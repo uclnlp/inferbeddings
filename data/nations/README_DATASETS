@@ -1,0 +1,24 @@
+Data analyzed by 
+
+Kemp, C., Tenenbaum, J. B., Griffiths, T. L., Yamada, T. & Ueda, N. (2006).
+Learning systems of concepts with an infinite relational model. AAAI 2006
+
+http://web.mit.edu/charleskemp.com/papers/KempTGYU06.pdf
+
+1) 50animalbindat: feature ratings primarily collected by Osherson et al.
+
+2) UMLS data: data from a biomedical ontology prepared by McCray et al.
+
+3) alyawarradata: kinship terms collected by Denham.
+    atts: kinship sections for each person
+    datass: kinship sections (one of n coding)
+    features: column 4 is gender, column 5 is age, column 9 is kinship section. 
+
+    The other features are described by 
+	http://www.alc.edu/denham/AlyaWeb/public/dir/03dbNum/File00Doc.pdf
+
+4) dnations.mat: International relations data from the Dimensionality of
+		 Nations project (Rummel). We've thresholded each continuous
+		 variable at its mean and used one-of-n coding for the
+		 categorical variables.
+

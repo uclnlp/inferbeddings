@@ -1,0 +1,18 @@
+# -*- coding: utf-8 -*-
+
+from setuptools import setup
+from setuptools import find_packages
+
+setup(name='inferbeddings',
+      version='0.0.1',
+      description='Rule Injection in Knowledge Graph Embeddings via Adversarial Training',
+      author='Pasquale Minervini',
+      author_email='p.minervini@cs.ucl.ac.uk',
+      url='https://github.com/uclmr/neural-walker',
+      test_suite='tests',
+      license='MIT',
+      install_requires=[
+            'tensorflow>=0.8',
+            'parsimonious>=0.7'
+      ],
+      packages=find_packages())

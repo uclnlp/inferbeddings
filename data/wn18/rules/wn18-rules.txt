@@ -1,0 +1,156 @@
+Loading files... 
+  Starting wordnet-mlj12-train.txt
+  Finished wordnet-mlj12-train.txt, still running: 0
+Loaded 141442 facts in 1.16 s using -28 MB
+Using HeadCoverage as pruning metric with minimum threshold 0.01
+Using recursivity limit 3
+Default mining assistant that defines support by counting support on both head variables
+No minimum threshold on standard confidence
+Filtering on PCA confidence with minimum threshold 0.1
+Constants in the arguments of relations are disabled
+Lossless (query refinement) heuristics enabled
+Starting the mining phase... Using 4 threads
+Rule	Head Coverage	Std Confidence	PCA Confidence	Positive Examples	Body size	PCA Body size	Functional variable	Std. Lower Bound	PCA Lower Bound	PCA Conf estimation
+?b  _synset_domain_usage_of  ?a   => ?a  _member_of_domain_usage  ?b	0.93799682	0.933544304	0.994940978	590	632	593	?b	0.0	0.0	0.0
+?b  _member_of_domain_usage  ?a   => ?a  _synset_domain_usage_of  ?b	0.933544304	0.93799682	0.993265993	590	629	594	?a	0.0	0.0	0.0
+?b  _member_of_domain_topic  ?a   => ?a  _synset_domain_topic_of  ?b	0.933568678	0.932969852	0.993510929	2909	3118	2928	?a	0.0	0.0	0.0
+?b  _verb_group  ?a   => ?a  _verb_group  ?b	0.931458699	0.931458699	0.980573543	1060	1138	1081	?b	0.0	0.0	0.0
+?b  _member_meronym  ?a   => ?a  _member_holonym  ?b	0.932945001	0.93042421	0.999129552	6887	7402	6893	?a	0.0	0.0	0.0
+?b  _instance_hypernym  ?a   => ?a  _instance_hyponym  ?b	0.926064736	0.930503252	0.975942549	2718	2921	2785	?b	0.0	0.0	0.0
+?b  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.932969852	0.933568678	0.993850359	2909	3116	2927	?b	0.0	0.0	0.0
+?b  _synset_domain_region_of  ?a   => ?a  _member_of_domain_region  ?b	0.918743229	0.939091916	0.990654206	848	903	856	?b	0.0	0.0	0.0
+?b  _instance_hyponym  ?a   => ?a  _instance_hypernym  ?b	0.930503252	0.926064736	0.975942549	2718	2935	2785	?a	0.0	0.0	0.0
+?a  _hyponym  ?b   => ?a  _also_see  ?b	0.029253272	0.001090951	0.133802817	38	34832	284	?b	0.0	0.0	0.0
+?b  _also_see  ?a   => ?a  _also_see  ?b	0.637413395	0.637413395	0.883671291	828	1299	937	?b	0.0	0.0	0.0
+?b  _hypernym  ?a   => ?a  _also_see  ?b	0.029253272	0.00109208	0.130136986	38	34796	292	?b	0.0	0.0	0.0
+?b  _member_of_domain_region  ?a   => ?a  _synset_domain_region_of  ?b	0.939091916	0.918743229	0.987194412	848	923	859	?a	0.0	0.0	0.0
+?b  _member_holonym  ?a   => ?a  _member_meronym  ?b	0.93042421	0.932945001	0.998839739	6887	7382	6895	?b	0.0	0.0	0.0
+?b  _hypernym  ?a   => ?a  _hyponym  ?b	0.934112311	0.935078745	0.996630625	32537	34796	32647	?b	0.0	0.0	0.0
+?b  _has_part  ?a   => ?a  _part_of  ?b	0.934235172	0.932101329	0.978635274	4489	4816	4587	?a	0.0	0.0	0.0
+?b  _derivationally_related_form  ?a   => ?a  _derivationally_related_form  ?b	0.932222783	0.932222783	0.95163008	27701	29715	29109	?b	0.0	0.0	0.0
+?b  _hyponym  ?f  ?f  _synset_domain_usage_of  ?a   => ?a  _member_of_domain_usage  ?b	0.028616852	0.04400978	0.75	18	409	24	?b	0.0	0.0	0.0
+?b  _hyponym  ?f  ?a  _member_of_domain_usage  ?f   => ?a  _member_of_domain_usage  ?b	0.028616852	0.043373494	0.692307692	18	415	26	?b	0.0	0.0	0.0
+?b  _part_of  ?a   => ?a  _has_part  ?b	0.932101329	0.934235172	0.980987762	4489	4805	4576	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?f  _synset_domain_usage_of  ?a   => ?a  _member_of_domain_usage  ?b	0.047694754	0.198675497	0.833333333	30	151	36	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?a  _member_of_domain_usage  ?f   => ?a  _member_of_domain_usage  ?b	0.049284579	0.196202532	0.756097561	31	158	41	?b	0.0	0.0	0.0
+?f  _hyponym  ?b  ?a  _member_of_domain_usage  ?f   => ?a  _member_of_domain_usage  ?b	0.052464229	0.20625	0.75	33	160	44	?b	0.0	0.0	0.0
+?f  _hypernym  ?b  ?a  _member_of_domain_usage  ?f   => ?a  _member_of_domain_usage  ?b	0.028616852	0.04400978	0.72	18	409	25	?b	0.0	0.0	0.0
+?e  _hyponym  ?b  ?e  _synset_domain_usage_of  ?a   => ?a  _member_of_domain_usage  ?b	0.050874404	0.210526316	0.820512821	32	152	39	?b	0.0	0.0	0.0
+?e  _hypernym  ?b  ?e  _synset_domain_usage_of  ?a   => ?a  _member_of_domain_usage  ?b	0.028616852	0.044554455	0.782608696	18	404	23	?b	0.0	0.0	0.0
+?f  _hyponym  ?a  ?b  _member_of_domain_usage  ?f   => ?a  _synset_domain_usage_of  ?b	0.055379747	0.21875	0.744680851	35	160	47	?a	0.0	0.0	0.0
+?a  _hypernym  ?f  ?b  _member_of_domain_usage  ?f   => ?a  _synset_domain_usage_of  ?b	0.053797468	0.215189873	0.755555556	34	158	45	?a	0.0	0.0	0.0
+?f  _hypernym  ?a  ?b  _member_of_domain_usage  ?f   => ?a  _synset_domain_usage_of  ?b	0.026898734	0.041564792	0.68	17	409	25	?a	0.0	0.0	0.0
+?a  _hyponym  ?f  ?b  _member_of_domain_usage  ?f   => ?a  _synset_domain_usage_of  ?b	0.026898734	0.040963855	0.653846154	17	415	26	?a	0.0	0.0	0.0
+?b  _hyponym  ?a   => ?a  _hypernym  ?b	0.935078745	0.934112311	0.996935993	32537	34832	32637	?a	0.0	0.0	0.0
+?a  _hypernym  ?f  ?f  _synset_domain_usage_of  ?b   => ?a  _synset_domain_usage_of  ?b	0.050632911	0.21192053	0.820512821	32	151	39	?a	0.0	0.0	0.0
+?a  _hyponym  ?f  ?f  _synset_domain_usage_of  ?b   => ?a  _synset_domain_usage_of  ?b	0.026898734	0.041564792	0.708333333	17	409	24	?a	0.0	0.0	0.0
+?e  _hyponym  ?a  ?e  _synset_domain_usage_of  ?b   => ?a  _synset_domain_usage_of  ?b	0.05221519	0.217105263	0.804878049	33	152	41	?a	0.0	0.0	0.0
+?e  _hypernym  ?a  ?e  _synset_domain_usage_of  ?b   => ?a  _synset_domain_usage_of  ?b	0.026898734	0.042079208	0.739130435	17	404	23	?a	0.0	0.0	0.0
+?f  _hyponym  ?a  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.181964056	0.28694332	0.82173913	567	1976	690	?a	0.0	0.0	0.0
+?f  _hypernym  ?a  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.090821566	0.14855643	0.733160622	283	1905	386	?a	0.0	0.0	0.0
+?f  _derivationally_related_form  ?a  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.035943517	0.065998821	0.484848485	112	1697	231	?a	0.0	0.0	0.0
+?f  _instance_hyponym  ?a  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.034338896	0.424603175	0.87704918	107	252	122	?a	0.0	0.0	0.0
+?f  _has_part  ?a  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.018934531	0.244813278	0.746835443	59	241	79	?a	0.0	0.0	0.0
+?b  _member_of_domain_topic  ?f  ?f  _verb_group  ?a   => ?a  _synset_domain_topic_of  ?b	0.011553273	0.363636364	0.765957447	36	99	47	?a	0.0	0.0	0.0
+?b  _member_of_domain_topic  ?f  ?f  _part_of  ?a   => ?a  _synset_domain_topic_of  ?b	0.013157895	0.262820513	0.803921569	41	156	51	?a	0.0	0.0	0.0
+?a  _hypernym  ?f  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.184852375	0.294027565	0.827586207	576	1959	696	?a	0.0	0.0	0.0
+?a  _instance_hypernym  ?f  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.033697047	0.421686747	0.875	105	249	120	?a	0.0	0.0	0.0
+?a  _derivationally_related_form  ?f  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.034980745	0.063445867	0.475982533	109	1718	229	?a	0.0	0.0	0.0
+?a  _has_part  ?f  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.01283697	0.25974026	0.816326531	40	154	49	?a	0.0	0.0	0.0
+?b  _member_of_domain_topic  ?f  ?a  _part_of  ?f   => ?a  _synset_domain_topic_of  ?b	0.019255456	0.256410256	0.75	60	234	80	?a	0.0	0.0	0.0
+?b  _member_of_domain_topic  ?f  ?a  _verb_group  ?f   => ?a  _synset_domain_topic_of  ?b	0.011874198	0.355769231	0.770833333	37	104	48	?a	0.0	0.0	0.0
+?a  _derivationally_related_form  ?f  ?f  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.036264442	0.065545244	0.495614035	113	1724	228	?a	0.0	0.0	0.0
+?a  _hyponym  ?f  ?b  _member_of_domain_topic  ?f   => ?a  _synset_domain_topic_of  ?b	0.091784339	0.148417229	0.733333333	286	1927	390	?a	0.0	0.0	0.0
+?a  _part_of  ?f  ?f  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.019255456	0.251046025	0.75	60	239	80	?a	0.0	0.0	0.0
+?a  _hypernym  ?f  ?f  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.178754814	0.285056295	0.809593023	557	1954	688	?a	0.0	0.0	0.0
+?a  _hyponym  ?f  ?f  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.090179718	0.146583203	0.720512821	281	1917	390	?a	0.0	0.0	0.0
+?f  _synset_domain_topic_of  ?b  ?a  _verb_group  ?f   => ?a  _synset_domain_topic_of  ?b	0.012516046	0.375	0.75	39	104	52	?a	0.0	0.0	0.0
+?a  _instance_hypernym  ?f  ?f  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.032092426	0.395256917	0.862068966	100	253	116	?a	0.0	0.0	0.0
+?a  _has_part  ?f  ?f  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.013478819	0.259259259	0.79245283	42	162	53	?a	0.0	0.0	0.0
+?e  _hyponym  ?a  ?e  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.176829268	0.279837481	0.804379562	551	1969	685	?a	0.0	0.0	0.0
+?e  _hypernym  ?a  ?e  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.088254172	0.145348837	0.721784777	275	1892	381	?a	0.0	0.0	0.0
+?e  _instance_hyponym  ?a  ?e  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.032734275	0.4	0.86440678	102	255	118	?a	0.0	0.0	0.0
+?e  _has_part  ?a  ?e  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.018934531	0.239837398	0.746835443	59	246	79	?a	0.0	0.0	0.0
+?e  _synset_domain_topic_of  ?b  ?e  _verb_group  ?a   => ?a  _synset_domain_topic_of  ?b	0.012516046	0.386138614	0.75	39	101	52	?a	0.0	0.0	0.0
+?e  _part_of  ?a  ?e  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.013799743	0.260606061	0.781818182	43	165	55	?a	0.0	0.0	0.0
+?e  _derivationally_related_form  ?a  ?e  _synset_domain_topic_of  ?b   => ?a  _synset_domain_topic_of  ?b	0.03690629	0.067766647	0.502183406	115	1697	229	?a	0.0	0.0	0.0
+?f  _derivationally_related_form  ?a  ?b  _derivationally_related_form  ?f   => ?a  _verb_group  ?b	0.423550088	0.008102202	0.147130647	482	59490	3276	?b	0.0	0.0	0.0
+?a  _derivationally_related_form  ?f  ?b  _derivationally_related_form  ?f   => ?a  _verb_group  ?b	0.41827768	0.007909079	0.145299145	476	60184	3276	?b	0.0	0.0	0.0
+?f  _derivationally_related_form  ?b  ?a  _derivationally_related_form  ?f   => ?a  _verb_group  ?b	0.422671353	0.008085393	0.145537065	481	59490	3305	?b	0.0	0.0	0.0
+?e  _derivationally_related_form  ?a  ?e  _derivationally_related_form  ?b   => ?a  _verb_group  ?b	0.430579965	0.008160003	0.146137787	490	60049	3353	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?f  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.180564464	0.288126919	0.823099415	563	1954	684	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.186337396	0.296579888	0.839595376	581	1959	692	?b	0.0	0.0	0.0
+?b  _hyponym  ?f  ?f  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.089480436	0.145539906	0.7265625	279	1917	384	?b	0.0	0.0	0.0
+?b  _hyponym  ?f  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.09076331	0.146860405	0.738903394	283	1927	383	?b	0.0	0.0	0.0
+?b  _derivationally_related_form  ?f  ?f  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.035920462	0.064965197	0.486956522	112	1724	230	?b	0.0	0.0	0.0
+?b  _derivationally_related_form  ?f  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.034637588	0.062863795	0.467532468	108	1718	231	?b	0.0	0.0	0.0
+?b  _part_of  ?f  ?f  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.018922386	0.246861925	0.766233766	59	239	77	?b	0.0	0.0	0.0
+?b  _has_part  ?f  ?f  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.013790892	0.265432099	0.796296296	43	162	54	?b	0.0	0.0	0.0
+?a  _member_of_domain_topic  ?f  ?b  _part_of  ?f   => ?a  _member_of_domain_topic  ?b	0.018922386	0.252136752	0.766233766	59	234	77	?b	0.0	0.0	0.0
+?f  _synset_domain_topic_of  ?a  ?b  _verb_group  ?f   => ?a  _member_of_domain_topic  ?b	0.011545863	0.346153846	0.782608696	36	104	46	?b	0.0	0.0	0.0
+?b  _has_part  ?f  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.013149455	0.266233766	0.82	41	154	50	?b	0.0	0.0	0.0
+?a  _member_of_domain_topic  ?f  ?b  _verb_group  ?f   => ?a  _member_of_domain_topic  ?b	0.011545863	0.346153846	0.782608696	36	104	46	?b	0.0	0.0	0.0
+?b  _instance_hypernym  ?f  ?f  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.033675433	0.415019763	0.867768595	105	253	121	?b	0.0	0.0	0.0
+?b  _instance_hypernym  ?f  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.035279025	0.441767068	0.88	110	249	125	?b	0.0	0.0	0.0
+?f  _hyponym  ?b  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.182809493	0.288461538	0.833333333	570	1976	684	?b	0.0	0.0	0.0
+?f  _hypernym  ?b  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.090442591	0.148031496	0.74015748	282	1905	381	?b	0.0	0.0	0.0
+?f  _instance_hyponym  ?b  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.03624118	0.448412698	0.8828125	113	252	128	?b	0.0	0.0	0.0
+?f  _derivationally_related_form  ?b  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.035279025	0.064820271	0.474137931	110	1697	232	?b	0.0	0.0	0.0
+?f  _has_part  ?b  ?a  _member_of_domain_topic  ?f   => ?a  _member_of_domain_topic  ?b	0.018601668	0.2406639	0.763157895	58	241	76	?b	0.0	0.0	0.0
+?a  _member_of_domain_topic  ?f  ?f  _verb_group  ?b   => ?a  _member_of_domain_topic  ?b	0.011545863	0.363636364	0.782608696	36	99	46	?b	0.0	0.0	0.0
+?a  _member_of_domain_topic  ?f  ?f  _part_of  ?b   => ?a  _member_of_domain_topic  ?b	0.013470173	0.269230769	0.807692308	42	156	52	?b	0.0	0.0	0.0
+?e  _hyponym  ?b  ?e  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.177998717	0.281868969	0.817378498	555	1969	679	?b	0.0	0.0	0.0
+?e  _hypernym  ?b  ?e  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.088518281	0.145877378	0.73015873	276	1892	378	?b	0.0	0.0	0.0
+?e  _has_part  ?b  ?e  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.018601668	0.235772358	0.763157895	58	246	76	?b	0.0	0.0	0.0
+?e  _derivationally_related_form  ?b  ?e  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.03624118	0.066588097	0.491304348	113	1697	230	?b	0.0	0.0	0.0
+?e  _instance_hyponym  ?b  ?e  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.034637588	0.423529412	0.870967742	108	255	124	?b	0.0	0.0	0.0
+?e  _part_of  ?b  ?e  _synset_domain_topic_of  ?a   => ?a  _member_of_domain_topic  ?b	0.01411161	0.266666667	0.785714286	44	165	56	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?f  _synset_domain_region_of  ?a   => ?a  _member_of_domain_region  ?b	0.014084507	0.26	0.722222222	13	50	18	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?a  _member_of_domain_region  ?f   => ?a  _member_of_domain_region  ?b	0.015167931	0.237288136	0.736842105	14	59	19	?b	0.0	0.0	0.0
+?e  _synset_domain_topic_of  ?a  ?e  _verb_group  ?b   => ?a  _member_of_domain_topic  ?b	0.011866581	0.366336634	0.787234043	37	101	47	?b	0.0	0.0	0.0
+?b  _hyponym  ?f  ?f  _synset_domain_region_of  ?a   => ?a  _member_of_domain_region  ?b	0.01191766	0.021484375	0.733333333	11	512	15	?b	0.0	0.0	0.0
+?f  _hyponym  ?b  ?a  _member_of_domain_region  ?f   => ?a  _member_of_domain_region  ?b	0.015167931	0.21875	0.736842105	14	64	19	?b	0.0	0.0	0.0
+?f  _hypernym  ?b  ?a  _member_of_domain_region  ?f   => ?a  _member_of_domain_region  ?b	0.01191766	0.021072797	0.733333333	11	522	15	?b	0.0	0.0	0.0
+?b  _hyponym  ?f  ?a  _member_of_domain_region  ?f   => ?a  _member_of_domain_region  ?b	0.01191766	0.021072797	0.733333333	11	522	15	?b	0.0	0.0	0.0
+?e  _hyponym  ?b  ?e  _synset_domain_region_of  ?a   => ?a  _member_of_domain_region  ?b	0.014084507	0.236363636	0.722222222	13	55	18	?b	0.0	0.0	0.0
+?e  _hypernym  ?b  ?e  _synset_domain_region_of  ?a   => ?a  _member_of_domain_region  ?b	0.013001083	0.023300971	0.75	12	515	16	?b	0.0	0.0	0.0
+?f  _also_see  ?a  ?b  _also_see  ?f   => ?a  _also_see  ?b	0.15704388	0.110809343	0.113712375	204	1841	1794	?b	0.0	0.0	0.0
+?a  _also_see  ?f  ?b  _also_see  ?f   => ?a  _also_see  ?b	0.16243264	0.094831461	0.115997801	211	2225	1819	?b	0.0	0.0	0.0
+?b  _hypernym  ?a  ?a  _hyponym  ?b   => ?a  _also_see  ?b	0.028483449	0.001137167	0.136531365	37	32537	271	?b	0.0	0.0	0.0
+?f  _also_see  ?b  ?a  _also_see  ?f   => ?a  _also_see  ?b	0.157813703	0.111352526	0.111352526	205	1841	1841	?b	0.0	0.0	0.0
+?f  _hyponym  ?a  ?b  _member_of_domain_region  ?f   => ?a  _synset_domain_region_of  ?b	0.015503876	0.21875	0.736842105	14	64	19	?a	0.0	0.0	0.0
+?f  _hypernym  ?a  ?b  _member_of_domain_region  ?f   => ?a  _synset_domain_region_of  ?b	0.011074197	0.019157088	0.714285714	10	522	14	?a	0.0	0.0	0.0
+?a  _hypernym  ?f  ?b  _member_of_domain_region  ?f   => ?a  _synset_domain_region_of  ?b	0.016611296	0.254237288	0.75	15	59	20	?a	0.0	0.0	0.0
+?a  _hyponym  ?f  ?b  _member_of_domain_region  ?f   => ?a  _synset_domain_region_of  ?b	0.011074197	0.019157088	0.714285714	10	522	14	?a	0.0	0.0	0.0
+?a  _hypernym  ?f  ?f  _synset_domain_region_of  ?b   => ?a  _synset_domain_region_of  ?b	0.015503876	0.28	0.736842105	14	50	19	?a	0.0	0.0	0.0
+?a  _hyponym  ?f  ?f  _synset_domain_region_of  ?b   => ?a  _synset_domain_region_of  ?b	0.011074197	0.01953125	0.714285714	10	512	14	?a	0.0	0.0	0.0
+?e  _hyponym  ?a  ?e  _synset_domain_region_of  ?b   => ?a  _synset_domain_region_of  ?b	0.014396456	0.236363636	0.722222222	13	55	18	?a	0.0	0.0	0.0
+?e  _hypernym  ?a  ?e  _synset_domain_region_of  ?b   => ?a  _synset_domain_region_of  ?b	0.012181617	0.021359223	0.733333333	11	515	15	?a	0.0	0.0	0.0
+?b  _has_part  ?f  ?f  _instance_hyponym  ?a   => ?a  _part_of  ?b	0.029968783	0.407932011	0.527472527	144	353	273	?a	0.0	0.0	0.0
+?b  _has_part  ?f  ?f  _hyponym  ?a   => ?a  _part_of  ?b	0.015400624	0.04214123	0.100135318	74	1756	739	?a	0.0	0.0	0.0
+?b  _has_part  ?f  ?f  _hypernym  ?a   => ?a  _part_of  ?b	0.010197711	0.022032374	0.101659751	49	2224	482	?a	0.0	0.0	0.0
+?b  _has_part  ?f  ?a  _instance_hypernym  ?f   => ?a  _part_of  ?b	0.030176899	0.413105413	0.525362319	145	351	276	?a	0.0	0.0	0.0
+?b  _has_part  ?f  ?a  _hyponym  ?f   => ?a  _part_of  ?b	0.010405827	0.022583559	0.103305785	50	2214	484	?a	0.0	0.0	0.0
+?a  _instance_hypernym  ?f  ?f  _part_of  ?b   => ?a  _part_of  ?b	0.032258065	0.417789757	0.521885522	155	371	297	?a	0.0	0.0	0.0
+?e  _instance_hyponym  ?a  ?e  _part_of  ?b   => ?a  _part_of  ?b	0.032466181	0.414893617	0.525252525	156	376	297	?a	0.0	0.0	0.0
+?e  _hyponym  ?a  ?e  _part_of  ?b   => ?a  _part_of  ?b	0.017273673	0.046603032	0.108496732	83	1781	765	?a	0.0	0.0	0.0
+?f  _derivationally_related_form  ?a  ?b  _verb_group  ?f   => ?a  _derivationally_related_form  ?b	0.021638903	0.298791822	0.36954023	643	2152	1740	?b	0.0	0.0	0.0
+?a  _derivationally_related_form  ?f  ?b  _verb_group  ?f   => ?a  _derivationally_related_form  ?b	0.022110045	0.30430755	0.374358974	657	2159	1755	?b	0.0	0.0	0.0
+?b  _derivationally_related_form  ?f  ?f  _verb_group  ?a   => ?a  _derivationally_related_form  ?b	0.021807168	0.297111417	0.30195713	648	2181	2146	?b	0.0	0.0	0.0
+?b  _derivationally_related_form  ?f  ?a  _verb_group  ?f   => ?a  _derivationally_related_form  ?b	0.021706209	0.298749421	0.304101839	645	2159	2121	?b	0.0	0.0	0.0
+?f  _derivationally_related_form  ?b  ?a  _verb_group  ?f   => ?a  _derivationally_related_form  ?b	0.021336026	0.294609665	0.294609665	634	2152	2152	?b	0.0	0.0	0.0
+?a  _derivationally_related_form  ?f  ?f  _verb_group  ?b   => ?a  _derivationally_related_form  ?b	0.022278311	0.303530491	0.370660694	662	2181	1786	?b	0.0	0.0	0.0
+?e  _derivationally_related_form  ?a  ?e  _verb_group  ?b   => ?a  _derivationally_related_form  ?b	0.021773515	0.298019346	0.366364666	647	2171	1766	?b	0.0	0.0	0.0
+?e  _derivationally_related_form  ?b  ?e  _verb_group  ?a   => ?a  _derivationally_related_form  ?b	0.021403332	0.292952556	0.292952556	636	2171	2171	?b	0.0	0.0	0.0
+?b  _hypernym  ?f  ?f  _part_of  ?a   => ?a  _has_part  ?b	0.017234219	0.046136743	0.102977667	83	1799	806	?b	0.0	0.0	0.0
+?b  _instance_hypernym  ?f  ?f  _part_of  ?a   => ?a  _has_part  ?b	0.031976744	0.41509434	0.522033898	154	371	295	?b	0.0	0.0	0.0
+?a  _has_part  ?f  ?b  _instance_hypernym  ?f   => ?a  _has_part  ?b	0.029900332	0.41025641	0.52173913	144	351	276	?b	0.0	0.0	0.0
+?a  _has_part  ?f  ?b  _hyponym  ?f   => ?a  _has_part  ?b	0.010589701	0.02303523	0.104294479	51	2214	489	?b	0.0	0.0	0.0
+?a  _has_part  ?f  ?f  _instance_hyponym  ?b   => ?a  _has_part  ?b	0.029900332	0.407932011	0.527472527	144	353	273	?b	0.0	0.0	0.0
+?a  _has_part  ?f  ?f  _hyponym  ?b   => ?a  _has_part  ?b	0.016196013	0.044419134	0.104278075	78	1756	748	?b	0.0	0.0	0.0
+?a  _has_part  ?f  ?f  _hypernym  ?b   => ?a  _has_part  ?b	0.01038206	0.022482014	0.101832994	50	2224	491	?b	0.0	0.0	0.0
+?e  _hyponym  ?b  ?e  _part_of  ?a   => ?a  _has_part  ?b	0.017857143	0.048287479	0.111398964	86	1781	772	?b	0.0	0.0	0.0
+?e  _instance_hyponym  ?b  ?e  _part_of  ?a   => ?a  _has_part  ?b	0.032392027	0.414893617	0.530612245	156	376	294	?b	0.0	0.0	0.0
+Mining done in 16.77 s
+Total time 17.94 s
+140 rules mined.

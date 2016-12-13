@@ -1,0 +1,54 @@
+# -*- coding: utf-8 -*-
+
+import numpy as np
+import tensorflow as tf
+
+from newalker.models.training.util import make_batches
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def train_pairwise(session, nb_epochs, nb_samples, random_state, Xr, Xe, subject_corruptor, object_corruptor, batch_size):
+    for epoch in range(1, nb_epochs + 1):
+        order = random_state.permutation(nb_samples)
+        Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
+
+        Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
+        Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
+
+        batches = make_batches(nb_samples, batch_size)
+        loss_values = []
+
+        for batch_start, batch_end in batches:
+            curr_batch_size = batch_end - batch_start
+
+            Xr_batch = np.zeros((curr_batch_size * 4, Xr.shape[1]), dtype=Xr.dtype)
+            Xe_batch = np.zeros((curr_batch_size * 4, Xe.shape[1]), dtype=Xe.dtype)
+
+            Xr_batch[0::4, :] = Xr_batch[2::4, :] = Xr[batch_start:batch_end, :]
+            Xe_batch[0::4, :] = Xe_batch[2::4, :] = Xe[batch_start:batch_end, :]
+
+            Xr_batch[1::4, :], Xe_batch[1::4, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
+            Xr_batch[3::4, :], Xe_batch[3::4, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
+
+            loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
+
+            _, loss_value = session.run([training_step, loss_function], feed_dict=loss_args)
+
+            for projection_step in projection_steps:
+                session.run([projection_step])
+
+            loss_values += [loss_value / Xr_batch.shape[0]]
+
+        logger.info('Epoch: {}\tLoss: {} ± {}'.format(epoch, round(np.mean(loss_values), 4), round(np.std(loss_values), 4)))
+
+        logger.info('Finding violators ..')
+
+        for finding_epoch in range(1, adv_nb_epochs + 1):
+            _, violation_loss_value = session.run([violation_training_step, violation_loss])
+            logging.info('Epoch: {}\tViolation loss: {}'.format(epoch, round(violation_loss_value, 4)))
+
+            for projection_step in adversarial_projection_steps:
+                session.run([projection_step])
