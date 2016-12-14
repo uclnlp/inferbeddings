@@ -22,7 +22,7 @@ def logistic_loss(scores, targets):
     :return: Loss value.
     """
     logistic_losses = tf.nn.sigmoid_cross_entropy_with_logits(scores, targets)
-    loss = tf.reduce_sum(hinge_losses)
+    loss = tf.reduce_sum(logistic_losses)
     return loss
 
 
