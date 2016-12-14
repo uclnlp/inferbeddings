@@ -10,12 +10,12 @@ def logistic_loss(scores, targets):
 
     [1] http://jmlr.org/proceedings/papers/v48/trouillon16.pdf
 
-    >> tf.log(1 + tf.exp(- np.array([10., -10.]) * np.array([1., -1]))).eval()
-    array([  4.53988992e-05,   4.53988992e-05])
-    >> tf.nn.softplus(- np.array([10., -10.]) * np.array([1., -1])).eval()
-    array([  4.53988992e-05,   4.53988992e-05])
-    >> tf.nn.sigmoid_cross_entropy_with_logits(np.array([10., -10.]), np.array([1., 0.])).eval()
-    array([  4.53988992e-05,   4.53988992e-05])
+    >> tf.log(1 + tf.exp(- np.array([10., -5.]) * np.array([1., -1]))).eval()
+    array([  4.53988992e-05,   6.71534849e-03])
+    >> tf.nn.softplus(- np.array([10., -5.]) * np.array([1., -1])).eval()
+    array([  4.53988992e-05,   6.71534849e-03])
+    >> tf.nn.sigmoid_cross_entropy_with_logits(np.array([10., -5.]), np.array([1., 0.])).eval()
+    array([  4.53988992e-05,   6.71534849e-03])
 
     :param scores: (N,) Tensor containing scores of examples.
     :param targets: (N,) Tensor containing {0, 1} targets of examples.
