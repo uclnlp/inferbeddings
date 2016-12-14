@@ -2,19 +2,18 @@
 
 import tensorflow as tf
 from inferbeddings.models.training import pairwise_losses
-
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class Adversarial:
-    def __init__(self, clauses, parser,
-                 entity_embedding_layer, predicate_embedding_layer,
-                 entity_embedding_size, predicate_embedding_size,
-                 similarity_function, model_class, loss_function=None, margin=0.0):
+    """
+    Utility class for, given a set of clauses, computing the symbolic violation loss.
+    """
+    def __init__(self, clauses, predicate_to_index, entity_embedding_layer, predicate_embedding_layer, entity_embedding_size, predicate_embedding_size, similarity_function, model_class, loss_function=None, margin=0.0):
         self.clauses = clauses
-        self.parser = parser
+        self.predicate_to_index = predicate_to_index
 
         self.entity_embedding_layer = entity_embedding_layer
         self.predicate_embedding_layer = predicate_embedding_layer
@@ -43,7 +42,11 @@ class Adversarial:
             self.parameters += clause_parameters
 
     def _parse_atom(self, atom, variable_name_to_layer):
-        predicate_ids = tf.Variable([self.parser.predicate_to_index[atom.predicate.name]])
+        """
+        Given an atom in the form p(X, Y), where X and Y are associated to two distinct [1, k] embedding layers,
+        return the symbolic score of the atom.
+        """
+        predicate_ids = tf.Variable([self.predicate_to_index[atom.predicate.name]])
         predicate_embedding = tf.nn.embedding_lookup(self.predicate_embedding_layer, predicate_ids)
         walk_embedding = tf.expand_dims(predicate_embedding, 1)
 
@@ -59,6 +62,9 @@ class Adversarial:
         return atom_score
 
     def _parse_conjunction(self, atoms, variable_name_to_layer):
+        """
+        Given a conjunction of atoms in the form p(X0, X1), q(X2, X3), r(X4, X5), return its symbolic score.
+        """
         conjunction_score = None
         for atom in atoms:
             atom_score = self._parse_atom(atom, variable_name_to_layer=variable_name_to_layer)
@@ -66,6 +72,9 @@ class Adversarial:
         return conjunction_score
 
     def _parse_clause(self, name, clause):
+        """
+        Given a clause in the form p(X0, X1) :- q(X2, X3), r(X4, X5), return its symbolic score.
+        """
         head, body = clause.head, clause.body
 
         # Enumerate all variables

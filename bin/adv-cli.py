@@ -74,7 +74,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     loss_function = 0.0
     if adv_lr is not None:
         from inferbeddings.adversarial import Adversarial
-        adversarial = Adversarial(clauses=clauses, parser=parser, entity_embedding_layer=entity_embedding_layer, predicate_embedding_layer=predicate_embedding_layer,
+        adversarial = Adversarial(clauses=clauses, predicate_to_index=parser.predicate_to_index, entity_embedding_layer=entity_embedding_layer, predicate_embedding_layer=predicate_embedding_layer,
                                   entity_embedding_size=entity_embedding_size, predicate_embedding_size=predicate_embedding_size,
                                   similarity_function=similarity_function, model_class=model_class, margin=adv_margin)
 
@@ -324,6 +324,7 @@ def main(argv):
                 evaluation.evaluate_auc(scoring_function, test_triples, test_triples_neg, nb_entities, nb_predicates, tag='test')
             else:
                 evaluation.evaluate_ranks(scoring_function, test_triples, nb_entities, true_triples=true_triples, tag='test')
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
