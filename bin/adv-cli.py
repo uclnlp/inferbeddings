@@ -18,7 +18,7 @@ from inferbeddings.parse import parse_clause
 from inferbeddings.models import base as models
 from inferbeddings.models import similarities
 
-from inferbeddings.models.training import pairwise_losses, constraints, corrupt, index
+from inferbeddings.models.training import losses, pairwise_losses, constraints, corrupt, index
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings import evaluation
@@ -27,7 +27,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size,
-          model_name, objective_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart):
+          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -91,20 +91,23 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
         loss_function += adv_weight * violation_loss
 
-        adversarial_projection_steps = []
-        for violation_layer in adversarial.parameters:
-            adversarial_projection_steps += [constraints.renorm_update(violation_layer, norm=1.0)]
-
-    # Transform the pairwise loss function in an unary loss function, where each positive example is followed by a negative example.
-    def pairwise_to_unary_modifier(_loss_function):
-        def unary_function(scores, *_args, **_kwargs):
-            positive_scores, negative_scores = tf.split(1, 2, tf.reshape(scores, [-1, 2]))
-            return _loss_function(positive_scores, negative_scores, *_args, **_kwargs)
-        return unary_function
+        adversarial_projection_steps = [constraints.renorm_update(violation_layer, norm=1.0) for violation_layer in adversarial.parameters]
 
     # Loss function to minimize by means of Stochastic Gradient Descent.
-    objective_function = pairwise_to_unary_modifier(pairwise_losses.get_function(objective_name))
-    loss_function += objective_function(score, margin=margin)
+    if loss_name is not None:
+        loss = losses.get_function(loss_name)
+        target = tf.cast((tf.range(0, limit=tf.shape(score)[0], delta=1) % 2), score.dtype)
+        loss_function += loss(score, target)
+    else:
+        # Transform the pairwise loss function in an unary loss function, where each positive example is followed by a negative example.
+        def pairwise_to_unary_modifier(_loss_function):
+            def unary_function(scores, *_args, **_kwargs):
+                positive_scores, negative_scores = tf.split(1, 2, tf.reshape(scores, [-1, 2]))
+                return _loss_function(positive_scores, negative_scores, *_args, **_kwargs)
+            return unary_function
+
+        pairwise_loss = pairwise_to_unary_modifier(pairwise_losses.get_function(pairwise_loss_name))
+        loss_function += pairwise_loss(score, margin=margin)
 
     # Optimization algorithm being used.
     optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
@@ -193,7 +196,10 @@ def main(argv):
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='DistMult', help='Model')
     argparser.add_argument('--similarity', '-s', action='store', type=str, default='dot', help='Similarity function')
-    argparser.add_argument('--objective', '-o', action='store', type=str, default='hinge_loss', help='Loss function')
+
+    argparser.add_argument('--loss', action='store', type=str, default=None, help='Loss function')
+    argparser.add_argument('--pairwise-loss', action='store', type=str, default='hinge_loss', help='Pairwise loss function')
+
     argparser.add_argument('--margin', '-M', action='store', type=float, default=1.0, help='Margin')
 
     argparser.add_argument('--embedding-size', '--entity-embedding-size', '-k', action='store', type=int, default=10, help='Entity embedding size')
@@ -208,7 +214,6 @@ def main(argv):
     argparser.add_argument('--adv-nb-epochs', '-E', action='store', type=int, default=10, help='Adversary number of training epochs')
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
-
     argparser.add_argument('--adv-restart', '-R', action='store_true', help='Restart the optimization process for identifying the violators')
 
     argparser.add_argument('--save', action='store', type=str, default=None, help='Path for saving the serialized model')
@@ -219,7 +224,8 @@ def main(argv):
     nb_batches, nb_epochs = args.nb_batches, args.nb_epochs
     learning_rate, margin = args.lr, args.margin
 
-    model_name, similarity_name, objective_name = args.model, args.similarity, args.objective
+    model_name, similarity_name = args.model, args.similarity
+    loss_name, pairwise_loss_name = args.loss, args.pairwise_loss
     entity_embedding_size, predicate_embedding_size = args.embedding_size, args.predicate_embedding_size
 
     if predicate_embedding_size is None:
@@ -285,9 +291,8 @@ def main(argv):
     sess_config.gpu_options.allow_growth = True
 
     with tf.Session(config=sess_config) as session:
-        scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name,
-                                          entity_embedding_size, predicate_embedding_size, model_name, objective_name, margin, learning_rate, nb_epochs,
-                                          parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart)
+        scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size,
+                                          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart)
 
         if save_path is not None:
             import pickle

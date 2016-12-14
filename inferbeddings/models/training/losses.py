@@ -29,5 +29,5 @@ def logistic_loss(scores, targets):
 def get_function(function_name):
     this_module = sys.modules[__name__]
     if not hasattr(this_module, function_name):
-        raise ValueError('Unknown objective function: {}'.format(function_name))
+        raise ValueError('Unknown loss function: {}'.format(function_name))
     return getattr(this_module, function_name)
