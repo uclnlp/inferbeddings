@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Sample usage:
+$ mkdir tmp ; cd tmp
+$ PYTHONPATH=. ../tools/populate.py ../data/wn18/wordnet-mlj12-valid.txt ../data/wn18/clauses/clauses_0.9.pl -o /dev/stdout
+"""
+
 import os
 import sys
 
@@ -25,11 +31,13 @@ def main(argv):
 
     argparser.add_argument('triples', action='store', type=str, default=None)
     argparser.add_argument('clauses', action='store', type=str, default=None)
+    argparser.add_argument('--output', '-o', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
 
     triples_path = args.triples
     clauses_path = args.clauses
+    output_path = args.output
 
     triples, _ = read_triples(triples_path)
     predicate_names = {p for (_, p, _) in triples}
@@ -64,6 +72,11 @@ def main(argv):
         with engine.prove_goal('facts.{}($s, $o)'.format(predicate_name)) as gen:
             for vs, plan in gen:
                 materialized_triples += [(vs['s'], predicate_name, vs['o'])]
+
+    if output_path is not None:
+        with open(output_path, 'w') as f:
+            f.writelines('{}\t{}\t{}\n'.format(s, p, o) for s, p, o in materialized_triples)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
