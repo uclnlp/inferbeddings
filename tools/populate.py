@@ -46,15 +46,23 @@ def main(argv):
         clauses_str = [line.strip() for line in f.readlines()]
     clauses = [parse_clause(clause_str) for clause_str in clauses_str]
 
+    #clauses = clauses[:50]
+
+    for clause in clauses:
+        predicate_names |= {clause.head.predicate.name}
+        for atom in clause.body:
+            predicate_names |= {atom.predicate.name}
+
+    predicate_to_idx = {predicate: 'p{}'.format(idx) for idx, predicate in enumerate(predicate_names)}
+    idx_to_predicate = {idx: predicate for predicate, idx in predicate_to_idx.items()}
+
     rule_str_lst = []
     for idx, clause in enumerate(clauses):
         head, body = clause.head, clause.body
-        head_str = '\t\tfacts.{}(${}, ${})'.format(head.predicate.name, head.arguments[0].name, head.arguments[1].name)
-        predicate_names |= {head.predicate.name}
+        head_str = '\t\tfacts.{}(${}, ${})'.format(predicate_to_idx[head.predicate.name], head.arguments[0].name, head.arguments[1].name)
         body_str = ''
         for atom in body:
-            body_str += '\t\tfacts.{}(${}, ${})'.format(atom.predicate.name, atom.arguments[0].name, atom.arguments[1].name)
-            predicate_names |= {atom.predicate.name}
+            body_str += '\t\tfacts.{}(${}, ${})\n'.format(predicate_to_idx[atom.predicate.name], atom.arguments[0].name, atom.arguments[1].name)
         rule_str_lst += ['rule_{}\n\tforeach\n{}\n\tassert\n{}\n'.format(idx, body_str, head_str)]
 
     with open(RULES_KRB_PATH, 'w') as f:
@@ -63,13 +71,13 @@ def main(argv):
     engine = knowledge_engine.engine('.')
 
     for (s, p, o) in tqdm(triples):
-        engine.assert_('facts', p, (s, o))
+        engine.assert_('facts', predicate_to_idx[p], (s, o))
 
     engine.activate(os.path.splitext(os.path.basename(RULES_KRB_PATH))[0])
 
     materialized_triples = []
     for predicate_name in tqdm(predicate_names):
-        with engine.prove_goal('facts.{}($s, $o)'.format(predicate_name)) as gen:
+        with engine.prove_goal('facts.{}($s, $o)'.format(predicate_to_idx[predicate_name])) as gen:
             for vs, plan in gen:
                 materialized_triples += [(vs['s'], predicate_name, vs['o'])]
 
@@ -79,5 +87,6 @@ def main(argv):
 
 
 if __name__ == '__main__':
+    sys.setrecursionlimit(65536)
     logging.basicConfig(level=logging.INFO)
     main(sys.argv[1:])
