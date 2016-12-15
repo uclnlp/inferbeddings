@@ -96,7 +96,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # Loss function to minimize by means of Stochastic Gradient Descent.
     if loss_name is not None:
         loss = losses.get_function(loss_name)
-        target = tf.cast((tf.range(0, limit=tf.shape(score)[0], delta=1) % 2), score.dtype)
+        target = tf.cast((tf.range(0, limit=tf.shape(score)[0]) % 2) < 1, score.dtype)
         loss_function += loss(score, target)
     else:
         # Transform the pairwise loss function in an unary loss function, where each positive example is followed by a negative example.
