@@ -90,3 +90,6 @@ ENV/
 
 # IDEA
 .idea/
+
+# Testing
+tmp/
