@@ -40,22 +40,25 @@ def main(argv):
     output_path = args.output
 
     triples, _ = read_triples(triples_path)
-    predicate_names = {p for (_, p, _) in triples}
 
+    # Parse the clauses using Sebastian's parser
     with open(clauses_path, 'r') as f:
         clauses_str = [line.strip() for line in f.readlines()]
     clauses = [parse_clause(clause_str) for clause_str in clauses_str]
 
-    #clauses = clauses[:50]
-
+    # Create a set containing all predicate names
+    predicate_names = {p for (_, p, _) in triples}
     for clause in clauses:
         predicate_names |= {clause.head.predicate.name}
         for atom in clause.body:
             predicate_names |= {atom.predicate.name}
 
+    # The original predicate names might not be handled well by Pyke (it's the case of e.g. Freebase)
+    # Replace them with p1, p2, p3 etc.
     predicate_to_idx = {predicate: 'p{}'.format(idx) for idx, predicate in enumerate(predicate_names)}
     idx_to_predicate = {idx: predicate for predicate, idx in predicate_to_idx.items()}
 
+    # Generate a Pyke rule base for reasoning via forward chaining
     rule_str_lst = []
     for idx, clause in enumerate(clauses):
         head, body = clause.head, clause.body
@@ -65,23 +68,28 @@ def main(argv):
             body_str += '\t\tfacts.{}(${}, ${})\n'.format(predicate_to_idx[atom.predicate.name], atom.arguments[0].name, atom.arguments[1].name)
         rule_str_lst += ['rule_{}\n\tforeach\n{}\n\tassert\n{}\n'.format(idx, body_str, head_str)]
 
+    # Write the Pyke rule base to file
     with open(RULES_KRB_PATH, 'w') as f:
         f.writelines('{}\n'.format(rule_str) for rule_str in rule_str_lst)
 
     engine = knowledge_engine.engine('.')
 
+    # Assert starting facts, corresponding to the triples already in the Knowledge Graph
     for (s, p, o) in tqdm(triples):
         engine.assert_('facts', predicate_to_idx[p], (s, o))
 
     engine.activate(os.path.splitext(os.path.basename(RULES_KRB_PATH))[0])
 
+    # For each predicate p, query the reasoning engine ..
     materialized_triples = []
     for predicate_name in tqdm(predicate_names):
+        # .. asking for all subject s and object o pairs such that (s, p, o) is entailed by the knowledge base
         with engine.prove_goal('facts.{}($s, $o)'.format(predicate_to_idx[predicate_name])) as gen:
             for vs, plan in gen:
                 materialized_triples += [(vs['s'], predicate_name, vs['o'])]
 
     if output_path is not None:
+        # Write the materialized triples to file
         with open(output_path, 'w') as f:
             f.writelines('{}\t{}\t{}\n'.format(s, p, o) for s, p, o in materialized_triples)
 
