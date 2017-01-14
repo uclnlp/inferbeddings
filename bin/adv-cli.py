@@ -298,8 +298,11 @@ def main(argv):
             import pickle
 
             objects_to_serialize = {
+                'command_line': argv,
+
                 'entity_to_index': parser.entity_to_index,
                 'predicate_to_index': parser.predicate_to_index,
+
                 'entities': objects['entity_embedding_layer'].eval(),
                 'predicates': objects['predicate_embedding_layer'].eval()
             }
