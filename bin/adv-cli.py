@@ -290,42 +290,20 @@ def main(argv):
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
 
+    saver = tf.train.Saver()
+
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart)
 
         if save_path is not None:
-            import itertools
             import pickle
-
-            def cartesian_product(dicts):
-                return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
-
-            triple_space_gen = cartesian_product({'s': range(1, nb_entities + 1),
-                                                  'p': range(1, nb_predicates + 1),
-                                                  'o': range(1, nb_entities + 1)})
-            triple_space = list(triple_space_gen)
-            nb_triples = len(triple_space)
-
-            logger.info('Creating input tensors ..')
-            Xr, Xe = np.zeros((nb_triples, 1)), np.zeros((nb_triples, 2))
-            for idx, triple in enumerate(triple_space):
-                Xr[idx, 0] = triple['p']
-                Xe[idx, 0], Xe[idx, 1] = triple['s'], triple['o']
-
-            logger.info('Evaluating the scoring function ..')
-            y = scoring_function([Xr, Xe])
 
             objects_to_serialize = {
                 'command_line': argv,
 
                 'entity_to_index': parser.entity_to_index,
                 'predicate_to_index': parser.predicate_to_index,
-
-                # AttributeError: Can't pickle local object 'train.<locals>.scoring_function'
-                #'scoring_function': scoring_function,
-
-                'ground_scores': {'Xr': Xr, 'Xe': Xe, 'y': y},
 
                 'entities': objects['entity_embedding_layer'].eval(),
                 'predicates': objects['predicate_embedding_layer'].eval()
@@ -334,6 +312,9 @@ def main(argv):
             logger.info('Saving the model parameters in {} ..'.format(save_path))
             with open(save_path, 'wb') as f:
                 pickle.dump(objects_to_serialize, f)
+
+            save_path = saver.save(session, '{}.model.ckpt'.format(save_path))
+            logger.info('Model saved in {}'.format(save_path))
 
         train_triples = [(s, p, o) for (p, [s, o]) in train_sequences]
 
