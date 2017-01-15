@@ -99,7 +99,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         target = tf.cast((tf.range(0, limit=tf.shape(score)[0]) % 2) < 1, score.dtype)
         loss_function += loss(score, target)
     else:
-        # Transform the pairwise loss function in an unary loss function, where each positive example is followed by a negative example.
+        # Transform the pairwise loss function in an unary loss function,
+        # where each positive example is followed by a negative example.
         def pairwise_to_unary_modifier(_loss_function):
             def unary_function(scores, *_args, **_kwargs):
                 positive_scores, negative_scores = tf.split(1, 2, tf.reshape(scores, [-1, 2]))
@@ -290,8 +291,6 @@ def main(argv):
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
 
-    saver = tf.train.Saver()
-
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart)
@@ -301,18 +300,17 @@ def main(argv):
 
             objects_to_serialize = {
                 'command_line': argv,
-
                 'entity_to_index': parser.entity_to_index,
                 'predicate_to_index': parser.predicate_to_index,
-
                 'entities': objects['entity_embedding_layer'].eval(),
                 'predicates': objects['predicate_embedding_layer'].eval()
             }
 
-            logger.info('Saving the model parameters in {} ..'.format(save_path))
-            with open(save_path, 'wb') as f:
+            with open('{}.pkl'.format(save_path), 'wb') as f:
                 pickle.dump(objects_to_serialize, f)
+            logger.info('Model parameters saved in {}.pkl'.format(save_path))
 
+            saver = tf.train.Saver()
             save_path = saver.save(session, '{}.model.ckpt'.format(save_path))
             logger.info('Model saved in {}'.format(save_path))
 
