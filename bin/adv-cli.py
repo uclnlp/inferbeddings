@@ -307,10 +307,13 @@ def main(argv):
             triple_space = list(triple_space_gen)
             nb_triples = len(triple_space)
 
+            logger.info('Creating input tensors ..')
             Xr, Xe = np.zeros((nb_triples, 1)), np.zeros((nb_triples, 2))
             for idx, triple in enumerate(triple_space):
                 Xr[idx, 0] = triple['p']
                 Xe[idx, 0], Xe[idx, 1] = triple['s'], triple['o']
+
+            logger.info('Evaluating the scoring function ..')
             y = scoring_function([Xr, Xe])
 
             objects_to_serialize = {
