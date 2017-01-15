@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Sample usage: $ ./bin/loss-cli.py -m models/wn18/wn18_v1.pkl -c data/wn18/clauses/clauses_0.9.pl
+"""
+
 import argparse
 import pickle
 
@@ -11,6 +15,8 @@ import sys
 import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
+
+
 
 
 def main(argv):
@@ -36,7 +42,9 @@ def main(argv):
     with open(clauses_path, 'r') as f:
         clauses = [parse_clause(line.strip()) for line in f.readlines()]
 
-    print(clauses)
+    entities = model['entity_to_index'].keys()
+    predicates = model['predicate_to_index'].keys()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
