@@ -21,6 +21,8 @@ from inferbeddings.models import similarities
 from inferbeddings.models.training import losses, pairwise_losses, constraints, corrupt, index
 from inferbeddings.models.training.util import make_batches
 
+from inferbeddings.adversarial import Adversarial, GroundLoss
+
 from inferbeddings import evaluation
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
@@ -73,7 +75,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     loss_function = 0.0
     if adv_lr is not None:
-        from inferbeddings.adversarial import Adversarial
         adversarial = Adversarial(clauses=clauses, predicate_to_index=parser.predicate_to_index, entity_embedding_layer=entity_embedding_layer, predicate_embedding_layer=predicate_embedding_layer,
                                   entity_embedding_size=entity_embedding_size, predicate_embedding_size=predicate_embedding_size,
                                   similarity_function=similarity_function, model_class=model_class, margin=adv_margin)
