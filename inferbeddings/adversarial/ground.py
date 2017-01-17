@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,27 @@ class GroundLoss:
         for body_atom in body:
             variable_names |= {argument.name for argument in body_atom.arguments}
         return variable_names
+
+    @staticmethod
+    def __tuple_to_mapping(variables, _tuple):
+        return {var_name: var_value for var_name, var_value in zip(variables, _tuple)}
+
+    @staticmethod
+    def sample_mappings(variables, entities, sample_size=1024, seed=None):
+        """
+        Sample a sample_size set of {variable:entity} mappings without replacement.
+        :param variables: List of variables, e.g. ['X', 'Y', 'Z']
+        :param entities: List of entities, e.g. [1, 2, 3]
+        :param sample_size: sample size.
+        :param seed: Random seed.
+        :return: List of randomly sampled {variable:entity} mappings.
+        """
+        rs = np.random.RandomState(0 if seed is None else seed)
+        nb_entities, nb_variables, np_entities = len(entities), len(variables), np.array(entities)
+        tuple_set, sample_size = set(), min(nb_entities ** nb_variables, sample_size)
+        while len(tuple_set) < sample_size:
+            tuple_set |= {tuple(value for value in np_entities[rs.choice(nb_entities, nb_variables)])}
+        return [GroundLoss.__tuple_to_mapping(variables, _tuple) for _tuple in tuple_set]
 
     def __entity_to_idx(self, entity):
         return self.entity_to_index[entity] if isinstance(entity, str) else entity
