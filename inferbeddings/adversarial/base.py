@@ -11,23 +11,14 @@ class Adversarial:
     """
     Utility class for, given a set of clauses, computing the symbolic violation loss.
     """
-    def __init__(self, clauses,
-                 parser,
-                 predicate_embedding_layer,
-
-                 entity_embedding_size,
-
-                 model_class,
-                 model_parameters,
-
-                 loss_function=None,
-                 margin=0.0):
+    def __init__(self, clauses, parser, predicate_embedding_layer,
+                 model_class, model_parameters, loss_function=None, margin=0.0):
         self.clauses = clauses
         self.parser = parser
 
         self.predicate_embedding_layer = predicate_embedding_layer
 
-        self.entity_embedding_size = entity_embedding_size
+        self.entity_embedding_size = model_parameters['entity_embedding_size']
 
         self.model_class = model_class
         self.model_parameters = model_parameters

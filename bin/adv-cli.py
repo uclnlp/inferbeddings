@@ -75,7 +75,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         similarity_function=similarity_function,
         entity_embedding_size=entity_embedding_size,
         predicate_embedding_size=predicate_embedding_size)
-
     model = model_class(**model_parameters)
 
     # Scoring function used for scoring arbitrary triples.
@@ -88,17 +87,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     if adv_lr is not None:
-        adversarial = Adversarial(clauses=clauses,
-                                  parser=parser,
-                                  predicate_embedding_layer=predicate_embedding_layer,
-                                  entity_embedding_size=entity_embedding_size,
-                                  model_class=model_class,
-                                  model_parameters=model_parameters,
-                                  margin=adv_margin)
-
-        ground_loss = GroundLoss(clauses=clauses,
-                                 parser=parser,
-                                 scoring_function=scoring_function)
+        adversarial = Adversarial(clauses=clauses, parser=parser, predicate_embedding_layer=predicate_embedding_layer,
+                                  model_class=model_class, model_parameters=model_parameters, margin=adv_margin)
+        ground_loss = GroundLoss(clauses=clauses, parser=parser, scoring_function=scoring_function)
 
         # For each clause, sample a list of 1024 {variable: entity} mappings
         entity_indices = sorted({idx for idx in parser.entity_to_index.values()})
