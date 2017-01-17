@@ -73,11 +73,19 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # Scoring function used for scoring arbitrary triples.
     score = model()
 
+    def scoring_function(args):
+        return session.run(score, feed_dict={walk_inputs: args[0], entity_inputs: args[1]})
+
     loss_function = 0.0
     if adv_lr is not None:
         adversarial = Adversarial(clauses=clauses, predicate_to_index=parser.predicate_to_index, entity_embedding_layer=entity_embedding_layer, predicate_embedding_layer=predicate_embedding_layer,
                                   entity_embedding_size=entity_embedding_size, predicate_embedding_size=predicate_embedding_size,
                                   similarity_function=similarity_function, model_class=model_class, margin=adv_margin)
+
+        ground_loss = GroundLoss(clauses=clauses,
+                                 entity_to_index=parser.entity_to_index,
+                                 predicate_to_index=parser.predicate_to_index,
+                                 scoring_function=scoring_function)
 
         initialize_violators = tf.initialize_variables(var_list=adversarial.parameters, name='init_violators') if adv_restart else None
         violation_errors, violation_loss = adversarial.errors, adversarial.loss
@@ -169,9 +177,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
-
-    def scoring_function(args):
-        return session.run(score, feed_dict={walk_inputs: args[0], entity_inputs: args[1]})
 
     objects = {
         'entity_embedding_layer': entity_embedding_layer,
@@ -285,8 +290,7 @@ def main(argv):
 
     if clauses_path is not None:
         with open(clauses_path, 'r') as f:
-            clauses_str = [line.strip() for line in f.readlines()]
-        clauses = [parse_clause(clause_str) for clause_str in clauses_str]
+            clauses = [parse_clause(line.strip()) for line in f.readlines()]
 
     # Do not take up all the GPU memory, all the time.
     sess_config = tf.ConfigProto()
