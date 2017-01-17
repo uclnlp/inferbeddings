@@ -31,6 +31,9 @@ class BaseModel(metaclass=abc.ABCMeta):
     def __call__(self):
         raise NotImplementedError
 
+    def get_params(self):
+        return []
+
 
 class TranslatingModel(BaseModel):
     def __init__(self, *args, **kwargs):
@@ -114,11 +117,10 @@ class ComplexModel(BaseModel):
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
         walk_embedding = embeddings.complex_walk_embedding(self.predicate_embeddings, self.entity_embeddings_size)
 
-        n = self.entity_embeddings_size
-
-        es_re, es_im = subject_embedding[:, :n // 2], subject_embedding[:, n // 2:]
-        eo_re, eo_im = object_embedding[:, :n // 2], object_embedding[:, n // 2:]
-        ew_re, ew_im = walk_embedding[:, :n // 2], walk_embedding[:, n // 2:]
+        emb_size = self.entity_embeddings_size
+        es_re, es_im = subject_embedding[:, :emb_size // 2], subject_embedding[:, emb_size // 2:]
+        eo_re, eo_im = object_embedding[:, :emb_size // 2], object_embedding[:, emb_size // 2:]
+        ew_re, ew_im = walk_embedding[:, :emb_size // 2], walk_embedding[:, emb_size // 2:]
 
         def dot3(arg1, rel, arg2):
             return self.similarity_function(arg1 * rel, arg2)
@@ -127,11 +129,49 @@ class ComplexModel(BaseModel):
         return score
 
 
+class ERMLP(BaseModel):
+    def __init__(self, hidden_size=69, f=tf.tanh, *args, **kwargs):
+        """
+        Implementation of the ER-MLP model described in [1, 2]
+
+        [1] Dong, X. L. et al. - Knowledge Vault: A Web-Scale Approach to Probabilistic Knowledge Fusion - KDD 2014
+        [2] Nickel, M. et al. - A Review of Relational Machine Learning for Knowledge Graphs - IEEE 2016
+        """
+        super().__init__(*args, **kwargs)
+        self.f = f
+
+        ent_emb_size = self.entity_embeddings_size
+        pred_emb_size = self.predicate_embeddings_size
+        ent_emb_size = ent_emb_size + ent_emb_size + pred_emb_size
+
+        self.C = tf.get_variable('C', shape=[ent_emb_size, hidden_size], initializer=tf.contrib.layers.xavier_initializer())
+        self.w = tf.get_variable('w', shape=[hidden_size, 1], initializer=tf.contrib.layers.xavier_initializer())
+
+    def __call__(self):
+        """
+        :return: (batch_size) Tensor containing the scores associated by the models to the walks.
+        """
+        subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
+        # This model is non-compositional in nature, so it might not be trivial to represent a walk embedding
+        walk_embedding = self.predicate_embeddings[:, 0, :]
+
+        e_ijk = tf.concat(1, [subject_embedding, object_embedding, walk_embedding])
+        h_ijk = tf.matmul(e_ijk, self.C)
+        f_ijk = tf.squeeze(tf.matmul(self.f(h_ijk), self.w), axis=1)
+
+        return f_ijk
+
+    def get_params(self):
+        params = super().get_params()
+        return params + [self.C, self.w]
+
+
 # Aliases
 TransE = TranslatingEmbeddings = TranslatingModel
 DistMult = BilinearDiagonal = BilinearDiagonalModel
 RESCAL = Bilinear = BilinearModel
 ComplEx = ComplexE = ComplexModel
+ER_MLP = ERMLP
 
 
 def get_function(function_name):

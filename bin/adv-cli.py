@@ -68,7 +68,11 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, walk_inputs)
 
     model_class = models.get_function(model_name)
-    model = model_class(entity_embeddings, predicate_embeddings, similarity_function, entity_embedding_size=entity_embedding_size, predicate_embedding_size=predicate_embedding_size)
+    model = model_class(entity_embeddings=entity_embeddings,
+                        predicate_embeddings=predicate_embeddings,
+                        similarity_function=similarity_function,
+                        entity_embedding_size=entity_embedding_size,
+                        predicate_embedding_size=predicate_embedding_size)
 
     # Scoring function used for scoring arbitrary triples.
     score = model()
