@@ -9,8 +9,9 @@ import sys
 
 
 class BaseModel(metaclass=abc.ABCMeta):
-    def __init__(self, entity_embeddings, predicate_embeddings, similarity_function,
-                 entity_embedding_size=None, predicate_embedding_size=None):
+    def __init__(self, entity_embeddings=None, predicate_embeddings=None, similarity_function=None,
+                 entity_embedding_size=None, predicate_embedding_size=None,
+                 reuse_variables=False):
         """
         Abstract class inheritedby all models.
 
@@ -26,6 +27,8 @@ class BaseModel(metaclass=abc.ABCMeta):
 
         self.entity_embeddings_size = entity_embedding_size
         self.predicate_embeddings_size = predicate_embedding_size
+
+        self.reuse_variables = reuse_variables
 
     @abc.abstractmethod
     def __call__(self):
@@ -144,8 +147,9 @@ class ERMLP(BaseModel):
         pred_emb_size = self.predicate_embeddings_size
         ent_emb_size = ent_emb_size + ent_emb_size + pred_emb_size
 
-        self.C = tf.get_variable('C', shape=[ent_emb_size, hidden_size], initializer=tf.contrib.layers.xavier_initializer())
-        self.w = tf.get_variable('w', shape=[hidden_size, 1], initializer=tf.contrib.layers.xavier_initializer())
+        with tf.variable_scope("embedders", reuse=self.reuse_variables) as _:
+            self.C = tf.get_variable('C', shape=[ent_emb_size, hidden_size], initializer=tf.contrib.layers.xavier_initializer())
+            self.w = tf.get_variable('w', shape=[hidden_size, 1], initializer=tf.contrib.layers.xavier_initializer())
 
     def __call__(self):
         """

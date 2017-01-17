@@ -7,10 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class GroundLoss:
-    def __init__(self, clauses, entity_to_index, predicate_to_index, scoring_function):
+    def __init__(self, clauses, parser, scoring_function):
         self.clauses = clauses
-        self.entity_to_index = entity_to_index
-        self.predicate_to_index = predicate_to_index
+        self.parser = parser
         self.scoring_function = scoring_function
 
     @staticmethod
@@ -48,10 +47,10 @@ class GroundLoss:
         return [GroundLoss.__tuple_to_mapping(variables, _tuple) for _tuple in tuple_set]
 
     def __entity_to_idx(self, entity):
-        return self.entity_to_index[entity] if isinstance(entity, str) else entity
+        return self.parser.entity_to_index[entity] if isinstance(entity, str) else entity
 
     def __predicate_to_idx(self, predicate):
-        return self.predicate_to_index[predicate] if isinstance(predicate, str) else predicate
+        return self.parser.predicate_to_index[predicate] if isinstance(predicate, str) else predicate
 
     def _score_atom(self, atom, feed_dict):
         arg1_name, arg2_name, predicate_name = atom.arguments[0].name, atom.arguments[1].name, atom.predicate.name

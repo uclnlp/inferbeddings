@@ -11,18 +11,26 @@ class Adversarial:
     """
     Utility class for, given a set of clauses, computing the symbolic violation loss.
     """
-    def __init__(self, clauses, predicate_to_index, entity_embedding_layer, predicate_embedding_layer, entity_embedding_size, predicate_embedding_size, similarity_function, model_class, loss_function=None, margin=0.0):
-        self.clauses = clauses
-        self.predicate_to_index = predicate_to_index
+    def __init__(self, clauses,
+                 parser,
+                 predicate_embedding_layer,
 
-        self.entity_embedding_layer = entity_embedding_layer
+                 entity_embedding_size,
+
+                 model_class,
+                 model_parameters,
+
+                 loss_function=None,
+                 margin=0.0):
+        self.clauses = clauses
+        self.parser = parser
+
         self.predicate_embedding_layer = predicate_embedding_layer
 
         self.entity_embedding_size = entity_embedding_size
-        self.predicate_embedding_size = predicate_embedding_size
 
-        self.similarity_function = similarity_function
         self.model_class = model_class
+        self.model_parameters = model_parameters
 
         self.loss_function = loss_function
         self.loss_margin = margin
@@ -46,7 +54,7 @@ class Adversarial:
         Given an atom in the form p(X, Y), where X and Y are associated to two distinct [1, k] embedding layers,
         return the symbolic score of the atom.
         """
-        predicate_ids = tf.Variable([self.predicate_to_index[atom.predicate.name]])
+        predicate_ids = tf.Variable([self.parser.predicate_to_index[atom.predicate.name]])
         predicate_embedding = tf.nn.embedding_lookup(self.predicate_embedding_layer, predicate_ids)
         walk_embedding = tf.expand_dims(predicate_embedding, 1)
 
@@ -55,10 +63,14 @@ class Adversarial:
 
         arg1_arg2_embeddings = tf.concat(1, [tf.expand_dims(arg1_layer, 1), tf.expand_dims(arg2_layer, 1)])
 
-        scoring_model = self.model_class(arg1_arg2_embeddings, walk_embedding, self.similarity_function,
-                                         entity_embedding_size=self.entity_embedding_size,
-                                         predicate_embedding_size=self.predicate_embedding_size)
+        model_parameters = self.model_parameters
+        model_parameters['entity_embeddings'] = arg1_arg2_embeddings
+        model_parameters['predicate_embeddings'] = walk_embedding
+
+        scoring_model = self.model_class(reuse_variables=True, **model_parameters)
         atom_score = scoring_model()
+
+        #atom_score = tf.contrib.graph_editor.graph_replace(self.score, {self.entity_embedding_layer: arg1_arg2_embeddings})
         return atom_score
 
     def _parse_conjunction(self, atoms, variable_name_to_layer):

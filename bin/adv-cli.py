@@ -68,11 +68,15 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, walk_inputs)
 
     model_class = models.get_function(model_name)
-    model = model_class(entity_embeddings=entity_embeddings,
-                        predicate_embeddings=predicate_embeddings,
-                        similarity_function=similarity_function,
-                        entity_embedding_size=entity_embedding_size,
-                        predicate_embedding_size=predicate_embedding_size)
+
+    model_parameters = dict(
+        entity_embeddings=entity_embeddings,
+        predicate_embeddings=predicate_embeddings,
+        similarity_function=similarity_function,
+        entity_embedding_size=entity_embedding_size,
+        predicate_embedding_size=predicate_embedding_size)
+
+    model = model_class(**model_parameters)
 
     # Scoring function used for scoring arbitrary triples.
     score = model()
@@ -84,16 +88,16 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     if adv_lr is not None:
-        adversarial = Adversarial(clauses=clauses, predicate_to_index=parser.predicate_to_index,
-                                  entity_embedding_layer=entity_embedding_layer,
+        adversarial = Adversarial(clauses=clauses,
+                                  parser=parser,
                                   predicate_embedding_layer=predicate_embedding_layer,
                                   entity_embedding_size=entity_embedding_size,
-                                  predicate_embedding_size=predicate_embedding_size,
-                                  similarity_function=similarity_function, model_class=model_class, margin=adv_margin)
+                                  model_class=model_class,
+                                  model_parameters=model_parameters,
+                                  margin=adv_margin)
 
         ground_loss = GroundLoss(clauses=clauses,
-                                 entity_to_index=parser.entity_to_index,
-                                 predicate_to_index=parser.predicate_to_index,
+                                 parser=parser,
                                  scoring_function=scoring_function)
 
         # For each clause, sample a list of 1024 {variable: entity} mappings
