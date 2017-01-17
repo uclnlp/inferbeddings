@@ -61,8 +61,11 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # Instantiate the model
     similarity_function = similarities.get_function(similarity_name)
 
-    entity_embedding_layer = tf.get_variable('entities', shape=[nb_entities + 1, entity_embedding_size], initializer=tf.contrib.layers.xavier_initializer())
-    predicate_embedding_layer = tf.get_variable('predicates', shape=[nb_predicates + 1, predicate_embedding_size], initializer=tf.contrib.layers.xavier_initializer())
+    entity_embedding_layer = tf.get_variable('entities', shape=[nb_entities + 1, entity_embedding_size],
+                                             initializer=tf.contrib.layers.xavier_initializer())
+
+    predicate_embedding_layer = tf.get_variable('predicates', shape=[nb_predicates + 1, predicate_embedding_size],
+                                                initializer=tf.contrib.layers.xavier_initializer())
 
     entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, entity_inputs)
     predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, walk_inputs)

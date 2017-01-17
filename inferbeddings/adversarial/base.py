@@ -45,8 +45,8 @@ class Adversarial:
         Given an atom in the form p(X, Y), where X and Y are associated to two distinct [1, k] embedding layers,
         return the symbolic score of the atom.
         """
-        predicate_ids = tf.Variable([self.parser.predicate_to_index[atom.predicate.name]])
-        predicate_embedding = tf.nn.embedding_lookup(self.predicate_embedding_layer, predicate_ids)
+        predicate_idx = self.parser.predicate_to_index[atom.predicate.name]
+        predicate_embedding = tf.nn.embedding_lookup(self.predicate_embedding_layer, [predicate_idx])
         walk_embedding = tf.expand_dims(predicate_embedding, 1)
 
         arg1_name, arg2_name = atom.arguments[0].name, atom.arguments[1].name
