@@ -110,7 +110,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr)
             violation_training_step = violation_finding_optimizer.minimize(- violation_loss, var_list=adversarial.parameters)
 
-        adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.VARIABLES, scope=adv_opt_scope_name)
+        adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
