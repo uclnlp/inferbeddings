@@ -67,6 +67,9 @@ class GroundLoss:
         atom_scores = [self._score_atom(atom, feed_dict) for atom in atoms]
         return min(atom_scores)
 
+    def zero_one_errors(self, clause, feed_dicts):
+        return sum([self.zero_one_error(clause, feed_dict) for feed_dict in feed_dicts])
+
     def zero_one_error(self, clause, feed_dict):
         """
         Compute the 0-1 loss of a clause w.r.t. of a variable assignment feed_dict

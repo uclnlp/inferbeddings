@@ -77,9 +77,14 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         return session.run(score, feed_dict={walk_inputs: args[0], entity_inputs: args[1]})
 
     loss_function = 0.0
+
+    adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     if adv_lr is not None:
-        adversarial = Adversarial(clauses=clauses, predicate_to_index=parser.predicate_to_index, entity_embedding_layer=entity_embedding_layer, predicate_embedding_layer=predicate_embedding_layer,
-                                  entity_embedding_size=entity_embedding_size, predicate_embedding_size=predicate_embedding_size,
+        adversarial = Adversarial(clauses=clauses, predicate_to_index=parser.predicate_to_index,
+                                  entity_embedding_layer=entity_embedding_layer,
+                                  predicate_embedding_layer=predicate_embedding_layer,
+                                  entity_embedding_size=entity_embedding_size,
+                                  predicate_embedding_size=predicate_embedding_size,
                                   similarity_function=similarity_function, model_class=model_class, margin=adv_margin)
 
         ground_loss = GroundLoss(clauses=clauses,
@@ -87,7 +92,13 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                  predicate_to_index=parser.predicate_to_index,
                                  scoring_function=scoring_function)
 
-        initialize_violators = tf.initialize_variables(var_list=adversarial.parameters, name='init_violators') if adv_restart else None
+        # For each clause, sample a list of 1024 {variable: entity} mappings
+        entity_indices = sorted({idx for idx in parser.entity_to_index.values()})
+        clause_to_feed_dicts = {clause: GroundLoss.sample_mappings(GroundLoss.get_variable_names(clause),
+                                                                   entities=entity_indices,
+                                                                   sample_size=1024) for clause in clauses}
+
+        initialize_violators = tf.variables_initializer(var_list=adversarial.parameters, name='init_violators') if adv_restart else None
         violation_errors, violation_loss = adversarial.errors, adversarial.loss
 
         adv_opt_scope_name = 'adversarial/optimizer'
@@ -96,7 +107,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             violation_training_step = violation_finding_optimizer.minimize(- violation_loss, var_list=adversarial.parameters)
 
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.VARIABLES, scope=adv_opt_scope_name)
-        adversarial_optimizer_variables_initializer = tf.initialize_variables(adversarial_optimizer_variables)
+        adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
 
@@ -126,11 +137,18 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # We enforce all entity embeddings to have an unitary norm.
     projection_steps = [constraints.renorm_update(entity_embedding_layer, norm=1.0)]
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
 
     session.run(init_op)
 
     for epoch in range(1, nb_epochs + 1):
+
+        if clause_to_feed_dicts is not None:
+            for clause_idx, clause in enumerate(clauses):
+                feed_dicts = clause_to_feed_dicts[clause]
+                nb_errors = ground_loss.zero_one_errors(clause=clause, feed_dicts=feed_dicts)
+                logger.info('Epoch: {}\tClause index: {}\tzero-one errors: {}'.format(epoch, clause_idx, nb_errors))
+
         order = random_state.permutation(nb_samples)
         Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
@@ -173,7 +191,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             for finding_epoch in range(1, adv_nb_epochs + 1):
                 _, violation_errors_value, violation_loss_value = session.run([violation_training_step, violation_errors, violation_loss])
-                logging.info('Epoch: {}\tViolated Clauses: {}\tViolation loss: {}'.format(epoch, int(violation_errors_value), round(violation_loss_value, 4)))
+                logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'.format(epoch, finding_epoch, int(violation_errors_value), round(violation_loss_value, 4)))
 
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
@@ -265,7 +283,7 @@ def main(argv):
     test_facts = [fact(s, p, o) for s, p, o in pos_test_triples] if pos_test_triples is not None else []
     test_facts_neg = [fact(s, p, o) for s, p, o in neg_test_triples] if neg_test_triples is not None else []
 
-    logger.info('#Training Triples: {}\t#Validation Triples: {}\t#Test Triples: {}'.format(len(train_facts), len(valid_facts), len(test_facts)))
+    logger.info('#Training Triples: {}, #Validation Triples: {}, #Test Triples: {}'.format(len(train_facts), len(valid_facts), len(test_facts)))
 
     parser = KnowledgeBaseParser(train_facts + valid_facts + test_facts)
 
