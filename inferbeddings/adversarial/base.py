@@ -61,7 +61,6 @@ class Adversarial:
         scoring_model = self.model_class(reuse_variables=True, **model_parameters)
         atom_score = scoring_model()
 
-        #atom_score = tf.contrib.graph_editor.graph_replace(self.score, {self.entity_embedding_layer: arg1_arg2_embeddings})
         return atom_score
 
     def _parse_conjunction(self, atoms, variable_name_to_layer):
