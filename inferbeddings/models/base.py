@@ -162,8 +162,8 @@ class ERMLP(BaseModel):
         return f_ijk
 
     def get_params(self):
-        params = super().get_params()
-        return params + [self.C, self.w]
+        params = super().get_params() + [self.C, self.w]
+        return params
 
 
 # Aliases
