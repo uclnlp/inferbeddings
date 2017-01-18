@@ -151,10 +151,13 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     for epoch in range(1, nb_epochs + 1):
 
         if clause_to_feed_dicts is not None:
+            sum_errors = 0
             for clause_idx, clause in enumerate(clauses):
                 feed_dicts = clause_to_feed_dicts[clause]
                 nb_errors = ground_loss.zero_one_errors(clause=clause, feed_dicts=feed_dicts)
-                logger.info('Epoch: {}\tClause index: {}\tzero-one errors: {}'.format(epoch, clause_idx, nb_errors))
+                logger.info('Epoch: {}\tClause index: {}\tZero-One Errors: {}'.format(epoch, clause_idx, nb_errors))
+                sum_errors += nb_errors
+            logger.info('Epoch: {}\tSum of Zero-One Errors: {}'.format(epoch, sum_errors))
 
         order = random_state.permutation(nb_samples)
         Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
