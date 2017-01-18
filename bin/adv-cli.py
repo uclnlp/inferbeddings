@@ -29,7 +29,8 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
-          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart):
+          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
+          clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart, adv_samples):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -93,13 +94,15 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     if adv_lr is not None:
         adversarial = Adversarial(clauses=clauses, parser=parser, predicate_embedding_layer=predicate_embedding_layer,
                                   model_class=model_class, model_parameters=model_parameters, margin=adv_margin)
-        ground_loss = GroundLoss(clauses=clauses, parser=parser, scoring_function=scoring_function)
 
-        # For each clause, sample a list of 1024 {variable: entity} mappings
-        entity_indices = sorted({idx for idx in parser.entity_to_index.values()})
-        clause_to_feed_dicts = {clause: GroundLoss.sample_mappings(GroundLoss.get_variable_names(clause),
-                                                                   entities=entity_indices,
-                                                                   sample_size=1024) for clause in clauses}
+        if adv_samples is not None:
+            ground_loss = GroundLoss(clauses=clauses, parser=parser, scoring_function=scoring_function)
+
+            # For each clause, sample a list of 1024 {variable: entity} mappings
+            entity_indices = sorted({idx for idx in parser.entity_to_index.values()})
+            clause_to_feed_dicts = {clause: GroundLoss.sample_mappings(GroundLoss.get_variable_names(clause),
+                                                                       entities=entity_indices,
+                                                                       sample_size=adv_samples) for clause in clauses}
 
         initialize_violators = tf.variables_initializer(var_list=adversarial.parameters, name='init_violators') if adv_restart else None
         violation_errors, violation_loss = adversarial.errors, adversarial.loss
@@ -245,6 +248,7 @@ def main(argv):
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
     argparser.add_argument('--adv-restart', '-R', action='store_true', help='Restart the optimization process for identifying the violators')
+    argparser.add_argument('--adv-samples', action='store', type=int, default=None, help='Number of samples on which to compute the ground loss')
 
     argparser.add_argument('--save', action='store', type=str, default=None, help='Path for saving the serialized model')
 
@@ -270,6 +274,7 @@ def main(argv):
     adv_lr, adv_nb_epochs = args.adv_lr, args.adv_nb_epochs
     adv_weight, adv_margin = args.adv_weight, args.adv_margin
     adv_restart = args.adv_restart
+    adv_samples = args.adv_samples
 
     save_path = args.save
 
@@ -322,7 +327,8 @@ def main(argv):
 
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
-                                          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart)
+                                          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
+                                          clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart, adv_samples)
 
         if save_path is not None:
             import pickle
