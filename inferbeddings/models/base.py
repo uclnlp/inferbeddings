@@ -10,16 +10,17 @@ import sys
 
 class BaseModel(metaclass=abc.ABCMeta):
     def __init__(self, entity_embeddings=None, predicate_embeddings=None, similarity_function=None,
-                 entity_embedding_size=None, predicate_embedding_size=None,
-                 reuse_variables=False):
+                 entity_embedding_size=None, predicate_embedding_size=None, reuse_variables=False,
+                 *args, **kwargs):
         """
-        Abstract class inheritedby all models.
+        Abstract class inherited by all models.
 
         :param entity_embeddings: (batch_size, 2, entity_embedding_size) Tensor.
         :param predicate_embeddings: (batch_size, walk_size, predicate_embedding_size) Tensor.
         :param similarity_function: similarity function.
         :param entity_embedding_size: size of the entity embeddings.
         :param predicate_embedding_size: size of the predicate embeddings.
+        :param reuse_variables: States whether the variables within the model need to be reused.
         """
         self.entity_embeddings = entity_embeddings
         self.predicate_embeddings = predicate_embeddings
@@ -133,7 +134,7 @@ class ComplexModel(BaseModel):
 
 
 class ERMLP(BaseModel):
-    def __init__(self, hidden_size=69, f=tf.tanh, *args, **kwargs):
+    def __init__(self, hidden_size=None, f=tf.tanh, *args, **kwargs):
         """
         Implementation of the ER-MLP model described in [1, 2]
 

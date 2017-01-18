@@ -28,7 +28,7 @@ from inferbeddings import evaluation
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
-def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size,
+def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart):
 
     index_gen = index.GlorotIndexGenerator()
@@ -77,7 +77,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         predicate_embeddings=predicate_embeddings,
         similarity_function=similarity_function,
         entity_embedding_size=entity_embedding_size,
-        predicate_embedding_size=predicate_embedding_size)
+        predicate_embedding_size=predicate_embedding_size,
+        hidden_size=hidden_size)
     model = model_class(**model_parameters)
 
     # Scoring function used for scoring arbitrary triples.
@@ -232,6 +233,7 @@ def main(argv):
 
     argparser.add_argument('--embedding-size', '--entity-embedding-size', '-k', action='store', type=int, default=10, help='Entity embedding size')
     argparser.add_argument('--predicate-embedding-size', '-p', action='store', type=int, default=None, help='Predicate embedding size')
+    argparser.add_argument('--hidden-size', '-H', action='store', type=int, default=None, help='Size of the hidden layer (if necessary, e.g. ER-MLP)')
 
     argparser.add_argument('--auc', '-a', action='store_true', help='Measure the predictive accuracy using AUC-PR and AUC-ROC')
     argparser.add_argument('--seed', '-S', action='store', type=int, default=0, help='Seed for the PRNG')
@@ -255,6 +257,7 @@ def main(argv):
     model_name, similarity_name = args.model, args.similarity
     loss_name, pairwise_loss_name = args.loss, args.pairwise_loss
     entity_embedding_size, predicate_embedding_size = args.embedding_size, args.predicate_embedding_size
+    hidden_size = args.hidden_size
 
     if predicate_embedding_size is None:
         predicate_embedding_size = entity_embedding_size
@@ -318,7 +321,7 @@ def main(argv):
     sess_config.gpu_options.allow_growth = True
 
     with tf.Session(config=sess_config) as session:
-        scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size,
+        scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser, clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart)
 
         if save_path is not None:
