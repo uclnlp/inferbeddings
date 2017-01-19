@@ -219,8 +219,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
 
 def main(argv):
-    def formatter(program_name):
-        return argparse.HelpFormatter(program_name, max_help_position=100, width=200)
+    def formatter(prog):
+        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
     argparser = argparse.ArgumentParser('Rule Injection via Adversarial Training', formatter_class=formatter)
 
@@ -253,7 +253,7 @@ def main(argv):
     argparser.add_argument('--adv-lr', '-L', action='store', type=float, default=None, help='Adversary learning rate')
 
     argparser.add_argument('--adversary-epochs', action='store', type=int, default=10, help='Adversary - number of training epochs')
-    argparser.add_argument('--discriminator-epochs', action='store', type=int, default=10, help='Discriminator - number of training epochs')
+    argparser.add_argument('--discriminator-epochs', action='store', type=int, default=1, help='Discriminator - number of training epochs')
 
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
