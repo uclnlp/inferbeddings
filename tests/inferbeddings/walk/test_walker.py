@@ -12,14 +12,9 @@ def test_walker():
     ]
 
     walkgen = BidirectionalWalker(triples=triples)
-    steps, [source, target] = walkgen(length=1)
+    walk = walkgen(length=1)
 
-    predicate, is_inverse = steps
-
-    if is_inverse is True:
-        assert((target, predicate, source) in triples)
-    else:
-        assert ((source, predicate, target) in triples)
+    assert len(walk) == 2
 
 
 if __name__ == '__main__':

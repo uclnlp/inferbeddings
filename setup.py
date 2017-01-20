@@ -13,6 +13,8 @@ setup(name='inferbeddings',
       license='MIT',
       install_requires=[
             'tensorflow>=0.8',
-            'parsimonious>=0.7'
+            'parsimonious>=0.7',
+            'terminaltables>=2.0',
+            'colorclass>=2.0'
       ],
       packages=find_packages())
