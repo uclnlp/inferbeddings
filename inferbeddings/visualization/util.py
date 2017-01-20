@@ -4,6 +4,7 @@ import numpy as np
 from colorclass import Color
 from terminaltables import SingleTable
 
+
 def hinton_diagram(arr, max_arr=None):
     max_arr = arr if max_arr is None else max_arr
     max_val = max(abs(np.max(max_arr)), abs(np.min(max_arr)))
