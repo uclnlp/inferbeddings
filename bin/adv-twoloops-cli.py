@@ -119,10 +119,11 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                         for adversarial_embedding_layer in adversarial.parameters]
 
     # Loss function to minimize by means of Stochastic Gradient Descent.
+    fact_loss = 0.0
     if loss_name is not None:
         loss = losses.get_function(loss_name)
         target = tf.cast((tf.range(0, limit=tf.shape(score)[0]) % 2) < 1, score.dtype)
-        loss_function += loss(score, target)
+        fact_loss += loss(score, target)
     else:
         # Transform the pairwise loss function in an unary loss function,
         # where each positive example is followed by a negative example.
@@ -133,7 +134,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             return unary_function
 
         pairwise_loss = pairwise_to_unary_modifier(pairwise_losses.get_function(pairwise_loss_name))
-        loss_function += pairwise_loss(score, margin=margin)
+        fact_loss += pairwise_loss(score, margin=margin)
+
+    loss_function += fact_loss
 
     # Optimization algorithm being used.
     optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
@@ -158,7 +161,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 sum_errors += nb_errors
             logger.info('Epoch: {}\tSum of Zero-One Errors: {}'.format(epoch, sum_errors))
 
-        for discriminator_epoch in range(1, discriminator_epochs + 1):
+        for disc_epoch in range(1, discriminator_epochs + 1):
             order = random_state.permutation(nb_samples)
             Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
@@ -166,7 +169,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
 
             batches = make_batches(nb_samples, batch_size)
-            loss_values = []
+            loss_values, fact_loss_values, violation_loss_values = [], [], []
 
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
@@ -182,17 +185,31 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
                 loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
 
-                _, loss_value = session.run([training_step, loss_function], feed_dict=loss_args)
+                if adv_lr is not None:
+                    _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function,
+                                                                                        fact_loss, violation_loss],
+                                                                                       feed_dict=loss_args)
+                else:
+                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
+                                                                 feed_dict=loss_args)
 
                 for projection_step in projection_steps:
                     session.run([projection_step])
 
                 loss_values += [loss_value / Xr_batch.shape[0]]
 
-            logger.info('Epoch: {}/{}\tLoss: {} ± {}'
-                        .format(epoch, discriminator_epoch,
-                                round(np.mean(loss_values), 4),
-                                round(np.std(loss_values), 4)))
+                fact_loss_values += [fact_loss_value]
+
+                if adv_lr is not None:
+                    violation_loss_values += [violation_loss_value]
+
+            def stats(values):
+                return '{} ± {}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+
+            logger.info('Epoch: {}/{}\tLoss: {}'.format(epoch, disc_epoch, stats(loss_values)))
+            logger.info('Epoch: {}/{}\tFact Loss: {}'.format(epoch, disc_epoch, stats(fact_loss_values)))
+            if adv_lr is not None:
+                logger.info('Epoch: {}/{}\tViolation Loss: {}'.format(epoch, disc_epoch, stats(violation_loss_values)))
 
         if adv_lr is not None:
             logger.info('Finding violators ..')

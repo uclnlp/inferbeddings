@@ -5,7 +5,7 @@ from inferbeddings.visualization.hinton import HintonDiagram
 
 
 def test_hinton_diagram():
-    rdata = np.random.randn(10, 50)
+    data = np.random.randn(10, 50)
     hd = HintonDiagram(is_terminal=False)
-    diagram = hd(rdata)
+    diagram = hd(data)
     assert len(diagram) == 6967
