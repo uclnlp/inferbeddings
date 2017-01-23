@@ -30,7 +30,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples):
+          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples, debug):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -148,6 +148,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     init_op = tf.global_variables_initializer()
 
+    prev_embedding_matrix = None
+
     session.run(init_op)
 
     for epoch in range(1, nb_epochs + 1):
@@ -221,11 +223,22 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             for finding_epoch in range(1, adversary_epochs + 1):
                 _, violation_errors_value, violation_loss_value = session.run([violation_training_step, violation_errors, violation_loss])
-                logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'
-                            .format(epoch, finding_epoch, int(violation_errors_value), round(violation_loss_value, 4)))
+
+                if finding_epoch == 1 or finding_epoch % 10 == 0:
+                    logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'
+                                .format(epoch, finding_epoch, int(violation_errors_value), round(violation_loss_value, 4)))
 
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
+
+        if debug:
+            from inferbeddings.visualization import HintonDiagram
+            embedding_matrix = session.run(predicate_embedding_layer)[1:, :]
+            print(HintonDiagram()(embedding_matrix))
+            if prev_embedding_matrix is not None:
+                diff = prev_embedding_matrix - embedding_matrix
+                logger.info('Epoch: {}, Update to Predicate Embeddings: {}'.format(epoch, np.abs(diff).sum()))
+            prev_embedding_matrix = embedding_matrix
 
     objects = {
         'entity_embedding_layer': entity_embedding_layer,
@@ -245,6 +258,8 @@ def main(argv):
     argparser.add_argument('--valid', '-v', action='store', type=str, default=None)
     argparser.add_argument('--test', '-T', action='store', type=str, default=None)
 
+    argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
+
     argparser.add_argument('--lr', '-l', action='store', type=float, default=0.1)
 
     argparser.add_argument('--nb-batches', '-b', action='store', type=int, default=10)
@@ -254,28 +269,38 @@ def main(argv):
     argparser.add_argument('--similarity', '-s', action='store', type=str, default='dot', help='Similarity function')
 
     argparser.add_argument('--loss', action='store', type=str, default=None, help='Loss function')
-    argparser.add_argument('--pairwise-loss', action='store', type=str, default='hinge_loss', help='Pairwise loss function')
+    argparser.add_argument('--pairwise-loss', action='store', type=str, default='hinge_loss',
+                           help='Pairwise loss function')
 
     argparser.add_argument('--margin', '-M', action='store', type=float, default=1.0, help='Margin')
 
-    argparser.add_argument('--embedding-size', '--entity-embedding-size', '-k', action='store', type=int, default=10, help='Entity embedding size')
-    argparser.add_argument('--predicate-embedding-size', '-p', action='store', type=int, default=None, help='Predicate embedding size')
-    argparser.add_argument('--hidden-size', '-H', action='store', type=int, default=None, help='Size of the hidden layer (if necessary, e.g. ER-MLP)')
+    argparser.add_argument('--embedding-size', '--entity-embedding-size', '-k', action='store', type=int, default=10,
+                           help='Entity embedding size')
+    argparser.add_argument('--predicate-embedding-size', '-p', action='store', type=int, default=None,
+                           help='Predicate embedding size')
+    argparser.add_argument('--hidden-size', '-H', action='store', type=int, default=None,
+                           help='Size of the hidden layer (if necessary, e.g. ER-MLP)')
 
-    argparser.add_argument('--auc', '-a', action='store_true', help='Measure the predictive accuracy using AUC-PR and AUC-ROC')
+    argparser.add_argument('--auc', '-a', action='store_true',
+                           help='Measure the predictive accuracy using AUC-PR and AUC-ROC')
     argparser.add_argument('--seed', '-S', action='store', type=int, default=0, help='Seed for the PRNG')
 
-    argparser.add_argument('--clauses', '-c', action='store', type=str, default=None, help='File containing background knowledge expressed as Horn clauses')
+    argparser.add_argument('--clauses', '-c', action='store', type=str, default=None,
+                           help='File containing background knowledge expressed as Horn clauses')
 
     argparser.add_argument('--adv-lr', '-L', action='store', type=float, default=None, help='Adversary learning rate')
 
-    argparser.add_argument('--adversary-epochs', action='store', type=int, default=10, help='Adversary - number of training epochs')
-    argparser.add_argument('--discriminator-epochs', action='store', type=int, default=1, help='Discriminator - number of training epochs')
+    argparser.add_argument('--adversary-epochs', action='store', type=int, default=10,
+                           help='Adversary - number of training epochs')
+    argparser.add_argument('--discriminator-epochs', action='store', type=int, default=1,
+                           help='Discriminator - number of training epochs')
 
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
-    argparser.add_argument('--adv-restart', '-R', action='store_true', help='Restart the optimization process for identifying the violators')
-    argparser.add_argument('--adv-samples', action='store', type=int, default=None, help='Number of samples on which to compute the ground loss')
+    argparser.add_argument('--adv-restart', '-R', action='store_true',
+                           help='Restart the optimization process for identifying the violators')
+    argparser.add_argument('--adv-samples', action='store', type=int, default=None,
+                           help='Number of samples on which to compute the ground loss')
 
     argparser.add_argument('--save', action='store', type=str, default=None, help='Path for saving the serialized model')
 
@@ -295,6 +320,7 @@ def main(argv):
 
     is_auc = args.auc
     seed = args.seed
+    debug = args.debug
 
     clauses_path = args.clauses
 
@@ -354,7 +380,7 @@ def main(argv):
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples)
+                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples, debug)
 
         if save_path is not None:
             import pickle
