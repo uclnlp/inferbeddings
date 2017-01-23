@@ -30,7 +30,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-          clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart, adv_samples):
+          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -73,13 +73,12 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     model_class = models.get_function(model_name)
 
-    model_parameters = dict(
-        entity_embeddings=entity_embeddings,
-        predicate_embeddings=predicate_embeddings,
-        similarity_function=similarity_function,
-        entity_embedding_size=entity_embedding_size,
-        predicate_embedding_size=predicate_embedding_size,
-        hidden_size=hidden_size)
+    model_parameters = dict(entity_embeddings=entity_embeddings,
+                            predicate_embeddings=predicate_embeddings,
+                            similarity_function=similarity_function,
+                            entity_embedding_size=entity_embedding_size,
+                            predicate_embedding_size=predicate_embedding_size,
+                            hidden_size=hidden_size)
     model = model_class(**model_parameters)
 
     # Scoring function used for scoring arbitrary triples.
@@ -116,14 +115,15 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
-
-        adversarial_projection_steps = [constraints.renorm_update(violation_layer, norm=1.0) for violation_layer in adversarial.parameters]
+        adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
+                                        for adversarial_embedding_layer in adversarial.parameters]
 
     # Loss function to minimize by means of Stochastic Gradient Descent.
+    fact_loss = 0.0
     if loss_name is not None:
         loss = losses.get_function(loss_name)
         target = tf.cast((tf.range(0, limit=tf.shape(score)[0]) % 2) < 1, score.dtype)
-        loss_function += loss(score, target)
+        fact_loss += loss(score, target)
     else:
         # Transform the pairwise loss function in an unary loss function,
         # where each positive example is followed by a negative example.
@@ -134,7 +134,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             return unary_function
 
         pairwise_loss = pairwise_to_unary_modifier(pairwise_losses.get_function(pairwise_loss_name))
-        loss_function += pairwise_loss(score, margin=margin)
+        fact_loss += pairwise_loss(score, margin=margin)
+
+    loss_function += fact_loss
 
     # Optimization algorithm being used.
     optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
@@ -159,37 +161,55 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 sum_errors += nb_errors
             logger.info('Epoch: {}\tSum of Zero-One Errors: {}'.format(epoch, sum_errors))
 
-        order = random_state.permutation(nb_samples)
-        Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
+        for disc_epoch in range(1, discriminator_epochs + 1):
+            order = random_state.permutation(nb_samples)
+            Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
-        Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
-        Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
+            Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
+            Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
 
-        batches = make_batches(nb_samples, batch_size)
-        loss_values = []
+            batches = make_batches(nb_samples, batch_size)
+            loss_values, fact_loss_values, violation_loss_values = [], [], []
 
-        for batch_start, batch_end in batches:
-            curr_batch_size = batch_end - batch_start
+            for batch_start, batch_end in batches:
+                curr_batch_size = batch_end - batch_start
 
-            Xr_batch = np.zeros((curr_batch_size * 4, Xr.shape[1]), dtype=Xr.dtype)
-            Xe_batch = np.zeros((curr_batch_size * 4, Xe.shape[1]), dtype=Xe.dtype)
+                Xr_batch = np.zeros((curr_batch_size * 4, Xr.shape[1]), dtype=Xr.dtype)
+                Xe_batch = np.zeros((curr_batch_size * 4, Xe.shape[1]), dtype=Xe.dtype)
 
-            Xr_batch[0::4, :] = Xr_batch[2::4, :] = Xr[batch_start:batch_end, :]
-            Xe_batch[0::4, :] = Xe_batch[2::4, :] = Xe[batch_start:batch_end, :]
+                Xr_batch[0::4, :] = Xr_batch[2::4, :] = Xr[batch_start:batch_end, :]
+                Xe_batch[0::4, :] = Xe_batch[2::4, :] = Xe[batch_start:batch_end, :]
 
-            Xr_batch[1::4, :], Xe_batch[1::4, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
-            Xr_batch[3::4, :], Xe_batch[3::4, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
+                Xr_batch[1::4, :], Xe_batch[1::4, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
+                Xr_batch[3::4, :], Xe_batch[3::4, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
 
-            loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
+                loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
 
-            _, loss_value = session.run([training_step, loss_function], feed_dict=loss_args)
+                if adv_lr is not None:
+                    _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function,
+                                                                                        fact_loss, violation_loss],
+                                                                                       feed_dict=loss_args)
+                else:
+                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
+                                                                 feed_dict=loss_args)
 
-            for projection_step in projection_steps:
-                session.run([projection_step])
+                for projection_step in projection_steps:
+                    session.run([projection_step])
 
-            loss_values += [loss_value / Xr_batch.shape[0]]
+                loss_values += [loss_value / Xr_batch.shape[0]]
 
-        logger.info('Epoch: {}\tLoss: {} ± {}'.format(epoch, round(np.mean(loss_values), 4), round(np.std(loss_values), 4)))
+                fact_loss_values += [fact_loss_value]
+
+                if adv_lr is not None:
+                    violation_loss_values += [violation_loss_value]
+
+            def stats(values):
+                return '{} ± {}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+
+            logger.info('Epoch: {}/{}\tLoss: {}'.format(epoch, disc_epoch, stats(loss_values)))
+            logger.info('Epoch: {}/{}\tFact Loss: {}'.format(epoch, disc_epoch, stats(fact_loss_values)))
+            if adv_lr is not None:
+                logger.info('Epoch: {}/{}\tViolation Loss: {}'.format(epoch, disc_epoch, stats(violation_loss_values)))
 
         if adv_lr is not None:
             logger.info('Finding violators ..')
@@ -199,9 +219,10 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
 
-            for finding_epoch in range(1, adv_nb_epochs + 1):
+            for finding_epoch in range(1, adversary_epochs + 1):
                 _, violation_errors_value, violation_loss_value = session.run([violation_training_step, violation_errors, violation_loss])
-                logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'.format(epoch, finding_epoch, int(violation_errors_value), round(violation_loss_value, 4)))
+                logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'
+                            .format(epoch, finding_epoch, int(violation_errors_value), round(violation_loss_value, 4)))
 
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
@@ -247,7 +268,10 @@ def main(argv):
     argparser.add_argument('--clauses', '-c', action='store', type=str, default=None, help='File containing background knowledge expressed as Horn clauses')
 
     argparser.add_argument('--adv-lr', '-L', action='store', type=float, default=None, help='Adversary learning rate')
-    argparser.add_argument('--adv-nb-epochs', '-E', action='store', type=int, default=10, help='Adversary number of training epochs')
+
+    argparser.add_argument('--adversary-epochs', action='store', type=int, default=10, help='Adversary - number of training epochs')
+    argparser.add_argument('--discriminator-epochs', action='store', type=int, default=1, help='Discriminator - number of training epochs')
+
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
     argparser.add_argument('--adv-restart', '-R', action='store_true', help='Restart the optimization process for identifying the violators')
@@ -274,10 +298,9 @@ def main(argv):
 
     clauses_path = args.clauses
 
-    adv_lr, adv_nb_epochs = args.adv_lr, args.adv_nb_epochs
-    adv_weight, adv_margin = args.adv_weight, args.adv_margin
-    adv_restart = args.adv_restart
-    adv_samples = args.adv_samples
+    adv_lr, adv_weight, adv_margin = args.adv_lr, args.adv_weight, args.adv_margin
+    adversary_epochs, discriminator_epochs = args.adversary_epochs, args.discriminator_epochs
+    adv_restart, adv_samples = args.adv_restart, args.adv_samples
 
     save_path = args.save
 
@@ -331,7 +354,7 @@ def main(argv):
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-                                          clauses, adv_lr, adv_nb_epochs, adv_weight, adv_margin, adv_restart, adv_samples)
+                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples)
 
         if save_path is not None:
             import pickle
