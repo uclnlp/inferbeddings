@@ -205,7 +205,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     session.run([projection_step])
 
                 loss_values += [loss_value / Xr_batch.shape[0]]
-
                 fact_loss_values += [fact_loss_value]
 
                 if adv_lr is not None:
@@ -244,7 +243,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             if prev_embedding_matrix is not None:
                 diff = prev_embedding_matrix - embedding_matrix
                 logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'
-                            .format(epoch, np.abs(diff).sum(),np.abs(embedding_matrix).sum()))
+                            .format(epoch, np.abs(diff).sum(), np.abs(embedding_matrix).sum()))
             prev_embedding_matrix = embedding_matrix
 
     objects = {

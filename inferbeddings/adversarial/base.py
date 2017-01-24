@@ -21,6 +21,7 @@ class Adversarial:
 
         self.model_class, self.model_parameters = model_class, model_parameters
         self.loss_function, self.loss_margin = loss_function, loss_margin
+
         self.batch_size = batch_size
 
         if self.loss_function is None:
@@ -44,8 +45,8 @@ class Adversarial:
         return the symbolic score of the atom.
         """
         predicate_idx = self.parser.predicate_to_index[atom.predicate.name]
-        predicate_embedding = tf.nn.embedding_lookup(self.predicate_embedding_layer, [predicate_idx])
-        walk_embedding = tf.expand_dims(predicate_embedding, 1)
+        # [1 x 1 x embedding_size] tensor
+        walk_embeddings = tf.nn.embedding_lookup(self.predicate_embedding_layer, [[predicate_idx]])
 
         arg1_name, arg2_name = atom.arguments[0].name, atom.arguments[1].name
         arg1_layer, arg2_layer = variable_name_to_layer[arg1_name], variable_name_to_layer[arg2_name]
@@ -54,7 +55,7 @@ class Adversarial:
 
         model_parameters = self.model_parameters
         model_parameters['entity_embeddings'] = arg1_arg2_embeddings
-        model_parameters['predicate_embeddings'] = walk_embedding
+        model_parameters['predicate_embeddings'] = walk_embeddings
 
         scoring_model = self.model_class(reuse_variables=True, **model_parameters)
         atom_score = scoring_model()
@@ -85,6 +86,7 @@ class Adversarial:
         # Instantiate a new layer for each variable
         variable_name_to_layer = dict()
         for variable_name in variable_names:
+            # [1, embedding_size] variable
             variable_layer = tf.get_variable('{}_{}_violator'.format(name, variable_name),
                                              shape=[1, self.entity_embedding_size],
                                              initializer=tf.contrib.layers.xavier_initializer())
