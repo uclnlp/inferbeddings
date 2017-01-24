@@ -45,12 +45,13 @@ class Adversarial:
         return the symbolic score of the atom.
         """
         predicate_idx = self.parser.predicate_to_index[atom.predicate.name]
-        # [1 x 1 x embedding_size] tensor
-        walk_embeddings = tf.nn.embedding_lookup(self.predicate_embedding_layer, [[predicate_idx]])
-
+        # [batch_size x 1 x embedding_size] tensor
+        walk_embeddings = tf.nn.embedding_lookup(self.predicate_embedding_layer, [[predicate_idx]] * self.batch_size)
         arg1_name, arg2_name = atom.arguments[0].name, atom.arguments[1].name
-        arg1_layer, arg2_layer = variable_name_to_layer[arg1_name], variable_name_to_layer[arg2_name]
 
+        # [batch_size x embedding_size] variables
+        arg1_layer, arg2_layer = variable_name_to_layer[arg1_name], variable_name_to_layer[arg2_name]
+        # [batch_size x 2 x embedding_size] tensor
         arg1_arg2_embeddings = tf.concat(1, [tf.expand_dims(arg1_layer, 1), tf.expand_dims(arg2_layer, 1)])
 
         model_parameters = self.model_parameters
@@ -86,9 +87,9 @@ class Adversarial:
         # Instantiate a new layer for each variable
         variable_name_to_layer = dict()
         for variable_name in variable_names:
-            # [1, embedding_size] variable
+            # [batch_size, embedding_size] variable
             variable_layer = tf.get_variable('{}_{}_violator'.format(name, variable_name),
-                                             shape=[1, self.entity_embedding_size],
+                                             shape=[self.batch_size, self.entity_embedding_size],
                                              initializer=tf.contrib.layers.xavier_initializer())
             variable_name_to_layer[variable_name] = variable_layer
 
