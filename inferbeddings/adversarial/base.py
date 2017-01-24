@@ -12,25 +12,23 @@ class Adversarial:
     Utility class for, given a set of clauses, computing the symbolic violation loss.
     """
     def __init__(self, clauses, parser, predicate_embedding_layer,
-                 model_class, model_parameters, loss_function=None, margin=0.0):
-        self.clauses = clauses
-        self.parser = parser
+                 model_class, model_parameters, loss_function=None, loss_margin=0.0, batch_size=1):
 
+        self.clauses, self.parser = clauses, parser
         self.predicate_embedding_layer = predicate_embedding_layer
 
         self.entity_embedding_size = model_parameters['entity_embedding_size']
 
-        self.model_class = model_class
-        self.model_parameters = model_parameters
+        self.model_class, self.model_parameters = model_class, model_parameters
+        self.loss_function, self.loss_margin = loss_function, loss_margin
+        self.batch_size = batch_size
 
-        self.loss_function = loss_function
-        self.loss_margin = margin
         if self.loss_function is None:
-            # Default violation loss
-            self.loss_function = lambda bs, hs: pairwise_losses.hinge_loss(hs, bs, margin=margin)
+            # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
+            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores,
+                                                                                             margin=self.loss_margin)
 
-        self.errors = 0
-        self.loss = 0
+        self.errors, self.loss = 0, 0
         self.parameters = []
 
         for clause_idx, clause in enumerate(clauses):

@@ -7,10 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 class GroundLoss:
-    def __init__(self, clauses, parser, scoring_function):
+    def __init__(self, clauses, parser, scoring_function, tolerance=0.0):
         self.clauses = clauses
         self.parser = parser
         self.scoring_function = scoring_function
+        self.tolerance = tolerance
 
     @staticmethod
     def get_variable_names(clause):
@@ -42,8 +43,10 @@ class GroundLoss:
         rs = np.random.RandomState(0 if seed is None else seed)
         nb_entities, nb_variables, np_entities = len(entities), len(variables), np.array(entities)
         tuple_set, sample_size = set(), min(nb_entities ** nb_variables, sample_size)
+
         while len(tuple_set) < sample_size:
             tuple_set |= {tuple(value for value in np_entities[rs.choice(nb_entities, nb_variables)])}
+
         return [GroundLoss.__tuple_to_mapping(variables, _tuple) for _tuple in tuple_set]
 
     def __entity_to_idx(self, entity):
@@ -79,4 +82,4 @@ class GroundLoss:
         head, body = clause.head, clause.body
         score_head = self._score_atom(head, feed_dict)
         score_body = self._score_conjunction(body, feed_dict)
-        return int(not score_body <= score_head)
+        return int(not ((score_body - self.tolerance) <= score_head))
