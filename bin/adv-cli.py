@@ -30,7 +30,8 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples, debug):
+          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples,
+          predicate_l2, predicate_norm, debug):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -136,6 +137,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         pairwise_loss = pairwise_to_unary_modifier(pairwise_losses.get_function(pairwise_loss_name))
         fact_loss += pairwise_loss(score, margin=margin)
 
+    if predicate_l2 is not None:
+        fact_loss += tf.nn.l2_loss(predicate_embedding_layer)
+
     loss_function += fact_loss
 
     # Optimization algorithm being used.
@@ -145,6 +149,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     # We enforce all entity embeddings to have an unitary norm.
     projection_steps = [constraints.renorm_update(entity_embedding_layer, norm=1.0)]
+    if predicate_norm is not None:
+        projection_steps += [constraints.renorm_update(predicate_embedding_layer, norm=predicate_norm)]
 
     init_op = tf.global_variables_initializer()
 
@@ -237,7 +243,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             print(HintonDiagram()(embedding_matrix))
             if prev_embedding_matrix is not None:
                 diff = prev_embedding_matrix - embedding_matrix
-                logger.info('Epoch: {}, Update to Predicate Embeddings: {}'.format(epoch, np.abs(diff).sum()))
+                logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'
+                            .format(epoch, np.abs(diff).sum(),np.abs(embedding_matrix).sum()))
             prev_embedding_matrix = embedding_matrix
 
     objects = {
@@ -281,6 +288,11 @@ def main(argv):
     argparser.add_argument('--hidden-size', '-H', action='store', type=int, default=None,
                            help='Size of the hidden layer (if necessary, e.g. ER-MLP)')
 
+    argparser.add_argument('--predicate-l2', action='store', type=float, default=None,
+                           help='Weight of the L2 regularization term on the predicate embeddings')
+    argparser.add_argument('--predicate-norm', action='store', type=float, default=None,
+                           help='Norm of the predicate embeddings')
+
     argparser.add_argument('--auc', '-a', action='store_true',
                            help='Measure the predictive accuracy using AUC-PR and AUC-ROC')
     argparser.add_argument('--seed', '-S', action='store', type=int, default=0, help='Seed for the PRNG')
@@ -314,6 +326,8 @@ def main(argv):
     loss_name, pairwise_loss_name = args.loss, args.pairwise_loss
     entity_embedding_size, predicate_embedding_size = args.embedding_size, args.predicate_embedding_size
     hidden_size = args.hidden_size
+
+    predicate_l2, predicate_norm = args.predicate_l2, args.predicate_norm
 
     if predicate_embedding_size is None:
         predicate_embedding_size = entity_embedding_size
@@ -380,7 +394,8 @@ def main(argv):
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples, debug)
+                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart, adv_samples,
+                                          predicate_l2, predicate_norm, debug)
 
         if save_path is not None:
             import pickle

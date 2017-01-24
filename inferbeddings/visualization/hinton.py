@@ -25,7 +25,7 @@ class HintonDiagram:
 
     @staticmethod
     def _hinton_diagram_value(val, max_val):
-        chars = [' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
+        chars = [' ', '▁', '▂', '▃', '▄', '▅'] #, '▆', '▇', '█']
         # chars = [' ', '·', '▪', '■', '█']
         if abs(abs(val) - max_val) < 1e-8:
             step = len(chars) - 1
