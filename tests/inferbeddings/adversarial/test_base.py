@@ -97,8 +97,9 @@ def _test_adversarial():
 
         assert int(errors_value) == np.sum((head_scores < body_scores).astype(int))
 
-        np_loss_values = np.sum((body_scores - head_scores) * (body_scores > head_scores))
-        assert np.abs(loss_value - np_loss_values) < 1e-4
+        linear_losses = body_scores - head_scores
+        np_loss_values = np.sum(linear_losses * (linear_losses > 0))
+        assert np.abs(loss_value - np_loss_values) < 1e-3
 
     tf.reset_default_graph()
 
