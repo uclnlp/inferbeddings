@@ -55,7 +55,16 @@ def test_adversarial():
                               model_parameters=model_parameters,
                               batch_size=batch_size)
 
+    init_op = tf.global_variables_initializer()
 
+    with tf.Session() as session:
+        session.run(init_op)
+
+        assert len(adversarial.parameters) == 2
+
+        for violating_embeddings in adversarial.parameters:
+            shape = session.run(tf.shape(violating_embeddings))
+            assert (shape == (batch_size, entity_embedding_size)).all()
 
 if __name__ == '__main__':
     pytest.main([__file__])
