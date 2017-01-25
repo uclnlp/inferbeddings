@@ -2,6 +2,7 @@
 
 import pytest
 
+import numpy as np
 import tensorflow as tf
 
 from inferbeddings.knowledgebase import Fact, KnowledgeBaseParser
@@ -13,6 +14,11 @@ from inferbeddings.adversarial import Adversarial
 
 
 def test_adversarial():
+    for _ in range(32):
+        _test_adversarial()
+
+
+def _test_adversarial():
     triples = [
         ('john', 'friendOf', 'mark'),
         ('mark', 'friendOf', 'aleksi'),
@@ -39,14 +45,14 @@ def test_adversarial():
                                                 shape=[nb_predicates + 1, predicate_embedding_size],
                                                 initializer=tf.contrib.layers.xavier_initializer())
 
-    model_class = models.get_function('DistMult')
+    model_class = models.get_function('TransE')
 
-    similarity_function = similarities.get_function('dot')
+    similarity_function = similarities.get_function('l1')
     model_parameters = dict(similarity_function=similarity_function,
                             entity_embedding_size=entity_embedding_size,
                             predicate_embedding_size=predicate_embedding_size)
 
-    batch_size = 10
+    batch_size = 1000
 
     adversarial = Adversarial(clauses=clauses,
                               parser=parser,
@@ -59,12 +65,40 @@ def test_adversarial():
 
     with tf.Session() as session:
         session.run(init_op)
-
         assert len(adversarial.parameters) == 2
-
         for violating_embeddings in adversarial.parameters:
             shape = session.run(tf.shape(violating_embeddings))
             assert (shape == (batch_size, entity_embedding_size)).all()
+
+        loss_value = session.run(adversarial.loss)
+        errors_value = session.run(adversarial.errors)
+
+        var1 = adversarial.parameters[0]
+        var2 = adversarial.parameters[1]
+
+        if var1.name == 'clause_0_X_violator:0':
+            varX = var1
+            varY = var2
+        else:
+            varX = var2
+            varY = var1
+
+        X_values = session.run(varX)
+        Y_values = session.run(varY)
+
+        p_value = session.run(tf.nn.embedding_lookup(predicate_embedding_layer, 1))
+
+        assert np.array(X_values.shape == (batch_size, entity_embedding_size)).all()
+        assert np.array(Y_values.shape == (batch_size, entity_embedding_size)).all()
+        assert np.array(p_value.shape == (predicate_embedding_size,))
+
+        head_scores = - np.sum(np.abs((X_values + p_value) - Y_values), axis=1)
+        body_scores = - np.sum(np.abs((Y_values + p_value) - X_values), axis=1)
+
+        print(errors_value)
+        assert int(errors_value) == np.sum((head_scores < body_scores).astype(int))
+
+    tf.reset_default_graph()
 
 if __name__ == '__main__':
     pytest.main([__file__])
