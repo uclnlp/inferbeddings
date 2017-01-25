@@ -31,7 +31,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
-          adv_batch_size, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug):
+          adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -216,6 +216,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             logger.info('Epoch: {0}/{1}\tLoss: {2}'.format(epoch, disc_epoch, stats(loss_values)))
             logger.info('Epoch: {0}/{1}\tFact Loss: {2:.4f}'.format(epoch, disc_epoch, fact_loss_values))
+
             if adv_lr is not None:
                 logger.info('Epoch: {0}/{1}\tViolation Loss: {2}'.format(epoch, disc_epoch, stats(violation_loss_values)))
 
@@ -223,6 +224,22 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             logger.info('Finding violators ..')
 
             session.run([initialize_violators, adversarial_optimizer_variables_initializer])
+
+            if adv_init_ground:
+                # Initialize the violating embeddings using real embeddings
+                def ground_init_op(violating_embeddings):
+                    # Select adv_batch_size random entity indices - first collect all entity indices
+                    _entity_indices = np.array(sorted(parser.index_to_entity.keys()))
+                    # Then select a subset of such indices
+                    rnd_entity_indices_idx = random_state.randint(low=0, high=len(_entity_indices), size=adv_batch_size)
+                    rnd_entity_indices = _entity_indices[rnd_entity_indices_idx]
+                    # Assign the embeddings of the entities at such indices to the violating embeddings
+                    _entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, rnd_entity_indices)
+                    return violating_embeddings.assign(_entity_embeddings)
+
+                assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
+                session.run(assignment_ops)
+
             for projection_step in adversarial_projection_steps:
                 session.run([projection_step])
 
@@ -245,12 +262,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             if prev_embedding_matrix is not None:
                 diff = prev_embedding_matrix - embedding_matrix
-                logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'
-                            .format(epoch, np.abs(diff).sum(), np.abs(embedding_matrix).sum()))
+                logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'.format(epoch, np.abs(diff).sum(), np.abs(embedding_matrix).sum()))
 
             prev_embedding_matrix = embedding_matrix
-
-            print([session.run(tf.shape(p)) for p in adversarial.parameters])
 
     objects = {
         'entity_embedding_layer': entity_embedding_layer,
@@ -317,6 +331,8 @@ def main(argv):
 
     argparser.add_argument('--adv-batch-size', action='store', type=int, default=1,
                            help='Size of the batch of adversarial examples to use')
+    argparser.add_argument('--adv-init-ground', action='store_true',
+                           help='Initialize adversarial embeddings using real entity embeddings')
 
     argparser.add_argument('--adv-ground-samples', action='store', type=int, default=None,
                            help='Number of ground samples on which to compute the ground loss')
@@ -350,7 +366,7 @@ def main(argv):
     adv_lr, adv_weight, adv_margin = args.adv_lr, args.adv_weight, args.adv_margin
     adversary_epochs, discriminator_epochs = args.adversary_epochs, args.discriminator_epochs
     adv_ground_samples, adv_ground_tol = args.adv_ground_samples, args.adv_ground_tol
-    adv_batch_size = args.adv_batch_size
+    adv_batch_size, adv_init_ground = args.adv_batch_size, args.adv_init_ground
 
     save_path = args.save
 
@@ -405,7 +421,8 @@ def main(argv):
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
                                           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
-                                          adv_batch_size, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug)
+                                          adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
+                                          predicate_l2, predicate_norm, debug)
 
         if save_path is not None:
             import pickle
