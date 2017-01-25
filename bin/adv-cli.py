@@ -30,7 +30,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart,
+          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
           adv_batch_size, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug):
 
     index_gen = index.GlorotIndexGenerator()
@@ -105,7 +105,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                                                        entities=entity_indices,
                                                                        sample_size=adv_ground_samples) for clause in clauses}
 
-        initialize_violators = tf.variables_initializer(var_list=adversarial.parameters, name='init_violators') if adv_restart else None
+        initialize_violators = tf.variables_initializer(var_list=adversarial.parameters, name='init_violators')
         violation_errors, violation_loss = adversarial.errors, adversarial.loss
 
         adv_opt_scope_name = 'adversarial/optimizer'
@@ -222,10 +222,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         if adv_lr is not None:
             logger.info('Finding violators ..')
 
-            if adv_restart:
-                session.run([initialize_violators, adversarial_optimizer_variables_initializer])
-                for projection_step in adversarial_projection_steps:
-                    session.run([projection_step])
+            session.run([initialize_violators, adversarial_optimizer_variables_initializer])
+            for projection_step in adversarial_projection_steps:
+                session.run([projection_step])
 
             for finding_epoch in range(1, adversary_epochs + 1):
                 _, violation_errors_value, violation_loss_value = session.run([violation_training_step, violation_errors, violation_loss])
@@ -240,12 +239,18 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         if debug:
             from inferbeddings.visualization import HintonDiagram
             embedding_matrix = session.run(predicate_embedding_layer)[1:, :]
-            print(HintonDiagram()(embedding_matrix))
+
+            hinton_diagram = HintonDiagram()
+            print(hinton_diagram(embedding_matrix))
+
             if prev_embedding_matrix is not None:
                 diff = prev_embedding_matrix - embedding_matrix
                 logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'
                             .format(epoch, np.abs(diff).sum(), np.abs(embedding_matrix).sum()))
+
             prev_embedding_matrix = embedding_matrix
+
+            print([session.run(tf.shape(p)) for p in adversarial.parameters])
 
     objects = {
         'entity_embedding_layer': entity_embedding_layer,
@@ -310,10 +315,6 @@ def main(argv):
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
 
-    # TODO: get rid of this flag (restarting should be done by default)
-    argparser.add_argument('--adv-restart', '-R', action='store_true',
-                           help='Restart the optimization process for identifying the violators')
-
     argparser.add_argument('--adv-batch-size', action='store', type=int, default=1,
                            help='Size of the batch of adversarial examples to use')
 
@@ -348,7 +349,7 @@ def main(argv):
 
     adv_lr, adv_weight, adv_margin = args.adv_lr, args.adv_weight, args.adv_margin
     adversary_epochs, discriminator_epochs = args.adversary_epochs, args.discriminator_epochs
-    adv_restart, adv_ground_samples, adv_ground_tol = args.adv_restart, args.adv_ground_samples, args.adv_ground_tol
+    adv_ground_samples, adv_ground_tol = args.adv_ground_samples, args.adv_ground_tol
     adv_batch_size = args.adv_batch_size
 
     save_path = args.save
@@ -403,7 +404,7 @@ def main(argv):
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
-                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart,
+                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
                                           adv_batch_size, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug)
 
         if save_path is not None:
