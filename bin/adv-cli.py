@@ -31,7 +31,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart,
-          adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug):
+          adv_batch_size, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug):
 
     index_gen = index.GlorotIndexGenerator()
     neg_idxs = np.arange(nb_entities)
@@ -93,7 +93,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     if adv_lr is not None:
         adversarial = Adversarial(clauses=clauses, parser=parser, predicate_embedding_layer=predicate_embedding_layer,
-                                  model_class=model_class, model_parameters=model_parameters, loss_margin=adv_margin)
+                                  model_class=model_class, model_parameters=model_parameters, loss_margin=adv_margin,
+                                  batch_size=adv_batch_size)
 
         if adv_ground_samples is not None:
             ground_loss = GroundLoss(clauses=clauses, parser=parser, scoring_function=scoring_function, tolerance=adv_ground_tol)
@@ -177,7 +178,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
 
             batches = make_batches(nb_samples, batch_size)
-            loss_values, fact_loss_values, violation_loss_values = [], [], []
+            loss_values, violation_loss_values = [], []
+            fact_loss_values = 0
 
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
@@ -194,8 +196,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
 
                 if adv_lr is not None:
-                    _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function,
-                                                                                        fact_loss, violation_loss],
+                    _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function, fact_loss, violation_loss],
                                                                                        feed_dict=loss_args)
                 else:
                     _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
@@ -205,18 +206,18 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     session.run([projection_step])
 
                 loss_values += [loss_value / Xr_batch.shape[0]]
-                fact_loss_values += [fact_loss_value]
+                fact_loss_values += fact_loss_value
 
                 if adv_lr is not None:
                     violation_loss_values += [violation_loss_value]
 
             def stats(values):
-                return '{} ± {}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+                return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
 
-            logger.info('Epoch: {}/{}\tLoss: {}'.format(epoch, disc_epoch, stats(loss_values)))
-            logger.info('Epoch: {}/{}\tFact Loss: {}'.format(epoch, disc_epoch, stats(fact_loss_values)))
+            logger.info('Epoch: {0}/{1}\tLoss: {2}'.format(epoch, disc_epoch, stats(loss_values)))
+            logger.info('Epoch: {0}/{1}\tFact Loss: {2:.4f}'.format(epoch, disc_epoch, fact_loss_values))
             if adv_lr is not None:
-                logger.info('Epoch: {}/{}\tViolation Loss: {}'.format(epoch, disc_epoch, stats(violation_loss_values)))
+                logger.info('Epoch: {0}/{1}\tViolation Loss: {2}'.format(epoch, disc_epoch, stats(violation_loss_values)))
 
         if adv_lr is not None:
             logger.info('Finding violators ..')
@@ -308,8 +309,13 @@ def main(argv):
 
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
+
+    # TODO: get rid of this flag (restarting should be done by default)
     argparser.add_argument('--adv-restart', '-R', action='store_true',
                            help='Restart the optimization process for identifying the violators')
+
+    argparser.add_argument('--adv-batch-size', action='store', type=int, default=1,
+                           help='Size of the batch of adversarial examples to use')
 
     argparser.add_argument('--adv-ground-samples', action='store', type=int, default=None,
                            help='Number of ground samples on which to compute the ground loss')
@@ -343,6 +349,7 @@ def main(argv):
     adv_lr, adv_weight, adv_margin = args.adv_lr, args.adv_weight, args.adv_margin
     adversary_epochs, discriminator_epochs = args.adversary_epochs, args.discriminator_epochs
     adv_restart, adv_ground_samples, adv_ground_tol = args.adv_restart, args.adv_ground_samples, args.adv_ground_tol
+    adv_batch_size = args.adv_batch_size
 
     save_path = args.save
 
@@ -397,7 +404,7 @@ def main(argv):
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
                                           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin, adv_restart,
-                                          adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug)
+                                          adv_batch_size, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug)
 
         if save_path is not None:
             import pickle
