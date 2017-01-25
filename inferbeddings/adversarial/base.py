@@ -20,16 +20,18 @@ class Adversarial:
         self.entity_embedding_size = model_parameters['entity_embedding_size']
 
         self.model_class, self.model_parameters = model_class, model_parameters
-        self.loss_function, self.loss_margin = loss_function, loss_margin
+        self.loss_function = loss_function
 
         self.batch_size = batch_size
 
         if self.loss_function is None:
             # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
-            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores,
-                                                                                             margin=self.loss_margin)
+            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores, margin=loss_margin)
 
-        self.errors, self.loss = 0, 0
+        # Symbolic functions computing the number of ground errors and the continuous loss
+        self.errors, self.loss = 0, .0
+
+        # Trainable parameters of the adversarial model
         self.parameters = []
 
         for clause_idx, clause in enumerate(clauses):
