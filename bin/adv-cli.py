@@ -229,13 +229,12 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 # Initialize the violating embeddings using real embeddings
                 def ground_init_op(violating_embeddings):
                     # Select adv_batch_size random entity indices - first collect all entity indices
-                    _entity_indices = np.array(sorted(parser.index_to_entity.keys()))
-                    # Then select a subset of such indices
-                    rnd_entity_indices_idx = random_state.randint(low=0, high=len(_entity_indices), size=adv_batch_size)
-                    rnd_entity_indices = _entity_indices[rnd_entity_indices_idx]
+                    _ent_indices = np.array(sorted(parser.index_to_entity.keys()))
+                    # Then select a subset of size adv_batch_size of such indices
+                    rnd_ent_indices = _ent_indices[random_state.randint(low=0, high=len(_ent_indices), size=adv_batch_size)]
                     # Assign the embeddings of the entities at such indices to the violating embeddings
-                    _entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, rnd_entity_indices)
-                    return violating_embeddings.assign(_entity_embeddings)
+                    _ent_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, rnd_ent_indices)
+                    return violating_embeddings.assign(_ent_embeddings)
 
                 assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
                 session.run(assignment_ops)
@@ -254,10 +253,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     session.run([projection_step])
 
         if debug:
-            from inferbeddings.visualization import HintonDiagram
+            from inferbeddings.visualization import hinton_diagram
             embedding_matrix = session.run(predicate_embedding_layer)[1:, :]
-
-            hinton_diagram = HintonDiagram()
             print(hinton_diagram(embedding_matrix))
 
             if prev_embedding_matrix is not None:
