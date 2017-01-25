@@ -76,15 +76,8 @@ def _test_adversarial():
         var1 = adversarial.parameters[0]
         var2 = adversarial.parameters[1]
 
-        if var1.name == 'clause_0_X_violator:0':
-            varX = var1
-            varY = var2
-        else:
-            varX = var2
-            varY = var1
-
-        X_values = session.run(varX)
-        Y_values = session.run(varY)
+        X_values = session.run(var1 if "X" in var1.name else var2)
+        Y_values = session.run(var2 if "Y" in var2.name else var1)
 
         p_value = session.run(tf.nn.embedding_lookup(predicate_embedding_layer, 1))
 
