@@ -2,18 +2,16 @@
 
 from parsimonious.grammar import Grammar, NodeVisitor
 
-grammar = Grammar(
-    """
+grammar = Grammar("""
     clause      = atom ( ":-" _ atom_list)?
     atom_list   = atom  ("," _ atom_list)? _
     atom        = neg? predicate "(" _ term_list ")" _
     neg         = "!" _
     term_list   = term  ("," _ term_list)? _
     term        = constant / variable
-    predicate   = low_high_id / string
+    predicate   = low_id / string
     constant    = low_id / string
     variable    = ~"[A-Z][a-z A-Z 0-9_]*"
-    low_high_id = ~"[a-zA-Z_./][a-z A-Z 0-9_./]*"
     low_id      = ~"[a-z_./][a-z A-Z 0-9_./]*"
     string      = ~r"'[^']*'" / ~r"\\"[^\\"]*\\""
     _           = skip*
