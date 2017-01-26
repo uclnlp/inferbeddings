@@ -91,6 +91,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     loss_function = 0.0
 
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
+    initialize_violators, adversarial_optimizer_variables_initializer = None, None
+
     if adv_lr is not None:
         adversarial = Adversarial(clauses=clauses, parser=parser, predicate_embedding_layer=predicate_embedding_layer,
                                   model_class=model_class, model_parameters=model_parameters, loss_margin=adv_margin,
@@ -156,7 +158,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     init_op = tf.global_variables_initializer()
 
     prev_embedding_matrix = None
-    initialize_violators, adversarial_optimizer_variables_initializer = None, None
 
     session.run(init_op)
 
