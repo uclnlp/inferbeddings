@@ -415,7 +415,8 @@ def main(argv):
     sess_config.gpu_options.allow_growth = True
 
     with tf.Session(config=sess_config) as session:
-        scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
+        scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name,
+                                          entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
                                           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
                                           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
@@ -461,7 +462,6 @@ def main(argv):
                 evaluation.evaluate_auc(scoring_function, test_triples, test_triples_neg, nb_entities, nb_predicates, tag='test')
             else:
                 evaluation.evaluate_ranks(scoring_function, test_triples, nb_entities, true_triples=true_triples, tag='test')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
