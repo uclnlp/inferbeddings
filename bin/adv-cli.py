@@ -156,6 +156,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     init_op = tf.global_variables_initializer()
 
     prev_embedding_matrix = None
+    initialize_violators, adversarial_optimizer_variables_initializer = None, None
 
     session.run(init_op)
 
@@ -179,7 +180,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             batches = make_batches(nb_samples, batch_size)
             loss_values, violation_loss_values = [], []
-            fact_loss_values = 0
+            total_fact_loss_value = 0
 
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
@@ -198,24 +199,22 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 if adv_lr is not None:
                     _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function, fact_loss, violation_loss],
                                                                                        feed_dict=loss_args)
+                    violation_loss_values += [violation_loss_value]
                 else:
                     _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
                                                                  feed_dict=loss_args)
 
+                loss_values += [loss_value / Xr_batch.shape[0]]
+                total_fact_loss_value += fact_loss_value
+
                 for projection_step in projection_steps:
                     session.run([projection_step])
-
-                loss_values += [loss_value / Xr_batch.shape[0]]
-                fact_loss_values += fact_loss_value
-
-                if adv_lr is not None:
-                    violation_loss_values += [violation_loss_value]
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
 
             logger.info('Epoch: {0}/{1}\tLoss: {2}'.format(epoch, disc_epoch, stats(loss_values)))
-            logger.info('Epoch: {0}/{1}\tFact Loss: {2:.4f}'.format(epoch, disc_epoch, fact_loss_values))
+            logger.info('Epoch: {0}/{1}\tFact Loss: {2:.4f}'.format(epoch, disc_epoch, total_fact_loss_value))
 
             if adv_lr is not None:
                 logger.info('Epoch: {0}/{1}\tViolation Loss: {2}'.format(epoch, disc_epoch, stats(violation_loss_values)))
