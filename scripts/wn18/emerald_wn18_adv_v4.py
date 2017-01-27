@@ -77,7 +77,7 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/wn18_adv_v3/'
+    path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/wn18_adv_v4/'
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
@@ -89,7 +89,7 @@ def main(argv):
                 completed = '### MICRO (test filtered)' in content
 
         if not completed:
-            file_name = 'wn18_adv_v2_{}.job'.format(job_id)
+            file_name = 'wn18_adv_v4_{}.job'.format(job_id)
             line = '{} >> {} 2>&1'.format(to_cmd(cfg, args.path), logfile)
 
             if args.debug:
