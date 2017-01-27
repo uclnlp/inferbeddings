@@ -95,7 +95,9 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                alias = """alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)""""
+                alias = """
+alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)
+"""
 
                 job_script = '#BSUB -W 2:00\n' \
                              '{}\n' \
@@ -106,3 +108,7 @@ def main(argv):
 
                 with open(file_name, 'w') as f:
                     f.write(job_script)
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])
