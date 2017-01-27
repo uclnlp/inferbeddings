@@ -4,6 +4,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 requirements = [
+      'pytest'
       'tensorflow>=0.8',
       'scikit-learn>=0.17.1',
       'scipy>=0.18.0',
@@ -21,5 +22,5 @@ setup(name='inferbeddings',
       license='MIT',
       install_requires=requirements,
       setup_requires=['pytest-runner'] + requirements,
-      tests_require=['pytest'] + requirements,
+      tests_require=requirements,
       packages=find_packages())
