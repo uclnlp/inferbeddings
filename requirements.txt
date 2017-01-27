@@ -1,3 +1,4 @@
+pytest
 tensorflow
 parsimonious
 terminaltables
