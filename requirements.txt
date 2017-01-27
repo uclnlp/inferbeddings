@@ -1,0 +1,4 @@
+tensorflow
+parsimonious
+terminaltables
+colorclass
