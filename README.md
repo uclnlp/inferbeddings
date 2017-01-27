@@ -1,4 +1,4 @@
-# Inferbeddings
+# Inferbeddings [![wercker status](https://app.wercker.com/status/47cfd21ce8315fb361ac5b4247ce280a/s/master "wercker status")](https://app.wercker.com/project/byKey/47cfd21ce8315fb361ac5b4247ce280a)
 
 Rule Injection in Knowledge Graph Embeddings via Adversarial Training.
 
