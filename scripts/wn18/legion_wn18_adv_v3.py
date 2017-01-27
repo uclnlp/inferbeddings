@@ -4,6 +4,10 @@
 import itertools
 import os.path
 
+import sys
+import argparse
+import logging
+
 
 def cartesian_product(dicts):
     return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
@@ -14,8 +18,9 @@ def summary(configuration):
     return '_'.join([('%s=%s' % (k, v)) for (k, v) in kvs])
 
 
-def to_cmd(c):
-    _path = '/home/ucacmin/workspace/inferbeddings/'
+def to_cmd(c, _path=None):
+    if _path is None:
+        _path = '/home/ucacmin/workspace/inferbeddings/'
     command = '{}/bin/adv-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
@@ -27,13 +32,13 @@ def to_cmd(c):
               ' --model {}' \
               ' --similarity {}' \
               ' --margin {}' \
-              ' --entity-embedding-size {}' \
-              ' --adv-lr {} --adv-nb-epochs {} --adv-weight {} ' \
-              ' --adv-restart'.format(_path, _path, _path, _path, _path,
-                                      c['epochs'], c['lr'], c['batches'],
-                                      c['model'], c['similarity'],
-                                      c['margin'], c['embedding_size'],
-                                      c['adv_lr'], c['adv_nb_epochs'], c['adv_weight'])
+              ' --embedding-size {}' \
+              ' --adv-lr {} --adv-init-ground --adversary-epochs {} --discriminator-epochs {} --adv-weight {} ' \
+              ' --predicate-norm 1'.format(_path, _path, _path, _path, _path,
+                                           c['epochs'], c['lr'], c['batches'],
+                                           c['model'], c['similarity'],
+                                           c['margin'], c['embedding_size'],
+                                           c['adv_lr'], c['adv_epochs'], c['disc_epochs'], c['adv_weight'])
     return command
 
 
@@ -41,42 +46,62 @@ def to_logfile(c, path):
     outfile = "%s/wn18_adv_v3.%s.log" % (path, summary(c))
     return outfile
 
-hyperparameters_space = dict(
-    epochs=[100],
-    optimizer=['adagrad'],
-    lr=[.1],
-    batches=[10],
-    model=['ComplEx'],
-    similarity=['dot'],
-    margin=[1],
-    embedding_size=[20, 50, 100, 150, 200],
-    adv_lr=[.1],
-    adv_nb_epochs=[0, 1, 10],
-    adv_weight=[0, 1, 10, 100, 1000, 10000]
-)
 
-configurations = cartesian_product(hyperparameters_space)
+def main(argv):
+    def formatter(prog):
+        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-path = '/home/ucacmin/Scratch/logs/wn18_adv_v3/'
+    argparser = argparse.ArgumentParser('Generating experiments for the Legion cluster', formatter_class=formatter)
+    argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
+    argparser.add_argument('--path', '-p', action='store', type=str, default=None, help='Path')
 
-for job_id, cfg in enumerate(configurations):
-    logfile = to_logfile(cfg, path)
+    args = argparser.parse_args(argv)
 
-    completed = False
-    if os.path.isfile(logfile):
-        with open(logfile, 'r') as f:
-            content = f.read()
-            completed = '### MICRO (test filtered)' in content
+    hyperparameters_space = dict(
+        epochs=[100],
+        optimizer=['adagrad'],
+        lr=[.1],
+        batches=[10],
+        model=['ComplEx'],
+        similarity=['dot'],
+        margin=[1],
+        embedding_size=[20, 50, 100, 150, 200],
+        adv_lr=[.1],
+        adv_epochs=[0, 1, 10],
+        disc_epochs=[1, 10],
+        adv_weight=[0, 1, 10, 100, 1000, 10000]
+    )
 
-    if not completed:
-        file_name = 'wn18_adv_v3_{}.job'.format(job_id)
+    configurations = cartesian_product(hyperparameters_space)
 
-        line = '{} >> {} 2>&1'.format(to_cmd(cfg), logfile)
-        job_script = '#!/bin/bash -l\n' \
-                     '#$ -l h_rt=24:00:00\n' \
-                     '#$ -l memory=8G\n' \
-                     '#$ -l tmpfs=4G\n' \
-                     '{}\n'.format(line)
+    path = '/home/ucacmin/Scratch/logs/wn18_adv_v3/'
 
-        with open(file_name, 'w') as f:
-            f.write(job_script)
+    for job_id, cfg in enumerate(configurations):
+        logfile = to_logfile(cfg, path)
+
+        completed = False
+        if os.path.isfile(logfile):
+            with open(logfile, 'r') as f:
+                content = f.read()
+                completed = '### MICRO (test filtered)' in content
+
+        if not completed:
+            line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+
+            if args.debug:
+                print(line)
+            else:
+                file_name = 'wn18_adv_v3_{}.job'.format(job_id)
+
+                job_script = '#!/bin/bash -l\n' \
+                             '#$ -l h_rt=24:00:00\n' \
+                             '#$ -l memory=8G\n' \
+                             '#$ -l tmpfs=4G\n' \
+                             '{}\n'.format(line)
+
+                with open(file_name, 'w') as f:
+                    f.write(job_script)
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])
