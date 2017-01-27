@@ -5,6 +5,7 @@ from setuptools import find_packages
 
 requirements = [
       'tensorflow>=0.8',
+      'scikit-learn>=0.17.1',
       'parsimonious>=0.7',
       'terminaltables>=2.0',
       'colorclass>=2.0']
