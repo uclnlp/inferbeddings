@@ -33,12 +33,14 @@ def to_cmd(c, _path=None):
               ' --similarity {}' \
               ' --margin {}' \
               ' --embedding-size {}' \
-              ' --adv-lr {} --adv-init-ground --adversary-epochs {} --discriminator-epochs {} --adv-weight {} ' \
+              ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
+              ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {}' \
               ' --predicate-norm 1'.format(_path, _path, _path, _path, _path,
                                            c['epochs'], c['lr'], c['batches'],
                                            c['model'], c['similarity'],
                                            c['margin'], c['embedding_size'],
-                                           c['adv_lr'], c['adv_epochs'], c['disc_epochs'], c['adv_weight'])
+                                           c['adv_lr'], c['adv_epochs'],
+                                           c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
     return command
 
 
@@ -69,7 +71,8 @@ def main(argv):
         adv_lr=[.1],
         adv_epochs=[0, 1, 10],
         disc_epochs=[1, 10],
-        adv_weight=[0, 1, 10, 100, 1000, 10000]
+        adv_weight=[0, 1, 10, 100, 1000, 10000],
+        adv_batch_size=[1, 10, 100]
     )
 
     configurations = cartesian_product(hyperparameters_space)
