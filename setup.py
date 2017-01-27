@@ -3,14 +3,8 @@
 from setuptools import setup
 from setuptools import find_packages
 
-requirements = [
-      'pytest'
-      'tensorflow>=0.8',
-      'scikit-learn>=0.17.1',
-      'scipy>=0.18.0',
-      'parsimonious>=0.7',
-      'terminaltables>=2.0',
-      'colorclass>=2.0']
+with open('requirements.txt', 'r') as f:
+      requirements = f.readlines()
 
 setup(name='inferbeddings',
       version='0.1.0',
