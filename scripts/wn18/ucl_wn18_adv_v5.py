@@ -95,11 +95,7 @@ def main(argv):
                 print(line)
             else:
                 file_name = 'wn18_adv_v5_{}.job'.format(job_id)
-
-                alias = """
-alias python3="LD_LIBRARY_PATH='${UCL_MR_SHARED_BASE}/utils/libc6_2.17/lib/x86_64-linux-gnu/:${UCL_MR_SHARED_BASE}/utils/lib6_2.17/usr/lib64/:/share/apps/gcc-5.2.0/lib64:/share/apps/gcc-5.2.0/lib:${LD_LIBRARY_PATH}' '${UCL_MR_SHARED_BASE}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
-                """
-
+                alias = 'source /home/pminervi/.bashrc'
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
                              '#$ -l tscratch=2G\n' \
