@@ -101,8 +101,6 @@ def main(argv):
                              '# $ -l tscratch=2G\n' \
                              '# $ -l h_vmem=8G,tmem=8G\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '#$ -l memory=8G\n' \
-                             '#$ -l tmpfs=4G\n' \
                              '{}\n'.format(line)
 
                 with open(file_name, 'w') as f:
