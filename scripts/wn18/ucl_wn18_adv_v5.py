@@ -21,7 +21,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '{}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/adv-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
               ' --test {}/data/wn18/wordnet-mlj12-test.txt' \
@@ -96,12 +96,16 @@ def main(argv):
             else:
                 file_name = 'wn18_adv_v5_{}.job'.format(job_id)
 
+                alias = """
+alias python3="LD_LIBRARY_PATH='${UCL_MR_SHARED_BASE}/utils/libc6_2.17/lib/x86_64-linux-gnu/:${UCL_MR_SHARED_BASE}/utils/lib6_2.17/usr/lib64/:/share/apps/gcc-5.2.0/lib64:/share/apps/gcc-5.2.0/lib:${LD_LIBRARY_PATH}' '${UCL_MR_SHARED_BASE}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
+                """
+
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
                              '#$ -l tscratch=2G\n' \
                              '#$ -l h_vmem=8G,tmem=8G\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '{}\n'.format(line)
+                             '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
                     f.write(job_script)
