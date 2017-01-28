@@ -95,7 +95,7 @@ def main(argv):
                 print(line)
             else:
                 file_name = 'wn18_adv_v5_{}.job'.format(job_id)
-                alias = 'source /home/pminervi/.bashrc'
+                alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
                              '#$ -l tscratch=2G\n' \
