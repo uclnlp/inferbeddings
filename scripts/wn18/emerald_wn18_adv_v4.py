@@ -103,8 +103,7 @@ alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${
                              '{}\n' \
                              'nvidia-smi > {}\n' \
                              'export CUDA_VISIBLE_DEVICES=`~/bin/lugpu.sh`\n' \
-                             'export TMP_CUDA_VISIBLE_DEVICES={}\n' \
-                             '{}\n'.format(alias, logfile, job_id % 4, line)
+                             '{}\n'.format(alias, logfile, line)
 
                 with open(file_name, 'w') as f:
                     f.write(job_script)
