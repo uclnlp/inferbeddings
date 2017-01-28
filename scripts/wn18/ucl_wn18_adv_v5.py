@@ -96,10 +96,10 @@ def main(argv):
             else:
                 file_name = 'wn18_adv_v5_{}.job'.format(job_id)
 
-                job_script = '# $ -S /bin/bash\n' \
-                             '# $ -wd /home/pminervi/workspace/jobs/\n' \
-                             '# $ -l tscratch=2G\n' \
-                             '# $ -l h_vmem=8G,tmem=8G\n' \
+                job_script = '#$ -S /bin/bash\n' \
+                             '#$ -wd /home/pminervi/workspace/jobs/\n' \
+                             '#$ -l tscratch=2G\n' \
+                             '#$ -l h_vmem=8G,tmem=8G\n' \
                              '#$ -l h_rt=24:00:00\n' \
                              '{}\n'.format(line)
 
