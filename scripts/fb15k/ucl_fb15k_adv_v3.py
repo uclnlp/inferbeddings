@@ -100,7 +100,7 @@ def main(argv):
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
                              '#$ -l tscratch=2G\n' \
                              '#$ -l h_vmem=8G,tmem=8G\n' \
-                             '#$ -l h_rt=24:00:00\n' \
+                             '#$ -l h_rt=48:00:00\n' \
                              '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
