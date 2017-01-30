@@ -26,11 +26,10 @@ from inferbeddings.adversarial import Adversarial, GroundLoss
 from inferbeddings import evaluation
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
-INITIAL_ADAGRAD_ACCUMULATOR = 1e-8  # Default in TensorFlow: 0.1
 
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
-          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
+          model_name, loss_name, pairwise_loss_name, margin, learning_rate, initial_accumulator_value, nb_epochs, parser,
           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol, predicate_l2, predicate_norm, debug):
 
@@ -114,7 +113,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
             violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr,
-                                                                    initial_accumulator_value=INITIAL_ADAGRAD_ACCUMULATOR)
+                                                                    initial_accumulator_value=initial_accumulator_value)
             violation_training_step = violation_finding_optimizer.minimize(- violation_loss, var_list=adversarial.parameters)
 
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
@@ -149,7 +148,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     # Optimization algorithm being used.
     optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate,
-                                          initial_accumulator_value=INITIAL_ADAGRAD_ACCUMULATOR)
+                                          initial_accumulator_value=initial_accumulator_value)
     trainable_var_list = [entity_embedding_layer, predicate_embedding_layer] + model.get_params()
     training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
 
@@ -286,6 +285,7 @@ def main(argv):
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
 
     argparser.add_argument('--lr', '-l', action='store', type=float, default=0.1)
+    argparser.add_argument('--initial-accumulator-value', action='store', type=float, default=0.1)
 
     argparser.add_argument('--nb-batches', '-b', action='store', type=int, default=10)
     argparser.add_argument('--nb-epochs', '-e', action='store', type=int, default=100)
@@ -344,7 +344,7 @@ def main(argv):
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
     nb_batches, nb_epochs = args.nb_batches, args.nb_epochs
-    learning_rate, margin = args.lr, args.margin
+    learning_rate, initial_accumulator_value, margin = args.lr, args.initial_accumulator_value, args.margin
 
     model_name, similarity_name = args.model, args.similarity
     loss_name, pairwise_loss_name = args.loss, args.pairwise_loss
@@ -423,7 +423,8 @@ def main(argv):
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name,
                                           entity_embedding_size, predicate_embedding_size, hidden_size,
-                                          model_name, loss_name, pairwise_loss_name, margin, learning_rate, nb_epochs, parser,
+                                          model_name, loss_name, pairwise_loss_name, margin,
+                                          learning_rate, initial_accumulator_value, nb_epochs, parser,
                                           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
                                           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
                                           predicate_l2, predicate_norm, debug)
