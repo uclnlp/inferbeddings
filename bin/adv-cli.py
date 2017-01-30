@@ -26,6 +26,7 @@ from inferbeddings.adversarial import Adversarial, GroundLoss
 from inferbeddings import evaluation
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
+INITIAL_ADAGRAD_ACCUMULATOR = 1e-8  # Default in TensorFlow: 0.1
 
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name, entity_embedding_size, predicate_embedding_size, hidden_size,
@@ -112,7 +113,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
-            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr)
+            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr,
+                                                                    initial_accumulator_value=INITIAL_ADAGRAD_ACCUMULATOR)
             violation_training_step = violation_finding_optimizer.minimize(- violation_loss, var_list=adversarial.parameters)
 
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
@@ -146,7 +148,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     loss_function += fact_loss
 
     # Optimization algorithm being used.
-    optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
+    optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate,
+                                          initial_accumulator_value=INITIAL_ADAGRAD_ACCUMULATOR)
     trainable_var_list = [entity_embedding_layer, predicate_embedding_layer] + model.get_params()
     training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
 
