@@ -5,7 +5,7 @@ import tensorflow as tf
 
 
 def renorm_update(var_matrix, norm=1.0, axis=1):
-    row_norms = tf.sqrt(tf.reduce_sum(tf.square(var_matrix), reduction_indices=axis))
+    row_norms = tf.sqrt(tf.reduce_sum(tf.square(var_matrix), axis=axis))
     scaled = var_matrix * tf.expand_dims(norm / row_norms, dim=axis)
     return tf.assign(var_matrix, scaled)
 

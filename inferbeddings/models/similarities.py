@@ -5,7 +5,7 @@ import tensorflow as tf
 import sys
 
 
-def negative_l1_distance(x1, x2, reduction_indices=1):
+def negative_l1_distance(x1, x2, axis=1):
     """
     Negative L1 Distance.
 
@@ -13,14 +13,14 @@ def negative_l1_distance(x1, x2, reduction_indices=1):
 
     :param x1: First term.
     :param x2: Second term.
-    :param reduction_indices: Reduction Indices.
+    :param axis: Reduction Indices.
     :return: Similarity Value.
     """
-    distance = tf.reduce_sum(tf.abs(x1 - x2), axis=reduction_indices)
+    distance = tf.reduce_sum(tf.abs(x1 - x2), axis=axis)
     return - distance
 
 
-def negative_l2_distance(x1, x2, reduction_indices=1):
+def negative_l2_distance(x1, x2, axis=1):
     """
     Negative L2 Distance.
 
@@ -28,15 +28,15 @@ def negative_l2_distance(x1, x2, reduction_indices=1):
 
     :param x1: First term.
     :param x2: Second term.
-    :param reduction_indices: Reduction Indices.
+    :param axis: Reduction Indices.
     :return: Similarity Value.
     """
 
-    distance = tf.sqrt(tf.reduce_sum(tf.square(x1 - x2), axis=reduction_indices))
+    distance = tf.sqrt(tf.reduce_sum(tf.square(x1 - x2), axis=axis))
     return - distance
 
 
-def negative_square_l2_distance(x1, x2, reduction_indices=1):
+def negative_square_l2_distance(x1, x2, axis=1):
     """
     Negative Square L2 Distance.
 
@@ -44,14 +44,14 @@ def negative_square_l2_distance(x1, x2, reduction_indices=1):
 
     :param x1: First term.
     :param x2: Second term.
-    :param reduction_indices: Reduction Indices.
+    :param axis: Reduction Indices.
     :return: Similarity Value.
     """
-    distance = tf.reduce_sum(tf.square(x1 - x2), axis=reduction_indices)
+    distance = tf.reduce_sum(tf.square(x1 - x2), axis=axis)
     return - distance
 
 
-def dot_product(x1, x2, reduction_indices=1):
+def dot_product(x1, x2, axis=1):
     """
     Dot Product.
 
@@ -59,11 +59,11 @@ def dot_product(x1, x2, reduction_indices=1):
 
     :param x1: First term.
     :param x2: Second term.
-    :param reduction_indices: Reduction Indices.
+    :param axis: Reduction Indices.
     :return: Similarity Value.
     """
 
-    similarity = tf.reduce_sum(x1 * x2, axis=reduction_indices)
+    similarity = tf.reduce_sum(x1 * x2, axis=axis)
     return similarity
 
 
