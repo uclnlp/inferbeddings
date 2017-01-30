@@ -217,7 +217,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 else:
                     _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss], feed_dict=loss_args)
 
-                loss_values += [loss_value / Xr_batch.shape[0]]
+                loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
                 total_fact_loss_value += fact_loss_value
 
                 for projection_step in projection_steps:
