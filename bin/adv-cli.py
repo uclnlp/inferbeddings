@@ -136,13 +136,20 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     else:
         # Transform the pairwise loss function in an unary loss function,
         # where each positive example is followed by a negative example.
-        def pairwise_to_unary_modifier(_loss_function):
-            def unary_function(scores, *_args, **_kwargs):
-                positive_scores, negative_scores = tf.split(1, 2, tf.reshape(scores, [-1, 2]))
-                return _loss_function(positive_scores, negative_scores, *_args, **_kwargs)
+        # TODO: re-use loss in hyper
+        def loss_modifier(_loss_function):
+            def unary_function(_score, *_args, **_kwargs):
+                #  tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
+                # tf.split(1, 3, x) turns a [N, 3]-dimensional score matrix into two [N]-dimensional ones
+                positive_scores, negative_scores_left, negative_scores_right = tf.split(1, 3, tf.reshape(_score, [-1, 3]))
+
+                _loss_left = _loss_function(positive_scores, negative_scores_left, *_args, **_kwargs)
+                _loss_right = _loss_function(positive_scores, negative_scores_right, *_args, **_kwargs)
+
+                return _loss_left + _loss_right
             return unary_function
 
-        pairwise_loss = pairwise_to_unary_modifier(pairwise_losses.get_function(pairwise_loss_name))
+        pairwise_loss = loss_modifier(pairwise_losses.get_function(pairwise_loss_name))
         fact_loss += pairwise_loss(score, margin=margin)
 
     if predicate_l2 is not None:
@@ -192,14 +199,14 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
 
-                Xr_batch = np.zeros((curr_batch_size * 4, Xr.shape[1]), dtype=Xr.dtype)
-                Xe_batch = np.zeros((curr_batch_size * 4, Xe.shape[1]), dtype=Xe.dtype)
+                Xr_batch = np.zeros((curr_batch_size * 3, Xr.shape[1]), dtype=Xr.dtype)
+                Xe_batch = np.zeros((curr_batch_size * 3, Xe.shape[1]), dtype=Xe.dtype)
 
-                Xr_batch[0::4, :] = Xr_batch[2::4, :] = Xr[batch_start:batch_end, :]
-                Xe_batch[0::4, :] = Xe_batch[2::4, :] = Xe[batch_start:batch_end, :]
+                Xr_batch[0::3, :] = Xr[batch_start:batch_end, :]
+                Xe_batch[0::3, :] = Xe[batch_start:batch_end, :]
 
-                Xr_batch[1::4, :], Xe_batch[1::4, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
-                Xr_batch[3::4, :], Xe_batch[3::4, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
+                Xr_batch[1::3, :], Xe_batch[1::3, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
+                Xr_batch[2::3, :], Xe_batch[2::3, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
 
                 loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
 
