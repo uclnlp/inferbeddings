@@ -16,7 +16,7 @@ def negative_l1_distance(x1, x2, reduction_indices=1):
     :param reduction_indices: Reduction Indices.
     :return: Similarity Value.
     """
-    distance = tf.reduce_sum(tf.abs(x1 - x2), reduction_indices=reduction_indices)
+    distance = tf.reduce_sum(tf.abs(x1 - x2), axis=reduction_indices)
     return - distance
 
 
@@ -32,7 +32,7 @@ def negative_l2_distance(x1, x2, reduction_indices=1):
     :return: Similarity Value.
     """
 
-    distance = tf.sqrt(tf.reduce_sum(tf.square(x1 - x2), reduction_indices=reduction_indices))
+    distance = tf.sqrt(tf.reduce_sum(tf.square(x1 - x2), axis=reduction_indices))
     return - distance
 
 
@@ -47,7 +47,7 @@ def negative_square_l2_distance(x1, x2, reduction_indices=1):
     :param reduction_indices: Reduction Indices.
     :return: Similarity Value.
     """
-    distance = tf.reduce_sum(tf.square(x1 - x2), reduction_indices=reduction_indices)
+    distance = tf.reduce_sum(tf.square(x1 - x2), axis=reduction_indices)
     return - distance
 
 
@@ -63,7 +63,7 @@ def dot_product(x1, x2, reduction_indices=1):
     :return: Similarity Value.
     """
 
-    similarity = tf.reduce_sum(x1 * x2, reduction_indices=reduction_indices)
+    similarity = tf.reduce_sum(x1 * x2, axis=reduction_indices)
     return similarity
 
 

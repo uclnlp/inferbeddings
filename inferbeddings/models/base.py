@@ -54,7 +54,7 @@ class TranslatingModel(BaseModel):
         """
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
 
-        #walk_embedding = tf.reduce_sum(predicate_embeddings, reduction_indices=1)
+        #walk_embedding = tf.reduce_sum(self.predicate_embeddings, reduction_indices=1)
         walk_embedding = embeddings.additive_walk_embedding(self.predicate_embeddings)
 
         translated_subject_embedding = subject_embedding + walk_embedding
