@@ -7,6 +7,8 @@ def additive_walk_embedding(predicate_embeddings):
     """
     Takes a walk, represented by a 3D Tensor with shape (batch_size, walk_length, embedding_length),
     and computes its embedding using a simple additive models.
+    This method is roughly equivalent to:
+    > walk_embedding = tf.reduce_prod(predicate_embeddings, axis=1)
 
     :param predicate_embeddings: 3D Tensor containing the embedding of the predicates in the walk.
     :return: 2D tensor of size (batch_size, embedding_length) containing the walk embeddings.
@@ -19,7 +21,8 @@ def additive_walk_embedding(predicate_embeddings):
     # Define the initializer of the scan procedure - an all-zeros matrix
     initializer = tf.zeros((batch_size, embedding_len), dtype=predicate_embeddings.dtype)
 
-    # The walk embeddings are given by the sum of the predicate embeddings (the neutral element wrt. the element-wise sum)
+    # The walk embeddings are given by the sum of the predicate embeddings
+    # where zero is the neutral element wrt. the element-wise sum
     walk_embedding = tf.scan(lambda x, y: x + y, transposed_embedding_matrix, initializer=initializer)
 
     # Add the initializer as the first step in the scan sequence, in case the walk has zero-length
@@ -30,6 +33,8 @@ def bilinear_diagonal_walk_embedding(predicate_embeddings):
     """
     Takes a walk, represented by a 3D Tensor with shape (batch_size, walk_length, embedding_length),
     and computes its embedding using a simple bilinear diagonal models.
+    This method is roughly equivalent to:
+    > walk_embedding = tf.reduce_prod(predicate_embeddings, axis=1)
 
     :param predicate_embeddings: 3D Tensor containing the embedding of the predicates in the walk.
     :return: 2D tensor of size (batch_size, embedding_length) containing the walk embeddings.
@@ -39,7 +44,8 @@ def bilinear_diagonal_walk_embedding(predicate_embeddings):
     # Transpose the (batch_size, walk_length, n) Tensor in a (walk_length, batch_size, n) Tensor
     transposed_embedding_matrix = tf.transpose(predicate_embeddings, perm=[1, 0, 2])
 
-    # Define the initializer of the scan procedure - an all-ones matrix (the neutral element wrt. the element-wise product)
+    # Define the initializer of the scan procedure - an all-ones matrix
+    # where one is the neutral element wrt. the element-wise product
     initializer = tf.ones((batch_size, embedding_len), dtype=predicate_embeddings.dtype)
 
     # The walk embeddings are given by the element-wise product of the predicate embeddings

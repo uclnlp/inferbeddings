@@ -202,8 +202,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                                                                        feed_dict=loss_args)
                     violation_loss_values += [violation_loss_value]
                 else:
-                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
-                                                                 feed_dict=loss_args)
+                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss], feed_dict=loss_args)
 
                 loss_values += [loss_value / Xr_batch.shape[0]]
                 total_fact_loss_value += fact_loss_value
@@ -389,6 +388,10 @@ def main(argv):
 
     nb_entities = len(parser.entity_vocabulary)
     nb_predicates = len(parser.predicate_vocabulary)
+
+    # Entity and predicate indices start at 1 (index 0 can be used for a missing entity or predicate)
+    assert (0 not in set(parser.entity_to_index.values()))
+    assert (0 not in set(parser.predicate_to_index.values()))
 
     logger.info('#Entities: {}\t#Predicates: {}'.format(nb_entities, nb_predicates))
 

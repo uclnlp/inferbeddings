@@ -53,8 +53,6 @@ class TranslatingModel(BaseModel):
         :return: (batch_size) Tensor containing the scores associated by the models to the walks.
         """
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
-
-        #walk_embedding = tf.reduce_sum(self.predicate_embeddings, axis=1)
         walk_embedding = embeddings.additive_walk_embedding(self.predicate_embeddings)
 
         translated_subject_embedding = subject_embedding + walk_embedding
@@ -75,8 +73,6 @@ class BilinearDiagonalModel(BaseModel):
         :return: (batch_size) Tensor containing the scores associated by the models to the walks.
         """
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
-
-        #walk_embedding = tf.reduce_prod(predicate_embeddings, axis=1)
         walk_embedding = embeddings.bilinear_diagonal_walk_embedding(self.predicate_embeddings)
 
         scaled_subject_embedding = subject_embedding * walk_embedding
