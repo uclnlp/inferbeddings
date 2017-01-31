@@ -48,12 +48,33 @@ Example - Embedding the WN18 Knowledge Graph:
 
 ```
 $ ./bin/adv-cli.py --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model ComplEx --similarity dot --margin 5 --embedding-size 100 --nb-epochs 100
-
+INFO:adv-cli.py:#Training Triples: 141442, #Validation Triples: 5000, #Test Triples: 5000
+INFO:adv-cli.py:#Entities: 40943	#Predicates: 18
+INFO:adv-cli.py:Samples: 141442, no. batches: 10 -> batch size: 14145
+INFO:adv-cli.py:Epoch: 1/1	Loss: 9.7014 ± 0.3431
+INFO:adv-cli.py:Epoch: 1/1	Fact Loss: 1372195.3594
+INFO:adv-cli.py:Epoch: 2/1	Loss: 6.1147 ± 1.5339
+INFO:adv-cli.py:Epoch: 2/1	Fact Loss: 864890.9531
+INFO:adv-cli.py:Epoch: 3/1	Loss: 2.2779 ± 0.6385
+INFO:adv-cli.py:Epoch: 3/1	Fact Loss: 322190.9766
+INFO:adv-cli.py:Epoch: 4/1	Loss: 0.8755 ± 0.1999
+INFO:adv-cli.py:Epoch: 4/1	Fact Loss: 123841.3086
+INFO:adv-cli.py:Epoch: 5/1	Loss: 0.4603 ± 0.0699
+INFO:adv-cli.py:Epoch: 5/1	Fact Loss: 65104.3921
+INFO:adv-cli.py:Epoch: 6/1	Loss: 0.2811 ± 0.0408
+INFO:adv-cli.py:Epoch: 6/1	Fact Loss: 39766.0500
 [..]
-
+INFO:adv-cli.py:Epoch: 98/1	Loss: 0.0101 ± 0.0014
+INFO:adv-cli.py:Epoch: 98/1	Fact Loss: 1433.6215
+INFO:adv-cli.py:Epoch: 99/1	Loss: 0.0094 ± 0.0013
+INFO:adv-cli.py:Epoch: 99/1	Fact Loss: 1330.8106
+INFO:adv-cli.py:Epoch: 100/1	Loss: 0.0098 ± 0.0013
+INFO:adv-cli.py:Epoch: 100/1	Fact Loss: 1379.2251
 [..]
-INFO:root:### MICRO (valid raw):
-
+INFO:inferbeddings.evaluation.base:### MICRO (test filtered):
+INFO:inferbeddings.evaluation.base:	-- left   >> mean: 542.212, median: 1.0, mrr: 0.919, hits@10: 94.62%
+INFO:inferbeddings.evaluation.base:	-- right  >> mean: 546.9044, median: 1.0, mrr: 0.925, hits@10: 94.56%
+INFO:inferbeddings.evaluation.base:	-- global >> mean: 544.5582, median: 1.0, mrr: 0.922, hits@10: 94.59%
 ```
 
 [1] Bordes, A. et al. - [Translating Embeddings for Modeling Multi-relational Data](https://www.utc.fr/~bordesan/dokuwiki/_media/en/transe_nips13.pdf) - NIPS 2013
