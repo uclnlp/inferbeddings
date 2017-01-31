@@ -213,21 +213,19 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
                 loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
 
-                # Update Parameters
-                session.run([training_step], feed_dict=loss_args)
+                # Update Parameters and Compute Loss
+                if adv_lr is not None:
+                    _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function, fact_loss, violation_loss], feed_dict=loss_args)
+                    violation_loss_values += [violation_loss_value]
+                else:
+                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss], feed_dict=loss_args)
+
+                loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
+                total_fact_loss_value += fact_loss_value
 
                 # Project parameters
                 for projection_step in projection_steps:
                     session.run([projection_step])
-
-                if adv_lr is not None:
-                    loss_value, fact_loss_value, violation_loss_value = session.run([loss_function, fact_loss, violation_loss], feed_dict=loss_args)
-                    violation_loss_values += [violation_loss_value]
-                else:
-                    loss_value, fact_loss_value = session.run([loss_function, fact_loss], feed_dict=loss_args)
-
-                loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
-                total_fact_loss_value += fact_loss_value
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
