@@ -136,7 +136,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     else:
         # Transform the pairwise loss function in an unary loss function,
         # where each positive example is followed by a negative example.
-        # TODO: re-use loss in hyper
         def loss_modifier(_loss_function):
             def unary_function(_score, *_args, **_kwargs):
                 #  tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
@@ -169,10 +168,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         projection_steps += [constraints.renorm_update(predicate_embedding_layer, norm=predicate_norm)]
 
     init_op = tf.global_variables_initializer()
+    session.run(init_op)
 
     prev_embedding_matrix = None
-
-    session.run(init_op)
 
     for epoch in range(1, nb_epochs + 1):
 
@@ -193,35 +191,43 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
 
             batches = make_batches(nb_samples, batch_size)
+
             loss_values, violation_loss_values = [], []
             total_fact_loss_value = 0
 
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
 
-                Xr_batch = np.zeros((curr_batch_size * 3, Xr.shape[1]), dtype=Xr.dtype)
-                Xe_batch = np.zeros((curr_batch_size * 3, Xe.shape[1]), dtype=Xe.dtype)
+                Xr_batch = np.zeros((curr_batch_size * 3, Xr_shuf.shape[1]), dtype=Xr_shuf.dtype)
+                Xe_batch = np.zeros((curr_batch_size * 3, Xe_shuf.shape[1]), dtype=Xe_shuf.dtype)
 
-                Xr_batch[0::3, :] = Xr[batch_start:batch_end, :]
-                Xe_batch[0::3, :] = Xe[batch_start:batch_end, :]
+                Xr_batch[0::3, :] = Xr_shuf[batch_start:batch_end, :]
+                Xe_batch[0::3, :] = Xe_shuf[batch_start:batch_end, :]
 
                 Xr_batch[1::3, :], Xe_batch[1::3, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
                 Xr_batch[2::3, :], Xe_batch[2::3, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
 
+                # Safety check - each positive example is followed by two negative (corrupted) examples
+                assert Xr_batch[0] == Xr_batch[1] == Xr_batch[2]
+                assert Xe_batch[0, 0] == Xe_batch[2, 0] and Xe_batch[0, 1] == Xe_batch[1, 1]
+
                 loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch}
 
+                # Update Parameters
+                session.run([training_step], feed_dict=loss_args)
+
+                # Project parameters
+                for projection_step in projection_steps:
+                    session.run([projection_step])
+
                 if adv_lr is not None:
-                    _, loss_value, fact_loss_value, violation_loss_value = session.run([training_step, loss_function, fact_loss, violation_loss],
-                                                                                       feed_dict=loss_args)
+                    loss_value, fact_loss_value, violation_loss_value = session.run([loss_function, fact_loss, violation_loss], feed_dict=loss_args)
                     violation_loss_values += [violation_loss_value]
                 else:
-                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss], feed_dict=loss_args)
+                    loss_value, fact_loss_value = session.run([loss_function, fact_loss], feed_dict=loss_args)
 
                 loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
                 total_fact_loss_value += fact_loss_value
-
-                for projection_step in projection_steps:
-                    session.run([projection_step])
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
