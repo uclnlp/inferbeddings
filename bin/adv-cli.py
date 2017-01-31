@@ -290,6 +290,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
 
 def main(argv):
+    logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
+
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
