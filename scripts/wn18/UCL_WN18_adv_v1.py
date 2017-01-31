@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import itertools
+import os
 import os.path
 
 import sys
@@ -35,17 +36,17 @@ def to_cmd(c, _path=None):
               ' --embedding-size {}' \
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {}' \
-              ' --predicate-norm 1'.format(_path, _path, _path, _path, _path,
-                                           c['epochs'], c['lr'], c['batches'],
-                                           c['model'], c['similarity'],
-                                           c['margin'], c['embedding_size'],
-                                           c['adv_lr'], c['adv_epochs'],
-                                           c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
+              ''.format(_path, _path, _path, _path, _path,
+                        c['epochs'], c['lr'], c['batches'],
+                        c['model'], c['similarity'],
+                        c['margin'], c['embedding_size'],
+                        c['adv_lr'], c['adv_epochs'],
+                        c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
     return command
 
 
 def to_logfile(c, path):
-    outfile = "%s/wn18_adv_v3.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_wn18_adv_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -64,8 +65,8 @@ def main(argv):
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
-        model=['ComplEx'],
-        similarity=['dot'],
+        model=['TransE'],
+        similarity=['l1', 'l2'],
         margin=[1],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
@@ -77,7 +78,9 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/wn18_adv_v3/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_wn18_adv_v1/'
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
@@ -94,7 +97,7 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                file_name = 'wn18_adv_v3_{}.job'.format(job_id)
+                file_name = 'ucl_wn18_adv_v1_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \

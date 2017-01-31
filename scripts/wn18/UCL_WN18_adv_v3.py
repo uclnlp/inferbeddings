@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import itertools
+import os
 import os.path
 
 import sys
@@ -45,7 +46,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/wn18_adv_v7.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_wn18_adv_v3.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -77,7 +78,9 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/wn18_adv_v7/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_wn18_adv_v3/'
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
@@ -94,7 +97,7 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                file_name = 'wn18_adv_v7_{}.job'.format(job_id)
+                file_name = 'ucl_wn18_adv_v3_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
