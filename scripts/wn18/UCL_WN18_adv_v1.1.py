@@ -46,7 +46,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_wn18_adv_v1.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_wn18_adv_v1.1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -78,7 +78,7 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_wn18_adv_v1/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_wn18_adv_v1.1/'
     if not os.path.exists(path):
         os.makedirs(path)
 
