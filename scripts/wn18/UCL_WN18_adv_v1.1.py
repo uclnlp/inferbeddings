@@ -97,7 +97,7 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                file_name = 'ucl_wn18_adv_v1_{}.job'.format(job_id)
+                file_name = 'ucl_wn18_adv_v1.1_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
