@@ -35,17 +35,17 @@ def to_cmd(c, _path=None):
               ' --embedding-size {}' \
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {}' \
-              ' --predicate-norm 1'.format(_path, _path, _path, _path, _path,
-                                           c['epochs'], c['lr'], c['batches'],
-                                           c['model'], c['similarity'],
-                                           c['margin'], c['embedding_size'],
-                                           c['adv_lr'], c['adv_epochs'],
-                                           c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
+              ''.format(_path, _path, _path, _path, _path,
+                        c['epochs'], c['lr'], c['batches'],
+                        c['model'], c['similarity'],
+                        c['margin'], c['embedding_size'],
+                        c['adv_lr'], c['adv_epochs'],
+                        c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
     return command
 
 
 def to_logfile(c, path):
-    outfile = "%s/fb15k_adv_v4.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_fb15k_adv_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -64,8 +64,8 @@ def main(argv):
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
-        model=['DistMult'],
-        similarity=['dot'],
+        model=['TransE'],
+        similarity=['l1', 'l2'],
         margin=[1],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
@@ -77,14 +77,14 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/fb15k_adv_v4/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_fb15k_adv_v1/'
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
         completed = False
         if os.path.isfile(logfile):
-            with open(logfile, 'r') as f:
+            with open(logfile, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
                 completed = '### MICRO (test filtered)' in content
 
@@ -94,7 +94,7 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                file_name = 'fb15k_adv_v4_{}.job'.format(job_id)
+                file_name = 'ucl_fb15k_adv_v1_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \

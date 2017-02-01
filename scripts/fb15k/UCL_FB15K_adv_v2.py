@@ -45,7 +45,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/fb15k_adv_v3.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_fb15k_adv_v2.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -64,7 +64,7 @@ def main(argv):
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
-        model=['ComplEx'],
+        model=['DistMult'],
         similarity=['dot'],
         margin=[1],
         embedding_size=[20, 50, 100, 150, 200],
@@ -77,14 +77,14 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/fb15k_adv_v3/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_fb15k_adv_v2/'
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
         completed = False
         if os.path.isfile(logfile):
-            with open(logfile, 'r') as f:
+            with open(logfile, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
                 completed = '### MICRO (test filtered)' in content
 
@@ -94,7 +94,7 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                file_name = 'fb15k_adv_v3_{}.job'.format(job_id)
+                file_name = 'ucl_fb15k_adv_v2_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
