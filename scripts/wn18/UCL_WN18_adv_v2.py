@@ -87,7 +87,7 @@ def main(argv):
 
         completed = False
         if os.path.isfile(logfile):
-            with open(logfile, 'r', encoding='utf-8') as f:
+            with open(logfile, 'r', encoding='utf-16') as f:
                 content = f.read()
                 completed = '### MICRO (test filtered)' in content
 
