@@ -78,6 +78,8 @@ def main(argv):
     configurations = cartesian_product(hyperparameters_space)
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_fb15k_adv_v2/'
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
