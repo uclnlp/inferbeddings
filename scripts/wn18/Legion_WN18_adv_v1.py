@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucacmin/workspace/inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = '{}/bin/adv-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
               ' --test {}/data/wn18/wordnet-mlj12-test.txt' \
@@ -103,7 +103,6 @@ def main(argv):
                              '#$ -wd /home/ucacmin/Scratch/jobs/\n' \
                              '#$ -l mem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '#$ -pe smp 1\n' \
                              '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
