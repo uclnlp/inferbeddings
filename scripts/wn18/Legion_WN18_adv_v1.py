@@ -78,7 +78,7 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/ucacmin/workspace/inferbeddings/logs/ucl_wn18_adv_v1/'
+    path = '/home/ucacmin/Scratch/inferbeddings/logs/ucl_wn18_adv_v1/'
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -100,9 +100,10 @@ def main(argv):
                 file_name = 'ucl_wn18_adv_v1_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
-                             '#$ -wd /home/ucacmin/workspace/jobs/\n' \
+                             '#$ -wd /home/ucacmin/Scratch/jobs/\n' \
                              '#$ -l h_vmem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
+                             '#$ -pe openmpi-fillup 1-8\n' \
                              '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
