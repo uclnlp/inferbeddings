@@ -99,7 +99,7 @@ def main(argv):
             else:
                 file_name = 'ucl_wn18_adv_v1_{}.job'.format(job_id)
                 alias = ''
-                job_script = '#$ -S /bin/bash\n' \
+                job_script = '#!/bin/bash -l\n' \
                              '#$ -wd /home/ucacmin/Scratch/jobs/\n' \
                              '#$ -l mem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
