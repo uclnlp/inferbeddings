@@ -103,7 +103,7 @@ def main(argv):
                              '#$ -wd /home/ucacmin/Scratch/jobs/\n' \
                              '#$ -l mem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '#$ -pe mpi 1\n' \
+                             '#$ -pe smp 1\n' \
                              '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
