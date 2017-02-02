@@ -101,7 +101,7 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/ucacmin/workspace/jobs/\n' \
-                             '#$ -l h_vmem=4G,tmem=4G\n' \
+                             '#$ -l h_vmem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
                              '{}\n{}\n'.format(alias, line)
 
