@@ -99,7 +99,7 @@ def main(argv):
 alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
 """
 
-            job_script = '#BSUB -W 2:00\n' \
+            job_script = '#BSUB -W 4:00\n' \
                          '{}\n' \
                          'nvidia-smi > {}\n' \
                          'export CUDA_VISIBLE_DEVICES=`~/bin/lugpu.sh`\n' \
