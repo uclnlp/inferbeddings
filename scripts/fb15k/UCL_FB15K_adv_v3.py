@@ -99,7 +99,7 @@ def main(argv):
                 file_name = 'ucl_fb15k_adv_v3_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
-                             '#$ -wd /home/pminervi/workspace/jobs/\n' \
+                             '#$ -wd /tmp/\n' \
                              '#$ -l h_vmem=8G,tmem=8G\n' \
                              '#$ -l h_rt=48:00:00\n' \
                              '{}\n{}\n'.format(alias, line)

@@ -100,7 +100,7 @@ def main(argv):
                 file_name = 'ucl_wn18_adv_v1.1_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
-                             '#$ -wd /home/pminervi/workspace/jobs/\n' \
+                             '#$ -wd /tmp/\n' \
                              '#$ -l h_vmem=4G,tmem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
                              '{}\n{}\n'.format(alias, line)
