@@ -95,3 +95,7 @@ ENV/
 tmp/
 snippet/
 logs/
+
+# Debugging log files
+safety.txt
+safety_new.txt

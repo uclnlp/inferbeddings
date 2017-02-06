@@ -53,19 +53,17 @@ def evaluate_auc(scoring_function, pos_triples, neg_triples, nb_entities, nb_pre
 
 
 def evaluate_ranks(scoring_function, triples, nb_entities, true_triples=None, tag=None):
-    ranker = metrics.Ranker(scoring_function=scoring_function, nb_entities=nb_entities)
-    ranks = ranker(triples)
+    if true_triples is None:
+        true_triples = []
+
+    ranker = metrics.Ranker(scoring_function=scoring_function, nb_entities=nb_entities, true_triples=true_triples)
+    ranks, ranks_f = ranker(triples)
 
     if tag is not None:
         for n in range(1, 10 + 1):
             ranking_summary(ranks, n=n, tag='{} raw'.format(tag))
 
-    ranks_f = None
-    if true_triples:
-        ranker_f = metrics.Ranker(scoring_function=scoring_function, nb_entities=nb_entities, true_triples=true_triples)
-        ranks_f = ranker_f(triples)
-
-        if tag is not None:
-            for n in range(1, 10 + 1):
-                ranking_summary(ranks_f, n=n, tag='{} filtered'.format(tag))
-    return ranks, ranks_f
+    if tag is not None:
+        for n in range(1, 10 + 1):
+            ranking_summary(ranks_f, n=n, tag='{} filtered'.format(tag))
+    return ranks

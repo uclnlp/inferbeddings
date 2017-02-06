@@ -24,6 +24,7 @@ class Ranker(BaseRanker):
 
     def __call__(self, pos_triples, neg_triples=None):
         err_subj, err_obj = [], []
+        filtered_err_subj, filtered_err_obj = [], []
 
         for subj_idx, pred_idx, obj_idx in pos_triples:
             Xr = np.full(shape=(self.nb_entities, 1), fill_value=pred_idx, dtype=np.int32)
@@ -36,6 +37,9 @@ class Ranker(BaseRanker):
 
             scores_o, scores_s = self.scoring_function([Xr, Xe_o]), self.scoring_function([Xr, Xe_s])
 
+            err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
+            err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
+
             if self.true_triples:
                 rm_idx_o = [o - 1 for (s, p, o) in self.true_triples if s == subj_idx and p == pred_idx and o != obj_idx]
                 rm_idx_s = [s - 1 for (s, p, o) in self.true_triples if o == obj_idx and p == pred_idx and s != subj_idx]
@@ -46,10 +50,10 @@ class Ranker(BaseRanker):
                 if rm_idx_s:
                     scores_o[rm_idx_s] = - np.inf
 
-            err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
-            err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
+            filtered_err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
+            filtered_err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
 
-        return err_subj, err_obj
+        return (err_subj, err_obj), (filtered_err_subj, filtered_err_obj)
 
 
 class AUC(BaseRanker):
