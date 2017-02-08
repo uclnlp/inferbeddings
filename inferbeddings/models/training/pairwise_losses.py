@@ -86,6 +86,13 @@ def square_exponential_loss(positive_scores, negative_scores, gamma=1.0):
     loss = tf.reduce_sum(square_exponential_losses)
     return loss
 
+# Aliases
+hinge = hinge_loss
+logistic = logistic_loss
+mce = mce_loss
+square_square = square_square_loss
+square_exponential = square_exponential_loss
+
 
 def get_function(function_name):
     this_module = sys.modules[__name__]
