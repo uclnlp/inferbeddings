@@ -26,6 +26,9 @@ def logistic_loss(scores, targets):
     return loss
 
 
+logistic = logistic_loss
+
+
 def get_function(function_name):
     this_module = sys.modules[__name__]
     if not hasattr(this_module, function_name):
