@@ -95,6 +95,7 @@ ENV/
 tmp/
 snippet/
 logs/
+logs*.tar.gz
 
 # Debugging log files
 safety.txt
