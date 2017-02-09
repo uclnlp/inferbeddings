@@ -46,7 +46,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_wn18_adv_v1.%s.log" % (path, summary(c))
+    outfile = "%s/Legion_wn18_adv_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -54,7 +54,7 @@ def main(argv):
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-    argparser = argparse.ArgumentParser('Generating experiments for the UCL cluster', formatter_class=formatter)
+    argparser = argparse.ArgumentParser('Generating experiments for the Legion cluster', formatter_class=formatter)
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
     argparser.add_argument('--path', '-p', action='store', type=str, default=None, help='Path')
 
@@ -78,7 +78,7 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/ucacmin/Scratch/inferbeddings/logs/ucl_wn18_adv_v1/'
+    path = '/home/ucacmin/Scratch/inferbeddings/logs/Legion_wn18_adv_v1/'
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -97,7 +97,7 @@ def main(argv):
             if args.debug:
                 print(line)
             else:
-                file_name = 'ucl_wn18_adv_v1_{}.job'.format(job_id)
+                file_name = 'Legion_wn18_adv_v1_{}.job'.format(job_id)
                 alias = ''
                 job_script = '#!/bin/bash -l\n' \
                              '#$ -wd /home/ucacmin/Scratch/jobs/\n' \
