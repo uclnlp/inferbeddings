@@ -111,7 +111,9 @@ class Adversarial:
                 weight_variable = tf.get_variable('{}_weight'.format(name),
                                                   shape=(),
                                                   initializer=tf.contrib.layers.xavier_initializer())
-                parameters.append(weight_variable)
+
+                # todo: the parameter must likely be registered somewhere to guarantee that weights are learned in the D-step.
+                # todo: parameters.append(weight_variable)
                 # todo: better to project when optimising
                 prob = tf.sigmoid(weight_variable)
             else:
