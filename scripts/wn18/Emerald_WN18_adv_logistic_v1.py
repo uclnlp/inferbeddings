@@ -59,7 +59,7 @@ def main(argv):
 
     args = argparser.parse_args(argv)
 
-    hyperparameters_space = dict(
+    hyperparameters_space_transe = dict(
         epochs=[100],
         optimizer=['adagrad'],
         lr=[.1],
@@ -75,11 +75,30 @@ def main(argv):
         adv_batch_size=[1, 10, 100]
     )
 
-    configurations = cartesian_product(hyperparameters_space)
+    hyperparameters_space_complex_distmult = dict(
+        epochs=[100],
+        optimizer=['adagrad'],
+        lr=[.1],
+        batches=[10],
+        model=['Complex', 'DistMult'],
+        similarity=['dot'],
+        margin=[1],
+        embedding_size=[20, 50, 100, 150, 200],
+        adv_lr=[.1],
+        adv_epochs=[0, 1, 10],
+        disc_epochs=[1, 10],
+        adv_weight=[0, 1, 10, 100, 1000, 10000],
+        adv_batch_size=[1, 10, 100]
+    )
+
+    configurations_transe = cartesian_product(hyperparameters_space_transe)
+    configurations_complex_distmult = cartesian_product(hyperparameters_space_complex_distmult)
 
     path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/emerald_wn18_adv_logistic_v1/'
     if not os.path.exists(path):
         os.makedirs(path)
+
+    configurations = list(configurations_transe) + list(configurations_complex_distmult)
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
