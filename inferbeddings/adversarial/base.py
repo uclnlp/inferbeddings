@@ -11,6 +11,7 @@ class Adversarial:
     """
     Utility class for, given a set of clauses, computing the symbolic violation loss.
     """
+
     def __init__(self, clauses, parser, predicate_embedding_layer,
                  model_class, model_parameters, loss_function=None, loss_margin=0.0, batch_size=1):
 
@@ -26,13 +27,17 @@ class Adversarial:
 
         if self.loss_function is None:
             # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
-            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores, margin=loss_margin)
+            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores,
+                                                                                             margin=loss_margin)
 
         # Symbolic functions computing the number of ground errors and the continuous loss
         self.errors, self.loss = 0, .0
 
         # Trainable parameters of the adversarial model
         self.parameters = []
+
+        # Weight terms of clauses, as mapping from clause to term
+        self.weights = {}
 
         for clause_idx, clause in enumerate(clauses):
             clause_errors, clause_loss, clause_parameters = self._parse_clause('clause_{}'.format(clause_idx), clause)
@@ -102,5 +107,25 @@ class Adversarial:
 
         errors = tf.reduce_sum(tf.cast(body_score > head_score, tf.float32))
         loss = self.loss_function(body_score, head_score)
+
+        # learnable clause weights
+        if clause.weight != 1.0:
+            if clause.weight is None:
+                weight_variable = tf.get_variable('{}_weight'.format(name),
+                                                  shape=(),
+                                                  initializer=tf.constant(0.0))
+
+                # todo: the parameter must likely be registered somewhere to guarantee that weights are learned in the D-step.
+                # todo: parameters.append(weight_variable)
+                # todo: better to project when optimising
+                prob = tf.sigmoid(weight_variable)
+                self.weights[clause] = weight_variable
+            else:
+                prob = clause.weight
+
+            # we define the negation of a clause as [score(head) <= score(body)] //strictly speaking it should be "<".
+            loss = prob * loss + (1 - prob) * self.loss_function(head_score, body_score)
+
+            # we leave the errors as is
 
         return errors, loss, parameters
