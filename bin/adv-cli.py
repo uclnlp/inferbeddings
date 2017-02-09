@@ -133,20 +133,33 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
                                         for adversarial_embedding_layer in adversarial.parameters]
 
+    # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
+    # obtained by corrupting the original training triple.
+    nb_versions = 3
+
     # Loss function to minimize by means of Stochastic Gradient Descent.
     fact_loss = 0.0
     if loss_name is not None:
+        # We are now using a classic (scores, targets) loss from models/training/losses.py
         loss = losses.get_function(loss_name)
-        target = tf.cast((tf.range(0, limit=tf.shape(score)[0]) % 2) < 1, score.dtype)
-        fact_loss += loss(score, target)
+
+        # Generate a vector of targets - given that each positive example is followed by
+        # two negative examples, create a targets vector like [1, 0, 0, 1, 0, 0, 1, 0, 0 ..]
+        # > tf.cast((tf.range(0, limit=12) % 3) < 1, dtype=tf.int32).eval()
+        # array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0], dtype=int32)
+
+        target = ((tf.range(0, limit=tf.shape(score)[0]) % nb_versions) < 1)
+        fact_loss += loss(score, tf.cast(target, score.dtype))
     else:
+        # We are now using a pairwise (positives, negatives) loss from models/training/pairwise_losses.py
+
         # Transform the pairwise loss function in an unary loss function,
         # where each positive example is followed by two negative examples.
         def loss_modifier(_loss_function):
             def unary_function(_score, *_args, **_kwargs):
                 # tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
-                # tf.split(1, 3, x) turns a [N, 3]-dimensional score matrix into two [N]-dimensional ones
-                positive_scores, negative_scores_left, negative_scores_right = tf.split(1, 3,
+                # tf.split(1, 3, x) turns a [N, 3]-dimensional score matrix into three [N]-dimensional ones
+                positive_scores, negative_scores_left, negative_scores_right = tf.split(1, nb_versions,
                                                                                         tf.reshape(_score, [-1, 3]))
 
                 _loss_left = _loss_function(positive_scores, negative_scores_left, *_args, **_kwargs)
@@ -182,6 +195,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     for epoch in range(1, nb_epochs + 1):
 
+        # This is a {clause:list[dict]} dictionary that maps each clause to a list[feed_dict], where each feed_dict
+        # provides a {variable:entity}
         if clause_to_feed_dicts is not None:
             sum_errors = 0
             for clause_idx, clause in enumerate(clauses):
@@ -203,9 +218,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             loss_values, violation_loss_values = [], []
             total_fact_loss_value = 0
 
-            # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
-            # obtained by corrupting the original training triple.
-            nb_versions = 3
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
 

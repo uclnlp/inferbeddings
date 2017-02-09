@@ -10,6 +10,7 @@ def logistic_loss(scores, targets):
 
     [1] http://jmlr.org/proceedings/papers/v48/trouillon16.pdf
 
+    # The following formulations are equivalent:
     >> tf.log(1 + tf.exp(- np.array([10., -5.]) * np.array([1., -1]))).eval()
     array([  4.53988992e-05,   6.71534849e-03])
     >> tf.nn.softplus(- np.array([10., -5.]) * np.array([1., -1])).eval()
