@@ -23,9 +23,11 @@ def main(argv):
     # Rules-related arguments
     argparser.add_argument('logfile', type=argparse.FileType('r'), help='AMIE+ Log')
 
-    argparser.add_argument('--head-coverage-thr', '-H', action='store', type=float, help='Threshold on Head Coverage')
     argparser.add_argument('--std-confidence-thr', '-C', action='store', type=float, help='Threshold on Std Confidence')
+    argparser.add_argument('--body-size-thr', '-B', action='store', type=float, help='Threshold on body size')
+    argparser.add_argument('--head-coverage-thr', '-H', action='store', type=float, help='Threshold on Head Coverage')
     argparser.add_argument('--show-weights', '-s', action='store_true')
+
 
     args = argparser.parse_args(argv)
 
@@ -33,6 +35,7 @@ def main(argv):
 
     hc_thr = args.head_coverage_thr
     std_c_thr = args.std_confidence_thr
+    body_thr = args.body_size_thr
 
     show_weights = args.show_weights
 
@@ -110,6 +113,7 @@ def main(argv):
         for _feature in features:
             head_coverage = _feature['head_coverage']
             std_confidence = _feature['std_confidence']
+            body_size = _feature['body_size']
 
             feature = _feature['feature']
             hops = feature['hops']
@@ -126,7 +130,8 @@ def main(argv):
 
             if hc_thr is None or head_coverage >= hc_thr:
                 if std_c_thr is None or std_confidence >= std_c_thr:
-                    print(('{}\t{}\t{}'.format(clause, head_coverage, std_confidence)) if show_weights else '{}'.format(clause))
+                    if body_thr is None or body_size >= body_thr:
+                        print(('{}\t{}\t{}'.format(clause, head_coverage, std_confidence)) if show_weights else '{}'.format(clause))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
