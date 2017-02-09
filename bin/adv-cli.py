@@ -319,6 +319,8 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default=None)
 
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
+    argparser.add_argument('--debug-scores', nargs='+', type=str,
+                           help='List of files containing triples we want to compute the score of')
 
     argparser.add_argument('--lr', '-l', action='store', type=float, default=0.1)
     argparser.add_argument('--initial-accumulator-value', action='store', type=float, default=0.1)
@@ -469,6 +471,17 @@ def main(argv):
                                           adv_margin,
                                           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
                                           predicate_l2, predicate_norm, debug)
+
+        if args.debug_scores is not None:
+            # Print the scores of all triples contained in args.debug_scores
+            for path in args.debug_scores:
+                debug_triples, _ = read_triples(path)
+                debug_sequences = parser.facts_to_sequences([fact(s, p, o) for s, p, o in debug_triples])
+                for debug_triple, (p, [s, o]) in zip(debug_triples, debug_sequences):
+                    debug_score = scoring_function([[[p]], [[s, o]]])[0]
+                    print('Triple: {}\tScore: {}'.format(debug_triple, debug_score))
+                    debug_score_inverse = scoring_function([[[p]], [[o, s]]])[0]
+                    print('Inverse Triple: {}\tScore: {}'.format(debug_triple, debug_score_inverse))
 
         if save_path is not None:
             import pickle
