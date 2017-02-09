@@ -28,24 +28,7 @@ from inferbeddings import evaluation
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
-ProvidedEmbeddings = NamedTuple("ProvidedEmbeddings",
-                                ('embeddings', 'trainable_variables', 'projection_steps', 'embedding_matrix'))
-
-
-def default_entity_embeddings(nb_entities, entity_embedding_size, entity_inputs):
-    entity_embedding_layer = tf.get_variable('entities', shape=[nb_entities + 1, entity_embedding_size],
-                                             initializer=tf.contrib.layers.xavier_initializer())
-
-    entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, entity_inputs)
-    return ProvidedEmbeddings(entity_embeddings, [entity_embedding_layer],
-                              (constraints.renorm_update(entity_embedding_layer, norm=1.0),), entity_embedding_layer)
-
-
-def default_predicate_embeddings(nb_predicates, predicate_embedding_size, walk_inputs):
-    predicate_embedding_layer = tf.get_variable('predicates', shape=[nb_predicates + 1, predicate_embedding_size],
-                                                initializer=tf.contrib.layers.xavier_initializer())
-    predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, walk_inputs)
-    return ProvidedEmbeddings(predicate_embeddings, (predicate_embedding_layer,), [], predicate_embedding_layer)
+from inferbeddings.models.embedding_provider import *
 
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name,
@@ -305,7 +288,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     rnd_ent_indices = _ent_indices[
                         random_state.randint(low=0, high=len(_ent_indices), size=adv_batch_size)]
                     # Assign the embeddings of the entities at such indices to the violating embeddings
-                    _ent_embeddings = tf.nn.embedding_lookup(provided_entity_embeddings.embedding_matrix, rnd_ent_indices)
+                    _ent_embeddings = tf.nn.embedding_lookup(provided_entity_embeddings.embedding_matrix,
+                                                             rnd_ent_indices)
                     return violating_embeddings.assign(_ent_embeddings)
 
                 assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
