@@ -26,8 +26,22 @@ def logistic_loss(scores, targets):
     loss = tf.reduce_sum(logistic_losses)
     return loss
 
+
+def hinge_loss(scores, targets):
+    """
+    Hinge loss.
+    :param scores: (N,) Tensor containing scores of examples.
+    :param targets: (N,) Tensor containing {0, 1} targets of examples.
+    :return: Loss value.
+    """
+    hinge_losses = tf.contrib.losses.hinge_loss(logits=scores, labels=targets)
+    loss = tf.reduce_sum(hinge_losses)
+    return loss
+
+
 # Aliases
 logistic = logistic_loss
+hinge = hinge_loss
 
 
 def get_function(function_name):
