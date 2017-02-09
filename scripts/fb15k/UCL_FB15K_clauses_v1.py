@@ -60,15 +60,17 @@ def main(argv):
 
     args = argparser.parse_args(argv)
 
-    hyperparameters_space = dict(
+
+
+    hyperparameters_space_transe = dict(
         clausefile=['clauses_highconf_highsupp.pl', 'clauses_highconf_lowsupp.pl', 'clauses_lowconf_highsupp.pl', 'clauses_lowconf_lowsupp.pl'],
         epochs=[100],
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
-        model=['TransE', 'ComplEx', 'DistMult'],
-        similarity=['dot'],
-        margin=[2, 5],
+        model=['TransE'],
+        similarity=['l1'],
+        margin=[1],
         embedding_size=[100],
         adv_lr=[.1],
         adv_epochs=[0, 1, 10],
@@ -77,11 +79,31 @@ def main(argv):
         adv_batch_size=[10]
     )
 
-    configurations = cartesian_product(hyperparameters_space)
+    hyperparameters_space_distmult_complex = dict(
+        clausefile=['clauses_highconf_highsupp.pl', 'clauses_highconf_lowsupp.pl', 'clauses_lowconf_highsupp.pl', 'clauses_lowconf_lowsupp.pl'],
+        epochs=[100],
+        optimizer=['adagrad'],
+        lr=[.1],
+        batches=[10],
+        model=['ComplEx', 'DistMult'],
+        similarity=['dot'],
+        margin=[1],
+        embedding_size=[100],
+        adv_lr=[.1],
+        adv_epochs=[0, 1, 10],
+        disc_epochs=[1, 10],
+        adv_weight=[1, 10],
+        adv_batch_size=[10]
+    )
+
+    configurations_transe = cartesian_product(hyperparameters_space_transe)
+    configurations_distmult_complex = cartesian_product(hyperparameters_space_distmult_complex)
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_fb15k_clauses_v1/'
     if not os.path.exists(path):
         os.makedirs(path)
+
+    configurations = list(configurations_transe) + list(configurations_distmult_complex)
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
@@ -102,7 +124,7 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
-                             '#$ -l h_vmem=10G,tmem=10G\n' \
+                             '#$ -l h_vmem=8G,tmem=8G\n' \
                              '#$ -l h_rt=96:00:00\n' \
                              '{}\n{}\n'.format(alias, line)
 
