@@ -25,7 +25,7 @@ def logistic_loss(scores, targets):
     loss = tf.reduce_sum(logistic_losses)
     return loss
 
-
+# Aliases
 logistic = logistic_loss
 
 
