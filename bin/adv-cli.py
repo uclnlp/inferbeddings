@@ -203,17 +203,20 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             loss_values, violation_loss_values = [], []
             total_fact_loss_value = 0
 
+            # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
+            # obtained by corrupting the original training triple.
+            nb_versions = 3
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
 
-                Xr_batch = np.zeros((curr_batch_size * 3, Xr_shuf.shape[1]), dtype=Xr_shuf.dtype)
-                Xe_batch = np.zeros((curr_batch_size * 3, Xe_shuf.shape[1]), dtype=Xe_shuf.dtype)
+                Xr_batch = np.zeros((curr_batch_size * nb_versions, Xr_shuf.shape[1]), dtype=Xr_shuf.dtype)
+                Xe_batch = np.zeros((curr_batch_size * nb_versions, Xe_shuf.shape[1]), dtype=Xe_shuf.dtype)
 
-                Xr_batch[0::3, :] = Xr_shuf[batch_start:batch_end, :]
-                Xe_batch[0::3, :] = Xe_shuf[batch_start:batch_end, :]
+                Xr_batch[0::nb_versions, :] = Xr_shuf[batch_start:batch_end, :]
+                Xe_batch[0::nb_versions, :] = Xe_shuf[batch_start:batch_end, :]
 
-                Xr_batch[1::3, :], Xe_batch[1::3, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
-                Xr_batch[2::3, :], Xe_batch[2::3, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
+                Xr_batch[1::nb_versions, :], Xe_batch[1::nb_versions, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[batch_start:batch_end, :]
+                Xr_batch[2::nb_versions, :], Xe_batch[2::nb_versions, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[batch_start:batch_end, :]
 
                 # Safety check - each positive example is followed by two negative (corrupted) examples
                 assert Xr_batch[0] == Xr_batch[1] == Xr_batch[2]
@@ -230,7 +233,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
                                                                  feed_dict=loss_args)
 
-                loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
+                loss_values += [loss_value / (Xr_batch.shape[0] / nb_versions)]
                 total_fact_loss_value += fact_loss_value
 
                 # Project parameters
