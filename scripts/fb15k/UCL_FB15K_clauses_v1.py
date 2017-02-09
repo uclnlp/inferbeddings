@@ -35,13 +35,13 @@ def to_cmd(c, _path=None):
               ' --embedding-size {}' \
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {}' \
-              ' --predicate-norm 1'.format(_path, _path, _path, _path, _path,
-                                           c['clausefile'],
-                                           c['epochs'], c['lr'], c['batches'],
-                                           c['model'], c['similarity'],
-                                           c['margin'], c['embedding_size'],
-                                           c['adv_lr'], c['adv_epochs'],
-                                           c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
+              ''.format(_path, _path, _path, _path, _path,
+                        c['clausefile'],
+                        c['epochs'], c['lr'], c['batches'],
+                        c['model'], c['similarity'],
+                        c['margin'], c['embedding_size'],
+                        c['adv_lr'], c['adv_epochs'],
+                        c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
     return command
 
 
