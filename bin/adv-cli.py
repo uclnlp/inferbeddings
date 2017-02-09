@@ -144,7 +144,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         # where each positive example is followed by a negative example.
         def loss_modifier(_loss_function):
             def unary_function(_score, *_args, **_kwargs):
-                #  tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
+                # tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
                 # tf.split(1, 3, x) turns a [N, 3]-dimensional score matrix into two [N]-dimensional ones
                 positive_scores, negative_scores_left, negative_scores_right = tf.split(1, 3,
                                                                                         tf.reshape(_score, [-1, 3]))
