@@ -3,7 +3,7 @@
 from parsimonious.grammar import Grammar, NodeVisitor
 
 grammar = Grammar("""
-    clause      = atom ( ":-" _ atom_list)?
+    clause      = atom ( ":-" _ atom_list)? ("<" _ weight _ ">")?
     atom_list   = atom  ("," _ atom_list)? _
     atom        = neg? predicate "(" _ term_list ")" _
     neg         = "!" _
@@ -16,6 +16,8 @@ grammar = Grammar("""
     string      = ~r"'[^']*'" / ~r"\\"[^\\"]*\\""
     _           = skip*
     skip        = ~r"\s+"
+    weight      = float / "?"
+    float       = ~"[-]?[0-9]+(\\.[0-9]+)?"
     """)
 
 
@@ -67,13 +69,15 @@ class Atom(Expr):
         self.negated = negated
 
     def __repr__(self):
-        return "{}{}({})".format("!" if self.negated else "", self.predicate.name, ", ".join(str(x) for x in self.arguments))
+        return "{}{}({})".format("!" if self.negated else "", self.predicate.name,
+                                 ", ".join(str(x) for x in self.arguments))
 
 
 class Clause(Expr):
-    def __init__(self, head: Atom, *body):
+    def __init__(self, head: Atom, *body, weight=1.0):
         self.head = head
         self.body = body
+        self.weight = weight
 
     def __repr__(self):
         return str(self.head) if len(self.body) == 0 else "{head} :- {body}".format(
@@ -83,11 +87,12 @@ class Clause(Expr):
 
 class ClauseVisitor(NodeVisitor):
     def visit_clause(self, node, visited_children):
+        weight = 1.0 if len(visited_children[2]) == 0 else visited_children[2][0][2]
         if len(visited_children[1]) == 0:
-            return Clause(visited_children[0])
+            return Clause(visited_children[0], weight=weight)
         else:
-            head, ((_, _, body),) = visited_children
-            return Clause(head, *body)
+            head, ((_, _, body),), _ = visited_children
+            return Clause(head, *body, weight=weight)
 
     def visit_predicate(self, _, visited_children):
         return Predicate(visited_children[0])
@@ -100,6 +105,13 @@ class ClauseVisitor(NodeVisitor):
 
     def visit_term(self, _, visited_children):
         return visited_children[0]
+
+    def visit_float(self, node, _):
+        text = node.full_text[node.start:node.end]
+        return float(text)
+
+    def visit_weight(self, node, visited_children):
+        return None if node.full_text[node.start:node.end] == "?" else visited_children[0]
 
     def visit_term_list(self, _, visited_children):
         if len(visited_children[1]) == 0:
