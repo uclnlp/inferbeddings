@@ -36,6 +36,9 @@ class Adversarial:
         # Trainable parameters of the adversarial model
         self.parameters = []
 
+        # Weight terms of clauses, as mapping from clause to term
+        self.weights = {}
+
         for clause_idx, clause in enumerate(clauses):
             clause_errors, clause_loss, clause_parameters = self._parse_clause('clause_{}'.format(clause_idx), clause)
 
@@ -110,12 +113,13 @@ class Adversarial:
             if clause.weight is None:
                 weight_variable = tf.get_variable('{}_weight'.format(name),
                                                   shape=(),
-                                                  initializer=tf.contrib.layers.xavier_initializer())
+                                                  initializer=tf.constant(0.0))
 
                 # todo: the parameter must likely be registered somewhere to guarantee that weights are learned in the D-step.
                 # todo: parameters.append(weight_variable)
                 # todo: better to project when optimising
                 prob = tf.sigmoid(weight_variable)
+                self.weights[clause] = weight_variable
             else:
                 prob = clause.weight
 
