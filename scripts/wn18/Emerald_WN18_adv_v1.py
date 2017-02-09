@@ -92,21 +92,23 @@ def main(argv):
 
         if not completed:
             file_name = 'emerald_wn18_adv_v1_{}.job'.format(job_id)
+            line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
 
-            line = '{} >> {} 2>&1'.format(to_cmd(cfg), logfile)
+            if args.debug:
+                print(line)
+            else:
+                alias = """
+    alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
+    """
 
-            alias = """
-alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
-"""
+                job_script = '#BSUB -W 4:00\n' \
+                             '{}\n' \
+                             'nvidia-smi > {}\n' \
+                             'export CUDA_VISIBLE_DEVICES=`~/bin/lugpu.sh`\n' \
+                             '{}\n'.format(alias, logfile, line)
 
-            job_script = '#BSUB -W 4:00\n' \
-                         '{}\n' \
-                         'nvidia-smi > {}\n' \
-                         'export CUDA_VISIBLE_DEVICES=`~/bin/lugpu.sh`\n' \
-                         '{}\n'.format(alias, logfile, line)
-
-            with open(file_name, 'w') as f:
-                f.write(job_script)
+                with open(file_name, 'w') as f:
+                    f.write(job_script)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
