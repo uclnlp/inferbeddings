@@ -494,9 +494,9 @@ def main(argv):
                 debug_sequences = parser.facts_to_sequences([fact(s, p, o) for s, p, o in debug_triples])
                 for debug_triple, (p, [s, o]) in zip(debug_triples, debug_sequences):
                     debug_score = scoring_function([[[p]], [[s, o]]])[0]
-                    print('Triple: {}\tScore: {}'.format(debug_triple, debug_score))
+                    print('{}\tTriple: {}\tScore: {}'.format(path, debug_triple, debug_score))
                     debug_score_inverse = scoring_function([[[p]], [[o, s]]])[0]
-                    print('Inverse Triple: {}\tScore: {}'.format(debug_triple, debug_score_inverse))
+                    print('{}\tInverse Triple: {}\tScore: {}'.format(path, debug_triple, debug_score_inverse))
 
         if save_path is not None:
             import pickle
