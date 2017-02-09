@@ -141,7 +141,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         fact_loss += loss(score, target)
     else:
         # Transform the pairwise loss function in an unary loss function,
-        # where each positive example is followed by a negative example.
+        # where each positive example is followed by two negative examples.
         def loss_modifier(_loss_function):
             def unary_function(_score, *_args, **_kwargs):
                 # tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
