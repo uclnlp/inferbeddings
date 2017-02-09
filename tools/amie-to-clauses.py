@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
+
 import logging
 import argparse
 
-import json
+logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 __author__ = 'pminervini'
-__copyright__ = 'INSIGHT Centre for Data Analytics 2016'
+__copyright__ = 'UCLMR'
 
 
 def main(argv):
@@ -21,13 +23,17 @@ def main(argv):
     # Rules-related arguments
     argparser.add_argument('logfile', type=argparse.FileType('r'), help='AMIE+ Log')
 
-    argparser.add_argument('--threshold', '-t', action='store', type=float, default=None)
+    argparser.add_argument('--head-coverage-thr', '-H', action='store', type=float, help='Threshold on Head Coverage')
+    argparser.add_argument('--std-confidence-thr', '-C', action='store', type=float, help='Threshold on Std Confidence')
     argparser.add_argument('--show-weights', '-s', action='store_true')
 
     args = argparser.parse_args(argv)
 
     logfile = args.logfile
-    threshold = args.threshold
+
+    hc_thr = args.head_coverage_thr
+    std_c_thr = args.std_confidence_thr
+
     show_weights = args.show_weights
 
     predicate_features = {}
@@ -69,14 +75,29 @@ def main(argv):
                     hops += [hop]
 
                 feature = {"hops": hops}
-                weight = float(components[1])
+                head_coverage = float(components[1])
+                std_confidence = float(components[2])
+                pca_confidence = float(components[3])
+                positive_examples = float(components[4])
+                body_size = float(components[5])
+                pca_body_size = float(components[6])
 
                 if target_predicate not in predicate_features:
                     predicate_features[target_predicate] = []
 
-                predicate_features[target_predicate] += [{"feature": feature, "weight": weight}]
+                obj = {
+                    'feature': feature,
+                    'head_coverage': head_coverage,
+                    'std_confidence': std_confidence,
+                    'pca_confidence': pca_confidence,
+                    'positive_examples': positive_examples,
+                    'body_size': body_size,
+                    'pca_body_size': pca_body_size
+                }
 
-                logging.debug(target_predicate, [str(hop) for hop in hops], components[1])
+                predicate_features[target_predicate] += [obj]
+
+                logger.debug(target_predicate, [str(hop) for hop in hops], components[1])
 
     obj = []
     for predicate, features in predicate_features.items():
@@ -87,7 +108,9 @@ def main(argv):
 
         features = rule['features']
         for _feature in features:
-            weight = _feature['weight']
+            head_coverage = _feature['head_coverage']
+            std_confidence = _feature['std_confidence']
+
             feature = _feature['feature']
             hops = feature['hops']
 
@@ -101,8 +124,9 @@ def main(argv):
             clause_head = '{}({}, {})'.format(head_predicate, 'X{}'.format(0), 'X{}'.format((last_i + 1)))
             clause = '{} :- {}'.format(clause_head, clause_body)
 
-            if threshold is None or weight >= threshold:
-                print(('{}\t{}'.format(clause, weight)) if show_weights else '{}'.format(clause))
+            if hc_thr is None or head_coverage >= hc_thr:
+                if std_c_thr is None or std_confidence >= std_c_thr:
+                    print(('{}\t{}\t{}'.format(clause, head_coverage, std_confidence)) if show_weights else '{}'.format(clause))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
