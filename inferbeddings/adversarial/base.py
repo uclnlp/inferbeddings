@@ -129,7 +129,6 @@ class Adversarial:
                 # todo: the parameter must likely be registered somewhere to guarantee that weights are learned in the D-step.
                 # todo: parameters.append(weight_variable)
                 # todo: better to project when optimising
-                # todo: the negated clause needs it's own optimisation variables.
                 prob = tf.sigmoid(weight_variable)
                 self.weights[clause] = weight_variable
             else:

@@ -28,23 +28,27 @@ def default_predicate_embeddings(nb_predicates, predicate_embedding_size, walk_i
 
 def pretrained_entity_embeddings(kb_parser: KnowledgeBaseParser, pretrained_embeddings_file):
     # construct a pre-trained matrix by loading the embeddings, turn into tf.constant
+
     with open(pretrained_embeddings_file, "r") as f:
         vocab, lookup = load_glove(f, kb_parser.entity_vocabulary)
         dim = lookup.shape[1]
-        embedding_matrix = np.empty([len(kb_parser.entity_vocabulary) + 1, dim], dtype=np.float32)
+        unk_embedding = tf.get_variable('unk_embedding', shape=[1, dim],
+                                        initializer=tf.contrib.layers.xavier_initializer())
+        embedding_matrix = np.empty([len(kb_parser.entity_vocabulary), dim], dtype=np.float32)
         for entity, index in kb_parser.entity_to_index.items():
             if entity in vocab:
-                embedding_matrix[index, :] = lookup[vocab[entity], :]
+                embedding_matrix[index - 1, :] = lookup[vocab[entity], :]
             else:
-                embedding_matrix[index, :] = lookup[vocab[entity], :]
+                embedding_matrix[index - 1, :] = np.zeros([dim], dtype=np.float32)
 
         embedding_matrix_const = tf.constant(embedding_matrix)
+        embedding_matrix_with_unk = tf.concat(0, [unk_embedding, embedding_matrix_const])
 
     def entity_embeddings(nb_entities, entity_embeddings_size, entity_inputs):
         assert nb_entities == len(kb_parser.entity_vocabulary)
         assert entity_embeddings_size == dim
-        embeddings = tf.nn.embedding_lookup(embedding_matrix_const, entity_inputs)
-        return ProvidedEmbeddings(embeddings, [], [], embedding_matrix_const)
+        embeddings = tf.nn.embedding_lookup(embedding_matrix_with_unk, entity_inputs)
+        return ProvidedEmbeddings(embeddings, [], [], embedding_matrix_with_unk)
 
     return entity_embeddings
 
@@ -79,7 +83,8 @@ def load_glove(stream, vocab):
         n += 1
         if n % 100000 == 0:
             print('  ' + str(n // 1000) + 'k vectors processed...\r')
-    lookup.resize((len(word2idx), dim))
+    np.resize(lookup, (len(word2idx), dim))
+    # lookup.resize((len(word2idx), dim))
     return_vocab = word2idx
     print('[Loading GloVe DONE]')
     return return_vocab, lookup
