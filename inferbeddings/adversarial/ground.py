@@ -83,3 +83,15 @@ class GroundLoss:
         score_head = self._score_atom(head, feed_dict)
         score_body = self._score_conjunction(body, feed_dict)
         return int(not ((score_body - self.tolerance) <= score_head))
+
+    def continuous_error(self, clause, feed_dict):
+        """
+        Compute the violation error of a clause w.r.t. of a variable assignment feed_dict
+        :param clause: Clause.
+        :param feed_dict: Variable assignment: {variable_name: entity}
+        :return: Continuous value
+        """
+        head, body = clause.head, clause.body
+        score_head = self._score_atom(head, feed_dict)
+        score_body = self._score_conjunction(body, feed_dict)
+        return score_body - score_head
