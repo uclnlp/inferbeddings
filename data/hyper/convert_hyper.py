@@ -12,7 +12,7 @@ def main(argv):
         tsvout = csv.writer(csvout, delimiter='\t')
         for row in tsvin:
             subset, superset, label = row
-            tsvout.writerow([subset, "isa", superset, 1 if label == "True" else 0])
+            tsvout.writerow([subset.lower(), "isa", superset.lower(), 1 if label == "True" else 0])
 
 
 if __name__ == '__main__':

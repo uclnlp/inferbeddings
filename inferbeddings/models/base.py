@@ -170,42 +170,49 @@ class ERMLP(BaseModel):
         return params
 
 
-class ConcatModel2Layer(BaseModel):
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        super().__init__(*args, **kwargs)
+class HyperModel(BaseModel):
+    @abc.abstractmethod
+    def aggregate(self, subject_embedding, object_embedding):
+        return None
+
+    def layers(self, aggregated, output_dim):
+        return aggregated
 
     def __call__(self):
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
         pred_embedding = self.predicate_embeddings[:, 0, :]
         shape = pred_embedding.get_shape()
         output_dim = shape[1].value
-
-        # concat subject and object
-        input = tf.concat(1, [subject_embedding, object_embedding])
-        output = slim.fully_connected(input, output_dim)  # [batch_size, pred_dim]
-        # score = tf.einsum("ij,ik->i", output, pred_embedding)
-        score = tf.reduce_sum(pred_embedding * output, axis=1)
+        input = self.aggregate(subject_embedding, object_embedding)
+        hidden = self.layers(input, output_dim)
+        score = tf.reduce_sum(pred_embedding * hidden, axis=1)
         return score
+
+
+class ConcatModel1Layer(HyperModel):
+    def aggregate(self, subject_embedding, object_embedding):
+        return tf.concat(1, [subject_embedding, object_embedding])
+
+
+class ConcatModel2Layer(ConcatModel1Layer):
+    def layers(self, aggregated, output_dim):
+        return slim.fully_connected(aggregated, output_dim)
 
     def get_params(self):
         return super().get_params() + slim.variables.model_variables()
 
 
-class ConcatModel1Layer(BaseModel):
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        super().__init__(*args, **kwargs)
+class DiffModel1Layer(HyperModel):
+    def aggregate(self, subject_embedding, object_embedding):
+        return subject_embedding - object_embedding
 
-    def __call__(self):
-        subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
-        pred_embedding = self.predicate_embeddings[:, 0, :]
-        input = tf.concat(1, [subject_embedding, object_embedding])
-        # score = tf.einsum("ij,ij->i", input, pred_embedding)
-        score = tf.reduce_sum(pred_embedding * input, axis=1)
-        return score
+
+class DiffModel2Layer(DiffModel1Layer):
+    def layers(self, aggregated, output_dim):
+        return slim.fully_connected(aggregated, output_dim)
+
+    def get_params(self):
+        return super().get_params() + slim.variables.model_variables()
 
 
 # Aliases
@@ -214,9 +221,10 @@ DistMult = BilinearDiagonal = BilinearDiagonalModel
 RESCAL = Bilinear = BilinearModel
 ComplEx = ComplexE = ComplexModel
 ER_MLP = ERMLP
-Concat = Concat2 = ConcatModel2Layer
+Concat2 = ConcatModel2Layer
 Concat1 = ConcatModel1Layer
-
+Diff1 = DiffModel1Layer
+Diff2 = DiffModel2Layer
 
 def get_function(function_name):
     this_module = sys.modules[__name__]

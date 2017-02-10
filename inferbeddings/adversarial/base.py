@@ -110,6 +110,17 @@ class Adversarial:
 
         # learnable clause weights
         if clause.weight != 1.0:
+            negation_variable_name_to_layer = dict()
+            for variable_name in variable_names:
+                # [batch_size, embedding_size] variable
+                variable_layer = tf.get_variable('{}_{}_violator_negation'.format(name, variable_name),
+                                                 shape=[self.batch_size, self.entity_embedding_size],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+                negation_variable_name_to_layer[variable_name] = variable_layer
+            negation_head_score = self._parse_atom(head, variable_name_to_layer=negation_variable_name_to_layer)
+            negation_body_score = self._parse_conjunction(body, variable_name_to_layer=negation_variable_name_to_layer)
+            parameters += [layer for _, layer in negation_variable_name_to_layer.items()]
+
             if clause.weight is None:
                 weight_variable = tf.get_variable('{}_weight'.format(name),
                                                   shape=(),
@@ -118,13 +129,14 @@ class Adversarial:
                 # todo: the parameter must likely be registered somewhere to guarantee that weights are learned in the D-step.
                 # todo: parameters.append(weight_variable)
                 # todo: better to project when optimising
+                # todo: the negated clause needs it's own optimisation variables.
                 prob = tf.sigmoid(weight_variable)
                 self.weights[clause] = weight_variable
             else:
                 prob = clause.weight
 
             # we define the negation of a clause as [score(head) <= score(body)] //strictly speaking it should be "<".
-            loss = prob * loss + (1 - prob) * self.loss_function(head_score, body_score)
+            loss = prob * loss + (1 - prob) * self.loss_function(negation_head_score, negation_body_score)
 
             # we leave the errors as is
 
