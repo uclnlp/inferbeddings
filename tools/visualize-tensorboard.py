@@ -13,7 +13,6 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def main(argv):
-
     embeddings = tf.get_variable('W', shape=[10, 100], initializer=tf.contrib.layers.xavier_initializer())
     init_op = tf.global_variables_initializer()
 

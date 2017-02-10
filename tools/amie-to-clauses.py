@@ -28,7 +28,6 @@ def main(argv):
     argparser.add_argument('--head-coverage-thr', '-H', action='store', type=float, help='Threshold on Head Coverage')
     argparser.add_argument('--show-weights', '-s', action='store_true')
 
-
     args = argparser.parse_args(argv)
 
     logfile = args.logfile
