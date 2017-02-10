@@ -75,11 +75,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # Instantiate the model
     similarity_function = similarities.get_function(similarity_name)
 
-    entity_embedding_layer = tf.get_variable('entities', shape=[nb_entities + 1, entity_embedding_size],
-                                             initializer=tf.contrib.layers.xavier_initializer())
-
-    predicate_embedding_layer = tf.get_variable('predicates', shape=[nb_predicates + 1, predicate_embedding_size],
-                                                initializer=tf.contrib.layers.xavier_initializer())
     provided_entity_embeddings = entity_embeddings_provider(nb_entities, entity_embedding_size, entity_inputs)
     provided_predicate_embeddings = predicate_embeddings_provider(nb_predicates, predicate_embedding_size, walk_inputs)
     entity_embeddings = provided_entity_embeddings.embeddings
@@ -107,7 +102,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     initialize_violators, adversarial_optimizer_variables_initializer = None, None
 
     if adv_lr is not None:
-        adversarial = Adversarial(clauses=clauses, parser=parser, predicate_embedding_layer=predicate_embedding_layer,
+        adversarial = Adversarial(clauses=clauses, parser=parser,
+                                  predicate_embedding_layer=provided_predicate_embeddings.embedding_matrix,
                                   model_class=model_class, model_parameters=model_parameters, loss_margin=adv_margin,
                                   batch_size=adv_batch_size)
 
@@ -438,7 +434,7 @@ def main(argv):
     save_path = args.save
 
     assert train_path is not None
-    pos_train_triples, _ = read_triples(train_path)
+    pos_train_triples, neg_train_triples = read_triples(train_path)
     pos_valid_triples, neg_valid_triples = read_triples(valid_path) if valid_path else (None, None)
     pos_test_triples, neg_test_triples = read_triples(test_path) if test_path else (None, None)
 
@@ -446,6 +442,7 @@ def main(argv):
         return Fact(predicate_name=p, argument_names=[s, o])
 
     train_facts = [fact(s, p, o) for s, p, o in pos_train_triples]
+    train_facts_neg = [fact(s, p, o) for s, p, o in neg_train_triples] if neg_train_triples is not None else []
 
     valid_facts = [fact(s, p, o) for s, p, o in pos_valid_triples] if pos_valid_triples is not None else []
     valid_facts_neg = [fact(s, p, o) for s, p, o in neg_valid_triples] if neg_valid_triples is not None else []
@@ -457,7 +454,8 @@ def main(argv):
         '#Training Triples: {}, #Validation Triples: {}, #Test Triples: {}'.format(len(train_facts), len(valid_facts),
                                                                                    len(test_facts)))
 
-    parser = KnowledgeBaseParser(train_facts + valid_facts + test_facts)
+    parser = KnowledgeBaseParser(
+        train_facts + valid_facts + test_facts + train_facts_neg + valid_facts_neg + test_facts_neg)
 
     nb_entities = len(parser.entity_vocabulary)
     nb_predicates = len(parser.predicate_vocabulary)

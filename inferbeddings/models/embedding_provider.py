@@ -16,14 +16,14 @@ def default_entity_embeddings(nb_entities, entity_embedding_size, entity_inputs)
 
     entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, entity_inputs)
     return ProvidedEmbeddings(entity_embeddings, [entity_embedding_layer],
-                              (constraints.renorm_update(entity_embedding_layer, norm=1.0),), entity_embedding_layer)
+                              [constraints.renorm_update(entity_embedding_layer, norm=1.0)], entity_embedding_layer)
 
 
 def default_predicate_embeddings(nb_predicates, predicate_embedding_size, walk_inputs):
     predicate_embedding_layer = tf.get_variable('predicates', shape=[nb_predicates + 1, predicate_embedding_size],
                                                 initializer=tf.contrib.layers.xavier_initializer())
     predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, walk_inputs)
-    return ProvidedEmbeddings(predicate_embeddings, (predicate_embedding_layer,), [], predicate_embedding_layer)
+    return ProvidedEmbeddings(predicate_embeddings, [predicate_embedding_layer], [], predicate_embedding_layer)
 
 
 def pretrained_entity_embeddings(kb_parser: KnowledgeBaseParser, pretrained_embeddings_file):
@@ -44,7 +44,7 @@ def pretrained_entity_embeddings(kb_parser: KnowledgeBaseParser, pretrained_embe
         assert nb_entities == len(kb_parser.entity_vocabulary)
         assert entity_embeddings_size == dim
         embeddings = tf.nn.embedding_lookup(embedding_matrix_const, entity_inputs)
-        return ProvidedEmbeddings(embeddings, (), (), embedding_matrix_const)
+        return ProvidedEmbeddings(embeddings, [], [], embedding_matrix_const)
 
     return entity_embeddings
 
