@@ -50,7 +50,7 @@ def read_triples(path):
     return pos_triples, neg_triples
 
 
-def serialize(path, obj):
+def save(path, obj):
     with open('{}.pkl'.format(path), 'wb') as f:
         pickle.dump(obj, f)
     logger.info('Object {} saved in {}.pkl'.format(type(obj), path))
