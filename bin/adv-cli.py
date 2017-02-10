@@ -323,8 +323,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             prev_embedding_matrix = embedding_matrix
 
     objects = {
-        'entity_embedding_layer': provided_entity_embeddings.trainable_variables[0],
-        # todo: should be adapted to when there are no trainable variables
+        'entity_embedding_layer': provided_entity_embeddings.embedding_matrix,
         'predicate_embedding_layer': provided_predicate_embeddings.trainable_variables[0]
     }
 

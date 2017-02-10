@@ -31,7 +31,7 @@ def pretrained_entity_embeddings(kb_parser: KnowledgeBaseParser, pretrained_embe
     with open(pretrained_embeddings_file, "r") as f:
         vocab, lookup = load_glove(f, kb_parser.entity_vocabulary)
         dim = lookup.shape[1]
-        embedding_matrix = np.empty([len(kb_parser.entity_vocabulary) + 1, dim], dtype=np.float)
+        embedding_matrix = np.empty([len(kb_parser.entity_vocabulary) + 1, dim], dtype=np.float32)
         for entity, index in kb_parser.entity_to_index.items():
             if entity in vocab:
                 embedding_matrix[index, :] = lookup[vocab[entity], :]
