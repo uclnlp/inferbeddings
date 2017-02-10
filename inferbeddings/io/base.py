@@ -51,6 +51,6 @@ def read_triples(path):
 
 
 def save(path, obj):
-    with open('{}.pkl'.format(path), 'wb') as f:
+    with open(path, 'wb') as f:
         pickle.dump(obj, f)
     logger.info('Object {} saved in {}.pkl'.format(type(obj), path))
