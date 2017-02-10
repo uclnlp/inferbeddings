@@ -347,6 +347,9 @@ def main(argv):
     argparser.add_argument('--debug-scores', nargs='+', type=str,
                            help='List of files containing triples we want to compute the score of')
 
+    argparser.add_argument('--ent_embeddings', '-E', action='store', type=str, default=None,
+                           help="Filename of embeddings file")
+
     argparser.add_argument('--lr', '-l', action='store', type=float, default=0.1)
     argparser.add_argument('--initial-accumulator-value', action='store', type=float, default=0.1)
 
@@ -488,6 +491,11 @@ def main(argv):
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
 
+    from inferbeddings.models.embedding_provider import default_entity_embeddings, pretrained_entity_embeddings
+
+    entity_embedding_provider = \
+        pretrained_entity_embeddings(parser, args.ent_embeddings) if args.ent_embeddings else default_entity_embeddings
+
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed,
                                           similarity_name,
@@ -497,7 +505,8 @@ def main(argv):
                                           clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight,
                                           adv_margin,
                                           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
-                                          predicate_l2, predicate_norm, debug)
+                                          predicate_l2, predicate_norm, debug,
+                                          entity_embeddings_provider=entity_embedding_provider)
 
         if args.debug_scores is not None:
             # Print the scores of all triples contained in args.debug_scores
