@@ -1,4 +1,10 @@
 horse   isa vertebrate
 vertebrate  isa animal
 horse   isa animal
+variation    isa change
+change  isa action
+variation  isa action
+carp    isa fish
+fish    isa animal
+carp    isa animal
 

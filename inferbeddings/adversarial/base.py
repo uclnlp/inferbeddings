@@ -68,7 +68,7 @@ class Adversarial:
         scoring_model = self.model_class(reuse_variables=True, **model_parameters)
         atom_score = scoring_model()
 
-        return atom_score
+        return atom_score if not atom.negated else -1.0 * atom_score
 
     def _parse_conjunction(self, atoms, variable_name_to_layer):
         """

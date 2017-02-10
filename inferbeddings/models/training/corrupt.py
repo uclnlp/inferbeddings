@@ -35,3 +35,19 @@ class SimpleCorruptor(ACorruptor):
         entities_corr[:, 1 if self.corrupt_objects else 0] = self.index_generator(nb_samples, self.candidate_indices)
 
         return negative_steps, entities_corr
+
+
+class InverseCorruptor(ACorruptor):
+    def __call__(self, steps, entities):
+        """
+        """
+
+        # TODO - Relation indices are not changed. Corrupting relations should be an option.
+        negative_steps = steps
+
+        # Entity (subject and object) indices are corrupted for generating two new sets of walks
+        entities_corr = np.copy(entities)
+        entities_corr[:, 0] = entities[:, 1]
+        entities_corr[:, 1] = entities[:, 0]
+
+        return negative_steps, entities_corr
