@@ -57,6 +57,7 @@ def main(argv):
     argparser = argparse.ArgumentParser('Generating experiments for the UCL cluster', formatter_class=formatter)
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
     argparser.add_argument('--path', '-p', action='store', type=str, default=None, help='Path')
+    argparser.add_argument('--memory', '-G', action='store', type=str, default='4G', help='Memory (in GBs)')
 
     args = argparser.parse_args(argv)
 
@@ -101,6 +102,8 @@ def main(argv):
 
     configurations = list(configurations_transe) + list(configurations_distmult_complex)
 
+    memory = args.memory
+
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
@@ -120,9 +123,9 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
-                             '#$ -l h_vmem=4G,tmem=4G\n' \
+                             '#$ -l h_vmem={},tmem={}\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '{}\n{}\n'.format(alias, line)
+                             '{}\n{}\n'.format(memory, memory, alias, line)
 
                 with open(file_name, 'w') as f:
                     f.write(job_script)
