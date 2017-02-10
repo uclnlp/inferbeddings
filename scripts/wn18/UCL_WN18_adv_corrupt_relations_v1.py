@@ -123,6 +123,7 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
+                             '#$ -pe smp 1\n' \
                              '#$ -l h_vmem={}\n' \
                              '#$ -l h_rt=24:00:00\n' \
                              '{}\n{}\n'.format(memory, alias, line)
