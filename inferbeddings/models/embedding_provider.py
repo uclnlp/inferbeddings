@@ -89,7 +89,7 @@ if __name__ == "__main__":
     facts = [Fact("hypernym", ("animal", "human"))]
     parser = KnowledgeBaseParser(facts)
     provider = pretrained_entity_embeddings(parser, '/Users/riedel/projects/jtr/jtr/data/GloVe/glove.6B.50d.txt')
-    provided = provider(2, 50, tf.constant([1],dtype=tf.int32))
+    provided = provider(2, 50, tf.constant([1], dtype=tf.int32))
 
     sess = tf.Session()
     print(sess.run(provided.embeddings))
