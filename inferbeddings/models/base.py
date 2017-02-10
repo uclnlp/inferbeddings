@@ -170,7 +170,7 @@ class ERMLP(BaseModel):
         return params
 
 
-class ConcatModel(BaseModel):
+class ConcatModel2Layer(BaseModel):
     def __init__(self, *args, **kwargs):
         """
         """
@@ -184,12 +184,28 @@ class ConcatModel(BaseModel):
 
         # concat subject and object
         input = tf.concat(1, [subject_embedding, object_embedding])
-        output = slim.fully_connected(input, output_dim) # [batch_size, pred_dim]
-        score = tf.einsum("ij,ik->i", output, pred_embedding)
+        output = slim.fully_connected(input, output_dim)  # [batch_size, pred_dim]
+        # score = tf.einsum("ij,ik->i", output, pred_embedding)
+        score = tf.reduce_sum(pred_embedding * output, axis=1)
         return score
 
     def get_params(self):
         return super().get_params() + slim.variables.model_variables()
+
+
+class ConcatModel1Layer(BaseModel):
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        super().__init__(*args, **kwargs)
+
+    def __call__(self):
+        subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
+        pred_embedding = self.predicate_embeddings[:, 0, :]
+        input = tf.concat(1, [subject_embedding, object_embedding])
+        # score = tf.einsum("ij,ij->i", input, pred_embedding)
+        score = tf.reduce_sum(pred_embedding * input, axis=1)
+        return score
 
 
 # Aliases
@@ -198,7 +214,8 @@ DistMult = BilinearDiagonal = BilinearDiagonalModel
 RESCAL = Bilinear = BilinearModel
 ComplEx = ComplexE = ComplexModel
 ER_MLP = ERMLP
-Concat = ConcatModel
+Concat = Concat2 = ConcatModel2Layer
+Concat1 = ConcatModel1Layer
 
 
 def get_function(function_name):
