@@ -2,6 +2,7 @@
 
 import gzip
 import bz2
+import pickle
 
 import logging
 
@@ -19,7 +20,6 @@ def iopen(file, *args, **kwargs):
 
 def read_triples(path):
     logger.debug('Acquiring %s ..' % path)
-
     pos_triples, neg_triples = [], None
 
     with iopen(path, 'rt') as f:
@@ -48,3 +48,9 @@ def read_triples(path):
                     pos_triples += [(s.strip(), p.strip(), o.strip())]
 
     return pos_triples, neg_triples
+
+
+def serialize(path, obj):
+    with open('{}.pkl'.format(path), 'wb') as f:
+        pickle.dump(obj, f)
+    logger.info('Object {} saved in {}.pkl'.format(type(obj), path))
