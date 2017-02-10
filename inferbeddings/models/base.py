@@ -195,11 +195,19 @@ class ConcatModel1Layer(HyperModel):
 
 
 class ConcatModel2Layer(ConcatModel1Layer):
+    def __init__(self, entity_embedding_size=None, predicate_embedding_size=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        with tf.variable_scope("Concat2", reuse=self.reuse_variables) as _:
+            self.matrix = tf.get_variable('concat_matrix_layer',
+                                          shape=[2 * entity_embedding_size, predicate_embedding_size],
+                                          initializer=tf.contrib.layers.xavier_initializer(seed=1))
+
     def layers(self, aggregated, output_dim):
-        return slim.fully_connected(aggregated, output_dim)
+        result = tf.nn.relu(tf.matmul(aggregated, self.matrix))
+        return result  # slim.fully_connected(aggregated, output_dim)
 
     def get_params(self):
-        return super().get_params() + slim.variables.model_variables()
+        return super().get_params() + [self.matrix]  # slim.variables.model_variables()
 
 
 class DiffModel1Layer(HyperModel):
@@ -225,6 +233,7 @@ Concat2 = ConcatModel2Layer
 Concat1 = ConcatModel1Layer
 Diff1 = DiffModel1Layer
 Diff2 = DiffModel2Layer
+
 
 def get_function(function_name):
     this_module = sys.modules[__name__]
