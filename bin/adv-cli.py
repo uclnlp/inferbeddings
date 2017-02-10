@@ -231,12 +231,10 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 Xr_batch[0::nb_versions, :] = Xr_shuf[batch_start:batch_end, :]
                 Xe_batch[0::nb_versions, :] = Xe_shuf[batch_start:batch_end, :]
 
-                Xr_batch[1::nb_versions, :], Xe_batch[1::nb_versions, :] = Xr_sc[batch_start:batch_end, :], Xe_sc[
-                                                                                                            batch_start:batch_end,
-                                                                                                            :]
-                Xr_batch[2::nb_versions, :], Xe_batch[2::nb_versions, :] = Xr_oc[batch_start:batch_end, :], Xe_oc[
-                                                                                                            batch_start:batch_end,
-                                                                                                            :]
+                Xr_batch[1::nb_versions, :], Xe_batch[1::nb_versions, :] = Xr_sc[batch_start:batch_end, :], \
+                                                                           Xe_sc[batch_start:batch_end, :]
+                Xr_batch[2::nb_versions, :], Xe_batch[2::nb_versions, :] = Xr_oc[batch_start:batch_end, :], \
+                                                                           Xe_oc[batch_start:batch_end, :]
 
                 # Safety check - each positive example is followed by two negative (corrupted) examples
                 assert Xr_batch[0] == Xr_batch[1] == Xr_batch[2]
@@ -308,7 +306,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
         if debug:
             from inferbeddings.visualization import hinton_diagram
-            embedding_matrix = session.run(predicate_embedding_layer)[1:, :]
+            embedding_matrix = session.run(provided_predicate_embeddings.embedding_matrix)[1:, :]
             print(hinton_diagram(embedding_matrix))
 
             if prev_embedding_matrix is not None:
@@ -516,7 +514,9 @@ def main(argv):
                     debug_score = scoring_function([[[p]], [[s, o]]])[0]
                     print('{}\tTriple: {}\tScore: {}'.format(path, debug_triple, debug_score))
                     debug_score_inverse = scoring_function([[[p]], [[o, s]]])[0]
-                    print('{}\tInverse Triple: {}\tScore: {}'.format(path, debug_triple, debug_score_inverse))
+                    print('{}\tInverse Triple: {}\tScore: {}'.format(path, (debug_triple[2],
+                                                                            debug_triple[1],
+                                                                            debug_triple[0]), debug_score_inverse))
 
         if save_path is not None:
             import pickle

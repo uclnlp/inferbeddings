@@ -1,0 +1,4 @@
+horse   isa vertebrate
+vertebrate  isa animal
+horse   isa animal
+
