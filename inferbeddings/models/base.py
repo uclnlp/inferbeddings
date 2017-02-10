@@ -3,6 +3,7 @@
 import abc
 
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
 from inferbeddings.models import embeddings
 
 import sys
@@ -125,7 +126,8 @@ class ComplexModel(BaseModel):
         def dot3(arg1, rel, arg2):
             return self.similarity_function(arg1 * rel, arg2)
 
-        score = dot3(es_re, ew_re, eo_re) + dot3(es_re, ew_im, eo_im) + dot3(es_im, ew_re, eo_im) - dot3(es_im, ew_im, eo_re)
+        score = dot3(es_re, ew_re, eo_re) + dot3(es_re, ew_im, eo_im) + dot3(es_im, ew_re, eo_im) - dot3(es_im, ew_im,
+                                                                                                         eo_re)
         return score
 
 
@@ -145,7 +147,8 @@ class ERMLP(BaseModel):
         ent_emb_size = ent_emb_size + ent_emb_size + pred_emb_size
 
         with tf.variable_scope("ERMLP", reuse=self.reuse_variables) as _:
-            self.C = tf.get_variable('C', shape=[ent_emb_size, hidden_size], initializer=tf.contrib.layers.xavier_initializer())
+            self.C = tf.get_variable('C', shape=[ent_emb_size, hidden_size],
+                                     initializer=tf.contrib.layers.xavier_initializer())
             self.w = tf.get_variable('w', shape=[hidden_size, 1], initializer=tf.contrib.layers.xavier_initializer())
 
     def __call__(self):
@@ -167,12 +170,35 @@ class ERMLP(BaseModel):
         return params
 
 
+class ConcatModel(BaseModel):
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        super().__init__(*args, **kwargs)
+
+    def __call__(self):
+        subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
+        pred_embedding = self.predicate_embeddings[:, 0, :]
+        shape = pred_embedding.get_shape()
+        output_dim = shape[1].value
+
+        # concat subject and object
+        input = tf.concat(1, [subject_embedding, object_embedding])
+        output = slim.fully_connected(input, output_dim) # [batch_size, pred_dim]
+        score = tf.einsum("ij,ik->i", output, pred_embedding)
+        return score
+
+    def get_params(self):
+        return super().get_params() + slim.variables.model_variables()
+
+
 # Aliases
 TransE = TranslatingEmbeddings = TranslatingModel
 DistMult = BilinearDiagonal = BilinearDiagonalModel
 RESCAL = Bilinear = BilinearModel
 ComplEx = ComplexE = ComplexModel
 ER_MLP = ERMLP
+Concat = ConcatModel
 
 
 def get_function(function_name):
