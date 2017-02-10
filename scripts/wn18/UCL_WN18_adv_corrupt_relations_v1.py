@@ -123,9 +123,9 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
-                             '#$ -l h_vmem={},tmem={}\n' \
+                             '#$ -l h_vmem={}\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '{}\n{}\n'.format(memory, memory, alias, line)
+                             '{}\n{}\n'.format(memory, alias, line)
 
                 with open(file_name, 'w') as f:
                     f.write(job_script)
