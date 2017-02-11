@@ -511,7 +511,7 @@ def main(argv):
 
     if clauses_path is not None:
         with open(clauses_path, 'r') as f:
-            clauses = [parse_clause(line.strip()) for line in f.readlines()]
+            clauses = [parse_clause(line.strip()) for line in f.readlines() if not line.startswith("%")]
 
     # Do not take up all the GPU memory, all the time.
     sess_config = tf.ConfigProto()
