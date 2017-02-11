@@ -70,7 +70,7 @@ def main(argv):
         margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
-        adv_epochs=[0, 1, 10],
+        adv_epochs=[0, 10],  # Also consider [0, 1, 10]
         disc_epochs=[10],
         adv_weight=[0, 1, 10, 100, 1000, 10000],
         adv_batch_size=[1, 10, 100]
@@ -86,7 +86,7 @@ def main(argv):
         margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
-        adv_epochs=[0, 1, 10],
+        adv_epochs=[0, 10],  # Also consider [0, 1, 10]
         disc_epochs=[10],
         adv_weight=[0, 1, 10, 100, 1000, 10000],
         adv_batch_size=[1, 10, 100]
