@@ -101,8 +101,6 @@ def main(argv):
 
     configurations = list(configurations_transe) + list(configurations_distmult_complex)
 
-    memory = args.memory
-
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
