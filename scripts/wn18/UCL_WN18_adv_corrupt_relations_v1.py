@@ -122,7 +122,7 @@ def main(argv):
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /home/pminervi/workspace/jobs/\n' \
                              '#$ -l mem_free=3G,h_vmem=4G\n' \
-                             '#$ -l h_rt=24:00:00\n' \
+                             '#$ -l h_rt=5:00:00\n' \
                              '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
