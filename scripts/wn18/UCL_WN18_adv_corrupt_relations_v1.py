@@ -57,7 +57,6 @@ def main(argv):
     argparser = argparse.ArgumentParser('Generating experiments for the UCL cluster', formatter_class=formatter)
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
     argparser.add_argument('--path', '-p', action='store', type=str, default=None, help='Path')
-    argparser.add_argument('--memory', '-G', action='store', type=str, default='4G', help='Memory (in GBs)')
 
     args = argparser.parse_args(argv)
 
@@ -72,7 +71,7 @@ def main(argv):
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         adv_epochs=[0, 1, 10],
-        disc_epochs=[1, 10],
+        disc_epochs=[10],
         adv_weight=[0, 1, 10, 100, 1000, 10000],
         adv_batch_size=[1, 10, 100]
     )
@@ -88,7 +87,7 @@ def main(argv):
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         adv_epochs=[0, 1, 10],
-        disc_epochs=[1, 10],
+        disc_epochs=[10],
         adv_weight=[0, 1, 10, 100, 1000, 10000],
         adv_batch_size=[1, 10, 100]
     )
@@ -121,12 +120,12 @@ def main(argv):
             else:
                 file_name = 'ucl_wn18_adv_corrupt_relations_v1_{}.job'.format(job_id)
                 alias = ''
+                # '#$ -pe smp 1\n' \
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
-                             '#$ -pe smp 1\n' \
-                             '#$ -l h_vmem={}\n' \
+                             '#$ -l mem_free=3G,h_vmem=4G\n' \
                              '#$ -l h_rt=24:00:00\n' \
-                             '{}\n{}\n'.format(memory, alias, line)
+                             '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
                     f.write(job_script)
