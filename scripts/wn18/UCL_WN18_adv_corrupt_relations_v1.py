@@ -120,7 +120,7 @@ def main(argv):
                 alias = ''
                 # '#$ -pe smp 1\n' \
                 job_script = '#$ -S /bin/bash\n' \
-                             '#$ -wd /home/pminervi/workspace/jobs/\n' \
+                             '#$ -wd /tmp/\n' \
                              '#$ -l h_vmem=4G,tmem=4G\n' \
                              '#$ -l h_rt=12:00:00\n' \
                              '{}\n{}\n'.format(alias, line)

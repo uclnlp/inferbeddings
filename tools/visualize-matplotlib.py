@@ -14,6 +14,12 @@ import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
+
+def score_TransE_L1(subject_embedding, predicate_embedding, object_embedding):
+    translated_embedding = subject_embedding + predicate_embedding
+    return - np.abs(translated_embedding - object_embedding).sum()
+
+
 def main(argv):
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
