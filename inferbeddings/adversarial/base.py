@@ -32,8 +32,8 @@ class Adversarial:
 
             # Heavily inspired by "Chains of Reasoning over Entities, Relations,
             # and Text using Recurrent Neural Networks" - https://arxiv.org/pdf/1607.01426.pdf
-            def _violation_losses(body_scores, head_scores):
-                _losses = tf.nn.relu(loss_margin - head_scores + body_scores)
+            def _violation_losses(body_scores, head_scores, margin):
+                _losses = tf.nn.relu(margin - head_scores + body_scores)
                 if self.pooling == 'sum':
                     _loss = tf.reduce_sum(_losses)
                 elif self.pooling == 'max':
@@ -45,7 +45,15 @@ class Adversarial:
                 else:
                     raise ValueError('Unknown pooling function {}'.format(self.pooling))
                 return _loss
-            self.loss_function = _violation_losses
+
+            # self.loss_function = lambda body_scores, head_scores:\
+            #    pairwise_losses.hinge_loss(head_scores, body_scores, margin=loss_margin)
+
+            # self.loss_function = lambda body_scores, head_scores:\
+            #     tf.reduce_sum(tf.nn.relu(loss_margin - head_scores + body_scores))
+
+            self.loss_function = lambda body_scores, head_scores:\
+                _violation_losses(body_scores, head_scores, margin=loss_margin)
 
         # Symbolic functions computing the number of ground errors and the continuous loss
         self.errors, self.loss = 0, .0
