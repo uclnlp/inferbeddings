@@ -67,14 +67,14 @@ def main(argv):
         lr=[.1],
         batches=[10],
         model=['TransE'],
-        similarity=['l1'],
-        margin=[1],
-        embedding_size=[100],
+        similarity=['l1', 'l2'],
+        margin=[1, 2, 5, 10],
+        embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
-        adv_epochs=[0, 10],
-        disc_epochs=[1, 10],
-        adv_weight=[1, 10],
-        adv_batch_size=[10]
+        adv_epochs=[0, 10],  # Also consider [0, 1, 10]
+        disc_epochs=[10],
+        adv_weight=[0, 1, 10, 100, 1000, 10000],
+        adv_batch_size=[1, 10, 100]
     )
 
     hyperparameters_space_distmult_complex = dict(
@@ -83,15 +83,15 @@ def main(argv):
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
-        model=['ComplEx', 'DistMult'],
+        model=['DistMult', 'ComplEx'],
         similarity=['dot'],
-        margin=[1],
-        embedding_size=[100],
+        margin=[1, 2, 5, 10],
+        embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
-        adv_epochs=[0, 10],
-        disc_epochs=[1, 10],
-        adv_weight=[1, 10],
-        adv_batch_size=[10]
+        adv_epochs=[0, 10],  # Also consider [0, 1, 10]
+        disc_epochs=[10],
+        adv_weight=[0, 1, 10, 100, 1000, 10000],
+        adv_batch_size=[1, 10, 100]
     )
 
     configurations_transe = cartesian_product(hyperparameters_space_transe)
