@@ -13,7 +13,8 @@ class Adversarial:
     """
 
     def __init__(self, clauses, parser, predicate_embedding_layer,
-                 model_class, model_parameters, loss_function=None, loss_margin=0.0, batch_size=1):
+                 model_class, model_parameters, loss_function=None, loss_margin=0.0,
+                 pooling='sum', batch_size=1):
 
         self.clauses, self.parser = clauses, parser
         self.predicate_embedding_layer = predicate_embedding_layer
@@ -23,12 +24,28 @@ class Adversarial:
         self.model_class, self.model_parameters = model_class, model_parameters
         self.loss_function = loss_function
 
+        self.pooling = pooling
         self.batch_size = batch_size
 
         if self.loss_function is None:
             # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
-            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores,
-                                                                                             margin=loss_margin)
+
+            # Heavily inspired by "Chains of Reasoning over Entities, Relations,
+            # and Text using Recurrent Neural Networks" - https://arxiv.org/pdf/1607.01426.pdf
+            def _violation_losses(body_scores, head_scores):
+                _losses = tf.nn.relu(loss_margin - head_scores + body_scores)
+                if self.pooling == 'sum':
+                    _loss = tf.reduce_sum(_losses)
+                elif self.pooling == 'max':
+                    _loss = tf.reduce_max(_losses)
+                elif self.pooling == 'mean':
+                    _loss = tf.reduce_mean(_losses)
+                elif self.pooling == 'logsumexp':
+                    _loss = tf.log(tf.reduce_sum(tf.exp(_losses)))
+                else:
+                    raise ValueError('Unknown pooling function {}'.format(self.pooling))
+                return _loss
+            self.loss_function = _violation_losses
 
         # Symbolic functions computing the number of ground errors and the continuous loss
         self.errors, self.loss = 0, .0
