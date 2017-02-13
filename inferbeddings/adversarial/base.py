@@ -118,7 +118,7 @@ class Adversarial:
 
         # Instantiate a new layer for each variable
         variable_name_to_layer = dict()
-        for variable_name in variable_names:
+        for variable_name in sorted(variable_names):
             # [batch_size, embedding_size] variable
             variable_layer = tf.get_variable('{}_{}_violator'.format(name, variable_name),
                                              shape=[self.batch_size, self.entity_embedding_size],
@@ -128,7 +128,7 @@ class Adversarial:
         head_score = self._parse_atom(head, variable_name_to_layer=variable_name_to_layer)
         body_score = self._parse_conjunction(body, variable_name_to_layer=variable_name_to_layer)
 
-        parameters = [layer for _, layer in variable_name_to_layer.items()]
+        parameters = [variable_name_to_layer[variable_name] for variable_name in sorted(variable_names)]
 
         errors = tf.reduce_sum(tf.cast(body_score > head_score, tf.float32))
         loss = self.loss_function(body_score, head_score)
