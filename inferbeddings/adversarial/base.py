@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
-from inferbeddings.models.training import pairwise_losses
 import logging
 
 logger = logging.getLogger(__name__)
