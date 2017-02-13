@@ -17,6 +17,9 @@ import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
+# Sample usage:
+# $ ./tools/visualize-matplotlib.py models/visualize/sym_discriminator_100.pkl.pkl \
+#   models/visualize/sym_adversary_100.pkl.pkl -c data/synth/symmetric-tiny/clauses.pl
 
 # Triple/Fact Scoring Functions
 def score_TransE_L1(subject_embedding, predicate_embedding, object_embedding):
