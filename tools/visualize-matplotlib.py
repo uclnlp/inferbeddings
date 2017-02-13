@@ -9,9 +9,12 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.manifold import MDS, TSNE
+# Use Multi-Dimensional Scaling
+from sklearn.manifold import MDS
+
 from inferbeddings.parse import parse_clause
 from inferbeddings.adversarial.ground import GroundLoss
+from inferbeddings.io import read_triples
 
 import logging
 
@@ -20,6 +23,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 # Sample usage:
 # $ ./tools/visualize-matplotlib.py models/visualize/sym_discriminator_100.pkl.pkl \
 #   models/visualize/sym_adversary_100.pkl.pkl -c data/synth/symmetric-tiny/clauses.pl
+
 
 # Triple/Fact Scoring Functions
 def score_TransE_L1(subject_embedding, predicate_embedding, object_embedding):
@@ -78,13 +82,16 @@ def main(argv):
     argparser = argparse.ArgumentParser('Plot Embeddings', formatter_class=formatter)
     argparser.add_argument('model', action='store', type=str)
     argparser.add_argument('adversary', action='store', type=str)
+
     argparser.add_argument('--clauses', '-c', action='store', type=str, default=None)
+    argparser.add_argument('--triples', '-t', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
 
     model_path = args.model
     adversary_path = args.adversary
     clauses_path = args.clauses
+    triples_path = args.triples
 
     with open(model_path, 'rb') as f:
         model_data = pickle.load(f)
@@ -103,13 +110,22 @@ def main(argv):
     entity_indices = sorted(set(entity_to_index.values()))
     predicate_indices = sorted(set(predicate_to_index.values()))
 
+    triples = None
+    if triples_path is not None:
+        triples, _ = read_triples(triples_path)
+        triples_idx = [(entity_to_index[s], predicate_to_index[p], entity_to_index[o]) for (s, p, o) in triples]
+
     clauses = None
+    clause_to_ground_mappings = None
     if clauses_path is not None:
         with open(clauses_path, 'r') as f:
             clauses = [parse_clause(line.strip()) for line in f.readlines()]
         clause_to_variable_names = {clause: GroundLoss.get_variable_names(clause) for clause in clauses}
         clause_to_mappings = {clause: GroundLoss.sample_mappings(clause_to_variable_names[clause], entity_indices)
                               for clause in clauses}
+        if triples is not None:
+            clause_to_ground_mappings = {clauses[0]: [{'X': s_idx, 'Y': o_idx} for (s_idx, _, o_idx) in triples_idx]}
+
 
     nb_entities = len(entity_to_index)
 
@@ -147,7 +163,18 @@ def main(argv):
 
             logger.info('Most violating mapping: {}'.format(most_violating_mapping))
             for variable_name, entity_idx in most_violating_mapping.items():
-                plt.scatter(entity_embeddings_proj[entity_idx, 0], entity_embeddings_proj[entity_idx, 1], color='b')
+                plt.scatter(entity_embeddings_proj[entity_idx - 1, 0], entity_embeddings_proj[entity_idx - 1, 1], color='b')
+
+            if clause_to_ground_mappings is not None:
+                for clause, mappings in clause_to_ground_mappings.items():
+                    mapping_loss_lst = [(mapping, loss_clause(clause, mapping, **kwargs)) for mapping in mappings]
+                    # Find the most violating variable assignment (i.e. the variable assignment with the highest loss)
+                    import operator
+                    most_violating_mapping = max(mapping_loss_lst, key=operator.itemgetter(1))[0]
+
+                    logger.info('Most violating ground mapping: {}'.format(most_violating_mapping))
+                    for variable_name, entity_idx in most_violating_mapping.items():
+                        plt.scatter(entity_embeddings_proj[entity_idx - 1, 0], entity_embeddings_proj[entity_idx - 1, 1], color='g')
 
     for index, (x, y) in enumerate(zip(entity_embeddings_proj[:, 0], entity_embeddings_proj[:, 1]), 1):
         label = index_to_entity[index]
