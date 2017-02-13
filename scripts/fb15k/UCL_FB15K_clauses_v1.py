@@ -60,8 +60,6 @@ def main(argv):
 
     args = argparser.parse_args(argv)
 
-
-
     hyperparameters_space_transe = dict(
         clausefile=['clauses_highconf_highsupp.pl', 'clauses_highconf_lowsupp.pl', 'clauses_lowconf_highsupp.pl', 'clauses_lowconf_lowsupp.pl'],
         epochs=[100],
