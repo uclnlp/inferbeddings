@@ -77,7 +77,7 @@ def main(argv):
     )
 
     hyperparameters_space_distmult_complex = dict(
-        epochs=[100],
+        epochs=[10, 50, 100],
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
@@ -86,8 +86,8 @@ def main(argv):
         margin=[1],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
-        adv_epochs=[0, 1, 10],
-        disc_epochs=[1, 10],
+        adv_epochs=[0, 10],
+        disc_epochs=[10],
         adv_weight=[0, 1, 10, 100, 1000, 10000],
         adv_batch_size=[1, 10, 100]
     )
