@@ -61,7 +61,7 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_transe = dict(
-        epochs=[10, 50, 100],
+        epochs=[100],
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
@@ -77,7 +77,7 @@ def main(argv):
     )
 
     hyperparameters_space_distmult_complex = dict(
-        epochs=[10, 50, 100],
+        epochs=[100],
         optimizer=['adagrad'],
         lr=[.1],
         batches=[10],
