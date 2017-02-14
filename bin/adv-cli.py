@@ -305,6 +305,11 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 }
                 save('{}_discriminator_{}.pkl'.format(debug_embeddings, epoch), objects_to_serialize)
 
+            # Check if the fact loss is NaN, and stop if it happens
+            if np.isnan(total_fact_loss_value):
+                logger.error('Epoch: {0}/{1}\tFact loss is NaN! Exiting ..'.format(epoch, disc_epoch))
+                sys.exit(0)
+
         if adv_lr is not None:
             logger.info('Finding violators ..')
 
