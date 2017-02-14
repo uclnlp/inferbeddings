@@ -100,3 +100,8 @@ logs*.tar.gz
 # Debugging log files
 safety.txt
 safety_new.txt
+
+# Datasets
+data/yago*/yagoFacts.tsv.7z
+data/yago*/yago3.tsv.gz
+data/yago*/tmp/
