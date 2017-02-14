@@ -16,10 +16,11 @@ def main(argv):
         with open(input_name, 'r') as f:
             for line in f.readlines():
                 if line != "\n":
-                    split = re.split(",|\\(|\\)", line.strip())[:-1]
+                    split = [s.strip() for s in re.split(",|\\(|\\)", line.strip())[:-1]]
                     if len(split) == 2:
                         split = ["unary"] + split
                     rel, subj, obj = split[:3]
+                    # if not rel.startswith("same"):
                     # print(split)
                     fold.append((subj, rel, obj))
                     if subj.startswith("Person"):

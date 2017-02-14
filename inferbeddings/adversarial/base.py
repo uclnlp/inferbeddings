@@ -27,8 +27,9 @@ class Adversarial:
 
         if self.loss_function is None:
             # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
-            self.loss_function = lambda body_scores, head_scores: pairwise_losses.hinge_loss(head_scores, body_scores,
-                                                                                             margin=loss_margin)
+            self.loss_function = lambda body_scores, head_scores: pairwise_losses.max_hinge_loss(head_scores,
+                                                                                                 body_scores,
+                                                                                                 margin=loss_margin)
 
         # Symbolic functions computing the number of ground errors and the continuous loss
         self.errors, self.loss = 0, .0
@@ -38,6 +39,8 @@ class Adversarial:
 
         # Weight terms of clauses, as mapping from clause to term
         self.weights = {}
+
+        # Mapping from clause to
 
         for clause_idx, clause in enumerate(clauses):
             clause_errors, clause_loss, clause_parameters = self._parse_clause('clause_{}'.format(clause_idx), clause)
@@ -80,6 +83,16 @@ class Adversarial:
             conjunction_score = atom_score if conjunction_score is None else tf.minimum(conjunction_score, atom_score)
         return conjunction_score
 
+    def create_violator_variable(self, clause_name, variable_name):
+        return tf.get_variable('{}_{}_violator'.format(clause_name, variable_name),
+                               shape=[self.batch_size, self.entity_embedding_size],
+                               initializer=tf.contrib.layers.xavier_initializer())
+
+    def create_violator_placeholder(self, clause_name, variable_name):
+        return tf.placeholder(dtype=tf.float32,
+                              shape=[self.batch_size, self.entity_embedding_size],
+                              name='{}_{}_violator_ph'.format(clause_name, variable_name))
+
     def _parse_clause(self, name, clause):
         """
         Given a clause in the form p(X0, X1) :- q(X2, X3), r(X4, X5), return its symbolic score.
@@ -98,9 +111,10 @@ class Adversarial:
             variable_layer = tf.get_variable('{}_{}_violator'.format(name, variable_name),
                                              shape=[self.batch_size, self.entity_embedding_size],
                                              initializer=tf.contrib.layers.xavier_initializer())
+            # variable_layer = violator_creator(name, variable_name)
             variable_name_to_layer[variable_name] = variable_layer
 
-        head_score = self._parse_atom(head, variable_name_to_layer=variable_name_to_layer)
+        head_score = tf.maximum(0.0, self._parse_atom(head, variable_name_to_layer=variable_name_to_layer))
         body_score = self._parse_conjunction(body, variable_name_to_layer=variable_name_to_layer)
 
         parameters = [layer for _, layer in variable_name_to_layer.items()]

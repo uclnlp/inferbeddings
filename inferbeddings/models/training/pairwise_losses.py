@@ -21,6 +21,18 @@ def hinge_loss(positive_scores, negative_scores, margin=1.0):
     return loss
 
 
+def avg_hinge_loss(positive_scores, negative_scores, margin=1.0):
+    hinge_losses = tf.nn.relu(margin - positive_scores + negative_scores)
+    loss = tf.reduce_mean(hinge_losses)
+    return loss
+
+
+def max_hinge_loss(positive_scores, negative_scores, margin=1.0):
+    hinge_losses = tf.nn.relu(margin - positive_scores + negative_scores)
+    loss = tf.reduce_max(hinge_losses)
+    return loss
+
+
 def logistic_loss(positive_scores, negative_scores):
     """
     Pairwise logistic loss [1]:
@@ -85,6 +97,7 @@ def square_exponential_loss(positive_scores, negative_scores, gamma=1.0):
     square_exponential_losses = - positive_scores + gamma * tf.exp(negative_scores)
     loss = tf.reduce_sum(square_exponential_losses)
     return loss
+
 
 # Aliases
 hinge = hinge_loss

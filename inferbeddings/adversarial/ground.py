@@ -80,6 +80,6 @@ class GroundLoss:
         :return: Value in {0, 1}
         """
         head, body = clause.head, clause.body
-        score_head = self._score_atom(head, feed_dict)
+        score_head = max(self._score_atom(head, feed_dict),0.0)
         score_body = self._score_conjunction(body, feed_dict)
         return int(not ((score_body - self.tolerance) <= score_head))

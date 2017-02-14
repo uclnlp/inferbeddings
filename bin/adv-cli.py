@@ -341,7 +341,8 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
 
     objects = {
         'entity_embedding_layer': provided_entity_embeddings.embedding_matrix,
-        'predicate_embedding_layer': provided_predicate_embeddings.trainable_variables[0]
+        'predicate_embedding_layer': provided_predicate_embeddings.trainable_variables[0],
+        'adversarial': adversarial
     }
 
     return scoring_function, objects
@@ -362,6 +363,9 @@ def main(argv):
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
     argparser.add_argument('--debug-scores', nargs='+', type=str,
                            help='List of files containing triples we want to compute the score of')
+
+    argparser.add_argument('--debug-clause-entities', type=str,
+                           help='file to load entities from to test clause violations')
 
     argparser.add_argument('--ent_embeddings', '-E', action='store', type=str, default=None,
                            help="Filename of embeddings file")
@@ -403,6 +407,9 @@ def main(argv):
                            help='File containing background knowledge expressed as Horn clauses')
 
     argparser.add_argument('--adv-lr', '-L', action='store', type=float, default=None, help='Adversary learning rate')
+
+    argparser.add_argument('--subsample-prob', '-sp', action='store', type=float, default=1.0,
+                           help='Probability of choosing a true fact into the training set')
 
     argparser.add_argument('--adversary-epochs', action='store', type=int, default=10,
                            help='Adversary - number of training epochs')
@@ -539,15 +546,22 @@ def main(argv):
         if args.debug_scores is not None:
             # Print the scores of all triples contained in args.debug_scores
             for path in args.debug_scores:
-                debug_triples, _ = read_triples(path)
+                debug_triples, neg_debug_triples = read_triples(path)
                 debug_sequences = parser.facts_to_sequences([fact(s, p, o) for s, p, o in debug_triples])
+                neg_debug_sequences = parser.facts_to_sequences([fact(s, p, o) for s, p, o in neg_debug_triples])
+
+                to_sort = []
                 for debug_triple, (p, [s, o]) in zip(debug_triples, debug_sequences):
                     debug_score = scoring_function([[[p]], [[s, o]]])[0]
-                    print('{}\tTriple: {}\tScore: {}'.format(path, debug_triple, debug_score))
-                    debug_score_inverse = scoring_function([[[p]], [[o, s]]])[0]
-                    print('{}\tInverse Triple: {}\tScore: {}'.format(path, (debug_triple[2],
-                                                                            debug_triple[1],
-                                                                            debug_triple[0]), debug_score_inverse))
+                    to_sort.append((debug_score, True, debug_triple))
+                for debug_triple, (p, [s, o]) in zip(neg_debug_triples, neg_debug_sequences):
+                    debug_score = scoring_function([[[p]], [[s, o]]])[0]
+                    to_sort.append((debug_score, False, debug_triple))
+
+                sorted_facts = sorted(to_sort, key=lambda t: -t[0])
+
+                for score, label, triple in sorted_facts:
+                    print('{}\t{}\t{}'.format(label, score, triple))
 
         if save_path is not None:
             import pickle
