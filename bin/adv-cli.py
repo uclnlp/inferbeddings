@@ -162,7 +162,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         # array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0], dtype=int32)
 
         target = ((tf.range(0, limit=tf.shape(score)[0]) % nb_versions) < 1)
-        fact_loss += loss(score, tf.cast(target, score.dtype))
+        fact_loss += loss(score, tf.cast(target, score.dtype), margin=margin)
     else:
         # We are now using a pairwise (positives, negatives) loss from models/training/pairwise_losses.py
 
