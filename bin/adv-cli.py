@@ -455,6 +455,9 @@ def main(argv):
     argparser.add_argument('--adv-pooling', action='store', type=str, default='sum',
                            help='Pooling method used for aggregating adversarial losses (sum, mean, max, logsumexp)')
 
+    argparser.add_argument('--subsample-size', action='store', type=float, default=None,
+                           help='Fraction of training facts to use during training (e.g. 0.1)')
+
     argparser.add_argument('--save', action='store', type=str, default=None,
                            help='Path for saving the serialized model')
 
@@ -488,6 +491,7 @@ def main(argv):
     adv_batch_size, adv_init_ground = args.adv_batch_size, args.adv_init_ground
     adv_pooling = args.adv_pooling
 
+    subsample_size = args.subsample_size
     save_path = args.save
 
     assert train_path is not None
@@ -520,6 +524,19 @@ def main(argv):
     assert (0 not in set(parser.predicate_to_index.values()))
 
     logger.info('#Entities: {}\t#Predicates: {}'.format(nb_entities, nb_predicates))
+
+    # Subsampling training facts for X-shot learning
+    if subsample_size is not None and subsample_size < 1:
+        assert subsample_size >= .0
+        nb_train_facts = len(train_facts)
+        sample_size = int(round(nb_train_facts * subsample_size))
+
+        logger.info('Randomly selecting {} triples from the training set'.format(sample_size))
+        random_state = np.random.RandomState(seed=seed)
+        sample_indices = random_state.choice(nb_train_facts, sample_size, replace=False)
+
+        _train_facts = [train_facts[idx] for idx in sample_indices]
+        train_facts = _train_facts
 
     train_sequences = parser.facts_to_sequences(train_facts)
 
