@@ -1,0 +1,64 @@
+Loading files... 
+  Starting music_2015-10_mte10-train.tsv
+  Finished music_2015-10_mte10-train.tsv, still running: 0
+Loaded 288587 facts in 1.87 s using -60 MB
+Using HeadCoverage as pruning metric with minimum threshold 0.01
+Using recursivity limit 3
+Default mining assistant that defines support by counting support on both head variables
+No minimum threshold on standard confidence
+Filtering on PCA confidence with minimum threshold 0.1
+Constants in the arguments of relations are disabled
+Lossless (query refinement) heuristics enabled
+Starting the mining phase... Using 4 threads
+Rule	Head Coverage	Std Confidence	PCA Confidence	Positive Examples	Body size	PCA Body size	Functional variable	Std. Lower Bound	PCA Lower Bound	PCA Conf estimation
+?a  <http://dbpedia.org/ontology/musicalBand>  ?b   => ?a  <http://dbpedia.org/ontology/musicalArtist>  ?b	0.966264399	0.967857143	0.980517673	3523	3640	3593	?b	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/musicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/musicalBand>  ?b	0.967857143	0.966264399	0.976441242	3523	3646	3608	?b	0.0	0.0	0.0
+?b  <http://dbpedia.org/ontology/associatedBand>  ?a   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.25655546	0.256502831	0.336587467	18756	73122	55724	?a	0.0	0.0	0.0
+?b  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.256158781	0.256158781	0.336079107	18727	73107	55722	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedBand>  ?b   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.967198763	0.967000356	0.968735872	70709	73122	72991	?a	0.0	0.0	0.0
+?b  <http://dbpedia.org/ontology/associatedBand>  ?a   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.25728235	0.25728235	0.337610365	18813	73122	55724	?a	0.0	0.0	0.0
+?b  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.256502831	0.25655546	0.336623712	18756	73107	55718	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.967000356	0.967198763	0.968921715	70709	73107	72977	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?f  ?f  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.288926908	0.098271124	0.147539603	14017	142636	95005	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/recordLabel>  ?b  ?a  <http://dbpedia.org/ontology/recordLabel>  ?f   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.012161438	0.546802595	0.546802595	590	1079	1079	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/musicalBand>  ?f  ?f  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.044935483	0.235167206	0.24420298	2180	9270	8927	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/album>  ?f  ?f  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.010409366	0.593419506	0.604066986	505	851	836	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/musicalArtist>  ?f  ?f  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.04483242	0.235415088	0.244519393	2175	9239	8895	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedBand>  ?f  ?f  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.289009358	0.09820553	0.147580153	14021	142772	95006	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/musicalBand>  ?a  ?e  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.034567341	0.233046137	0.288640275	1677	7196	5810	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/musicalArtist>  ?a  ?e  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.034134477	0.230512249	0.285763589	1656	7184	5795	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedBand>  ?a  ?e  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.240652183	0.121197965	0.151863992	11675	96330	76878	?a	0.0	0.0	0.0
+countPairs vars ?a, ?b in ?b <http://dbpedia.org/ontology/genre> ?f  ?a <http://dbpedia.org/ontology/genre> ?f   has taken 28250 ms
+countPairs vars ?a, ?b in ?b <http://dbpedia.org/ontology/genre> ?f  ?a <http://dbpedia.org/ontology/genre> ?f   has taken 28571 ms
+?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a  ?e  <http://dbpedia.org/ontology/recordLabel>  ?b   => ?a  <http://dbpedia.org/ontology/recordLabel>  ?b	0.240672795	0.121237293	0.15202927	11676	96307	76801	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/genre>  ?b  ?a  <http://dbpedia.org/ontology/recordLabel>  ?f   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.119957266	0.209155885	0.213818513	10330	49389	48312	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedBand>  ?f  ?f  <http://dbpedia.org/ontology/genre>  ?b   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.362298813	0.229072593	0.243717435	31199	136197	128013	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/genre>  ?b  ?a  <http://dbpedia.org/ontology/musicalArtist>  ?f   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.028543559	0.297506657	0.301965602	2458	8262	8140	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/genre>  ?b  ?a  <http://dbpedia.org/ontology/musicalBand>  ?f   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.028427433	0.296224589	0.300404958	2448	8264	8149	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?f  ?f  <http://dbpedia.org/ontology/genre>  ?b   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.361520775	0.228736848	0.243378467	31132	136104	127916	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedBand>  ?a  ?e  <http://dbpedia.org/ontology/genre>  ?b   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.291752793	0.197207199	0.21498494	25124	127399	116864	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a  ?e  <http://dbpedia.org/ontology/genre>  ?b   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.291160555	0.196546156	0.214211264	25073	127568	117048	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/genre>  ?b  ?e  <http://dbpedia.org/ontology/musicalBand>  ?a   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.02540818	0.252393586	0.300343171	2188	8669	7285	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/genre>  ?b  ?e  <http://dbpedia.org/ontology/musicalArtist>  ?a   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.025326892	0.251731302	0.300247797	2181	8664	7264	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/genre>  ?b  ?e  <http://dbpedia.org/ontology/recordLabel>  ?a   => ?a  <http://dbpedia.org/ontology/genre>  ?b	0.03012286	0.049204272	0.119407107	2594	52719	21724	?a	0.0	0.0	0.0
+countPairs vars ?a, ?b in ?b <http://dbpedia.org/ontology/genre> ?f  ?a <http://dbpedia.org/ontology/genre> ?f   has taken 28472 ms
+countPairs vars ?a, ?b in ?b <http://dbpedia.org/ontology/genre> ?f  ?a <http://dbpedia.org/ontology/genre> ?f   has taken 28393 ms
+countPairs vars ?a, ?b in ?b <http://dbpedia.org/ontology/genre> ?f  ?a <http://dbpedia.org/ontology/genre> ?f   has taken 73109 ms
+?f  <http://dbpedia.org/ontology/associatedBand>  ?b  ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?f   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.408811742	0.118969807	0.118969807	29887	251215	251215	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b  ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?f   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.408798063	0.119140827	0.119140827	29886	250846	250846	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/associatedBand>  ?b  ?a  <http://dbpedia.org/ontology/associatedBand>  ?f   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.408209884	0.118788511	0.11894475	29843	251228	250898	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedBand>  ?f  ?f  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.408004705	0.118938533	0.119095247	29828	250785	250455	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a  ?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.331637189	0.074782008	0.100536582	24245	324209	241156	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedBand>  ?b  ?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a   => ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b	0.330433474	0.07443275	0.10010982	24157	324548	241305	?a	0.0	0.0	0.0
+?b  <http://dbpedia.org/ontology/associatedBand>  ?a  ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.248174284	0.96753039	0.970427807	18147	18756	18700	?a	0.0	0.0	0.0
+?b  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a  ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.24747682	0.966305335	0.969203578	18096	18727	18671	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/associatedBand>  ?b  ?a  <http://dbpedia.org/ontology/associatedBand>  ?f   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.408085118	0.118776569	0.118776569	29840	251228	251228	?a	0.0	0.0	0.0
+?a  <http://dbpedia.org/ontology/associatedBand>  ?f  ?f  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.407127814	0.118707259	0.118707259	29770	250785	250785	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/associatedBand>  ?b  ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?f   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.407962036	0.11874689	0.118922043	29831	251215	250845	?a	0.0	0.0	0.0
+?f  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b  ?a  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?f   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.407250896	0.118714271	0.118889634	29779	250846	250476	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a  ?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?b   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.331268291	0.07471415	0.100462018	24223	324209	241116	?a	0.0	0.0	0.0
+?e  <http://dbpedia.org/ontology/associatedBand>  ?b  ?e  <http://dbpedia.org/ontology/associatedMusicalArtist>  ?a   => ?a  <http://dbpedia.org/ontology/associatedBand>  ?b	0.330611854	0.074488211	0.100200608	24175	324548	241266	?a	0.0	0.0	0.0
+countPairs vars ?a, ?b in ?b <http://dbpedia.org/ontology/genre> ?f  ?a <http://dbpedia.org/ontology/genre> ?f   has taken 47674 ms
+Mining done in 3 min, 52 s
+Total time 3 min, 54 s
+42 rules mined.
