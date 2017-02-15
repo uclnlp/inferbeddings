@@ -34,7 +34,7 @@ def main(argv):
 
     hc_thr = args.head_coverage_thr
     std_c_thr = args.std_confidence_thr
-    body_thr = args.body_size_thr
+    body_thr = args.body_thr
 
     show_weights = args.show_weights
 
