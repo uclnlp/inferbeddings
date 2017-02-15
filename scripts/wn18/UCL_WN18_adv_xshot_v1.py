@@ -128,8 +128,8 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
-                             '#$ -l h_vmem=4G,tmem=4G\n' \
-                             '#$ -l h_rt=24:00:00\n' \
+                             '#$ -l h_vmem=3G,tmem=3G\n' \
+                             '#$ -l h_rt=12:00:00\n' \
                              '{}\n{}\n'.format(alias, line)
 
                 with open(file_name, 'w') as f:
