@@ -34,6 +34,7 @@ def to_cmd(c, _path=None):
               ' --similarity {}' \
               ' --margin {}' \
               ' --embedding-size {}' \
+              ' --subsample-size {}' \
               ' --loss {}' \
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {}' \
@@ -41,6 +42,7 @@ def to_cmd(c, _path=None):
                         c['epochs'], c['lr'], c['batches'],
                         c['model'], c['similarity'],
                         c['margin'], c['embedding_size'],
+                        c['subsample_size'],
                         c['loss'],
                         c['adv_lr'], c['adv_epochs'],
                         c['disc_epochs'], c['adv_weight'], c['adv_batch_size'])
