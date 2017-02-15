@@ -1,0 +1,7 @@
+isMarriedTo(X0, X1) :- isMarriedTo(X1, X0)
+hasNeighbor(X0, X1) :- hasNeighbor(X1, X0)
+hasNeighbor(X0, X2) :- dealsWith(X1, X0), hasNeighbor(X1, X2)
+isLocatedIn(X0, X2) :- hasCapital(X1, X0), isLocatedIn(X1, X2)
+hasGender(X0, X2) :- hasAcademicAdvisor(X0, X1), hasGender(X1, X2)
+hasGender(X0, X2) :- influences(X1, X0), hasGender(X1, X2)
+isAffiliatedTo(X0, X1) :- playsFor(X0, X1)
