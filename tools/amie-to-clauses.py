@@ -24,7 +24,7 @@ def main(argv):
     argparser.add_argument('logfile', type=argparse.FileType('r'), help='AMIE+ Log')
 
     argparser.add_argument('--std-confidence-thr', '-C', action='store', type=float, help='Threshold on Std Confidence')
-    argparser.add_argument('--body-size-thr', '-B', action='store', type=float, help='Threshold on body size')
+    argparser.add_argument('--body-thr', '-B', action='store', type=float, help='Threshold on body size')
     argparser.add_argument('--head-coverage-thr', '-H', action='store', type=float, help='Threshold on Head Coverage')
     argparser.add_argument('--show-weights', '-s', action='store_true')
 
