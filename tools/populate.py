@@ -95,6 +95,6 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    sys.setrecursionlimit(65536)
+    sys.setrecursionlimit(2 ** 20)
     logging.basicConfig(level=logging.INFO)
     main(sys.argv[1:])
