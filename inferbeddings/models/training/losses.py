@@ -4,7 +4,7 @@ import tensorflow as tf
 import sys
 
 
-def logistic_loss(scores, targets):
+def logistic_loss(scores, targets, *args, **kwargs):
     """
     Logistic loss as used in [1]
 
@@ -27,14 +27,27 @@ def logistic_loss(scores, targets):
     return loss
 
 
-def hinge_loss(scores, targets):
+def hinge_loss(scores, targets, margin=1, *args, **kwargs):
     """
     Hinge loss.
     :param scores: (N,) Tensor containing scores of examples.
     :param targets: (N,) Tensor containing {0, 1} targets of examples.
+    :param margin: float representing the margin in the hinge loss relu(margin - logits * (2 * targets - 1))
     :return: Loss value.
     """
-    hinge_losses = tf.contrib.losses.hinge_loss(logits=scores, labels=targets)
+    # The following two formulations are equivalent:
+    # > x.eval()
+    # array([0., -1., 2., -3., 4., -5., 6.], dtype=float32)
+    # > t.eval()
+    # array([0., 1., 1., 1., 0., 0., 1.], dtype=float32)
+    # > tf.contrib.losses.hinge_loss(logits=x, labels=t).eval()
+    # array([1., 2., 0., 4., 5., 0., 0.], dtype=float32)
+    # > tf.nn.relu(1 - x * (2 * t - 1)).eval()
+    # array([1., 2., 0., 4., 5., 0., 0.], dtype=float32)
+
+    # hinge_losses = tf.contrib.losses.hinge_loss(logits=scores, labels=targets)
+    hinge_losses = tf.nn.relu(margin - scores * (2 * targets - 1))
+
     loss = tf.reduce_sum(hinge_losses)
     return loss
 

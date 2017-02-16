@@ -100,3 +100,9 @@ logs*.tar.gz
 # Debugging log files
 safety.txt
 safety_new.txt
+
+# Datasets
+data/yago*/yagoFacts.tsv.7z
+data/yago*/yago3.tsv.gz
+data/yago*/tmp/
+data/music_mte10_5k/download/mappingbased_objects_en.ttl.bz

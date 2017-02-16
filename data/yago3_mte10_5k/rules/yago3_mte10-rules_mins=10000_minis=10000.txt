@@ -1,0 +1,49 @@
+Loading files... 
+  Starting yago3_mte10-train.tsv
+  Finished yago3_mte10-train.tsv, still running: 0
+Loaded 1079040 facts in 8.72 s using 328 MB
+Using HeadCoverage as pruning metric with minimum threshold 0.01
+Using recursivity limit 3
+Default mining assistant that defines support by counting support on both head variables
+No minimum threshold on standard confidence
+Filtering on PCA confidence with minimum threshold 0.1
+Constants in the arguments of relations are disabled
+Lossless (query refinement) heuristics enabled
+Starting the mining phase... Using 8 threads
+Rule	Head Coverage	Std Confidence	PCA Confidence	Positive Examples	Body size	PCA Body size	Functional variable	Std. Lower Bound	PCA Lower Bound	PCA Conf estimation
+?b  isConnectedTo  ?a   => ?a  isConnectedTo  ?b	0.662486352	0.662486352	0.671919	21236	32055	31605	?b	0.0	0.0	0.0
+?a  directed  ?b   => ?a  actedIn  ?b	0.017353444	0.10180624	0.104007456	558	5481	5365	?b	0.0	0.0	0.0
+?a  diedIn  ?b   => ?a  wasBornIn  ?b	0.02516786	0.122404844	0.174127057	1132	9248	6501	?a	0.0	0.0	0.0
+?a  hasCapital  ?b   => ?a  isLocatedIn  ?b	0.011187297	0.38659392	0.417508418	992	2566	2376	?a	0.0	0.0	0.0
+?b  hasCapital  ?a   => ?a  isLocatedIn  ?b	0.019645435	0.678877631	0.681533646	1742	2566	2556	?a	0.0	0.0	0.0
+?f  hasWonPrize  ?b  ?a  isMarriedTo  ?f   => ?a  hasWonPrize  ?b	0.021106864	0.168770764	0.31127451	508	3010	1632	?a	0.0	0.0	0.0
+?a  hasAcademicAdvisor  ?f  ?f  hasWonPrize  ?b   => ?a  hasWonPrize  ?b	0.015830148	0.202551834	0.256393001	381	1881	1486	?a	0.0	0.0	0.0
+?f  hasWonPrize  ?b  ?a  influences  ?f   => ?a  hasWonPrize  ?b	0.021397706	0.075424722	0.16808094	515	6828	3064	?a	0.0	0.0	0.0
+?e  hasAcademicAdvisor  ?a  ?e  hasWonPrize  ?b   => ?a  hasWonPrize  ?b	0.012423134	0.197359736	0.255774166	299	1515	1169	?a	0.0	0.0	0.0
+?a  hasChild  ?f  ?f  hasWonPrize  ?b   => ?a  hasWonPrize  ?b	0.031535649	0.189655172	0.304330393	759	4002	2494	?a	0.0	0.0	0.0
+?e  hasWonPrize  ?b  ?e  isMarriedTo  ?a   => ?a  hasWonPrize  ?b	0.021106864	0.16815624	0.311083895	508	3021	1633	?a	0.0	0.0	0.0
+?e  hasWonPrize  ?b  ?e  influences  ?a   => ?a  hasWonPrize  ?b	0.02364135	0.086487308	0.177369077	569	6579	3208	?a	0.0	0.0	0.0
+?e  hasChild  ?a  ?e  hasWonPrize  ?b   => ?a  hasWonPrize  ?b	0.033322254	0.200952142	0.312062257	802	3991	2570	?a	0.0	0.0	0.0
+?e  owns  ?a  ?e  owns  ?b   => ?a  isConnectedTo  ?b	0.010138824	0.115823236	0.276125743	325	2806	1177	?b	0.0	0.0	0.0
+?a  playsFor  ?b   => ?a  isAffiliatedTo  ?b	0.746015736	0.868620415	0.946135863	278848	321024	294723	?a	0.0	0.0	0.0
+?a  isAffiliatedTo  ?b   => ?a  playsFor  ?b	0.868620415	0.746015736	0.825331052	278848	373783	337862	?a	0.0	0.0	0.0
+?e  diedIn  ?b  ?e  hasChild  ?a   => ?a  wasBornIn  ?b	0.010049357	0.194743645	0.285353535	452	2321	1584	?a	0.0	0.0	0.0
+?e  hasChild  ?a  ?e  wasBornIn  ?b   => ?a  wasBornIn  ?b	0.010182756	0.149429038	0.20510524	458	3065	2233	?a	0.0	0.0	0.0
+?a  hasChild  ?f  ?f  hasGender  ?b   => ?a  hasGender  ?b	0.033100071	0.66504707	0.698341837	2190	3293	3136	?a	0.0	0.0	0.0
+?a  hasAcademicAdvisor  ?f  ?f  hasGender  ?b   => ?a  hasGender  ?b	0.011320527	0.946902655	0.961489089	749	791	779	?a	0.0	0.0	0.0
+?f  hasGender  ?b  ?a  influences  ?f   => ?a  hasGender  ?b	0.030591116	0.797478329	0.80733945	2024	2538	2507	?a	0.0	0.0	0.0
+?e  hasGender  ?b  ?e  influences  ?a   => ?a  hasGender  ?b	0.036727476	0.838509317	0.852631579	2430	2898	2850	?a	0.0	0.0	0.0
+?a  hasCapital  ?b  ?b  isLocatedIn  ?a   => ?a  isLocatedIn  ?b	0.010138488	0.516073479	0.537679426	899	1742	1672	?a	0.0	0.0	0.0
+?b  hasCapital  ?a  ?b  isLocatedIn  ?a   => ?a  isLocatedIn  ?b	0.010138488	0.90625	0.908080808	899	992	990	?a	0.0	0.0	0.0
+?e  hasChild  ?a  ?e  hasGender  ?b   => ?a  hasGender  ?b	0.03619848	0.647822559	0.678854875	2395	3697	3528	?a	0.0	0.0	0.0
+?b  hasCapital  ?f  ?a  isLocatedIn  ?f   => ?a  isLocatedIn  ?b	0.027032209	0.145211123	0.145211123	2397	16507	16507	?a	0.0	0.0	0.0
+?a  hasCapital  ?f  ?f  isLocatedIn  ?b   => ?a  isLocatedIn  ?b	0.024167719	0.293160055	0.316543575	2143	7310	6770	?a	0.0	0.0	0.0
+?e  hasCapital  ?a  ?e  isLocatedIn  ?b   => ?a  isLocatedIn  ?b	0.022577589	0.448677723	0.450292398	2002	4462	4446	?a	0.0	0.0	0.0
+?f  isLocatedIn  ?b  ?a  isLocatedIn  ?f   => ?a  isLocatedIn  ?b	0.387066943	0.230260907	0.230260907	34322	149057	149057	?a	0.0	0.0	0.0
+?e  isLocatedIn  ?a  ?e  isLocatedIn  ?b   => ?a  isLocatedIn  ?b	0.174271472	0.146252129	0.158961857	15453	105660	97212	?a	0.0	0.0	0.0
+countPairs vars ?a, ?b in ?a isLocatedIn ?f  ?b isLocatedIn ?f   has taken 76313 ms
+countPairs vars ?a, ?b in ?b isLocatedIn ?f  ?a isLocatedIn ?f   has taken 126575 ms
+countPairs vars ?a, ?b in ?b hasGender ?f  ?a hasGender ?f   has taken 3338361 ms
+Mining done in 58 min, 12 s
+Total time 58 min, 21 s
+30 rules mined.

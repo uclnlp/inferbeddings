@@ -1,0 +1,6 @@
+"<http://dbpedia.org/ontology/associatedBand>"(X0, X1) :- "<http://dbpedia.org/ontology/associatedMusicalArtist>"(X0, X1)
+"<http://dbpedia.org/ontology/associatedBand>"(X0, X2) :- "<http://dbpedia.org/ontology/associatedBand>"(X1, X0), "<http://dbpedia.org/ontology/associatedMusicalArtist>"(X2, X1)
+"<http://dbpedia.org/ontology/associatedBand>"(X0, X2) :- "<http://dbpedia.org/ontology/associatedMusicalArtist>"(X1, X0), "<http://dbpedia.org/ontology/associatedMusicalArtist>"(X2, X1)
+"<http://dbpedia.org/ontology/musicalArtist>"(X0, X1) :- "<http://dbpedia.org/ontology/musicalBand>"(X0, X1)
+"<http://dbpedia.org/ontology/musicalBand>"(X0, X1) :- "<http://dbpedia.org/ontology/musicalArtist>"(X0, X1)
+"<http://dbpedia.org/ontology/associatedMusicalArtist>"(X0, X1) :- "<http://dbpedia.org/ontology/associatedBand>"(X0, X1)
