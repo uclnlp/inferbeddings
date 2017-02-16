@@ -469,8 +469,14 @@ def main(argv):
     def fact(s, p, o):
         return Fact(predicate_name=p, argument_names=[s, o])
 
-    train_facts = [fact(s, p, o) for s, p, o in pos_train_triples]
-    train_facts_neg = [fact(s, p, o) for s, p, o in neg_train_triples] if neg_train_triples is not None else []
+    np.random.seed(seed)
+
+    def sample_keep_fact(s, p, o):
+        return np.random.uniform() <= args.subsample_prob  # or p != "advisedBy"
+
+    train_facts = [fact(s, p, o) for s, p, o in pos_train_triples if sample_keep_fact(s, p, o)]
+    train_facts_neg = [fact(s, p, o) for s, p, o in neg_train_triples if
+                       sample_keep_fact(s, p, o)] if neg_train_triples is not None else []
 
     valid_facts = [fact(s, p, o) for s, p, o in pos_valid_triples] if pos_valid_triples is not None else []
     valid_facts_neg = [fact(s, p, o) for s, p, o in neg_valid_triples] if neg_valid_triples is not None else []
@@ -550,6 +556,12 @@ def main(argv):
                 debug_sequences = parser.facts_to_sequences([fact(s, p, o) for s, p, o in debug_triples])
                 neg_debug_sequences = parser.facts_to_sequences([fact(s, p, o) for s, p, o in neg_debug_triples])
 
+                from collections import defaultdict
+                neighbourhoods = defaultdict(list)
+                for s, p, o in pos_train_triples:
+                    neighbourhoods[s].append((p, o))
+                    neighbourhoods[o].append((s, p))
+
                 to_sort = []
                 for debug_triple, (p, [s, o]) in zip(debug_triples, debug_sequences):
                     debug_score = scoring_function([[[p]], [[s, o]]])[0]
@@ -558,10 +570,17 @@ def main(argv):
                     debug_score = scoring_function([[[p]], [[s, o]]])[0]
                     to_sort.append((debug_score, False, debug_triple))
 
-                sorted_facts = sorted(to_sort, key=lambda t: -t[0])
+                sorted_facts = sorted(to_sort, key=lambda t: t[0])
 
                 for score, label, triple in sorted_facts:
+                    print("*" * 10)
                     print('{}\t{}\t{}'.format(label, score, triple))
+                    s, p, o = triple
+                    for other_p, other_o in neighbourhoods[s]:
+                        print("  {}\t{}".format(other_p, other_o))
+                    print("-" * 10)
+                    for other_s, other_p in neighbourhoods[o]:
+                        print("  {}\t{}".format(other_s, other_p))
 
         if save_path is not None:
             import pickle

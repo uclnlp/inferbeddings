@@ -1,5 +1,6 @@
 % advisedBy(Y,X):- publication(P,X), publication(P,Y), unary(Y,student), unary(X, professor)
-!advisedBy(Y,X) :- advisedBy(X,Y)
+%!advisedBy(Y,X) :- advisedBy(X,Y)
 % unary(student, S):- advisedBy(S,P)
 % unary(professor, P):- advisedBy(S,P)
-% samePerson(A1,A2) :- advisedBy(S,A1), advisedBy(S,A2)
+samePerson(A1,A2) :- advisedBy(S,A1), advisedBy(S,A2)
+% publication(C,X):- advisedBy(P,X), publication(P,Y), unary(Y,student), unary(X, professor)

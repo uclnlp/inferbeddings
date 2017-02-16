@@ -35,7 +35,12 @@ def main(argv):
         with open("{}_fold_{}_test.tsv".format(output_name, fold_index), 'w') as test_file, \
                 open("{}_fold_{}_train.tsv".format(output_name, fold_index), 'w') as train_file:
             true_advised_by = set()
+            fold_persons = set()
             for subj, rel, obj in fold:
+                if subj.startswith("Person"):
+                    fold_persons.add(subj)
+                if obj.startswith("Person"):
+                    fold_persons.add(obj)
                 if rel == "advisedBy":
                     test_file.write("{}\t{}\t{}\t1\n".format(subj, rel, obj))
                     true_advised_by.add((subj, obj))
@@ -43,10 +48,11 @@ def main(argv):
                     train_file.write("{}\t{}\t{}\n".format(subj, rel, obj))
             for other_fold_index in range(0, len(folds)):
                 if other_fold_index != fold_index:
-                    for subj, rel, obj in fold:
+                    for subj, rel, obj in folds[other_fold_index]:
                         train_file.write("{}\t{}\t{}\n".format(subj, rel, obj))
-            for person1 in sorted_persons:
-                for person2 in sorted_persons:
+            sorted_fold_persons = sorted(fold_persons)
+            for person1 in sorted_fold_persons:
+                for person2 in sorted_fold_persons:
                     if person1 != person2 and (person1, person2) not in true_advised_by:
                         test_file.write("{}\t{}\t{}\t0\n".format(person1, "advisedBy", person2))
 
