@@ -7,8 +7,8 @@ import sys
 import itertools
 import argparse
 
-import sqlite3
 from tqdm import tqdm
+from pyDatalog import pyDatalog
 
 from inferbeddings.io import read_triples
 from inferbeddings.parse import parse_clause
@@ -16,9 +16,6 @@ from inferbeddings.parse import parse_clause
 import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
-
-# Usage:
-# $ ./tools/populate-sqlite.py data/wn18/wordnet-mlj12-train.txt data/wn18/clauses/clauses_0.9.pl
 
 def main(argv):
     def formatter(prog):
@@ -56,50 +53,36 @@ def main(argv):
     # Associate each entity and predicate to an unique index
     entity_to_idx = {entity: idx for idx, entity in enumerate(entity_names)}
     idx_to_entity = {idx: entity for entity, idx in entity_to_idx.items()}
-    entity_indices = list(idx_to_entity.keys())
 
     predicate_to_idx = {predicate: idx for idx, predicate in enumerate(predicate_names)}
     idx_to_predicate = {idx: predicate for predicate, idx in predicate_to_idx.items()}
-    predicate_indices = list(idx_to_predicate.keys())
 
-    # Creating a set of index triples, for efficiency reasons
-    idx_triples = {(entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o]) for (s, p, o) in triples}
+    logger.info('Asserting facts ..')
 
-    # Adding a field 'idx' to each atom.predicate, containing the index of that predicate
-    for clause in clauses:
+    # Asserting the facts
+    for (s, p, o) in triples:
+        pyDatalog.assert_fact('p', entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o])
+
+    logger.info('Loading rules ..')
+
+    def atom_to_str(atom):
+        atom_predicate_idx = predicate_to_idx[atom.predicate.name]
+        atom_arg_0, atom_arg_1 = atom.arguments[0], atom.arguments[1]
+        return 'p({}, {}, {})'.format(atom_arg_0, atom_predicate_idx, atom_arg_1)
+
+    def clause_to_str(clause):
         head, body = clause.head, clause.body
-        head.predicate.idx = predicate_to_idx[head.predicate.name]
-        for atom in body:
-            atom.predicate.idx = predicate_to_idx[atom.predicate.name]
+        return '{} <= {}'.format(atom_to_str(head), ' & '.join([atom_to_str(a) for a in body]))
 
-    # Starting to materialize the KB - until convergence:
-    for epoch in [1]:
+    rules_str = '\n'.join([clause_to_str(clause) for clause in clauses])
 
-        connection = sqlite3.connect(':memory:')
+    pyDatalog.load(rules_str)
 
-        logger.info('Populating the database ..')
+    logger.info('Querying triples ..')
 
-        cursor = connection.cursor()
-        cursor.execute('CREATE TABLE t (s, p, o)')
-        cursor.executemany('INSERT INTO t(s, p, o) VALUES (?, ?, ?)', idx_triples)
-        connection.commit()
+    ans = pyDatalog.ask('p(S, P, O)')
 
-        logger.info(' .. done.')
-
-        # For each clause ..
-        for clause in clauses:
-            # .. find all variable assignments that match the body ..
-            head, body = clause.head, clause.body
-            h_arg1, h_arg2 = head.arguments
-
-            if len(body) == 1:
-                atom = body[0]
-                b_arg1, b_arg2 = atom.arguments
-                query = 'SELECT ({}, {}) FROM t, '.format(h_arg1, h_arg2)
-                query += 't.s AS {}, t.o AS {} WHERE t.p == {}'\
-                    .format(b_arg1, b_arg2, atom.predicate.idx)
-                cursor.execute(query)
-
+    print(ans)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
