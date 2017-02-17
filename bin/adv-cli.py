@@ -160,9 +160,9 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
-        # if not args.no_projection:
-        #     adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
-        #                                     for adversarial_embedding_layer in adversarial.parameters]
+        adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
+                                        for adversarial_embedding_layer in
+                                        adversarial.parameters] if args.project_adv_vars else []
 
     # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
     # obtained by corrupting the original training triple.
@@ -336,9 +336,8 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
                 assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
                 session.run(assignment_ops)
 
-            # if not args.no_projection:
-            #     for projection_step in adversarial_projection_steps:
-            #         session.run([projection_step])
+            for projection_step in adversarial_projection_steps:
+                session.run([projection_step])
 
             for finding_epoch in range(1, adversary_epochs + 1):
                 _, violation_errors_value, violation_loss_value = session.run(
@@ -349,9 +348,8 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
                                 .format(epoch, finding_epoch, int(violation_errors_value),
                                         round(violation_loss_value, 4)))
 
-                # if not args.no_projection:
-                #     for projection_step in adversarial_projection_steps:
-                #         session.run([projection_step])
+                for projection_step in adversarial_projection_steps:
+                    session.run([projection_step])
 
         if debug:
             from inferbeddings.visualization import hinton_diagram
@@ -464,7 +462,9 @@ def main(argv):
     argparser.add_argument('--adv-builder', action='store', type=str, help='point-mass, deep-adv', default='point-mass')
     argparser.add_argument('--adv-aggregate', action='store', type=str, help='max, mean, sum', default='max')
     argparser.add_argument('--entity-l2', action='store', type=float, default=0.0)
+    argparser.add_argument('--project-adv-expr', action='store_true')
     argparser.add_argument('--no-projection', action='store_true')
+    argparser.add_argument('--project-adv-vars', action='store_true')
     argparser.add_argument('--clip-heads', action='store_true')
     argparser.add_argument('--noise-sample-dim', action='store', type=int, default=50)
     argparser.add_argument('--deep-adv-l2', action='store', type=float, default=1.0)

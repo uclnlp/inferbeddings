@@ -252,8 +252,8 @@ class GenerativeAdversarial:
                                initializer=tf.contrib.layers.xavier_initializer())
 
     def normalise_entity_embeddings(self, variable_name_to_layer):
-        return variable_name_to_layer if self.args.no_projection else {n: renorm(e) for n, e in
-                                                                       variable_name_to_layer.items()}
+        return variable_name_to_layer if not self.args.project_adv_expr else {n: renorm(e) for n, e in
+                                                                              variable_name_to_layer.items()}
 
     def _parse_clause(self, name, clause):
         """
@@ -309,7 +309,7 @@ class GenerativeAdversarial:
             # we leave the errors as is
         parameters = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, clause_scope.name)
 
-        print([p.name for p in parameters])
+        # print([p.name for p in parameters])
 
         return errors, loss, parameters
 
@@ -346,7 +346,7 @@ def deep_generator(batch_size, entity_embedding_size, noise_dim=2, regularisatio
                         output_layer = slim.fully_connected(latent_layer, entity_embedding_size, scope=log_var_scope)
                         variable_name_to_layer[variable_name] = output_layer
 
-            print(variable_name_to_layer)
+            # print(variable_name_to_layer)
             return variable_name_to_layer
 
     return build_generative_deep_network
