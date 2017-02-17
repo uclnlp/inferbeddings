@@ -458,6 +458,8 @@ def main(argv):
     argparser.add_argument('--subsample-size', action='store', type=float, default=None,
                            help='Fraction of training facts to use during training (e.g. 0.1)')
 
+    argparser.add_argument('--materialize', action='store_true',
+                           help='Materialize all facts using clauses and logical inference')
     argparser.add_argument('--save', action='store', type=str, default=None,
                            help='Path for saving the serialized model')
 
@@ -493,6 +495,7 @@ def main(argv):
 
     subsample_size = args.subsample_size
     save_path = args.save
+    is_materialize = args.materialize
 
     assert train_path is not None
     pos_train_triples, _ = read_triples(train_path)
@@ -538,6 +541,21 @@ def main(argv):
         _train_facts = [train_facts[idx] for idx in sample_indices]
         train_facts = _train_facts
 
+    # Parse the clauses
+    clauses = None
+    if clauses_path is not None:
+        with open(clauses_path, 'r') as f:
+            clauses = [parse_clause(line.strip()) for line in f.readlines()]
+
+    if is_materialize:
+        assert clauses is not None
+        logger.info('Materializing the Knowledge Base using Logical Inference')
+        logger.info('Number of starting facts: {}'.format(len(train_facts)))
+        from inferbeddings.logic import materialize
+        _train_facts = materialize(train_facts, clauses, parser.predicate_to_index)
+        train_facts = _train_facts
+        logger.info('Number of inferred facts: {}'.format(len(train_facts)))
+
     train_sequences = parser.facts_to_sequences(train_facts)
 
     valid_sequences = parser.facts_to_sequences(valid_facts)
@@ -546,15 +564,8 @@ def main(argv):
     test_sequences = parser.facts_to_sequences(test_facts)
     test_sequences_neg = parser.facts_to_sequences(test_facts_neg)
 
-    # Parse the clauses
-    clauses = None
-
     if adv_lr is not None:
         assert clauses_path is not None
-
-    if clauses_path is not None:
-        with open(clauses_path, 'r') as f:
-            clauses = [parse_clause(line.strip()) for line in f.readlines()]
 
     # Do not take up all the GPU memory, all the time.
     sess_config = tf.ConfigProto()
