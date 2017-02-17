@@ -4,10 +4,8 @@
 import os
 import sys
 
-import itertools
 import argparse
 
-from tqdm import tqdm
 from pyDatalog import pyDatalog
 
 from inferbeddings.io import read_triples
@@ -16,6 +14,7 @@ from inferbeddings.parse import parse_clause
 import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
+
 
 def main(argv):
     def formatter(prog):
@@ -63,6 +62,11 @@ def main(argv):
     for (s, p, o) in triples:
         pyDatalog.assert_fact('p', entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o])
 
+    logger.info('Querying triples ..')
+
+    ans = pyDatalog.ask('p(S, P, O)')
+    print(len(ans.answers))
+
     logger.info('Loading rules ..')
 
     def atom_to_str(atom):
@@ -81,8 +85,7 @@ def main(argv):
     logger.info('Querying triples ..')
 
     ans = pyDatalog.ask('p(S, P, O)')
-
-    print(ans)
+    answers = sorted(ans.answers)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
