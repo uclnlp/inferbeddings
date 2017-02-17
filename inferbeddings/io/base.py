@@ -45,7 +45,7 @@ def read_triples(path):
             else:
                 line_strip = line.strip()
                 if len(line_strip) > 0:
-                    line_split = str(line).encode("utf-8").split()
+                    line_split = line.split()
                     if len(line_split) != 3:
                         logger.error(line_split)
                     s, p, o = line_split
