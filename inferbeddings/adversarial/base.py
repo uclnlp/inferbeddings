@@ -297,6 +297,8 @@ class GenerativeAdversarial:
             # we leave the errors as is
         parameters = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, clause_scope.name)
 
+        print([p.name for p in parameters])
+
         return errors, loss, parameters
 
 
@@ -326,12 +328,13 @@ def deep_generator(batch_size, entity_embedding_size, noise_dim=2):
             with tf.variable_scope("Clause_{}{}".format(name, postfix)) as clause_scope:
                 noise_samples = tf.random_normal([batch_size, noise_dim])
                 latent_layer = slim.fully_connected(noise_samples, intermediate_dim, scope=clause_scope,
-                                                    weights_regularizer=slim.l2_regularizer(0.01))
+                                                    weights_regularizer=slim.l2_regularizer(1.0))
                 for variable_name in variable_names:
                     with tf.variable_scope("Variable_{}".format(variable_name)) as log_var_scope:
                         output_layer = slim.fully_connected(latent_layer, entity_embedding_size, scope=log_var_scope)
                         variable_name_to_layer[variable_name] = output_layer
 
+            print(variable_name_to_layer)
             return variable_name_to_layer
 
     return build_generative_deep_network

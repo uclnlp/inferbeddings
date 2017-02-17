@@ -119,7 +119,9 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
         #                           batch_size=adv_batch_size)
         builder = {
             "point-mass": adv_base.point_mass_generator(adv_batch_size, model_parameters['entity_embedding_size']),
-            "deep-adv": adv_base.deep_generator(adv_batch_size, model_parameters['entity_embedding_size'])
+            "deep-adv": adv_base.deep_generator(adv_batch_size,
+                                                model_parameters['entity_embedding_size'],
+                                                model_parameters['entity_embedding_size'])
         }[args.adv_builder]
         adversarial = GenerativeAdversarial(clauses=clauses, parser=parser,
                                             predicate_embedding_layer=provided_predicate_embeddings.embedding_matrix,
