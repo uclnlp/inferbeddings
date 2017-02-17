@@ -43,8 +43,12 @@ def read_triples(path):
                     else:
                         neg_triples += [(s.strip(), p.strip(), o.strip())]
             else:
-                if len(line.strip()) > 0:
-                    s, p, o = line.split()
+                line_strip = line.strip()
+                if len(line_strip) > 0:
+                    line_split = line.split()
+                    if len(line_split) != 3:
+                        logger.error(line_split)
+                    s, p, o = line_split
                     pos_triples += [(s.strip(), p.strip(), o.strip())]
 
     return pos_triples, neg_triples

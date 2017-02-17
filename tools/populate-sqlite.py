@@ -89,7 +89,17 @@ def main(argv):
         # For each clause ..
         for clause in clauses:
             # .. find all variable assignments that match the body ..
-            pass
+            head, body = clause.head, clause.body
+            h_arg1, h_arg2 = head.arguments
+
+            if len(body) == 1:
+                atom = body[0]
+                b_arg1, b_arg2 = atom.arguments
+                query = 'SELECT ({}, {}) FROM t, '.format(h_arg1, h_arg2)
+                query += 't.s AS {}, t.o AS {} WHERE t.p == {}'\
+                    .format(b_arg1, b_arg2, atom.predicate.idx)
+                cursor.execute(query)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
