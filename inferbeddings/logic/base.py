@@ -23,16 +23,13 @@ def clause_to_str(clause, predicate_to_idx):
 
 def materialize(facts, clauses, predicate_to_idx):
     logger.info('Asserting facts ..')
-
-    # Asserting the facts
     for f in facts:
-        pyDatalog.assert_fact('p', f.arguments[0], f.predicate_name, f.arguments[1])
+        pyDatalog.assert_fact('p', f.argument_names[0], f.predicate_name, f.argument_names[1])
 
     rules_str = '\n'.join([clause_to_str(clause, predicate_to_idx) for clause in clauses])
     pyDatalog.load(rules_str)
 
     logger.info('Querying triples ..')
-
     _ans = pyDatalog.ask('p(S, P, O)')
     inferred_facts = [Fact(p, [s, o]) for (s, p, o) in sorted(_ans.answers)]
 
