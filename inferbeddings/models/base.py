@@ -205,9 +205,12 @@ class ConcatModel2Layer(ConcatModel1Layer):
     def layers(self, aggregated, output_dim):
         result = tf.nn.relu(tf.matmul(aggregated, self.matrix))
         return result  # slim.fully_connected(aggregated, output_dim)
+        # with tf.variable_scope("Concat2", reuse=self.reuse_variables) as scope:
+        #     return slim.fully_connected(aggregated, output_dim,scope=scope)
 
     def get_params(self):
         return super().get_params() + [self.matrix]  # slim.variables.model_variables()
+        # return super().get_params() + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Concat2")
 
 
 class DiffModel1Layer(HyperModel):
