@@ -23,9 +23,9 @@ def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
     command = 'python3 {}/bin/adv-cli.py' \
-              ' --train {}/data/music_mte10_5k/music_mte10-train.tsv.gz' \
-              ' --valid {}/data/music_mte10_5k/music_mte10-valid.tsv.gz' \
-              ' --test {}/data/music_mte10_5k/music_mte10-test.tsv.gz' \
+              ' --train {}/data/music_mte10_5k/music_mte10-train.tsv' \
+              ' --valid {}/data/music_mte10_5k/music_mte10-valid.tsv' \
+              ' --test {}/data/music_mte10_5k/music_mte10-test.tsv' \
               ' --clauses {}/data/music_mte10_5k/clauses/clauses_B=100_C=0.8.pl' \
               ' --nb-epochs {}' \
               ' --lr {}' \
