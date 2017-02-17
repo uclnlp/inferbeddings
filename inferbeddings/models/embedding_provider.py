@@ -10,13 +10,18 @@ ProvidedEmbeddings = namedtuple("ProvidedEmbeddings",
                                 ('embeddings', 'trainable_variables', 'projection_steps', 'embedding_matrix'))
 
 
-def default_entity_embeddings(nb_entities, entity_embedding_size, entity_inputs):
-    entity_embedding_layer = tf.get_variable('entities', shape=[nb_entities + 1, entity_embedding_size],
-                                             initializer=tf.contrib.layers.xavier_initializer())
+def default_entity_embeddings(project=True, regularizer=None):
+    def provide(nb_entities, entity_embedding_size, entity_inputs):
+        entity_embedding_layer = tf.get_variable('entities', shape=[nb_entities + 1, entity_embedding_size],
+                                                 initializer=tf.contrib.layers.xavier_initializer(),
+                                                 regularizer=regularizer)
 
-    entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, entity_inputs)
-    return ProvidedEmbeddings(entity_embeddings, [entity_embedding_layer],
-                              [constraints.renorm_update(entity_embedding_layer, norm=1.0)], entity_embedding_layer)
+        entity_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, entity_inputs)
+        return ProvidedEmbeddings(entity_embeddings, [entity_embedding_layer],
+                                  [constraints.renorm_update(entity_embedding_layer, norm=1.0)] if project else [],
+                                  entity_embedding_layer)
+
+    return provide
 
 
 def default_predicate_embeddings(nb_predicates, predicate_embedding_size, walk_inputs):

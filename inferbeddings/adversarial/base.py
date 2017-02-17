@@ -164,7 +164,7 @@ class GenerativeAdversarial:
 
     def __init__(self, clauses, parser, predicate_embedding_layer,
                  model_class, model_parameters, loss_function=None, loss_margin=0.0, batch_size=1,
-                 builder=None):
+                 builder=None, args=None):
 
         self.clauses, self.parser = clauses, parser
         self.predicate_embedding_layer = predicate_embedding_layer
@@ -173,16 +173,25 @@ class GenerativeAdversarial:
 
         self.model_class, self.model_parameters = model_class, model_parameters
         self.loss_function = loss_function
+        self.args = args
 
         self.batch_size = batch_size
         self.builder = builder if builder else point_mass_generator(self.batch_size, self.entity_embedding_size)
 
         if self.loss_function is None:
-            # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
-            self.loss_function = lambda body_scores, head_scores: pairwise_losses.max_hinge_loss(head_scores,
-                                                                                                 body_scores,
-                                                                                                 margin=loss_margin)
+            def loss_function(positive_scores, negative_scores):
+                aggregator = {
+                    "max": lambda l: tf.reduce_max(l),
+                    "mean": lambda l: tf.reduce_mean(l),
+                    "sum": lambda l: tf.reduce_sum(l)
+                }[args.adv_aggregate]
+                margin = 0.0
+                hinge_losses = tf.nn.relu(margin - negative_scores + positive_scores)
+                loss = aggregator(hinge_losses)
+                return loss
 
+            # Default continuous violation loss: tf.nn.relu(margin - head_scores + body_scores)
+            self.loss_function = loss_function
         # Symbolic functions computing the number of ground errors and the continuous loss
         self.errors, self.loss = 0, .0
 
@@ -251,24 +260,24 @@ class GenerativeAdversarial:
         for body_atom in body:
             variable_names |= {argument.name for argument in body_atom.arguments}
 
+        variable_names = sorted(variable_names)
         # Instantiate a new layer for each variable
-        variable_name_to_layer = self.builder(self, name, variable_names)
+        with tf.variable_scope("Clause_{}".format(name)) as clause_scope:
+            variable_name_to_layer = self.builder(name, variable_names, clause_scope)
 
         head_score = tf.maximum(0.0, self._parse_atom(head, variable_name_to_layer=variable_name_to_layer))
         body_score = self._parse_conjunction(body, variable_name_to_layer=variable_name_to_layer)
-
-        parameters = [variable_name_to_layer[variable_name] for variable_name in sorted(variable_names)]
 
         errors = tf.reduce_sum(tf.cast(body_score > head_score, tf.float32))
         loss = self.loss_function(body_score, head_score)
 
         # learnable clause weights
         if clause.weight != 1.0:
-            negation_variable_name_to_layer = self.builder(self, name, variable_names)
+            with tf.variable_scope("Clause_{}".format(name)) as clause_scope:
+                negation_variable_name_to_layer = self.builder(name, variable_names, clause_scope, "neg")
             negation_head_score = self._parse_atom(head, variable_name_to_layer=negation_variable_name_to_layer)
-            negation_body_score = self._parse_conjunction(body, variable_name_to_layer=negation_variable_name_to_layer)
-            parameters += [negation_variable_name_to_layer[variable_name] for variable_name in sorted(variable_names)]
-
+            negation_body_score = self._parse_conjunction(body,
+                                                          variable_name_to_layer=negation_variable_name_to_layer)
             if clause.weight is None:
                 weight_variable = tf.get_variable('{}_weight'.format(name),
                                                   shape=(),
@@ -286,39 +295,43 @@ class GenerativeAdversarial:
             loss = prob * loss + (1 - prob) * self.loss_function(negation_head_score, negation_body_score)
 
             # we leave the errors as is
+        parameters = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, clause_scope.name)
 
         return errors, loss, parameters
 
 
 def point_mass_generator(batch_size, entity_embedding_size):
-    def build_basic_logvar_to_tensor_mapping(name, variable_names, postfix=""):
+    def build_basic_logvar_to_tensor_mapping(name, variable_names, scope, postfix=""):
         # Instantiate a new layer for each variable
         variable_name_to_layer = dict()
-        for variable_name in sorted(variable_names):
-            # [batch_size, embedding_size] variable
-            variable_layer = tf.get_variable('{}_{}_violator{}'.format(name, variable_name, postfix),
-                                             shape=[batch_size, entity_embedding_size],
-                                             initializer=tf.contrib.layers.xavier_initializer())
-            # variable_layer = violator_creator(name, variable_name)
-            variable_name_to_layer[variable_name] = variable_layer
-        return variable_name_to_layer
+        with tf.variable_scope(scope):
+            for variable_name in variable_names:
+                # [batch_size, embedding_size] variable
+                variable_layer = tf.get_variable('{}_{}_violator{}'.format(name, variable_name, postfix),
+                                                 shape=[batch_size, entity_embedding_size],
+                                                 initializer=tf.contrib.layers.xavier_initializer())
+                # variable_layer = violator_creator(name, variable_name)
+                variable_name_to_layer[variable_name] = variable_layer
+            return variable_name_to_layer
 
     return build_basic_logvar_to_tensor_mapping
 
 
 def deep_generator(batch_size, entity_embedding_size, noise_dim=2):
-    def build_generative_deep_network(name, variable_names, postfix=""):
+    def build_generative_deep_network(name, variable_names, scope, postfix=""):
         # Instantiate a new layer for each variable
         variable_name_to_layer = dict()
         intermediate_dim = noise_dim
-        with tf.variable_scope("Clause {}{}".format(name, postfix)) as scope:
-            noise_samples = tf.random_normal([batch_size, noise_dim])
-            latent_layer = slim.fully_connected(noise_samples, intermediate_dim, scope=scope)
-            for variable_name in variable_names:
-                with tf.variable_scope("Variable {}".format(variable_name)) as log_var_scope:
-                    output_layer = slim.fully_connected(latent_layer, entity_embedding_size, scope=log_var_scope)
-                    variable_name_to_layer[variable_name] = output_layer
+        with tf.variable_scope(scope):
+            with tf.variable_scope("Clause_{}{}".format(name, postfix)) as clause_scope:
+                noise_samples = tf.random_normal([batch_size, noise_dim])
+                latent_layer = slim.fully_connected(noise_samples, intermediate_dim, scope=clause_scope,
+                                                    weights_regularizer=slim.l2_regularizer(0.01))
+                for variable_name in variable_names:
+                    with tf.variable_scope("Variable_{}".format(variable_name)) as log_var_scope:
+                        output_layer = slim.fully_connected(latent_layer, entity_embedding_size, scope=log_var_scope)
+                        variable_name_to_layer[variable_name] = output_layer
 
-        return variable_name_to_layer
+            return variable_name_to_layer
 
     return build_generative_deep_network
