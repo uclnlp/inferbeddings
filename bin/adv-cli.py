@@ -121,7 +121,8 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
             "point-mass": adv_base.point_mass_generator(adv_batch_size, model_parameters['entity_embedding_size']),
             "deep-adv": adv_base.deep_generator(adv_batch_size,
                                                 model_parameters['entity_embedding_size'],
-                                                model_parameters['entity_embedding_size'])
+                                                args.noise_sample_dim,
+                                                args.deep_adv_l2)
         }[args.adv_builder]
         adversarial = GenerativeAdversarial(clauses=clauses, parser=parser,
                                             predicate_embedding_layer=provided_predicate_embeddings.embedding_matrix,
@@ -149,16 +150,19 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
         with tf.variable_scope(adv_opt_scope_name):
             violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr,
                                                                     initial_accumulator_value=initial_accumulator_value)
-            violation_training_step = violation_finding_optimizer.minimize(- violation_loss,
+            adv_regularizer = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)) if tf.get_collection(
+                tf.GraphKeys.REGULARIZATION_LOSSES) else 0.0
+
+            violation_training_step = violation_finding_optimizer.minimize(- violation_loss + adv_regularizer,
                                                                            var_list=adversarial.parameters)
 
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
-        if not args.no_projection:
-            adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
-                                            for adversarial_embedding_layer in adversarial.parameters]
+        # if not args.no_projection:
+        #     adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
+        #                                     for adversarial_embedding_layer in adversarial.parameters]
 
     # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
     # obtained by corrupting the original training triple.
@@ -332,9 +336,9 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
                 assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
                 session.run(assignment_ops)
 
-            if not args.no_projection:
-                for projection_step in adversarial_projection_steps:
-                    session.run([projection_step])
+            # if not args.no_projection:
+            #     for projection_step in adversarial_projection_steps:
+            #         session.run([projection_step])
 
             for finding_epoch in range(1, adversary_epochs + 1):
                 _, violation_errors_value, violation_loss_value = session.run(
@@ -345,9 +349,9 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
                                 .format(epoch, finding_epoch, int(violation_errors_value),
                                         round(violation_loss_value, 4)))
 
-                if not args.no_projection:
-                    for projection_step in adversarial_projection_steps:
-                        session.run([projection_step])
+                # if not args.no_projection:
+                #     for projection_step in adversarial_projection_steps:
+                #         session.run([projection_step])
 
         if debug:
             from inferbeddings.visualization import hinton_diagram
@@ -461,6 +465,9 @@ def main(argv):
     argparser.add_argument('--adv-aggregate', action='store', type=str, help='max, mean, sum', default='max')
     argparser.add_argument('--entity-l2', action='store', type=float, default=0.0)
     argparser.add_argument('--no-projection', action='store_true')
+    argparser.add_argument('--clip-heads', action='store_true')
+    argparser.add_argument('--noise-sample-dim', action='store', type=int, default=50)
+    argparser.add_argument('--deep-adv-l2', action='store', type=float, default=1.0)
 
     args = argparser.parse_args(argv)
 

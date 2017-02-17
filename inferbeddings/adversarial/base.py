@@ -201,6 +201,8 @@ class GenerativeAdversarial:
         # Weight terms of clauses, as mapping from clause to term
         self.weights = {}
 
+        self.head_conversion = (lambda s: tf.maximum(s, 0.0)) if args.clip_heads else (lambda s: s)
+
         # Mapping from clause to
 
         for clause_idx, clause in enumerate(clauses):
@@ -249,6 +251,10 @@ class GenerativeAdversarial:
                                shape=[self.batch_size, self.entity_embedding_size],
                                initializer=tf.contrib.layers.xavier_initializer())
 
+    def normalise_entity_embeddings(self, variable_name_to_layer):
+        return variable_name_to_layer if self.args.no_projection else {n: renorm(e) for n, e in
+                                                                       variable_name_to_layer.items()}
+
     def _parse_clause(self, name, clause):
         """
         Given a clause in the form p(X0, X1) :- q(X2, X3), r(X4, X5), return its symbolic score.
@@ -263,19 +269,25 @@ class GenerativeAdversarial:
         variable_names = sorted(variable_names)
         # Instantiate a new layer for each variable
         with tf.variable_scope("Clause_{}".format(name)) as clause_scope:
-            variable_name_to_layer = self.builder(name, variable_names, clause_scope)
+            variable_name_to_layer = self.normalise_entity_embeddings(self.builder(name, variable_names, clause_scope))
 
-        head_score = tf.maximum(0.0, self._parse_atom(head, variable_name_to_layer=variable_name_to_layer))
+        head_score = self.head_conversion(self._parse_atom(head, variable_name_to_layer=variable_name_to_layer))
         body_score = self._parse_conjunction(body, variable_name_to_layer=variable_name_to_layer)
 
         errors = tf.reduce_sum(tf.cast(body_score > head_score, tf.float32))
         loss = self.loss_function(body_score, head_score)
 
+        if self.args.entity_l2 != 0.0:
+            loss -= tf.add_n(
+                [slim.l2_regularizer(self.args.entity_l2)(variable_name_to_layer[name]) for name in variable_names])
+
         # learnable clause weights
         if clause.weight != 1.0:
             with tf.variable_scope("Clause_{}".format(name)) as clause_scope:
-                negation_variable_name_to_layer = self.builder(name, variable_names, clause_scope, "neg")
-            negation_head_score = self._parse_atom(head, variable_name_to_layer=negation_variable_name_to_layer)
+                negation_variable_name_to_layer = self.normalise_entity_embeddings(
+                    self.builder(name, variable_names, clause_scope, "neg"))
+            negation_head_score = self.head_conversion(
+                self._parse_atom(head, variable_name_to_layer=negation_variable_name_to_layer))
             negation_body_score = self._parse_conjunction(body,
                                                           variable_name_to_layer=negation_variable_name_to_layer)
             if clause.weight is None:
@@ -319,7 +331,7 @@ def point_mass_generator(batch_size, entity_embedding_size):
     return build_basic_logvar_to_tensor_mapping
 
 
-def deep_generator(batch_size, entity_embedding_size, noise_dim=2):
+def deep_generator(batch_size, entity_embedding_size, noise_dim=2, regularisation_weight=1.0):
     def build_generative_deep_network(name, variable_names, scope, postfix=""):
         # Instantiate a new layer for each variable
         variable_name_to_layer = dict()
@@ -328,7 +340,7 @@ def deep_generator(batch_size, entity_embedding_size, noise_dim=2):
             with tf.variable_scope("Clause_{}{}".format(name, postfix)) as clause_scope:
                 noise_samples = tf.random_normal([batch_size, noise_dim])
                 latent_layer = slim.fully_connected(noise_samples, intermediate_dim, scope=clause_scope,
-                                                    weights_regularizer=slim.l2_regularizer(1.0))
+                                                    weights_regularizer=slim.l2_regularizer(regularisation_weight))
                 for variable_name in variable_names:
                     with tf.variable_scope("Variable_{}".format(variable_name)) as log_var_scope:
                         output_layer = slim.fully_connected(latent_layer, entity_embedding_size, scope=log_var_scope)
@@ -338,3 +350,9 @@ def deep_generator(batch_size, entity_embedding_size, noise_dim=2):
             return variable_name_to_layer
 
     return build_generative_deep_network
+
+
+def renorm(var_matrix, norm=1.0, axis=1):
+    row_norms = tf.sqrt(tf.reduce_sum(tf.square(var_matrix), axis=axis))
+    scaled = var_matrix * tf.expand_dims(norm / row_norms, axis=axis)
+    return scaled
