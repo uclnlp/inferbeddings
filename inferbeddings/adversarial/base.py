@@ -338,12 +338,14 @@ def deep_generator(batch_size, entity_embedding_size, noise_dim=2, regularisatio
         intermediate_dim = noise_dim
         with tf.variable_scope(scope):
             with tf.variable_scope("Clause_{}{}".format(name, postfix)) as clause_scope:
-                noise_samples = tf.random_normal([batch_size, noise_dim])
-                latent_layer = slim.fully_connected(noise_samples, intermediate_dim, scope=clause_scope,
-                                                    weights_regularizer=slim.l2_regularizer(regularisation_weight))
+                # latent_layer = slim.fully_connected(noise_samples, intermediate_dim, scope=clause_scope,
+                #                                     weights_regularizer=slim.l2_regularizer(regularisation_weight))
                 for variable_name in variable_names:
                     with tf.variable_scope("Variable_{}".format(variable_name)) as log_var_scope:
-                        output_layer = slim.fully_connected(latent_layer, entity_embedding_size, scope=log_var_scope)
+                        noise_samples = tf.random_normal([batch_size, noise_dim], stddev=1.0)
+                        output_layer = slim.fully_connected(noise_samples, entity_embedding_size,
+                                                            activation_fn=None,
+                                                            scope=log_var_scope)
                         variable_name_to_layer[variable_name] = output_layer
 
             # print(variable_name_to_layer)

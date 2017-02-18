@@ -319,6 +319,7 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
             logger.info('Finding violators ..')
 
             session.run([initialize_violators, adversarial_optimizer_variables_initializer])
+            # session.run([adversarial_optimizer_variables_initializer])
 
             if adv_init_ground:
                 # Initialize the violating embeddings using real embeddings
@@ -571,8 +572,8 @@ def main(argv):
 
     default_entity_embedder = default_entity_embeddings(not args.no_projection, tf.contrib.layers.l2_regularizer(
         args.entity_l2) if args.entity_l2 != 0 else None)
-    pre_trained_embedder = pretrained_entity_embeddings(parser, args.ent_embeddings)
-    entity_embedding_provider = pre_trained_embedder if args.ent_embeddings else default_entity_embedder
+    pre_trained_embedder = lambda: pretrained_entity_embeddings(parser, args.ent_embeddings)
+    entity_embedding_provider = pre_trained_embedder() if args.ent_embeddings else default_entity_embedder
 
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, train_targets,
