@@ -128,7 +128,7 @@ def main(argv):
                 alias = ''
                 job_script = '#$ -S /bin/bash\n' \
                              '#$ -wd /tmp/\n' \
-                             '#$ -l h_vmem=4G,tmem=4G\n' \
+                             '#$ -l h_vmem=6G,tmem=6G\n' \
                              '#$ -l h_rt=24:00:00\n' \
                              'export LANG="en_GB.UTF-8"\n' \
                              '{}\n{}\n'.format(alias, line)
