@@ -44,7 +44,7 @@ optional arguments:
 
 If the parameter `--adv-lr` is not specified, the method does not perform any adversarial training -- i.e. it simply trains the Knowledge Graph Embedding models by minimizing a standard pairwise loss in, such as the margin-based ranking loss in [1].
 
-Example - Embedding the WN18 Knowledge Graph:
+Example - Embedding the WN18 Knowledge Graph using Complex Embeddings:
 
 ```
 $ ./bin/adv-cli.py --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model ComplEx --similarity dot --margin 5 --embedding-size 100 --nb-epochs 100
@@ -77,6 +77,49 @@ INFO:inferbeddings.evaluation.base:### MICRO (test filtered):
 INFO:inferbeddings.evaluation.base:     -- left   >> mean: 555.7002, median: 1.0, mrr: 0.923, hits@10: 94.48%
 INFO:inferbeddings.evaluation.base:     -- right  >> mean: 554.135, median: 1.0, mrr: 0.924, hits@10: 94.54%
 INFO:inferbeddings.evaluation.base:     -- global >> mean: 554.9176, median: 1.0, mrr: 0.924, hits@10: 94.51%
+```
+
+Example - Embedding the WN18 Knowledge Graph using Translating Embeddings:
+
+```bash
+$ ./bin/adv-cli.py --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model TransE --similarity l1 --margin 2 --embedding-size 50 --nb-epochs 1000
+INFO:adv-cli.py:Command line: --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model TransE --similarity l1 --margin 2 --embedding-size 50 --nb-epochs 1000
+INFO:adv-cli.py:#Training Triples: 141442, #Validation Triples: 5000, #Test Triples: 5000
+INFO:adv-cli.py:#Entities: 40943        #Predicates: 18
+INFO:adv-cli.py:Samples: 141442, no. batches: 10 -> batch size: 14145
+INFO:adv-cli.py:Epoch: 1/1      Loss: 3.6197 ± 0.5006
+INFO:adv-cli.py:Epoch: 1/1      Fact Loss: 511980.6953
+INFO:adv-cli.py:Epoch: 2/1      Loss: 2.0904 ± 0.0947
+INFO:adv-cli.py:Epoch: 2/1      Fact Loss: 295677.3770
+INFO:adv-cli.py:Epoch: 3/1      Loss: 1.3305 ± 0.0399
+INFO:adv-cli.py:Epoch: 3/1      Fact Loss: 188185.9883
+INFO:adv-cli.py:Epoch: 4/1      Loss: 0.9019 ± 0.0126
+INFO:adv-cli.py:Epoch: 4/1      Fact Loss: 127561.4561
+INFO:adv-cli.py:Epoch: 5/1      Loss: 0.6394 ± 0.0117
+INFO:adv-cli.py:Epoch: 5/1      Fact Loss: 90443.4600
+[..]
+INFO:adv-cli.py:Epoch: 995/1    Loss: 0.0030 ± 0.0004
+INFO:adv-cli.py:Epoch: 995/1    Fact Loss: 428.5829
+INFO:adv-cli.py:Epoch: 996/1    Loss: 0.0030 ± 0.0009
+INFO:adv-cli.py:Epoch: 996/1    Fact Loss: 427.0264
+INFO:adv-cli.py:Epoch: 997/1    Loss: 0.0030 ± 0.0004
+INFO:adv-cli.py:Epoch: 997/1    Fact Loss: 428.6463
+INFO:adv-cli.py:Epoch: 998/1    Loss: 0.0030 ± 0.0005
+INFO:adv-cli.py:Epoch: 998/1    Fact Loss: 422.2098
+INFO:adv-cli.py:Epoch: 999/1    Loss: 0.0030 ± 0.0008
+INFO:adv-cli.py:Epoch: 999/1    Fact Loss: 419.9970
+INFO:adv-cli.py:Epoch: 1000/1   Loss: 0.0027 ± 0.0007
+INFO:adv-cli.py:Epoch: 1000/1   Fact Loss: 378.9356
+[..]
+INFO:inferbeddings.evaluation.base:### MICRO (valid filtered):
+INFO:inferbeddings.evaluation.base:     -- left   >> mean: 456.7884, median: 2.0, mrr: 0.472, hits@10: 91.74%
+INFO:inferbeddings.evaluation.base:     -- right  >> mean: 457.314, median: 2.0, mrr: 0.481, hits@10: 93.58%
+INFO:inferbeddings.evaluation.base:     -- global >> mean: 457.0512, median: 2.0, mrr: 0.476, hits@10: 92.66%
+[..]
+INFO:inferbeddings.evaluation.base:### MICRO (test filtered):
+INFO:inferbeddings.evaluation.base:     -- left   >> mean: 384.1844, median: 2.0, mrr: 0.468, hits@10: 92.38%
+INFO:inferbeddings.evaluation.base:     -- right  >> mean: 396.3276, median: 2.0, mrr: 0.479, hits@10: 93.56%
+INFO:inferbeddings.evaluation.base:     -- global >> mean: 390.256, median: 2.0, mrr: 0.474, hits@10: 92.97%
 ```
 
 [1] Bordes, A. et al. - [Translating Embeddings for Modeling Multi-relational Data](https://www.utc.fr/~bordesan/dokuwiki/_media/en/transe_nips13.pdf) - NIPS 2013
