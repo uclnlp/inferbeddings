@@ -48,7 +48,5 @@ def test_symmetric_tiny_cli():
     # Hits@10 should be at least 90% even after a limited number of epochs
     assert float(err.split()[-1][:-1]) < 5.0
 
-
-
 if __name__ == '__main__':
     pytest.main([__file__])
