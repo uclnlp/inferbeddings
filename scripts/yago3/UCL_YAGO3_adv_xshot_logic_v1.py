@@ -71,12 +71,7 @@ def main(argv):
         margin=[1],  # margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         loss=['hinge'],
-        subsample_size=[.1, .2, .3, .4, .5, .6, .7, .8, .9, 1],
-        adv_lr=[.1],
-        adv_epochs=[0, 10],
-        disc_epochs=[10],
-        adv_weight=[0, 1, 100, 10000, 1000000],
-        adv_batch_size=[1, 10, 100]
+        subsample_size=[.1, .2, .3, .4, .5, .6, .7, .8, .9, 1]
     )
 
     hyperparameters_space_distmult_complex = dict(
