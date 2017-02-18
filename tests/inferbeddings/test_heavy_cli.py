@@ -4,7 +4,7 @@ import pytest
 import subprocess
 
 
-def test_nations_cli():
+def test_wordnet_cli():
     # Checking if results are still nice
     cmd = ['./bin/adv-cli.py',
            '--train', 'data/wn18/wordnet-mlj12-train.txt',
