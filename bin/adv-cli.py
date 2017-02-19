@@ -111,7 +111,7 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     initialize_violators, adversarial_optimizer_variables_initializer = None, None
 
-    if adv_lr is not None:
+    if adv_lr is not None and adv_weight != 0.0:
         import inferbeddings.adversarial.base as adv_base
         # adversarial = Adversarial(clauses=clauses, parser=parser,
         #                           predicate_embedding_layer=provided_predicate_embeddings.embedding_matrix,
@@ -290,7 +290,7 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
                     loss_args = {walk_inputs: Xr_batch, entity_inputs: Xe_batch, target_inputs: X_target_batch}
 
                 # Update Parameters and Compute Loss
-                if adv_lr is not None:
+                if adv_lr is not None and adv_weight != 0.0:
                     _, loss_value, fact_loss_value, violation_loss_value = session.run(
                         [training_step, loss_function, fact_loss, violation_loss], feed_dict=loss_args)
                     violation_loss_values += [violation_loss_value]
@@ -311,11 +311,11 @@ def train(session, train_sequences, traing_targets, nb_entities, nb_predicates, 
             logger.info('Epoch: {0}/{1}\tLoss: {2}'.format(epoch, disc_epoch, stats(loss_values)))
             logger.info('Epoch: {0}/{1}\tFact Loss: {2:.4f}'.format(epoch, disc_epoch, total_fact_loss_value))
 
-            if adv_lr is not None:
+            if adv_lr is not None and adv_weight != 0.0:
                 logger.info(
                     'Epoch: {0}/{1}\tViolation Loss: {2}'.format(epoch, disc_epoch, stats(violation_loss_values)))
 
-        if adv_lr is not None:
+        if adv_lr is not None and adv_weight != 0.0:
             logger.info('Finding violators ..')
 
             session.run([initialize_violators, adversarial_optimizer_variables_initializer])
