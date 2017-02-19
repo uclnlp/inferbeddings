@@ -10,6 +10,12 @@ import subprocess
 import logging
 
 
+def exec(cmd):
+    p = subprocess.Popen(['sh', '-c', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    return out
+
+
 def main(argv):
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
@@ -45,9 +51,13 @@ def main(argv):
             cmd = './tools/parse_results_filtered.sh ' \
                   '{}/*model={}*similarity={}*subsample_size={}.log'.format(args.logs, model_name, similarity_name, sample_size)
 
-            p = subprocess.Popen(['sh', '-c', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate()
+            mr += [float(exec(cmd + '| grep MR: | awk \'{ print $6 }\'').strip())]
+            mrr += [float(exec(cmd + '| grep MRR: | awk \'{ print $6 }\'').strip())]
 
+            hits_at_1 += [float(exec(cmd + '| grep Hits@1: | awk \'{ print $6 }\'').strip())]
+            hits_at_3 += [float(exec(cmd + '| grep Hits@3: | awk \'{ print $6 }\'').strip())]
+            hits_at_5 += [float(exec(cmd + '| grep Hits@5: | awk \'{ print $6 }\'').strip())]
+            hits_at_10 += [float(exec(cmd + '| grep Hits@10: | awk \'{ print $6 }\'').strip())]
 
 
 if __name__ == '__main__':
