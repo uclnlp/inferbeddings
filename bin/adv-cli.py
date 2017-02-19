@@ -229,7 +229,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 sum_errors += nb_errors
             logger.info('Epoch: {}\tSum of Zero-One Errors: {}'.format(epoch, sum_errors))
 
-        for disc_epoch in range(1, discriminator_epochs + 1):
+        for disc_epoch in range(1, int(np.ceil(discriminator_epochs)) + 1):
             order = random_state.permutation(nb_samples)
             Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
@@ -240,6 +240,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 Xr_rc, Xe_rc = relation_corruptor(Xr_shuf, Xe_shuf)
 
             batches = make_batches(nb_samples, batch_size)
+            if disc_epoch > discriminator_epochs:
+                nbatches = max(1, int((disc_epoch-discriminator_epochs)*len(batches)))
+                batches = batches[:nbatches]
 
             loss_values, violation_loss_values = [], []
             total_fact_loss_value = 0
@@ -436,8 +439,9 @@ def main(argv):
 
     argparser.add_argument('--adversary-epochs', action='store', type=int, default=10,
                            help='Adversary - number of training epochs')
-    argparser.add_argument('--discriminator-epochs', action='store', type=int, default=1,
-                           help='Discriminator - number of training epochs')
+    argparser.add_argument('--discriminator-epochs', action='store', type=float, default=1,
+                           help='Discriminator - number of training epochs \
+                                (fractional values are allowed, e.g., 0.2)')
 
     argparser.add_argument('--adv-weight', '-W', action='store', type=float, default=1.0, help='Adversary weight')
     argparser.add_argument('--adv-margin', action='store', type=float, default=0.0, help='Adversary margin')
