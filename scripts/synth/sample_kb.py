@@ -1,6 +1,6 @@
 from kb import KB, TRAIN_LABEL, DEV_LABEL, TEST_LABEL
 import random
-
+import numpy as np
 
 class SampleKB:
     def __init__(self, num_relations, num_entities,
@@ -171,6 +171,7 @@ if __name__=="__main__":
     sampled_unobserved_per_true = 1 # number of false (unobserved) test facts added for each true test fact (inferred from clause)
     simple_transitivities = False
     seed = 846
+    np.random.seed(seed)
 
     #input args
     argparser = argparse.ArgumentParser('create artificial dataset (train+test) with rules (all arity 2)')
@@ -232,12 +233,18 @@ if __name__=="__main__":
 #        print(fact)
 #    for clause in testKB.get_formulae_strings():
 #        print(clause)
-    for clause in testKB.get_formulae_for_ntp_strings():
-        print(clause)
 
     testKB.apply_formulae(test_prob=test_prob, sampled_unobserved_per_true=sampled_unobserved_per_true)
 
-    msg = ''
+    #create train / test file for inferbeddings
+    train_file = os.path.join(args.dir, args.tag + '_train.tsv')
+    valid_file = os.path.join(args.dir, args.tag + '_valid.tsv')
+    test_file = os.path.join(args.dir, args.tag + '_test.tsv')
+    clause_file = os.path.join(args.dir, args.tag + '_clauses.pl')
+    readme_file = os.path.join(args.dir, args.tag + '_config.txt')
+
+
+    msg = '#file: '+ args.tag + '_config.txt\n'
     msg += '#%d original purely random train facts (without formulae)\n'%N_original_facts
     train_facts = testKB.get_all_facts(of_types=(TRAIN_LABEL,))
     msg +='#%d train facts (after creating rules and adding inferred facts to train set with prob %.3f)\n'%(len(train_facts), 1.-test_prob)
@@ -245,13 +252,10 @@ if __name__=="__main__":
     test_facts_T = [f for f in test_facts if f[1]]
     test_facts_F = [f for f in test_facts if not f[1]]
     msg += '#%d test facts (%d True, %d False)\n'%(len(test_facts), len(test_facts_T), len(test_facts_F))
-    print(msg)
+    print('\n' + msg)
+    for clause in testKB.get_formulae_for_ntp_strings():
+        print(clause)
 
-    #create train / test file for inferbeddings
-    train_file = os.path.join(args.dir, args.tag + '_train.tsv')
-    test_file = os.path.join(args.dir, args.tag + '_test.tsv')
-    clause_file = os.path.join(args.dir, args.tag + '_clauses.pl')
-    readme_file = os.path.join(args.dir, args.tag + '_config.txt')
 
     with open(readme_file, 'w') as rf:
         rf.write('\n#command:\npython3 %s\n'%' '.join(list(sys.argv)))
@@ -271,6 +275,22 @@ if __name__=="__main__":
         for fact in sorted(testKB.get_all_facts(of_types=TRAIN_LABEL)):
             pred, (subj, obj) = fact[0]
             trf.write('{}\t{}\t{}\n'.format(subj, pred, obj))
+
+    with open(valid_file, 'w') as vaf:
+        #simple strategy for artificial setting:  tune on train data
+        #but: for AUC evaluation, we need false train facts as well
+        # (sampled_unobserved_per_true randomly sampled unobserved ones per positive train fact
+
+        nb_pos_test = int(len(testKB.get_all_facts(of_types=TEST_LABEL))/(sampled_unobserved_per_true+1.))
+        train_facts_True = testKB.get_all_facts(of_types=TRAIN_LABEL)
+        np.random.shuffle(train_facts_True)
+        valid_facts_True = train_facts_True #[:nb_pos_test]
+        valid_facts_False = []
+        for (pred, (subj, obj)), truth, _ in valid_facts_True:
+            if truth: #should be the case
+                vaf.write('{}\t{}\t{}\t{}\n'.format(subj, pred, obj, {True: 1, False: 0}[truth]))
+                ((pred_n, (subj_n, obj_n)), _, _) = testKB.sample_neg(pred, 0, 1, oracle=True)
+                vaf.write('{}\t{}\t{}\t{}\n'.format(subj_n, pred, obj_n, 0)) #negative fact for same relation
 
     with open(test_file, 'w') as tef:
         for fact in sorted(testKB.get_all_facts(of_types=TEST_LABEL)):

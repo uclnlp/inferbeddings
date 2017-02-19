@@ -1,5 +1,0 @@
-b3(Y, X) :- b3(X, Y)
-b5(Y, X) :- b5(X, Y)
-b4(Y, X) :- b4(X, Y)
-b1(Y, X) :- b1(X, Y)
-b2(Y, X) :- b2(X, Y)
