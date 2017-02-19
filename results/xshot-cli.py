@@ -9,6 +9,8 @@ import subprocess
 
 import logging
 
+logger = logging.getLogger(os.path.basename(sys.argv[0]))
+
 
 def exec(cmd):
     p = subprocess.Popen(['sh', '-c', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -82,6 +84,7 @@ def main(argv):
         }
 
         model_to_adversarial_results[model_name] = results
+        logger.info('{}: {}'.format(model_name, str(results)))
 
         # Standard results (no Adversarial)
 
@@ -110,6 +113,7 @@ def main(argv):
         }
 
         model_to_standard_results[model_name] = results
+        logger.info('{}: {}'.format(model_name, str(results)))
 
         # NAACL results
 
@@ -138,6 +142,7 @@ def main(argv):
         }
 
         model_to_naacl_results[model_name] = results
+        logger.info('{}: {}'.format(model_name, str(results)))
 
         # Logic results
 
@@ -166,7 +171,7 @@ def main(argv):
         }
 
         model_to_logic_results[model_name] = results
-
+        logger.info('{}: {}'.format(model_name, str(results)))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
