@@ -30,6 +30,8 @@ def rename_metric(x):
         return "HITS@10"
 
 with open("./results/results.tsv", "w") as f:
+    f.write("Method\tModel\tMetric\tFraction\tResult\n")
+
     for name, results in [
         ("ADV", model_to_adversarial_results),
         ("STD", model_to_standard_results),

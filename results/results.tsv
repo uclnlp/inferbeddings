@@ -1,3 +1,4 @@
+Method	Model	Metric	Fraction	Result
 ADV	TransE	MR	0.1	18131.32
 ADV	TransE	MR	0.2	14855.25
 ADV	TransE	MR	0.3	10764.13
