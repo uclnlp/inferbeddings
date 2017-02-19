@@ -36,21 +36,26 @@ def main(argv):
                            help='Folder where "inferbeddings" is located')
     argparser.add_argument('logs', action='store', type=str,
                            help='Folder where the logs are located (e.g. "logs/ucl_wn18_adv_xshot_v1/")')
+    argparser.add_argument('logic', action='store', type=str,
+                           help='Folder where the logic logs are located (e.g. "logs/ucl_wn18_adv_xshot_v1/")')
 
     args = argparser.parse_args(argv)
 
     assert args.base is not None
     assert args.logs is not None
+    assert args.logic is not None
 
     if args.base is not None:
         os.chdir(args.base)
 
     model_to_adversarial_results = {}
     model_to_standard_results = {}
-    model_to_logic_results = {}
     model_to_naacl_results = {}
+    model_to_logic_results = {}
 
     for model_name in ['TransE', 'DistMult', 'ComplEx']:
+
+        # Adversarial results
 
         mr, mrr = [], []
         hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
@@ -69,6 +74,98 @@ def main(argv):
             hits_at_3 += [_hits_at_3]
             hits_at_5 += [_hits_at_5]
             hits_at_10 += [_hits_at_10]
+
+        results = {
+            'mr': mr, 'mrr': mrr,
+            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
+            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
+        }
+
+        model_to_adversarial_results[model_name] = results
+
+        # Standard results (no Adversarial)
+
+        mr, mrr = [], []
+        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
+
+        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+            similarity_name = 'dot'
+            cmd = './tools/parse_results_filtered.sh ' \
+                  '{}/*adv_weight=0_*model={}*similarity={}*subsample_size={}.log'.format(args.logs, model_name, similarity_name, sample_size)
+
+            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
+
+            mr += [_mr]
+            mrr += [_mrr]
+
+            hits_at_1 += [_hits_at_1]
+            hits_at_3 += [_hits_at_3]
+            hits_at_5 += [_hits_at_5]
+            hits_at_10 += [_hits_at_10]
+
+        results = {
+            'mr': mr, 'mrr': mrr,
+            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
+            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
+        }
+
+        model_to_standard_results[model_name] = results
+
+        # NAACL results
+
+        mr, mrr = [], []
+        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
+
+        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+            similarity_name = 'dot'
+            cmd = './tools/parse_results_filtered.sh ' \
+                  '{}/*adv_epochs=0_*model={}*similarity={}*subsample_size={}.log'.format(args.logs, model_name, similarity_name, sample_size)
+
+            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
+
+            mr += [_mr]
+            mrr += [_mrr]
+
+            hits_at_1 += [_hits_at_1]
+            hits_at_3 += [_hits_at_3]
+            hits_at_5 += [_hits_at_5]
+            hits_at_10 += [_hits_at_10]
+
+        results = {
+            'mr': mr, 'mrr': mrr,
+            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
+            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
+        }
+
+        model_to_naacl_results[model_name] = results
+
+        # Logic results
+
+        mr, mrr = [], []
+        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
+
+        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+            similarity_name = 'dot'
+            cmd = './tools/parse_results_filtered.sh ' \
+                  '{}/*model={}*similarity={}*subsample_size={}.log'.format(args.logic, model_name, similarity_name, sample_size)
+
+            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
+
+            mr += [_mr]
+            mrr += [_mrr]
+
+            hits_at_1 += [_hits_at_1]
+            hits_at_3 += [_hits_at_3]
+            hits_at_5 += [_hits_at_5]
+            hits_at_10 += [_hits_at_10]
+
+        results = {
+            'mr': mr, 'mrr': mrr,
+            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
+            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
+        }
+
+        model_to_logic_results[model_name] = results
 
 
 if __name__ == '__main__':
