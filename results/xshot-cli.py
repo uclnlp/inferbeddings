@@ -18,14 +18,43 @@ def exec(cmd):
     return out
 
 
-def get_results(cmd):
-    mr = float(exec(cmd + '| grep MR: | awk \'{ print $6 }\'').strip())
-    mrr = float(exec(cmd + '| grep MRR: | awk \'{ print $6 }\'').strip())
-    hits_at_1 = float(exec(cmd + '| grep Hits@1: | tr -d "%" | awk \'{ print $6 }\'').strip())
-    hits_at_3 = float(exec(cmd + '| grep Hits@3: | tr -d "%" | awk \'{ print $6 }\'').strip())
-    hits_at_5 = float(exec(cmd + '| grep Hits@5: | tr -d "%" | awk \'{ print $6 }\'').strip())
-    hits_at_10 = float(exec(cmd + '| grep Hits@10: | tr -d "%" | awk \'{ print $6 }\'').strip())
+def _get_results(cmd):
+    exec(cmd + ' > /tmp/make_america_great_again.log 2>&1')
+    mr = float(exec('cat /tmp/make_america_great_again.log | grep MR: | awk \'{ print $6 }\'').strip())
+    mrr = float(exec('cat /tmp/make_america_great_again.log | grep MRR: | awk \'{ print $6 }\'').strip())
+    hits_at_1 = float(exec('cat /tmp/make_america_great_again.log | grep Hits@1: | tr -d "%" | awk \'{ print $6 }\'').strip())
+    hits_at_3 = float(exec('cat /tmp/make_america_great_again.log | grep Hits@3: | tr -d "%" | awk \'{ print $6 }\'').strip())
+    hits_at_5 = float(exec('cat /tmp/make_america_great_again.log | grep Hits@5: | tr -d "%" | awk \'{ print $6 }\'').strip())
+    hits_at_10 = float(exec('cat /tmp/make_america_great_again.log | grep Hits@10: | tr -d "%" | awk \'{ print $6 }\'').strip())
     return mr, mrr, hits_at_1, hits_at_3, hits_at_5, hits_at_10
+
+
+def get_results(logs, model_name, prefix):
+    mr, mrr = [], []
+    hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
+
+    for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+        similarity_name = 'dot'
+        cmd = './tools/parse_results_filtered.sh ' \
+              '{}/{}*model={}*similarity={}*subsample_size={}.log'.format(logs, prefix, model_name,
+                                                                          similarity_name, sample_size)
+        _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = _get_results(cmd)
+
+        mr += [_mr]
+        mrr += [_mrr]
+
+        hits_at_1 += [_hits_at_1]
+        hits_at_3 += [_hits_at_3]
+        hits_at_5 += [_hits_at_5]
+        hits_at_10 += [_hits_at_10]
+
+    results = {
+        'mr': mr, 'mrr': mrr,
+        'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
+        'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
+    }
+
+    return results
 
 
 def main(argv):
@@ -57,121 +86,21 @@ def main(argv):
 
     for model_name in ['TransE', 'DistMult', 'ComplEx']:
 
-        # Adversarial results
-
-        mr, mrr = [], []
-        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
-
-        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-            similarity_name = 'dot'
-            cmd = './tools/parse_results_filtered.sh ' \
-                  '{}/*model={}*similarity={}*subsample_size={}.log'.format(args.logs, model_name, similarity_name, sample_size)
-
-            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
-
-            mr += [_mr]
-            mrr += [_mrr]
-
-            hits_at_1 += [_hits_at_1]
-            hits_at_3 += [_hits_at_3]
-            hits_at_5 += [_hits_at_5]
-            hits_at_10 += [_hits_at_10]
-
-        results = {
-            'mr': mr, 'mrr': mrr,
-            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
-            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
-        }
-
-        model_to_adversarial_results[model_name] = results
-        logger.info('{}: {}'.format(model_name, str(results)))
+        # Adversarial training
+        model_to_adversarial_results[model_name] = get_results(logs=args.logs, model_name=model_name, prefix='*')
+        logger.info('{}: {}'.format(model_name, str(model_to_adversarial_results[model_name])))
 
         # Standard results (no Adversarial)
-
-        mr, mrr = [], []
-        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
-
-        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-            similarity_name = 'dot'
-            cmd = './tools/parse_results_filtered.sh ' \
-                  '{}/*adv_weight=0_*model={}*similarity={}*subsample_size={}.log'.format(args.logs, model_name, similarity_name, sample_size)
-
-            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
-
-            mr += [_mr]
-            mrr += [_mrr]
-
-            hits_at_1 += [_hits_at_1]
-            hits_at_3 += [_hits_at_3]
-            hits_at_5 += [_hits_at_5]
-            hits_at_10 += [_hits_at_10]
-
-        results = {
-            'mr': mr, 'mrr': mrr,
-            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
-            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
-        }
-
-        model_to_standard_results[model_name] = results
-        logger.info('{}: {}'.format(model_name, str(results)))
+        model_to_standard_results[model_name] = get_results(logs=args.logs, model_name=model_name, prefix='*adv_weight=0_*')
+        logger.info('{}: {}'.format(model_name, str(model_to_standard_results[model_name])))
 
         # NAACL results
-
-        mr, mrr = [], []
-        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
-
-        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-            similarity_name = 'dot'
-            cmd = './tools/parse_results_filtered.sh ' \
-                  '{}/*adv_epochs=0_*model={}*similarity={}*subsample_size={}.log'.format(args.logs, model_name, similarity_name, sample_size)
-
-            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
-
-            mr += [_mr]
-            mrr += [_mrr]
-
-            hits_at_1 += [_hits_at_1]
-            hits_at_3 += [_hits_at_3]
-            hits_at_5 += [_hits_at_5]
-            hits_at_10 += [_hits_at_10]
-
-        results = {
-            'mr': mr, 'mrr': mrr,
-            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
-            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
-        }
-
-        model_to_naacl_results[model_name] = results
-        logger.info('{}: {}'.format(model_name, str(results)))
+        model_to_naacl_results[model_name] = get_results(logs=args.logs, model_name=model_name, prefix='*adv_epochs=0_*')
+        logger.info('{}: {}'.format(model_name, str(model_to_naacl_results[model_name])))
 
         # Logic results
-
-        mr, mrr = [], []
-        hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
-
-        for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-            similarity_name = 'dot'
-            cmd = './tools/parse_results_filtered.sh ' \
-                  '{}/*model={}*similarity={}*subsample_size={}.log'.format(args.logic, model_name, similarity_name, sample_size)
-
-            _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = get_results(cmd)
-
-            mr += [_mr]
-            mrr += [_mrr]
-
-            hits_at_1 += [_hits_at_1]
-            hits_at_3 += [_hits_at_3]
-            hits_at_5 += [_hits_at_5]
-            hits_at_10 += [_hits_at_10]
-
-        results = {
-            'mr': mr, 'mrr': mrr,
-            'hits_at_1': hits_at_1, 'hits_at_3': hits_at_3,
-            'hits_at_5': hits_at_5, 'hits_at_10': hits_at_10
-        }
-
-        model_to_logic_results[model_name] = results
-        logger.info('{}: {}'.format(model_name, str(results)))
+        model_to_logic_results[model_name] = get_results(logs=args.logic, model_name=model_name, prefix='*')
+        logger.info('{}: {}'.format(model_name, str(model_to_logic_results[model_name])))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
