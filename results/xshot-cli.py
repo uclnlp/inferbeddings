@@ -9,6 +9,8 @@ import subprocess
 
 import logging
 
+import json
+
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
@@ -34,6 +36,7 @@ def get_results(logs, model_name, prefix):
     hits_at_1, hits_at_3, hits_at_5, hits_at_10 = [], [], [], []
 
     for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
+        print(sample_size)
         similarity_name = 'dot'
         cmd = './tools/parse_results_filtered.sh ' \
               '{}/{}*model={}*similarity={}*subsample_size={}.log'.format(logs, prefix, model_name,
@@ -85,6 +88,7 @@ def main(argv):
     model_to_logic_results = {}
 
     for model_name in ['TransE', 'DistMult', 'ComplEx']:
+        print(model_name)
 
         # Adversarial training
         model_to_adversarial_results[model_name] = get_results(logs=args.logs, model_name=model_name, prefix='*')
@@ -101,6 +105,20 @@ def main(argv):
         # Logic results
         model_to_logic_results[model_name] = get_results(logs=args.logic, model_name=model_name, prefix='*')
         logger.info('{}: {}'.format(model_name, str(model_to_logic_results[model_name])))
+
+    with open("./results/model_to_adversarial_results.txt", "w") as f:
+        json.dump(model_to_adversarial_results, f, indent=2)
+        f.close()
+    with open("./results/model_to_standard_results.txt", "w") as f:
+        json.dump(model_to_standard_results, f, indent=2)
+        f.close()
+    with open("./results/model_to_naacl_results.txt", "w") as f:
+        json.dump(model_to_naacl_results, f, indent=2)
+        f.close()
+    with open("./results/model_to_logic_results.txt", "w") as f:
+        json.dump(model_to_logic_results, f, indent=2)
+        f.close()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
