@@ -19,10 +19,10 @@ def exec(cmd):
 def get_results(cmd):
     mr = float(exec(cmd + '| grep MR: | awk \'{ print $6 }\'').strip())
     mrr = float(exec(cmd + '| grep MRR: | awk \'{ print $6 }\'').strip())
-    hits_at_1 = float(exec(cmd + '| grep Hits@1: | awk \'{ print $6 }\'').strip())
-    hits_at_3 = float(exec(cmd + '| grep Hits@3: | awk \'{ print $6 }\'').strip())
-    hits_at_5 = float(exec(cmd + '| grep Hits@5: | awk \'{ print $6 }\'').strip())
-    hits_at_10 = float(exec(cmd + '| grep Hits@10: | awk \'{ print $6 }\'').strip())
+    hits_at_1 = float(exec(cmd + '| grep Hits@1: | tr -d "%" | awk \'{ print $6 }\'').strip())
+    hits_at_3 = float(exec(cmd + '| grep Hits@3: | tr -d "%" | awk \'{ print $6 }\'').strip())
+    hits_at_5 = float(exec(cmd + '| grep Hits@5: | tr -d "%" | awk \'{ print $6 }\'').strip())
+    hits_at_10 = float(exec(cmd + '| grep Hits@10: | tr -d "%" | awk \'{ print $6 }\'').strip())
     return mr, mrr, hits_at_1, hits_at_3, hits_at_5, hits_at_10
 
 
