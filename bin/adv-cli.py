@@ -395,6 +395,7 @@ def main(argv):
     argparser.add_argument('--debug-scores', nargs='+', type=str,
                            help='List of files containing triples we want to compute the score of')
     argparser.add_argument('--debug-embeddings', action='store', type=str, default=None)
+    argparser.add_argument('--debug-results', action='store_true', help='Report fine-grained ranking results')
 
     argparser.add_argument('--lr', '-l', action='store', type=float, default=0.1)
     argparser.add_argument('--initial-accumulator-value', action='store', type=float, default=0.1)
@@ -621,19 +622,21 @@ def main(argv):
 
         if valid_triples:
             if is_auc:
-                evaluation.evaluate_auc(scoring_function, valid_triples, valid_triples_neg, nb_entities, nb_predicates,
-                                        tag='valid')
+                evaluation.evaluate_auc(scoring_function, valid_triples, valid_triples_neg,
+                                        nb_entities, nb_predicates, tag='valid')
             else:
-                evaluation.evaluate_ranks(scoring_function, valid_triples, nb_entities, true_triples=true_triples,
-                                          tag='valid')
+                evaluation.evaluate_ranks(scoring_function, valid_triples,
+                                          nb_entities, true_triples=true_triples, tag='valid',
+                                          verbose=args.debug_results, index_to_predicate=parser.index_to_predicate)
 
         if test_triples:
             if is_auc:
-                evaluation.evaluate_auc(scoring_function, test_triples, test_triples_neg, nb_entities, nb_predicates,
-                                        tag='test')
+                evaluation.evaluate_auc(scoring_function, test_triples, test_triples_neg,
+                                        nb_entities, nb_predicates, tag='test')
             else:
-                evaluation.evaluate_ranks(scoring_function, test_triples, nb_entities, true_triples=true_triples,
-                                          tag='test')
+                evaluation.evaluate_ranks(scoring_function, test_triples,
+                                          nb_entities, true_triples=true_triples, tag='test',
+                                          verbose=args.debug_results, index_to_predicate=parser.index_to_predicate)
 
 
 if __name__ == '__main__':
