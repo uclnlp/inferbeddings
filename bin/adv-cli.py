@@ -366,19 +366,23 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
         if debug:
             from inferbeddings.visualization import hinton_diagram
+
             embedding_matrix = session.run(predicate_embedding_layer)[1:, :]
             print(hinton_diagram(embedding_matrix))
 
             if prev_embedding_matrix is not None:
                 diff = prev_embedding_matrix - embedding_matrix
-                logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'.format(epoch, np.abs(diff).sum(),
-                                                                                            np.abs(
-                                                                                                embedding_matrix).sum()))
+                diff_norm, norm = np.abs(diff).sum(), np.abs(embedding_matrix).sum()
+                logger.info('Epoch: {}, Update to Predicate Embeddings: {} Norm: {}'.format(epoch, diff_norm, norm))
 
-            for clause, weight in adversarial.weights.items():
-                print("{clause} < {weight} >".format(clause=clause, weight=session.run(weight)))
+            # Clause weights, being explored by @riedelcastro
+            # for clause, weight in adversarial.weights.items():
+            #     print("{clause} < {weight} >".format(clause=clause, weight=session.run(weight)))
 
             prev_embedding_matrix = embedding_matrix
+
+            # ent_embedding_matrix = session.run(entity_embedding_layer)[1:, :]
+            # print(hinton_diagram(ent_embedding_matrix))
 
     objects = {
         'entity_embedding_layer': entity_embedding_layer,
