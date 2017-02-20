@@ -1,5 +1,7 @@
 import pandas as pd
 import sys
+import os
+from subprocess import call
 
 
 def select(df, metric="HITS@10", model="ComplEx"):
@@ -10,7 +12,7 @@ def select(df, metric="HITS@10", model="ComplEx"):
     return df
 
 
-def generate_table(df, metric="HITS@10", model="ComplEx"):
+def generate_table(df, metric="HITS@10", model="ComplEx", compile_pdf=True):
     tmp_df = select(df, metric, model)
     print("Creating ./results/results_%s_%s.tex" % (model, metric))
     with open("./results/results_%s_%s.tex" % (model, metric), "w") as f:
@@ -50,15 +52,31 @@ def generate_table(df, metric="HITS@10", model="ComplEx"):
 \\end{tabular}
 \\end{document}""")
         f.close()
+        if compile_pdf:
+            current_dir = os.getcwd()
+            os.chdir("./results/")
+            call(["pdflatex", "./results_%s_%s.tex" % (model, metric)])
+            os.chdir(current_dir)
 
 if __name__ == '__main__':
     df = pd.DataFrame.from_csv('./results/results.tsv', sep='\t',
                                index_col=None)
-
     if len(sys.argv) == 1:
-        for metric in ["MR", "MRR", "HITS@1", "HITS@3", "HITS@5", "HITS@10"]:
-            for model in ["TransE", "DistMult", "ComplEx"]:
-                generate_table(df, metric, model)
+        with open("./results/results.tex", "w") as f:
+            f.write("""\\documentclass{article}
+\\usepackage{graphicx}
+\\begin{document}
+""")
+            for metric in ["MR", "MRR", "HITS@1", "HITS@3", "HITS@5", "HITS@10"]:
+                for model in ["TransE", "DistMult", "ComplEx"]:
+                    generate_table(df, metric, model)
+                    f.write("\\begin{figure}\n")
+                    f.write("\includegraphics[]{results_%s_%s}\\\\\n"
+                            % (model, metric))
+                    f.write("\\caption{%s %s}\n" % (model, metric))
+                    f.write("\\end{figure}")
+            f.write("\end{document}")
+            f.close()
     else:
         metric = sys.argv[1] if len(sys.argv) > 1 else "HITS@10"
         model = sys.argv[2] if len(sys.argv) > 2 else "ComplEx"
