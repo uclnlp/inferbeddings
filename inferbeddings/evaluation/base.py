@@ -74,18 +74,29 @@ def evaluate_ranks(scoring_function, triples, nb_entities, true_triples=None, ta
     if verbose:
         assert index_to_predicate is not None
 
-        p_to_ranks, p_to_ranks_filtered = {}, {}
-        for (_, p, _), rank, rank_filtered in zip(triples, ranks, ranks_filtered):
-            if p not in p_to_ranks:
-                p_to_ranks[p], p_to_ranks_filtered[p] = [], []
+        ranks_l, ranks_r = ranks
+        ranks_l_filtered, ranks_r_filtered = ranks_filtered
 
         p_idxs = sorted({p for (_, p, _) in triples})
+
+        p_to_ranks_l = {p_idx: [] for p_idx in p_idxs}
+        p_to_ranks_l_filtered = {p_idx: [] for p_idx in p_idxs}
+
+        p_to_ranks_r = {p_idx: [] for p_idx in p_idxs}
+        p_to_ranks_r_filtered = {p_idx: [] for p_idx in p_idxs}
+
+        for (_, p, _), r_l, r_r, r_l_f, r_r_f in zip(triples, ranks_l, ranks_r, ranks_l_filtered, ranks_r_filtered):
+            p_to_ranks_l[p] += [r_l]
+            p_to_ranks_r[p] += [r_r]
+
+            p_to_ranks_l_filtered[p] += [r_l_f]
+            p_to_ranks_r_filtered[p] += [r_r_f]
+
         for p_idx in p_idxs:
             predicate_name = index_to_predicate[p_idx]
 
-            _ranks, _ranks_f = p_to_ranks[p_idx], p_to_ranks_filtered[p_idx]
-            ranks = ([rank_l for (rank_l, _) in _ranks], [rank_r for (_, rank_r) in _ranks])
-            ranks_f = ([rank_l for (rank_l, _) in _ranks_f], [rank_r for (_, rank_r) in _ranks_f])
+            ranks = (p_to_ranks_l[p_idx], p_to_ranks_r[p_idx])
+            ranks_f = (p_to_ranks_l_filtered[p_idx], p_to_ranks_r_filtered[p_idx])
 
             if tag is not None:
                 for n in range(1, 10 + 1):
