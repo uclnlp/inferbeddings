@@ -18,4 +18,4 @@ mv results/results* results/model_to_* results/music/
 ./results/xshot-cli.py . logs/ucl_yago3_adv_xshot_v1/ logs/ucl_yago3_adv_xshot_logic_v1/
 ./results/aggregate_results.py
 ./results/tex_results.py
-mv results/results* results/model_to_* results/music/
+mv results/results* results/model_to_* results/yago/
