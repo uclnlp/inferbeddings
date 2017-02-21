@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import json
-from pprint import pprint
 
 with open("./results/model_to_adversarial_results.txt", "r") as f:
     model_to_adversarial_results = json.load(f)
