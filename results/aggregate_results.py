@@ -3,16 +3,16 @@
 
 import json
 
-with open("./results/model_to_adversarial_results.txt", "r") as f:
+with open("./results/model_to_adversarial_results.json", "r") as f:
     model_to_adversarial_results = json.load(f)
     f.close()
-with open("./results/model_to_standard_results.txt", "r") as f:
+with open("./results/model_to_standard_results.json", "r") as f:
     model_to_standard_results = json.load(f)
     f.close()
-with open("./results/model_to_naacl_results.txt", "r") as f:
+with open("./results/model_to_naacl_results.json", "r") as f:
     model_to_naacl_results = json.load(f)
     f.close()
-with open("./results/model_to_logic_results.txt", "r") as f:
+with open("./results/model_to_logic_results.json", "r") as f:
     model_to_logic_results = json.load(f)
     f.close()
 

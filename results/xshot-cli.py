@@ -106,16 +106,16 @@ def main(argv):
         model_to_logic_results[model_name] = get_results(logs=args.logic, model_name=model_name, prefix='*')
         logger.info('{}: {}'.format(model_name, str(model_to_logic_results[model_name])))
 
-    with open("./results/model_to_adversarial_results.txt", "w") as f:
+    with open("./results/model_to_adversarial_results.json", "w") as f:
         json.dump(model_to_adversarial_results, f, indent=2)
         f.close()
-    with open("./results/model_to_standard_results.txt", "w") as f:
+    with open("./results/model_to_standard_results.json", "w") as f:
         json.dump(model_to_standard_results, f, indent=2)
         f.close()
-    with open("./results/model_to_naacl_results.txt", "w") as f:
+    with open("./results/model_to_naacl_results.json", "w") as f:
         json.dump(model_to_naacl_results, f, indent=2)
         f.close()
-    with open("./results/model_to_logic_results.txt", "w") as f:
+    with open("./results/model_to_logic_results.json", "w") as f:
         json.dump(model_to_logic_results, f, indent=2)
         f.close()
 
