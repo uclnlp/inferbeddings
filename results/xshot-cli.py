@@ -38,6 +38,8 @@ def get_results(logs, model_name, prefix):
     for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
         print(sample_size)
         similarity_name = 'dot'
+        if model_name == 'TransE':
+            similarity_name = 'l*'
         cmd = './tools/parse_results_filtered.sh ' \
               '{}/{}*model={}*similarity={}*subsample_size={}.log'.format(logs, prefix, model_name,
                                                                           similarity_name, sample_size)
