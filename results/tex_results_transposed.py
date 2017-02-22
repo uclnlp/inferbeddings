@@ -15,40 +15,44 @@ def select(df, metric="HITS@10", model="ComplEx"):
     return df
 
 
-def generate_table(df, metric="HITS@10", model="ComplEx", compile_pdf=False):
+def generate_table(df, metric="HITS@10", model="ComplEx", compile_pdf=True):
     tmp_df = select(df, metric, model)
     print("Creating ./results/results_%s_%s.tex" % (model, metric))
+
+    methods = ["STD", "SMPL", "LOG", "ADV"]
+    fractions = [round(fraction / 10.0, 1) for fraction in range(1, 11)]
+
+    fractions_str = ' & '.join(["{}\%".format(int(f * 100)) for f in fractions])
+
     with open("./results/results_%s_%s.tex" % (model, metric), "w") as f:
         f.write("""\\documentclass{standalone}
 \\usepackage{booktabs}
 \\begin{document}
-\\begin{tabular}{r|rrrr}
+\\begin{tabular}{c|""" + ''.join(['c' for _ in range(len(fractions))]) + """}
       \\toprule
-      Method & 10\% & 20\% & 30\% & 40\% & 50\% & 60\% & 70\% & 80\% & 90\% & 100\% \\\\
+      Method & """ + fractions_str + """ \\\\
       \\midrule
-    """)
-
-        methods = ["STD", "SMPL", "LOG", "ADV"]
+""")
         _m2d = {}
 
         for method in methods:
             _m2d[method] = []
             tmp = tmp_df[tmp_df.Method == method]
             data = []
-            for fraction in range(1, 11):
-                fraction = round(fraction / 10.0, 1)
+            for fraction in fractions:
                 data.append(tmp[tmp.Fraction == fraction]["Result"].values[0])
-            data = ["%2.2f" % x for x in data]
+            def to_str(x, idx):
+                return "%2.2f" % x if idx > 0 else "%2.3f" % x
+            data = [to_str(x, idx) for idx, x in enumerate(data)]
             _m2d[method] = data
 
         method_to_data = {m: [] for m in methods}
         for idx in range(len(_m2d[methods[0]])):
             max_value = max([float(_m2d[m][idx]) for m in methods])
-            min_value = min([float(_m2d[m][idx]) for m in methods])
             for method in methods:
                 value = _m2d[method][idx]
                 if float(value) == max_value:
-                    value = '\\bf{' + value + '}'
+                    value = '\\textbf{' + value + '}'
                 method_to_data[method] += [str(value)]
 
         for method in methods:

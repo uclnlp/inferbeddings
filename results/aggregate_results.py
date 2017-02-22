@@ -44,7 +44,13 @@ with open("./results/results.tsv", "w") as f:
             for metric in results[model]:
                 result = results[model][metric]
                 for i, x in enumerate(result):
-                    f.write("%s\t%s\t%s\t%1.1f\t%2.2f\n" %
-                            (name, model, rename_metric(metric),
-                             (int(i)+1)/10, float(x)))
+                    renamed_metric = rename_metric(metric)
+                    if renamed_metric == 'MRR':
+                        f.write("%s\t%s\t%s\t%1.1f\t%2.3f\n" %
+                                (name, model, renamed_metric,
+                                 (int(i)+1)/10, float(x)))
+                    else:
+                        f.write("%s\t%s\t%s\t%1.1f\t%2.2f\n" %
+                                (name, model, renamed_metric,
+                                 (int(i)+1)/10, float(x)))
     f.close()

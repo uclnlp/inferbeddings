@@ -1,20 +1,14 @@
 \documentclass{standalone}
 \usepackage{booktabs}
 \begin{document}
-\begin{tabular}{r|rrrr}
+\begin{tabular}{c|cccccccccc}
       \toprule
-      Fraction & STD & SMPL & LOG & ADV\\
+      Method & 10\% & 20\% & 30\% & 40\% & 50\% & 60\% & 70\% & 80\% & 90\% & 100\% \\
       \midrule
-      0.1 & 7.60 & \textbf{9.42} & 6.30 & 9.35\\
-  0.2 & 17.38 & 17.76 & 17.43 & \textbf{17.98}\\
-  0.3 & 25.82 & \textbf{26.81} & 26.15 & 26.76\\
-  0.4 & 35.32 & \textbf{36.19} & 35.56 & 35.97\\
-  0.5 & 43.46 & \emph{44.23} & \emph{44.23} & 44.22\\
-  0.6 & 52.57 & \emph{52.95} & 52.35 & \emph{52.95}\\
-  0.7 & 61.28 & \textbf{61.82} & 60.97 & 61.71\\
-  0.8 & 68.88 & \emph{70.00} & 69.71 & \emph{70.00}\\
-  0.9 & 78.84 & \emph{78.95} & 78.90 & \emph{78.95}\\
-  1.0 & 92.78 & \emph{92.79} & 92.41 & \emph{92.79}\\
+STD & 7.600 & 17.38 & 25.82 & 35.32 & 43.46 & 52.57 & 61.28 & 68.88 & 78.84 & 92.78\\
+SMPL & \textbf{9.420} & 17.76 & \textbf{26.81} & \textbf{36.19} & \textbf{44.23} & \textbf{52.95} & \textbf{61.82} & \textbf{70.00} & \textbf{78.95} & \textbf{92.79}\\
+LOG & 6.300 & 17.43 & 26.15 & 35.56 & \textbf{44.23} & 52.35 & 60.97 & 69.71 & 78.90 & 92.41\\
+ADV & 9.350 & \textbf{17.98} & 26.76 & 35.97 & 44.22 & \textbf{52.95} & 61.71 & \textbf{70.00} & \textbf{78.95} & \textbf{92.79}\\
   \bottomrule
 \end{tabular}
 \end{document}
