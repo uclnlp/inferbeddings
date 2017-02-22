@@ -19,7 +19,7 @@ def generate_table(df, metric="HITS@10", model="ComplEx", compile_pdf=True):
     tmp_df = select(df, metric, model)
     print("Creating ./results/results_%s_%s.tex" % (model, metric))
 
-    methods = ["STD", "SMPL", "LOG", "ADV"]
+    methods = ["STD", "LOG", "SMPL", "ADV"]
     fractions = [round(fraction / 10.0, 1) for fraction in range(1, 11)]
 
     fractions_str = ' & '.join(["{}\%".format(int(f * 100)) for f in fractions])
