@@ -40,7 +40,7 @@ def get_results(logs, model_name, prefix):
         similarity_name = 'l*'
 
     sample_size = 1
-    cmd = './tools/parse_results_filtered.sh ' \
+    cmd = './tools/parse_results_filtered.sh /dev/null ' \
           '{}/{}*model={}*similarity={}*subsample_size={}.log'.format(logs, prefix, model_name,
                                                                       similarity_name, sample_size)
 
@@ -48,12 +48,10 @@ def get_results(logs, model_name, prefix):
 
     for sample_size in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
         print(sample_size)
-#        cmd = './tools/parse_results_filtered.sh ' \
-#              '{}/{}*model={}*similarity={}*subsample_size={}.log'.format(logs, prefix, model_name,
-#                                                                          similarity_name, sample_size)
         file = (str(optimal).replace('subsample_size=1.log', 'subsample_size={}.log'.format(sample_size)))
-        print(file)
-        cmd = './tools/parse_results_filtered.sh {}'.format(file)
+        cmd = './tools/parse_results_filtered.sh /dev/null {}'.format(file[2:-1])
+
+        print(cmd)
 
         _mr, _mrr, _hits_at_1, _hits_at_3, _hits_at_5, _hits_at_10 = _get_results(cmd)
 
