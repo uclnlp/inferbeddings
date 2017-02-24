@@ -1,0 +1,14 @@
+\documentclass{standalone}
+\usepackage{booktabs}
+\begin{document}
+\begin{tabular}{c|cccccccccc}
+      \toprule
+      Method & 10\% & 20\% & 30\% & 40\% & 50\% & 60\% & 70\% & 80\% & 90\% & 100\% \\
+      \midrule
+STD & 7.030 & 17.91 & 27.48 & 37.08 & 45.72 & 55.28 & 64.24 & 72.65 & 81.91 & 93.85\\
+LOG & 6.490 & 18.27 & 27.60 & 37.40 & 46.60 & 55.72 & 64.57 & 73.34 & 82.02 & 93.81\\
+SMPL & 9.030 & 18.66 & 28.13 & \textbf{38.11} & \textbf{46.88} & \textbf{56.12} & \textbf{65.15} & 73.19 & \textbf{82.16} & 93.62\\
+ADV & \textbf{9.550} & \textbf{18.84} & \textbf{28.18} & 37.68 & 46.61 & 55.76 & 64.24 & \textbf{73.38} & 81.82 & \textbf{94.00}\\
+  \bottomrule
+\end{tabular}
+\end{document}
