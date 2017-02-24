@@ -474,6 +474,8 @@ def main(argv):
 
     argparser.add_argument('--subsample-size', action='store', type=float, default=None,
                            help='Fraction of training facts to use during training (e.g. 0.1)')
+    argparser.add_argument('--head-subsample-size', action='store', type=float, default=None,
+                           help='Fraction of training facts to use during training (e.g. 0.1)')
 
     argparser.add_argument('--materialize', action='store_true',
                            help='Materialize all facts using clauses and logical inference')
@@ -513,6 +515,8 @@ def main(argv):
     adv_pooling = args.adv_pooling
 
     subsample_size = args.subsample_size
+    head_subsample_size = args.head_subsample_size
+
     save_path = args.save
     is_materialize = args.materialize
 
@@ -565,6 +569,43 @@ def main(argv):
     if clauses_path is not None:
         with open(clauses_path, 'r') as f:
             clauses = [parse_clause(line.strip()) for line in f.readlines()]
+
+    # Subsampling training facts that appear in the clause heads for X-shot learning
+    if head_subsample_size is not None and head_subsample_size < 1:
+        assert head_subsample_size >= .0
+        assert clauses is not None
+
+        # Listing all predicate indexes
+        predicate_idxs = sorted({parser.predicate_to_index[train_fact.predicate_name] for train_fact in train_facts})
+
+        # Listing the predicate indexes used in clause heads:
+        predicate_idxs_in_clause_heads = sorted({parser.predicate_to_index[c.head.predicate.name] for c in clauses})
+
+        _train_facts = []
+
+        # Iterate over all predicate indexes
+        for predicate_idx in predicate_idxs:
+            # Select all facts with predicate predicate_idx
+            predicate_facts = [f for f in train_facts if parser.predicate_to_index[f.predicate_name] == predicate_idx]
+
+            # If predicate_idx appears in the head of a clause, subsample it
+            if predicate_idx in predicate_idxs_in_clause_heads:
+                nb_predicate_facts = len(predicate_facts)
+                sample_size = int(round(nb_predicate_facts * head_subsample_size))
+
+                logger.info('Randomly selecting {} triples for predicate {} from the training set'
+                            .format(sample_size, predicate_idx))
+
+                random_state = np.random.RandomState(seed=seed)
+                sample_indices = random_state.choice(nb_predicate_facts, sample_size, replace=False)
+
+                _predicate_facts = [predicate_facts[idx] for idx in sample_indices]
+                _train_facts += _predicate_facts
+            # Otherwise do nothing
+            else:
+                _train_facts += predicate_facts
+
+        train_facts = _train_facts
 
     if is_materialize:
         assert clauses is not None
