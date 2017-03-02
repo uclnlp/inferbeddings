@@ -83,7 +83,7 @@ def bilinear_walk_embedding(predicate_embeddings, entity_embedding_size):
     transformed_embedding_matrix = tf.concat(values=[tf.expand_dims(initializer, 0), transformed_embedding_matrix], axis=0)
 
     # The walk embeddings are given by the matrix multiplication of the predicate embeddings
-    walk_embeddings = tf.scan(lambda x, y: tf.batch_matmul(x, y), transformed_embedding_matrix, initializer=initializer)
+    walk_embeddings = tf.scan(lambda x, y: tf.matmul(x, y), transformed_embedding_matrix, initializer=initializer)
     return walk_embeddings[-1]
 
 

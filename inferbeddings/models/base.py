@@ -96,7 +96,7 @@ class BilinearModel(BaseModel):
         walk_embedding = embeddings.bilinear_walk_embedding(self.predicate_embeddings, self.entity_embeddings_size)
 
         es = tf.expand_dims(subject_embedding, 1)
-        sW = tf.batch_matmul(es, walk_embedding)[:, 0, :]
+        sW = tf.matmul(es, walk_embedding)[:, 0, :]
 
         return self.similarity_function(sW, object_embedding)
 
