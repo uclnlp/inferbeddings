@@ -175,7 +175,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     assert nb_versions == 4
                     # tf.reshape(x, [-1, 4]) turns an [M]-dimensional score vector into a [M/4, 4] dimensional one
                     # tf.split(1, 4, x) turns a [N, 4]-dimensional score matrix into four [N]-dimensional ones
-                    positive_scores, neg_left, neg_central, neg_right = tf.split(1, nb_versions, tf.reshape(_score, [-1, nb_versions]))
+                    positive_scores, neg_left, neg_central, neg_right = tf.split(axis=1, num_or_size_splits=nb_versions,
+                                                                                 value=tf.reshape(_score, [-1, nb_versions]))
                     _loss_left = _loss_function(positive_scores, neg_left, *_args, **_kwargs)
                     _loss_central = _loss_function(positive_scores, neg_central, *_args, **_kwargs)
                     _loss_right = _loss_function(positive_scores, neg_right, *_args, **_kwargs)
@@ -184,8 +185,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     assert nb_versions == 3
                     # tf.reshape(x, [-1, 3]) turns an [M]-dimensional score vector into a [M/3, 3] dimensional one
                     # tf.split(1, 3, x) turns a [N, 3]-dimensional score matrix into three [N]-dimensional ones
-                    positive_scores, negative_scores_left, negative_scores_right = tf.split(1, nb_versions,
-                                                                                            tf.reshape(_score, [-1, nb_versions]))
+                    positive_scores, negative_scores_left, negative_scores_right = tf.split(axis=1, num_or_size_splits=nb_versions,
+                                                                                            value=tf.reshape(_score, [-1, nb_versions]))
                     _loss_left = _loss_function(positive_scores, negative_scores_left, *_args, **_kwargs)
                     _loss_right = _loss_function(positive_scores, negative_scores_right, *_args, **_kwargs)
                     _loss = _loss_left + _loss_right
