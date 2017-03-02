@@ -26,7 +26,7 @@ def additive_walk_embedding(predicate_embeddings):
     walk_embedding = tf.scan(lambda x, y: x + y, transposed_embedding_matrix, initializer=initializer)
 
     # Add the initializer as the first step in the scan sequence, in case the walk has zero-length
-    return tf.concat(0, [tf.expand_dims(initializer, 0), walk_embedding])[-1]
+    return tf.concat(values=[tf.expand_dims(initializer, 0), walk_embedding], axis=0)[-1]
 
 
 def bilinear_diagonal_walk_embedding(predicate_embeddings):
@@ -52,7 +52,7 @@ def bilinear_diagonal_walk_embedding(predicate_embeddings):
     walk_embedding = tf.scan(lambda x, y: x * y, transposed_embedding_matrix, initializer=initializer)
 
     # Add the initializer as the first step in the scan sequence, in case the walk has zero-length
-    return tf.concat(0, [tf.expand_dims(initializer, 0), walk_embedding])[-1]
+    return tf.concat(values=[tf.expand_dims(initializer, 0), walk_embedding], axis=0)[-1]
 
 
 def bilinear_walk_embedding(predicate_embeddings, entity_embedding_size):
@@ -80,7 +80,7 @@ def bilinear_walk_embedding(predicate_embeddings, entity_embedding_size):
     transformed_embedding_matrix = tf.transpose(reshapen_embedding_matrix, perm=[1, 0, 2, 3])
 
     # The first step in the walk is the identity matrix (the neutral element wrt. the matrix product)'
-    transformed_embedding_matrix = tf.concat(0, [tf.expand_dims(initializer, 0), transformed_embedding_matrix])
+    transformed_embedding_matrix = tf.concat(values=[tf.expand_dims(initializer, 0), transformed_embedding_matrix], axis=0)
 
     # The walk embeddings are given by the matrix multiplication of the predicate embeddings
     walk_embeddings = tf.scan(lambda x, y: tf.batch_matmul(x, y), transformed_embedding_matrix, initializer=initializer)
@@ -106,15 +106,15 @@ def complex_walk_embedding(predicate_embeddings, entity_embedding_size):
     def hermitian_product(x, y):
         x_re, x_im = x[:, :entity_embedding_size // 2], x[:, entity_embedding_size // 2:]
         y_re, y_im = y[:, :entity_embedding_size // 2], y[:, entity_embedding_size // 2:]
-        return tf.concat(1, [p(x_re, y_re) + p(x_im, y_im), p(x_re, y_im) - p(x_im, y_re)])
+        return tf.concat(values=[p(x_re, y_re) + p(x_im, y_im), p(x_re, y_im) - p(x_im, y_re)], axis=1)
 
     # Transpose the (batch_size, walk_length, n) Tensor in a (walk_length, batch_size, n) Tensor
     transposed_embedding_matrix = tf.transpose(predicate_embeddings, perm=[1, 0, 2])
 
-    neutral_element = tf.concat(1, [
+    neutral_element = tf.concat(values=[
         tf.ones((batch_size, embedding_len // 2), dtype=predicate_embeddings.dtype),
         tf.zeros((batch_size, embedding_len // 2), dtype=predicate_embeddings.dtype)
-    ])
+    ], axis=1)
 
     # Define the initializer of the scan procedure - the neutral element of the Hermitian product
     initializer = neutral_element
@@ -123,4 +123,4 @@ def complex_walk_embedding(predicate_embeddings, entity_embedding_size):
     walk_embedding = tf.scan(lambda x, y: hermitian_product(x, y), transposed_embedding_matrix, initializer=initializer)
 
     # Add the initializer as the first step in the scan sequence, in case the walk has zero-length
-    return tf.concat(0, [tf.expand_dims(initializer, 0), walk_embedding])[-1]
+    return tf.concat(values=[tf.expand_dims(initializer, 0), walk_embedding], axis=0)[-1]

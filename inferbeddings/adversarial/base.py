@@ -83,7 +83,7 @@ class Adversarial:
         # [batch_size x embedding_size] variables
         arg1_layer, arg2_layer = variable_name_to_layer[arg1_name], variable_name_to_layer[arg2_name]
         # [batch_size x 2 x embedding_size] tensor
-        arg1_arg2_embeddings = tf.concat(1, [tf.expand_dims(arg1_layer, 1), tf.expand_dims(arg2_layer, 1)])
+        arg1_arg2_embeddings = tf.concat(values=[tf.expand_dims(arg1_layer, 1), tf.expand_dims(arg2_layer, 1)], axis=1)
 
         model_parameters = self.model_parameters
         model_parameters['entity_embeddings'] = arg1_arg2_embeddings

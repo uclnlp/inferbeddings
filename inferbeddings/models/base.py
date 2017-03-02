@@ -156,7 +156,7 @@ class ERMLP(BaseModel):
         # This model is non-compositional in nature, so it might not be trivial to represent a walk embedding
         walk_embedding = self.predicate_embeddings[:, 0, :]
 
-        e_ijk = tf.concat(1, [subject_embedding, object_embedding, walk_embedding])
+        e_ijk = tf.concat(values=[subject_embedding, object_embedding, walk_embedding], axis=1)
         h_ijk = tf.matmul(e_ijk, self.C)
         f_ijk = tf.squeeze(tf.matmul(self.f(h_ijk), self.w), axis=1)
 
