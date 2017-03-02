@@ -19,7 +19,7 @@ def test_wordnet_complex_cli():
     out, err = p.communicate()
 
     # Hits@10 should be at least 90% even after a limited number of epochs
-    assert float(err.split()[-1][:-1]) > 92.0
+    assert float(err.split()[-1][:-1]) > 91.0
 
 
 def test_wordnet_translating_cli():
@@ -37,7 +37,7 @@ def test_wordnet_translating_cli():
     out, err = p.communicate()
 
     # Hits@10 should be at least 90% even after a limited number of epochs
-    assert float(err.split()[-1][:-1]) > 92.0
+    assert float(err.split()[-1][:-1]) > 93.0
 
 
 if __name__ == '__main__':
