@@ -109,7 +109,7 @@ def main(argv):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    configurations = list(configurations_transe) + list(configurations_distmult_complex)
+    configurations = list(configurations_distmult_complex)  # + list(configurations_transe)
 
     for job_id, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
