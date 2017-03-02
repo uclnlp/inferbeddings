@@ -1,5 +1,5 @@
 pytest
-tensorflow>=0.12
+tensorflow>=1.0
 scikit-learn>=0.17
 scipy>=0.18.0
 parsimonious>=0.7
