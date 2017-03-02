@@ -19,7 +19,7 @@ def test_additive_walk_embedding():
     vP = tf.Variable(P, name='P')
     vW = embeddings.additive_walk_embedding(vP)
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
     with tf.Session() as session:
         session.run(init_op)
 
@@ -39,7 +39,7 @@ def test_additive_walk_embedding_zeros():
     vP = tf.Variable(P, name='P')
     vW = embeddings.additive_walk_embedding(vP)
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
     with tf.Session() as session:
         session.run(init_op)
 
@@ -59,7 +59,7 @@ def test_bilinear_diagonal_walk_embedding():
     vP = tf.Variable(P, name='P')
     vW = embeddings.bilinear_diagonal_walk_embedding(vP)
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
     with tf.Session() as session:
         session.run(init_op)
 
@@ -79,7 +79,7 @@ def test_bilinear_walk_embedding():
     vP = tf.Variable(P, name='P')
     vW = embeddings.bilinear_walk_embedding(vP, int(np.sqrt(embedding_size)))
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
     with tf.Session() as session:
         session.run(init_op)
 

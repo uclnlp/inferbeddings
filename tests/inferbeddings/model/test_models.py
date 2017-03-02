@@ -24,7 +24,7 @@ def test_translating_embeddings_score():
     model = TranslatingModel(vE, vR, similarities.negative_l1_distance)
     scores = model()
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
 
     with tf.Session() as session:
         session.run(init_op)
@@ -51,7 +51,7 @@ def test_bilinear_diagonal_score():
     model = BilinearDiagonalModel(vE, vR, similarities.negative_l1_distance)
     scores = model()
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
 
     with tf.Session() as session:
         session.run(init_op)
@@ -79,7 +79,7 @@ def test_bilinear_score():
     model = BilinearModel(vE, vR, similarities.dot_product, entity_embedding_size=entity_embedding_size)
     scores = model()
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
 
     with tf.Session() as session:
         session.run(init_op)

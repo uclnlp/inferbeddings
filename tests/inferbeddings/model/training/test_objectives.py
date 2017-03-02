@@ -12,7 +12,7 @@ def test_additive_walk_embedding():
     pos_scores = tf.Variable(np.array([.9]), name='pos_scores')
     neg_scores = tf.Variable(np.array([.1]), name='neg_scores')
 
-    init_op = tf.initialize_all_variables()
+    init_op = tf.global_variables_initializer()
     with tf.Session() as session:
         session.run(init_op)
         res = session.run(pairwise_losses.hinge_loss(pos_scores, neg_scores, margin=100.0))
