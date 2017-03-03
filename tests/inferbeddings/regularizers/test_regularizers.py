@@ -26,5 +26,48 @@ def test_translations():
         loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
         np.testing.assert_almost_equal(session.run(loss), np.sum(np.square(pe[0, :] - pe[1, :])))
 
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
+        np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
+
+
+def test_scaling():
+    rs = np.random.RandomState(0)
+    pe = rs.rand(1024, 10)
+
+    var = tf.Variable(pe, name='pe')
+
+    init_op = tf.global_variables_initializer()
+    with tf.Session() as session:
+        session.run(init_op)
+
+        loss = DistMultEquivalentPredicateRegularizer(x1=var[0, :], x2=var[0, :])()
+        np.testing.assert_almost_equal(session.run(loss), 0.0)
+
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
+        np.testing.assert_almost_equal(session.run(loss), np.sum(np.square(pe[0, :] - pe[1, :])))
+
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
+        np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
+
+
+def test_complex():
+    rs = np.random.RandomState(0)
+    pe = rs.rand(1024, 10)
+
+    var = tf.Variable(pe, name='pe')
+
+    init_op = tf.global_variables_initializer()
+    with tf.Session() as session:
+        session.run(init_op)
+
+        loss = ComplExEquivalentPredicateRegularizer(x1=var[0, :], x2=var[0, :], embedding_size=pe.shape[1])()
+        np.testing.assert_almost_equal(session.run(loss), 0.0)
+
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
+        np.testing.assert_almost_equal(session.run(loss), np.sum(np.square(pe[0, :] - pe[1, :])))
+
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
+        np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
+
 if __name__ == '__main__':
     pytest.main([__file__])
