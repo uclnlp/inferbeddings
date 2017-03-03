@@ -32,6 +32,8 @@ def test_translations():
         loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
         np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
 
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :], is_inverse=True)()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] + pe[1, :]))
 
 def test_scaling():
     rs = np.random.RandomState(0)
@@ -51,6 +53,9 @@ def test_scaling():
 
         loss = DistMultEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
         np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
+
+        loss = DistMultEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :], is_inverse=True)()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] - pe[1, :]))
 
 
 def test_complex():
