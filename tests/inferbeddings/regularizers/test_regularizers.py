@@ -36,6 +36,9 @@ def test_translations():
         loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :], is_inverse=True)()
         np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] + pe[1, :]))
 
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[1:5, :])()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0:4, :] - pe[1:5, :]))
+
         loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[1:5, :], is_inverse=True)()
         np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0:4, :] + pe[1:5, :]))
 
@@ -61,6 +64,12 @@ def test_scaling():
 
         loss = DistMultEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :], is_inverse=True)()
         np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] - pe[1, :]))
+
+        loss = DistMultEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[1:5, :])()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0:4, :] - pe[1:5, :]))
+
+        loss = DistMultEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[1:5, :], is_inverse=True)()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0:4, :] - pe[1:5, :]))
 
 
 def test_complex():
