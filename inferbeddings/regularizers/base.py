@@ -31,7 +31,7 @@ class TransEEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
     def __call__(self):
         similarity = similarities.get_function(self.similarity_name)
         loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
-        return loss  # tf.reduce_sum(input_tensor=loss, axis=-1)
+        return loss
 
 
 class DistMultEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
@@ -44,20 +44,18 @@ class DistMultEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
     def __call__(self):
         similarity = similarities.get_function(self.similarity_name)
         loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
-        return loss  # tf.reduce_sum(input_tensor=loss, axis=-1)
+        return loss
 
 
 class ComplExEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
-    def __init__(self, embedding_size=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.embedding_size = embedding_size
-        assert self.embedding_size is not None
 
     def inverse(self, x):
-        x_re, x_im = tf.split(value=x, num_or_size_splits=self.embedding_size, axis=-1)
+        x_re, x_im = tf.split(value=x, num_or_size_splits=2, axis=1)
         return tf.concat(values=[x_re, - x_im], axis=-1)
 
     def __call__(self):
         similarity = similarities.get_function(self.similarity_name)
         loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
-        return loss  # tf.reduce_sum(input_tensor=loss, axis=-1)
+        return loss

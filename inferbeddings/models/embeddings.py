@@ -104,8 +104,10 @@ def complex_walk_embedding(predicate_embeddings, entity_embedding_size):
         return x * y
 
     def hermitian_product(x, y):
-        x_re, x_im = x[:, :entity_embedding_size // 2], x[:, entity_embedding_size // 2:]
-        y_re, y_im = y[:, :entity_embedding_size // 2], y[:, entity_embedding_size // 2:]
+        # x_re, x_im = x[:, :entity_embedding_size // 2], x[:, entity_embedding_size // 2:]
+        # y_re, y_im = y[:, :entity_embedding_size // 2], y[:, entity_embedding_size // 2:]
+        x_re, x_im = tf.split(value=x, num_or_size_splits=2, axis=1)
+        y_re, y_im = tf.split(value=y, num_or_size_splits=2, axis=1)
         return tf.concat(values=[p(x_re, y_re) + p(x_im, y_im), p(x_re, y_im) - p(x_im, y_re)], axis=1)
 
     # Transpose the (batch_size, walk_length, n) Tensor in a (walk_length, batch_size, n) Tensor

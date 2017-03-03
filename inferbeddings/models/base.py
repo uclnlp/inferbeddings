@@ -117,10 +117,13 @@ class ComplexModel(BaseModel):
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
         walk_embedding = embeddings.complex_walk_embedding(self.predicate_embeddings, self.entity_embeddings_size)
 
-        emb_size = self.entity_embeddings_size
-        es_re, es_im = subject_embedding[:, :emb_size // 2], subject_embedding[:, emb_size // 2:]
-        eo_re, eo_im = object_embedding[:, :emb_size // 2], object_embedding[:, emb_size // 2:]
-        ew_re, ew_im = walk_embedding[:, :emb_size // 2], walk_embedding[:, emb_size // 2:]
+        # emb_size = self.entity_embeddings_size
+        # es_re, es_im = subject_embedding[:, :emb_size // 2], subject_embedding[:, emb_size // 2:]
+        # eo_re, eo_im = object_embedding[:, :emb_size // 2], object_embedding[:, emb_size // 2:]
+        # ew_re, ew_im = walk_embedding[:, :emb_size // 2], walk_embedding[:, emb_size // 2:]
+        es_re, es_im = tf.split(value=subject_embedding, num_or_size_splits=2, axis=1)
+        eo_re, eo_im = tf.split(value=object_embedding, num_or_size_splits=2, axis=1)
+        ew_re, ew_im = tf.split(value=walk_embedding, num_or_size_splits=2, axis=1)
 
         def dot3(arg1, rel, arg2):
             return self.similarity_function(arg1 * rel, arg2)
