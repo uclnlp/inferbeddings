@@ -51,7 +51,7 @@ build:
     - script:
         name: install
         code: |
-          sudo apt-get install libtcmalloc-minimal4
+          sudo apt-get -y install libtcmalloc-minimal4
           pip3 install --upgrade tensorflow
           python3 setup.py install
 
