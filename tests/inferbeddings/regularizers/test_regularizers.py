@@ -9,6 +9,9 @@ from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer,\
 
 import pytest
 
+def l2sqr(x):
+    return np.sum(np.square(x))
+
 
 def test_translations():
     rs = np.random.RandomState(0)
@@ -24,7 +27,7 @@ def test_translations():
         np.testing.assert_almost_equal(session.run(loss), 0.0)
 
         loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
-        np.testing.assert_almost_equal(session.run(loss), np.sum(np.square(pe[0, :] - pe[1, :])))
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] - pe[1, :]))
 
         loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
         np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
@@ -43,10 +46,10 @@ def test_scaling():
         loss = DistMultEquivalentPredicateRegularizer(x1=var[0, :], x2=var[0, :])()
         np.testing.assert_almost_equal(session.run(loss), 0.0)
 
-        loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
-        np.testing.assert_almost_equal(session.run(loss), np.sum(np.square(pe[0, :] - pe[1, :])))
+        loss = DistMultEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] - pe[1, :]))
 
-        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
+        loss = DistMultEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
         np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
 
 
@@ -63,10 +66,10 @@ def test_complex():
         loss = ComplExEquivalentPredicateRegularizer(x1=var[0, :], x2=var[0, :], embedding_size=pe.shape[1])()
         np.testing.assert_almost_equal(session.run(loss), 0.0)
 
-        loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :])()
-        np.testing.assert_almost_equal(session.run(loss), np.sum(np.square(pe[0, :] - pe[1, :])))
+        loss = ComplExEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :], embedding_size=pe.shape[1])()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] - pe[1, :]))
 
-        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :])()
+        loss = ComplExEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[0:4, :], embedding_size=pe.shape[1])()
         np.testing.assert_almost_equal(session.run(loss), [0.0] * 4)
 
 if __name__ == '__main__':
