@@ -52,6 +52,7 @@ class ComplExEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
         super().__init__(*args, **kwargs)
 
     def inverse(self, x):
+        # TensorFlow does not allow for tf.split([..], axis=-1)
         x_re, x_im = tf.split(value=x, num_or_size_splits=2, axis=len(x.get_shape()) - 1)
         return tf.concat(values=[x_re, - x_im], axis=-1)
 
