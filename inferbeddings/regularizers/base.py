@@ -52,8 +52,8 @@ class ComplExEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
         assert self.embedding_size is not None
 
     def inverse(self, x):
-        x_re, x_im = x[:self.embedding_size], x[self.embedding_size:]
-        return tf.concat(values=[x_re, x_im], axis=0)
+        x_re, x_im = tf.split(value=x, num_or_size_splits=self.embedding_size, axis=-1)
+        return tf.concat(values=[x_re, - x_im], axis=-1)
 
     def __call__(self):
         similarity = similarities.get_function(self.similarity_name)
