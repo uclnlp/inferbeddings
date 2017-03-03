@@ -87,7 +87,7 @@ def bilinear_walk_embedding(predicate_embeddings, entity_embedding_size):
     return walk_embeddings[-1]
 
 
-def complex_walk_embedding(predicate_embeddings, entity_embedding_size):
+def complex_walk_embedding(predicate_embeddings):
     """
     Takes a walk, represented by a 3D Tensor with shape (batch_size, walk_length, embedding_length),
     and returns its [:, 0, :] entry.
@@ -95,7 +95,6 @@ def complex_walk_embedding(predicate_embeddings, entity_embedding_size):
     TODO - find a more clever way of embedding walks using Complex Embeddings.
 
     :param predicate_embeddings: 3D Tensor containing the embedding of the predicates in the walk.
-    :param entity_embedding_size: size of the entity embeddings.
     :return: 2D tensor of size (batch_size, entity_embedding_length, entity_embedding_length) containing the walk embeddings.
     """
     batch_size, embedding_len = tf.shape(predicate_embeddings)[0], tf.shape(predicate_embeddings)[2]

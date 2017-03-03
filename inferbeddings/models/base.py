@@ -10,24 +10,18 @@ import sys
 
 class BaseModel(metaclass=abc.ABCMeta):
     def __init__(self, entity_embeddings=None, predicate_embeddings=None, similarity_function=None,
-                 entity_embedding_size=None, predicate_embedding_size=None, reuse_variables=False,
-                 *args, **kwargs):
+                 reuse_variables=False, *args, **kwargs):
         """
         Abstract class inherited by all models.
 
         :param entity_embeddings: (batch_size, 2, entity_embedding_size) Tensor.
         :param predicate_embeddings: (batch_size, walk_size, predicate_embedding_size) Tensor.
         :param similarity_function: similarity function.
-        :param entity_embedding_size: size of the entity embeddings.
-        :param predicate_embedding_size: size of the predicate embeddings.
         :param reuse_variables: States whether the variables within the model need to be reused.
         """
         self.entity_embeddings = entity_embeddings
         self.predicate_embeddings = predicate_embeddings
         self.similarity_function = similarity_function
-
-        self.entity_embeddings_size = entity_embedding_size
-        self.predicate_embeddings_size = predicate_embedding_size
 
         self.reuse_variables = reuse_variables
 
@@ -93,7 +87,8 @@ class BilinearModel(BaseModel):
         :return: (batch_size) Tensor containing the scores associated by the models to the walks.
         """
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
-        walk_embedding = embeddings.bilinear_walk_embedding(self.predicate_embeddings, self.entity_embeddings_size)
+        walk_embedding = embeddings.bilinear_walk_embedding(self.predicate_embeddings,
+                                                            subject_embedding.get_shape()[-1].value)
 
         es = tf.expand_dims(subject_embedding, 1)
         sW = tf.matmul(es, walk_embedding)[:, 0, :]
@@ -115,12 +110,8 @@ class ComplexModel(BaseModel):
         :return: (batch_size) Tensor containing the scores associated by the models to the walks.
         """
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
-        walk_embedding = embeddings.complex_walk_embedding(self.predicate_embeddings, self.entity_embeddings_size)
+        walk_embedding = embeddings.complex_walk_embedding(self.predicate_embeddings)
 
-        # emb_size = self.entity_embeddings_size
-        # es_re, es_im = subject_embedding[:, :emb_size // 2], subject_embedding[:, emb_size // 2:]
-        # eo_re, eo_im = object_embedding[:, :emb_size // 2], object_embedding[:, emb_size // 2:]
-        # ew_re, ew_im = walk_embedding[:, :emb_size // 2], walk_embedding[:, emb_size // 2:]
         es_re, es_im = tf.split(value=subject_embedding, num_or_size_splits=2, axis=1)
         eo_re, eo_im = tf.split(value=object_embedding, num_or_size_splits=2, axis=1)
         ew_re, ew_im = tf.split(value=walk_embedding, num_or_size_splits=2, axis=1)
@@ -143,7 +134,9 @@ class ERMLP(BaseModel):
         super().__init__(*args, **kwargs)
         self.f = f
 
-        ent_emb_size, pred_emb_size = self.entity_embeddings_size, self.predicate_embeddings_size
+        # ent_emb_size, pred_emb_size = self.entity_embeddings_size, self.predicate_embeddings_size
+        ent_emb_size = self.entity_embeddings.get_shape()[-1].value
+        pred_emb_size = self.predicate_embeddings.get_shape()[-1].value
         input_size = ent_emb_size + ent_emb_size + pred_emb_size
 
         with tf.variable_scope("ERMLP", reuse=self.reuse_variables) as _:

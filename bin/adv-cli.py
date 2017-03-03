@@ -90,8 +90,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     model_parameters = dict(entity_embeddings=entity_embeddings,
                             predicate_embeddings=predicate_embeddings,
                             similarity_function=similarity_function,
-                            entity_embedding_size=entity_embedding_size,
-                            predicate_embedding_size=predicate_embedding_size,
                             hidden_size=hidden_size)
     model = model_class(**model_parameters)
 
@@ -107,7 +105,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     initialize_violators, adversarial_optimizer_variables_initializer = None, None
 
     if adv_lr is not None:
-        adversarial = Adversarial(clauses=clauses, parser=parser, predicate_embedding_layer=predicate_embedding_layer,
+        adversarial = Adversarial(clauses=clauses, parser=parser,
+                                  entity_embedding_layer=entity_embedding_layer,
+                                  predicate_embedding_layer=predicate_embedding_layer,
                                   model_class=model_class, model_parameters=model_parameters, loss_margin=adv_margin,
                                   pooling=adv_pooling, batch_size=adv_batch_size)
 
