@@ -9,8 +9,9 @@ from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer,\
 
 import pytest
 
+
 def l2sqr(x):
-    return np.sum(np.square(x))
+    return np.sum(np.square(x), axis=-1)
 
 
 def test_translations():
@@ -34,6 +35,10 @@ def test_translations():
 
         loss = TransEEquivalentPredicateRegularizer(x1=var[0, :], x2=var[1, :], is_inverse=True)()
         np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0, :] + pe[1, :]))
+
+        loss = TransEEquivalentPredicateRegularizer(x1=var[0:4, :], x2=var[1:5, :], is_inverse=True)()
+        np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0:4, :] + pe[1:5, :]))
+
 
 def test_scaling():
     rs = np.random.RandomState(0)
