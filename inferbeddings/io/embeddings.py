@@ -47,7 +47,6 @@ def load_word2vec(stream, words=None):
             else:
                 word += c
         word = word.decode('utf-8')
-
         vector = np.fromstring(stream.read(byte_size), dtype=np.float32)
         if words is None or word in words:
             word2embedding[word] = vector.tolist()
