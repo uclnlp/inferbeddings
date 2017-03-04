@@ -49,13 +49,13 @@ def _test_adversarial():
 
     similarity_function = similarities.get_function('l1')
     model_parameters = dict(similarity_function=similarity_function,
-                            entity_embedding_size=entity_embedding_size,
                             predicate_embedding_size=predicate_embedding_size)
 
     batch_size = 1000
 
     adversarial = Adversarial(clauses=clauses,
                               parser=parser,
+                              entity_embedding_layer=entity_embedding_layer,
                               predicate_embedding_layer=predicate_embedding_layer,
                               model_class=model_class,
                               model_parameters=model_parameters,
