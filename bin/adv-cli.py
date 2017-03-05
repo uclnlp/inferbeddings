@@ -31,9 +31,10 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name,
           entity_embedding_size, predicate_embedding_size, hidden_size,
           model_name, loss_name, pairwise_loss_name, margin,
-          corrupt_relations, learning_rate, initial_accumulator_value, nb_epochs,
-          parser,
-          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
+          corrupt_relations, learning_rate, initial_accumulator_value, nb_epochs, parser,
+          clauses,
+          sar_weight, sar_similarity,
+          adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
           adv_pooling,
           predicate_l2, predicate_norm, debug, debug_embeddings, all_one_entities):
@@ -100,6 +101,14 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         return session.run(score, feed_dict={walk_inputs: args[0], entity_inputs: args[1]})
 
     loss_function = 0.0
+
+    if sar_weight is not None:
+        from inferbeddings.regularizers import clauses_to_equality_loss
+        sar_loss = clauses_to_equality_loss(model_name=model_name, clauses=clauses,
+                                            similarity_name=sar_similarity,
+                                            predicate_embedding_layer=predicate_embedding_layer,
+                                            predicate_to_index=parser.predicate_to_index)
+        loss_function += sar_weight * sar_loss
 
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     initialize_violators, adversarial_optimizer_variables_initializer = None, None
@@ -449,6 +458,11 @@ def main(argv):
     argparser.add_argument('--clauses', '-c', action='store', type=str, default=None,
                            help='File containing background knowledge expressed as Horn clauses')
 
+    argparser.add_argument('--sar-weight', action='store', type=float, default=None,
+                           help='Schema-Aware Regularization, regularizer weight')
+    argparser.add_argument('--sar-similarity', action='store', type=str, default='l2_sqr',
+                           help='Schema-Aware Regularization, similarity measure')
+
     argparser.add_argument('--adv-lr', '-L', action='store', type=float, default=None, help='Adversary learning rate')
 
     argparser.add_argument('--adversary-epochs', action='store', type=int, default=10,
@@ -507,6 +521,8 @@ def main(argv):
     debug_embeddings = args.debug_embeddings
 
     clauses_path = args.clauses
+
+    sar_weight, sar_similarity = args.sar_weight, args.similarity
 
     adv_lr, adv_weight, adv_margin = args.adv_lr, args.adv_weight, args.adv_margin
     adversary_epochs, discriminator_epochs = args.adversary_epochs, args.discriminator_epochs
@@ -637,8 +653,9 @@ def main(argv):
                                           entity_embedding_size, predicate_embedding_size, hidden_size,
                                           model_name, loss_name, pairwise_loss_name, margin,
                                           corrupt_relations, learning_rate, initial_accumulator_value, nb_epochs, parser,
-                                          clauses, adv_lr, adversary_epochs, discriminator_epochs, adv_weight,
-                                          adv_margin,
+                                          clauses,
+                                          sar_weight, sar_similarity,
+                                          adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
                                           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
                                           adv_pooling,
                                           predicate_l2, predicate_norm, debug, debug_embeddings, all_one_entities)
