@@ -52,6 +52,8 @@ class Adversarial:
                     raise ValueError('Unknown pooling function {}'.format(self.pooling))
                 return _loss
 
+            # The following formulations are equivalent:
+
             # self.loss_function = lambda body_scores, head_scores:\
             #    pairwise_losses.hinge_loss(head_scores, body_scores, margin=loss_margin)
 
