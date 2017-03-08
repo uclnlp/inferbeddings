@@ -43,7 +43,11 @@ class Adversarial:
                 elif self.pooling == 'mean':
                     _loss = tf.reduce_mean(_losses)
                 elif self.pooling == 'logsumexp':
-                    _loss = tf.log(tf.reduce_sum(tf.exp(_losses)))
+                    # Prone to under/overflow: http://andrewgelman.com/2016/06/11/log-sum-of-exponentials/
+                    # _loss = tf.log(tf.reduce_sum(tf.exp(_losses)))
+
+                    # More robust implementation provided by the TensorFlow APIs.
+                    _loss = tf.reduce_logsumexp(_losses)
                 else:
                     raise ValueError('Unknown pooling function {}'.format(self.pooling))
                 return _loss
