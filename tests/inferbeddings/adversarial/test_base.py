@@ -48,8 +48,7 @@ def _test_adversarial():
     model_class = models.get_function('TransE')
 
     similarity_function = similarities.get_function('l1')
-    model_parameters = dict(similarity_function=similarity_function,
-                            predicate_embedding_size=predicate_embedding_size)
+    model_parameters = dict(similarity_function=similarity_function)
 
     batch_size = 1000
 
