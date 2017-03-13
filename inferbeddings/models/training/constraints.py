@@ -20,8 +20,8 @@ def pseudoboolean_sigmoid_update(var_matrix):
     return tf.assign(var_matrix, pseudoboolean_sigmoid)
 
 
-renorm = renorm_update
-pseudoboolean_linear = pseudoboolean_linear_update
+unit_ball = unit_sphere = renorm = renorm_update
+unit_cube = pseudoboolean_linear = pseudoboolean_linear_update
 pseudoboolean_sigmoid = pseudoboolean_sigmoid_update
 
 

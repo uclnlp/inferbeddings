@@ -29,7 +29,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed, similarity_name,
-          entity_embedding_size, predicate_embedding_size, hidden_size,
+          entity_embedding_size, predicate_embedding_size, hidden_size, unit_cube,
           model_name, loss_name, pairwise_loss_name, margin,
           corrupt_relations, learning_rate, initial_accumulator_value, nb_epochs, parser,
           clauses,
@@ -216,8 +216,11 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     trainable_var_list = [entity_embedding_layer, predicate_embedding_layer] + model.get_params()
     training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
 
-    # We enforce all entity embeddings to have an unitary norm.
-    projection_steps = [constraints.renorm_update(entity_embedding_layer, norm=1.0)]
+    # We enforce all entity embeddings to have an unitary norm, or to live in the unit cube.
+    entity_projection = constraints.unit_ball(entity_embedding_layer, norm=1.0)
+    if unit_cube:
+        entity_projection = constraints.unit_cube(entity_embedding_layer)
+    projection_steps = [entity_projection]
     if predicate_norm is not None:
         projection_steps += [constraints.renorm_update(predicate_embedding_layer, norm=predicate_norm)]
 
@@ -390,9 +393,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             prev_embedding_matrix = embedding_matrix
 
-            # ent_embedding_matrix = session.run(entity_embedding_layer)[1:, :]
-            # print(hinton_diagram(ent_embedding_matrix))
-
     objects = {
         'entity_embedding_layer': entity_embedding_layer,
         'predicate_embedding_layer': predicate_embedding_layer
@@ -442,6 +442,8 @@ def main(argv):
                            help='Predicate embedding size')
     argparser.add_argument('--hidden-size', '-H', action='store', type=int, default=None,
                            help='Size of the hidden layer (if necessary, e.g. ER-MLP)')
+    argparser.add_argument('--unit-cube', action='store_true',
+                           help='Project all entity embeddings on the unit cube (rather than the unit ball)')
 
     argparser.add_argument('--all-one-entities', nargs='+', type=str,
                            help='Entities with all-one entity embeddings')
@@ -507,6 +509,7 @@ def main(argv):
     corrupt_relations = args.corrupt_relations
     entity_embedding_size, predicate_embedding_size = args.embedding_size, args.predicate_embedding_size
     hidden_size = args.hidden_size
+    unit_cube = args.unit_cube
 
     all_one_entities = args.all_one_entities
 
@@ -650,7 +653,7 @@ def main(argv):
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed,
                                           similarity_name,
-                                          entity_embedding_size, predicate_embedding_size, hidden_size,
+                                          entity_embedding_size, predicate_embedding_size, hidden_size, unit_cube,
                                           model_name, loss_name, pairwise_loss_name, margin,
                                           corrupt_relations, learning_rate, initial_accumulator_value, nb_epochs, parser,
                                           clauses,
