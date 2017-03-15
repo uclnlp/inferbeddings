@@ -3,6 +3,9 @@
 import pytest
 import subprocess
 
+import sys
+sys.setrecursionlimit(65535)
+
 
 def test_wordnet_complex_cli():
     # Checking if results are still nice
