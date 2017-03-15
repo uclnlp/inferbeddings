@@ -72,7 +72,8 @@ def main(argv):
 
     v_errors, v_loss = adversarial.errors, adversarial.loss
 
-    v_optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
+    #v_optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
+    v_optimizer = tf.train.AdamOptimizer(learning_rate=0.1)
     v_training_step = v_optimizer.minimize(- v_loss, var_list=adversarial.parameters)
 
     init_op = tf.global_variables_initializer()
