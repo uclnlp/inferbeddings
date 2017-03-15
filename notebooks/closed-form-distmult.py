@@ -94,11 +94,27 @@ def main(argv):
 
         p_emb = tf.nn.embedding_lookup(predicate_embedding_layer, p_idx)
         q_emb = tf.nn.embedding_lookup(predicate_embedding_layer, q_idx)
+
+        # Analytically computing the maximum value for the adversar
         J = tf.reduce_max(p_emb - q_emb, reduction_indices=[0])
         J_val = session.run([J])
         logging.info('Maximum value for adversarial loss: {}'.format(J_val))
 
+        # Analytically computing the best adversarial embeddings
+        p_emb_val, q_emb_val = session.run([p_emb, q_emb])
+        j = (p_emb_val - q_emb_val).argmax(axis=0)
 
+        opt_emb = np.array([0] * entity_embedding_size)
+        opt_emb[j] = 1
+
+        session.run([adversarial.parameters[0][0, :].assign(opt_emb)])
+        session.run([adversarial.parameters[1][0, :].assign(opt_emb)])
+
+        for projection_step in adv_projection_steps:
+            session.run([projection_step])
+
+        v_errors_val, v_loss_val = session.run([v_errors, v_loss])
+        logging.info('{}\t{}'.format(v_errors_val, v_loss_val))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
