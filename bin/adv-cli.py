@@ -145,8 +145,12 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
-        adversarial_projection_steps = [constraints.renorm_update(adversarial_embedding_layer, norm=1.0)
-                                        for adversarial_embedding_layer in adversarial.parameters]
+
+        adv_entity_projections = [constraints.unit_ball(adv_embedding_layer, norm=1.0) for adv_embedding_layer in adversarial.parameters]
+        if unit_cube:
+            adv_entity_projections = [constraints.unit_cube(adv_embedding_layer) for adv_embedding_layer in adversarial.parameters]
+
+        adversarial_projection_steps = adv_entity_projections
 
     # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
     # obtained by corrupting the original training triple.
