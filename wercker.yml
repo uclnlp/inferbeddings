@@ -54,13 +54,14 @@ build:
           sudo apt-get update
           sudo apt-get -y install libtcmalloc-minimal4
           pip3 install --upgrade tensorflow
+          pip3 install --upgrade pytest-faulthandler
           python3 setup.py install
 
     - script:
-        name: echo python information
+        name: echo python3 information
         code: |
-          echo "python version $(python --version) running"
-          echo "pip version $(pip --version) running"
+          echo "python3 version $(python --version) running"
+          echo "pip3 version $(pip --version) running"
           ls
 
     - script:
