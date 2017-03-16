@@ -82,12 +82,15 @@ def test_distmult_unitball():
 
             # Analytically computing the best adversarial embeddings
             p_emb_val, q_emb_val = session.run([p_emb, q_emb])
-            j = (p_emb_val - q_emb_val).argmax(axis=0)
-            opt_emb = np.array([0] * entity_embedding_size)
-            opt_emb[j] = 1
 
-            session.run([adversarial.parameters[0][0, :].assign(opt_emb)])
-            session.run([adversarial.parameters[1][0, :].assign(opt_emb)])
+            j = np.square(p_emb_val - q_emb_val).argmax(axis=0)
+            opt_emb_s = np.array([0] * entity_embedding_size)
+            opt_emb_o = np.array([0] * entity_embedding_size)
+            opt_emb_s[j] = 1
+            opt_emb_o[j] = 1 if (p_emb_val[j] > q_emb_val[j]) else -1
+
+            session.run([adversarial.parameters[0][0, :].assign(opt_emb_s)])
+            session.run([adversarial.parameters[1][0, :].assign(opt_emb_o)])
 
             for projection_step in adv_projection_steps:
                 session.run([projection_step])
@@ -102,13 +105,14 @@ def test_distmult_unitball():
 
                 for projection_step in adv_projection_steps:
                     session.run([projection_step])
+                    session.run([predicate_embedding_layer.assign(predicate_embedding_layer_value)])
 
                 v_errors_val, v_loss_val = session.run([v_errors, v_loss])
 
                 print('{} <= {}'.format(v_loss_val, v_opt_loss_val))
 
                 assert v_opt_errors_val >= v_errors_val
-                assert v_opt_loss_val + 0.1 >= v_loss_val
+                assert v_opt_loss_val >= v_loss_val
 
 if __name__ == '__main__':
     pytest.main([__file__])
