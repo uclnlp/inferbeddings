@@ -447,7 +447,7 @@ def main(argv):
     argparser.add_argument('--hidden-size', '-H', action='store', type=int, default=None,
                            help='Size of the hidden layer (if necessary, e.g. ER-MLP)')
     argparser.add_argument('--unit-cube', action='store_true',
-                           help='Project all entity embeddings on the unit cube (rather than the unit ball)')
+                           help='Project all entity embeddings on the unit cube (rather than the unit sphere)')
 
     argparser.add_argument('--all-one-entities', nargs='+', type=str,
                            help='Entities with all-one entity embeddings')

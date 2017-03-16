@@ -62,7 +62,7 @@ def test_distmult_unit_sphere():
                                   model_parameters=model_parameters,
                                   batch_size=1)
 
-        adv_projection_steps = [constraints.unit_ball(adv_emb_layer, norm=1.0) for adv_emb_layer in adversarial.parameters]
+        adv_projection_steps = [constraints.unit_sphere(adv_emb_layer, norm=1.0) for adv_emb_layer in adversarial.parameters]
 
         v_errors, v_loss = adversarial.errors, adversarial.loss
 
