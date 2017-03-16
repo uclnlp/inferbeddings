@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import tensorflow as tf
+
+from inferbeddings.models import BilinearDiagonalModel
 
 import logging
 
@@ -52,12 +53,15 @@ class ClosedForm:
         head_predicate_emb = self.predicate_embeddings[head_predicate_idx, :]
         body_predicate_emb = self.predicate_embeddings[body_predicate_idx, :]
 
-        opt_emb_X = np.zeros(self.entity_embedding_size)
-        opt_emb_Y = np.zeros(self.entity_embedding_size)
-        opt_emb_X[j] = 1
-        opt_emb_Y[j] = 1 if (p_emb_val[j] > q_emb_val[j]) else -1
+        j = np.square(body_predicate_emb - head_predicate_emb).argmax(axis=0)
 
+        opt_emb_X, opt_emb_Y = np.zeros(self.entity_embedding_size), np.zeros(self.entity_embedding_size)
+        opt_emb_X[j], opt_emb_Y[j] = 1, 1 if (opt_emb_X[j] > opt_emb_Y[j]) else -1
 
+        variable_names_lst = list(variable_names)
+        return {variable_names_lst[0]: opt_emb_X, variable_names_lst[1]: opt_emb_Y}
 
     def __call__(self, clause):
-        pass
+        if self.model_class == BilinearDiagonalModel:
+            # We are using DistMult
+

@@ -11,33 +11,62 @@ running install
 running bdist_egg
 running egg_info
 [...]
-$ ./bin/adv-cli.py -h
-usage: Rule Injection via Adversarial Training [-h] --train TRAIN [--valid VALID] [--test TEST] [--lr LR] [--nb-batches NB_BATCHES] [--nb-epochs NB_EPOCHS] [--model MODEL] [--similarity SIMILARITY]
-                                               [--objective OBJECTIVE] [--margin MARGIN] [--embedding-size EMBEDDING_SIZE] [--predicate-embedding-size PREDICATE_EMBEDDING_SIZE] [--auc] [--seed SEED]
-                                               [--clauses CLAUSES] [--adv-lr ADV_LR] [--adv-nb-epochs ADV_NB_EPOCHS] [--adv-weight ADV_WEIGHT] [--adv-margin ADV_MARGIN] [--adv-restart] [--save SAVE]
+$ ./bin/adv-cli.py -h 
+INFO:adv-cli.py:Command line: -h
+usage: Rule Injection via Adversarial Training [-h] --train TRAIN [--valid VALID] [--test TEST] [--debug] [--debug-scores DEBUG_SCORES [DEBUG_SCORES ...]] [--debug-embeddings DEBUG_EMBEDDINGS]
+                                               [--debug-results] [--lr LR] [--initial-accumulator-value INITIAL_ACCUMULATOR_VALUE] [--nb-batches NB_BATCHES] [--nb-epochs NB_EPOCHS] [--model MODEL]
+                                               [--similarity SIMILARITY] [--loss LOSS] [--pairwise-loss PAIRWISE_LOSS] [--corrupt-relations] [--margin MARGIN] [--embedding-size EMBEDDING_SIZE]
+                                               [--predicate-embedding-size PREDICATE_EMBEDDING_SIZE] [--hidden-size HIDDEN_SIZE] [--unit-cube]
+                                               [--all-one-entities ALL_ONE_ENTITIES [ALL_ONE_ENTITIES ...]] [--predicate-l2 PREDICATE_L2] [--predicate-norm PREDICATE_NORM] [--auc] [--seed SEED]
+                                               [--clauses CLAUSES] [--sar-weight SAR_WEIGHT] [--sar-similarity SAR_SIMILARITY] [--adv-lr ADV_LR] [--adversary-epochs ADVERSARY_EPOCHS]
+                                               [--discriminator-epochs DISCRIMINATOR_EPOCHS] [--adv-weight ADV_WEIGHT] [--adv-margin ADV_MARGIN] [--adv-batch-size ADV_BATCH_SIZE] [--adv-init-ground]
+                                               [--adv-ground-samples ADV_GROUND_SAMPLES] [--adv-ground-tol ADV_GROUND_TOL] [--adv-pooling ADV_POOLING] [--subsample-size SUBSAMPLE_SIZE]
+                                               [--head-subsample-size HEAD_SUBSAMPLE_SIZE] [--materialize] [--save SAVE]
 
 optional arguments:
   -h, --help                                                                                  show this help message and exit
   --train TRAIN, -t TRAIN
   --valid VALID, -v VALID
   --test TEST, -T TEST
+  --debug, -D                                                                                 Debug flag
+  --debug-scores DEBUG_SCORES [DEBUG_SCORES ...]                                              List of files containing triples we want to compute the score of
+  --debug-embeddings DEBUG_EMBEDDINGS
+  --debug-results                                                                             Report fine-grained ranking results
   --lr LR, -l LR
+  --initial-accumulator-value INITIAL_ACCUMULATOR_VALUE
   --nb-batches NB_BATCHES, -b NB_BATCHES
   --nb-epochs NB_EPOCHS, -e NB_EPOCHS
   --model MODEL, -m MODEL                                                                     Model
   --similarity SIMILARITY, -s SIMILARITY                                                      Similarity function
-  --objective OBJECTIVE, -o OBJECTIVE                                                         Loss function
+  --loss LOSS                                                                                 Loss function
+  --pairwise-loss PAIRWISE_LOSS                                                               Pairwise loss function
+  --corrupt-relations                                                                         Also corrupt the relation of each training triple for generating negative examples
   --margin MARGIN, -M MARGIN                                                                  Margin
   --embedding-size EMBEDDING_SIZE, --entity-embedding-size EMBEDDING_SIZE, -k EMBEDDING_SIZE  Entity embedding size
   --predicate-embedding-size PREDICATE_EMBEDDING_SIZE, -p PREDICATE_EMBEDDING_SIZE            Predicate embedding size
+  --hidden-size HIDDEN_SIZE, -H HIDDEN_SIZE                                                   Size of the hidden layer (if necessary, e.g. ER-MLP)
+  --unit-cube                                                                                 Project all entity embeddings on the unit cube (rather than the unit ball)
+  --all-one-entities ALL_ONE_ENTITIES [ALL_ONE_ENTITIES ...]                                  Entities with all-one entity embeddings
+  --predicate-l2 PREDICATE_L2                                                                 Weight of the L2 regularization term on the predicate embeddings
+  --predicate-norm PREDICATE_NORM                                                             Norm of the predicate embeddings
   --auc, -a                                                                                   Measure the predictive accuracy using AUC-PR and AUC-ROC
   --seed SEED, -S SEED                                                                        Seed for the PRNG
   --clauses CLAUSES, -c CLAUSES                                                               File containing background knowledge expressed as Horn clauses
+  --sar-weight SAR_WEIGHT                                                                     Schema-Aware Regularization, regularizer weight
+  --sar-similarity SAR_SIMILARITY                                                             Schema-Aware Regularization, similarity measure
   --adv-lr ADV_LR, -L ADV_LR                                                                  Adversary learning rate
-  --adv-nb-epochs ADV_NB_EPOCHS, -E ADV_NB_EPOCHS                                             Adversary number of training epochs
+  --adversary-epochs ADVERSARY_EPOCHS                                                         Adversary - number of training epochs
+  --discriminator-epochs DISCRIMINATOR_EPOCHS                                                 Discriminator - number of training epochs
   --adv-weight ADV_WEIGHT, -W ADV_WEIGHT                                                      Adversary weight
   --adv-margin ADV_MARGIN                                                                     Adversary margin
-  --adv-restart, -R                                                                           Restart the optimization process for identifying the violators
+  --adv-batch-size ADV_BATCH_SIZE                                                             Size of the batch of adversarial examples to use
+  --adv-init-ground                                                                           Initialize adversarial embeddings using real entity embeddings
+  --adv-ground-samples ADV_GROUND_SAMPLES                                                     Number of ground samples on which to compute the ground loss
+  --adv-ground-tol ADV_GROUND_TOL, --adv-ground-tolerance ADV_GROUND_TOL                      Epsilon-tolerance when calculating the ground loss
+  --adv-pooling ADV_POOLING                                                                   Pooling method used for aggregating adversarial losses (sum, mean, max, logsumexp)
+  --subsample-size SUBSAMPLE_SIZE                                                             Fraction of training facts to use during training (e.g. 0.1)
+  --head-subsample-size HEAD_SUBSAMPLE_SIZE                                                   Fraction of training facts to use during training (e.g. 0.1)
+  --materialize                                                                               Materialize all facts using clauses and logical inference
   --save SAVE                                                                                 Path for saving the serialized model
 
 ```
