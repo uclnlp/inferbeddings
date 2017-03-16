@@ -72,17 +72,17 @@ assert len(regions) == 5
 assert len(subregions) == 23
 
 with open('countries.tsv', 'w') as f_out:
-    for fact in facts:
+    for fact in sorted(facts):
         f_out.write(fact)
 
 with open('data/countries.lst', 'w') as f_out:
-    for country in countries:
+    for country in sorted(countries):
         f_out.write('{}\n'.format(country))
 
 with open('data/regions.lst', 'w') as f_out:
-    for region in regions:
+    for region in sorted(regions):
         f_out.write('{}\n'.format(region))
 
 with open('data/subregions.lst', 'w') as f_out:
-    for region in subregions:
+    for region in sorted(subregions):
         f_out.write('{}\n'.format(region))
