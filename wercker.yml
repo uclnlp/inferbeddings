@@ -52,7 +52,7 @@ build:
         name: install
         code: |
           sudo apt-get update
-          sudo apt-get -y install libtcmalloc-minimal4
+          # sudo apt-get -y install libtcmalloc-minimal4
           pip3 install --upgrade tensorflow
           pip3 install --upgrade pytest-faulthandler
           python3 setup.py install
@@ -67,5 +67,5 @@ build:
     - script:
         name: Run unit tests
         code: |
-          export LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
+          # export LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4"
           pytest tests -v
