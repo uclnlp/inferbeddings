@@ -84,10 +84,8 @@ def test_distmult_unitball():
             p_emb_val, q_emb_val = session.run([p_emb, q_emb])
 
             j = np.square(p_emb_val - q_emb_val).argmax(axis=0)
-            opt_emb_s = np.array([0] * entity_embedding_size)
-            opt_emb_o = np.array([0] * entity_embedding_size)
-            opt_emb_s[j] = 1
-            opt_emb_o[j] = 1 if (p_emb_val[j] > q_emb_val[j]) else -1
+            opt_emb_s, opt_emb_o = np.zeros(entity_embedding_size), np.zeros(entity_embedding_size)
+            opt_emb_s[j], opt_emb_o[j] = 1, 1 if (p_emb_val[j] > q_emb_val[j]) else -1
 
             session.run([adversarial.parameters[0][0, :].assign(opt_emb_s)])
             session.run([adversarial.parameters[1][0, :].assign(opt_emb_o)])

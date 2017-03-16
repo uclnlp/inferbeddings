@@ -20,7 +20,6 @@ class Adversarial:
         self.entity_embedding_layer = entity_embedding_layer
         self.predicate_embedding_layer = predicate_embedding_layer
 
-        # self.entity_embedding_size = model_parameters['entity_embedding_size']
         self.entity_embedding_size = self.entity_embedding_layer.get_shape()[-1].value
 
         self.model_class, self.model_parameters = model_class, model_parameters
@@ -43,10 +42,7 @@ class Adversarial:
                 elif self.pooling == 'mean':
                     _loss = tf.reduce_mean(_losses)
                 elif self.pooling == 'logsumexp':
-                    # Prone to under/overflow: http://andrewgelman.com/2016/06/11/log-sum-of-exponentials/
-                    # _loss = tf.log(tf.reduce_sum(tf.exp(_losses)))
-
-                    # More robust implementation provided by the TensorFlow APIs.
+                    # Robust logsumexp implementation provided by the TensorFlow APIs.
                     _loss = tf.reduce_logsumexp(_losses)
                 else:
                     raise ValueError('Unknown pooling function {}'.format(self.pooling))
@@ -55,10 +51,9 @@ class Adversarial:
             # The following formulations are equivalent:
 
             # self.loss_function = lambda body_scores, head_scores:\
-            #    pairwise_losses.hinge_loss(head_scores, body_scores, margin=loss_margin)
-
-            # self.loss_function = lambda body_scores, head_scores:\
-            #     tf.reduce_sum(tf.nn.relu(loss_margin - head_scores + body_scores))
+            #     1: pairwise_losses.hinge_loss(head_scores, body_scores, margin=loss_margin)
+            #     2: tf.reduce_sum(tf.nn.relu(loss_margin - head_scores + body_scores))
+            #     3: _violation_losses(body_scores, head_scores, margin=loss_margin)
 
             self.loss_function = lambda body_scores, head_scores:\
                 _violation_losses(body_scores, head_scores, margin=loss_margin)

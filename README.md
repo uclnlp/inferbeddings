@@ -48,78 +48,118 @@ Example - Embedding the WN18 Knowledge Graph using Complex Embeddings:
 
 ```
 $ ./bin/adv-cli.py --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model ComplEx --similarity dot --margin 5 --embedding-size 100 --nb-epochs 100
-INFO:adv-cli.py:Command line: --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt 
---lr 0.1 --model ComplEx --similarity dot --margin 5 --embedding-size 100 --nb-epochs 100
+INFO:adv-cli.py:Command line: --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model ComplEx --similarity dot --margin 5 --embedding-size 100 --nb-epochs 100
 INFO:adv-cli.py:#Training Triples: 141442, #Validation Triples: 5000, #Test Triples: 5000
 INFO:adv-cli.py:#Entities: 40943        #Predicates: 18
 INFO:adv-cli.py:Samples: 141442, no. batches: 10 -> batch size: 14145
-INFO:adv-cli.py:Epoch: 1/1      Loss: 9.6925 ± 0.3596
-INFO:adv-cli.py:Epoch: 1/1      Fact Loss: 1370931.7656
-INFO:adv-cli.py:Epoch: 2/1      Loss: 5.6142 ± 1.1346
-INFO:adv-cli.py:Epoch: 2/1      Fact Loss: 794099.1484
-INFO:adv-cli.py:Epoch: 3/1      Loss: 1.9155 ± 0.2875
-INFO:adv-cli.py:Epoch: 3/1      Fact Loss: 270929.2051
-INFO:adv-cli.py:Epoch: 4/1      Loss: 0.7533 ± 0.0712
-INFO:adv-cli.py:Epoch: 4/1      Fact Loss: 106553.3623
-INFO:adv-cli.py:Epoch: 5/1      Loss: 0.3941 ± 0.0196
-INFO:adv-cli.py:Epoch: 5/1      Fact Loss: 55737.0645
+INFO:adv-cli.py:Epoch: 1/1      Loss: 9.9205 ± 0.0819
+INFO:adv-cli.py:Epoch: 1/1      Fact Loss: 1403175.1875
+INFO:adv-cli.py:Epoch: 2/1      Loss: 9.1740 ± 0.1622
+INFO:adv-cli.py:Epoch: 2/1      Fact Loss: 1297591.9766
+INFO:adv-cli.py:Epoch: 3/1      Loss: 8.3536 ± 0.0911
+INFO:adv-cli.py:Epoch: 3/1      Fact Loss: 1181545.5312
+INFO:adv-cli.py:Epoch: 4/1      Loss: 7.7184 ± 0.0576
+INFO:adv-cli.py:Epoch: 4/1      Fact Loss: 1091707.6953
+INFO:adv-cli.py:Epoch: 5/1      Loss: 7.1793 ± 0.0403
+INFO:adv-cli.py:Epoch: 5/1      Fact Loss: 1015459.9766
+INFO:adv-cli.py:Epoch: 6/1      Loss: 6.7136 ± 0.0240
+INFO:adv-cli.py:Epoch: 6/1      Fact Loss: 949580.1484
+INFO:adv-cli.py:Epoch: 7/1      Loss: 6.3037 ± 0.0203
+INFO:adv-cli.py:Epoch: 7/1      Fact Loss: 891614.3750
+INFO:adv-cli.py:Epoch: 8/1      Loss: 5.9400 ± 0.0131
+INFO:adv-cli.py:Epoch: 8/1      Fact Loss: 840160.1172
+INFO:adv-cli.py:Epoch: 9/1      Loss: 5.6087 ± 0.0192
+INFO:adv-cli.py:Epoch: 9/1      Fact Loss: 793311.0703
+INFO:adv-cli.py:Epoch: 10/1     Loss: 5.3024 ± 0.0215
+INFO:adv-cli.py:Epoch: 10/1     Fact Loss: 749982.7891
 [..]
-INFO:adv-cli.py:Epoch: 97/1     Loss: 0.0090 ± 0.0018
-INFO:adv-cli.py:Epoch: 97/1     Fact Loss: 1267.5016
-INFO:adv-cli.py:Epoch: 98/1     Loss: 0.0095 ± 0.0018
-INFO:adv-cli.py:Epoch: 98/1     Fact Loss: 1347.9553
-INFO:adv-cli.py:Epoch: 99/1     Loss: 0.0094 ± 0.0019
-INFO:adv-cli.py:Epoch: 99/1     Fact Loss: 1332.0370
-INFO:adv-cli.py:Epoch: 100/1    Loss: 0.0088 ± 0.0014
-INFO:adv-cli.py:Epoch: 100/1    Fact Loss: 1243.2720
+INFO:adv-cli.py:Epoch: 91/1     Loss: 0.2401 ± 0.0085
+INFO:adv-cli.py:Epoch: 91/1     Fact Loss: 33953.7292
+INFO:adv-cli.py:Epoch: 92/1     Loss: 0.2347 ± 0.0053
+INFO:adv-cli.py:Epoch: 92/1     Fact Loss: 33194.0295
+INFO:adv-cli.py:Epoch: 93/1     Loss: 0.2315 ± 0.0077
+INFO:adv-cli.py:Epoch: 93/1     Fact Loss: 32742.8557
+INFO:adv-cli.py:Epoch: 94/1     Loss: 0.2280 ± 0.0066
+INFO:adv-cli.py:Epoch: 94/1     Fact Loss: 32254.6658
+INFO:adv-cli.py:Epoch: 95/1     Loss: 0.2221 ± 0.0078
+INFO:adv-cli.py:Epoch: 95/1     Fact Loss: 31411.6094
+INFO:adv-cli.py:Epoch: 96/1     Loss: 0.2181 ± 0.0055
+INFO:adv-cli.py:Epoch: 96/1     Fact Loss: 30844.9131
+INFO:adv-cli.py:Epoch: 97/1     Loss: 0.2119 ± 0.0073
+INFO:adv-cli.py:Epoch: 97/1     Fact Loss: 29971.1079
+INFO:adv-cli.py:Epoch: 98/1     Loss: 0.2107 ± 0.0061
+INFO:adv-cli.py:Epoch: 98/1     Fact Loss: 29807.2014
+INFO:adv-cli.py:Epoch: 99/1     Loss: 0.2081 ± 0.0054
+INFO:adv-cli.py:Epoch: 99/1     Fact Loss: 29432.5969
+INFO:adv-cli.py:Epoch: 100/1    Loss: 0.2042 ± 0.0067
+INFO:adv-cli.py:Epoch: 100/1    Fact Loss: 28878.2566
 [..]
 INFO:inferbeddings.evaluation.base:### MICRO (test filtered):
-INFO:inferbeddings.evaluation.base:     -- left   >> mean: 555.7002, median: 1.0, mrr: 0.923, hits@10: 94.48%
-INFO:inferbeddings.evaluation.base:     -- right  >> mean: 554.135, median: 1.0, mrr: 0.924, hits@10: 94.54%
-INFO:inferbeddings.evaluation.base:     -- global >> mean: 554.9176, median: 1.0, mrr: 0.924, hits@10: 94.51%
+INFO:inferbeddings.evaluation.base:     -- left   >> mean: 438.0892, median: 1.0, mrr: 0.857, hits@10: 92.32%
+INFO:inferbeddings.evaluation.base:     -- right  >> mean: 441.4096, median: 1.0, mrr: 0.868, hits@10: 92.38%
+INFO:inferbeddings.evaluation.base:     -- global >> mean: 439.7494, median: 1.0, mrr: 0.862, hits@10: 92.35%
 ```
 
 Example - Embedding the WN18 Knowledge Graph using Translating Embeddings:
 
 ```bash
 $ ./bin/adv-cli.py --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model TransE --similarity l1 --margin 2 --embedding-size 50 --nb-epochs 1000
-INFO:adv-cli.py:Command line: --train data/wn18/wordnet-mlj12-train.txt --valid data/wn18/wordnet-mlj12-valid.txt --test data/wn18/wordnet-mlj12-test.txt --lr 0.1 --model TransE --similarity l1 --margin 2 --embedding-size 50 --nb-epochs 1000
 INFO:adv-cli.py:#Training Triples: 141442, #Validation Triples: 5000, #Test Triples: 5000
 INFO:adv-cli.py:#Entities: 40943        #Predicates: 18
 INFO:adv-cli.py:Samples: 141442, no. batches: 10 -> batch size: 14145
-INFO:adv-cli.py:Epoch: 1/1      Loss: 3.6197 ± 0.5006
-INFO:adv-cli.py:Epoch: 1/1      Fact Loss: 511980.6953
-INFO:adv-cli.py:Epoch: 2/1      Loss: 2.0904 ± 0.0947
-INFO:adv-cli.py:Epoch: 2/1      Fact Loss: 295677.3770
-INFO:adv-cli.py:Epoch: 3/1      Loss: 1.3305 ± 0.0399
-INFO:adv-cli.py:Epoch: 3/1      Fact Loss: 188185.9883
-INFO:adv-cli.py:Epoch: 4/1      Loss: 0.9019 ± 0.0126
-INFO:adv-cli.py:Epoch: 4/1      Fact Loss: 127561.4561
-INFO:adv-cli.py:Epoch: 5/1      Loss: 0.6394 ± 0.0117
-INFO:adv-cli.py:Epoch: 5/1      Fact Loss: 90443.4600
+INFO:adv-cli.py:Epoch: 1/1      Loss: 3.3778 ± 0.5889
+INFO:adv-cli.py:Epoch: 1/1      Fact Loss: 477762.2461
+INFO:adv-cli.py:Epoch: 2/1      Loss: 1.3837 ± 0.1561
+INFO:adv-cli.py:Epoch: 2/1      Fact Loss: 195715.7637
+INFO:adv-cli.py:Epoch: 3/1      Loss: 0.5752 ± 0.0353
+INFO:adv-cli.py:Epoch: 3/1      Fact Loss: 81351.6055
+INFO:adv-cli.py:Epoch: 4/1      Loss: 0.2984 ± 0.0071
+INFO:adv-cli.py:Epoch: 4/1      Fact Loss: 42206.5698
+INFO:adv-cli.py:Epoch: 5/1      Loss: 0.1842 ± 0.0028
+INFO:adv-cli.py:Epoch: 5/1      Fact Loss: 26058.0952
+INFO:adv-cli.py:Epoch: 6/1      Loss: 0.1287 ± 0.0017
+INFO:adv-cli.py:Epoch: 6/1      Fact Loss: 18210.4518
+INFO:adv-cli.py:Epoch: 7/1      Loss: 0.0980 ± 0.0023
+INFO:adv-cli.py:Epoch: 7/1      Fact Loss: 13866.0588
+INFO:adv-cli.py:Epoch: 8/1      Loss: 0.0795 ± 0.0034
+INFO:adv-cli.py:Epoch: 8/1      Fact Loss: 11243.2173
+INFO:adv-cli.py:Epoch: 9/1      Loss: 0.0653 ± 0.0019
+INFO:adv-cli.py:Epoch: 9/1      Fact Loss: 9239.1135
+INFO:adv-cli.py:Epoch: 10/1     Loss: 0.0562 ± 0.0026
+INFO:adv-cli.py:Epoch: 10/1     Fact Loss: 7942.8276
 [..]
-INFO:adv-cli.py:Epoch: 995/1    Loss: 0.0030 ± 0.0004
-INFO:adv-cli.py:Epoch: 995/1    Fact Loss: 428.5829
-INFO:adv-cli.py:Epoch: 996/1    Loss: 0.0030 ± 0.0009
-INFO:adv-cli.py:Epoch: 996/1    Fact Loss: 427.0264
-INFO:adv-cli.py:Epoch: 997/1    Loss: 0.0030 ± 0.0004
-INFO:adv-cli.py:Epoch: 997/1    Fact Loss: 428.6463
-INFO:adv-cli.py:Epoch: 998/1    Loss: 0.0030 ± 0.0005
-INFO:adv-cli.py:Epoch: 998/1    Fact Loss: 422.2098
-INFO:adv-cli.py:Epoch: 999/1    Loss: 0.0030 ± 0.0008
-INFO:adv-cli.py:Epoch: 999/1    Fact Loss: 419.9970
-INFO:adv-cli.py:Epoch: 1000/1   Loss: 0.0027 ± 0.0007
-INFO:adv-cli.py:Epoch: 1000/1   Fact Loss: 378.9356
+INFO:adv-cli.py:Epoch: 990/1    Loss: 0.0026 ± 0.0006
+INFO:adv-cli.py:Epoch: 990/1    Fact Loss: 373.8182
+INFO:adv-cli.py:Epoch: 991/1    Loss: 0.0030 ± 0.0007
+INFO:adv-cli.py:Epoch: 991/1    Fact Loss: 419.6469
+INFO:adv-cli.py:Epoch: 992/1    Loss: 0.0025 ± 0.0006
+INFO:adv-cli.py:Epoch: 992/1    Fact Loss: 354.5707
+INFO:adv-cli.py:Epoch: 993/1    Loss: 0.0028 ± 0.0004
+INFO:adv-cli.py:Epoch: 993/1    Fact Loss: 398.7795
+INFO:adv-cli.py:Epoch: 994/1    Loss: 0.0032 ± 0.0006
+INFO:adv-cli.py:Epoch: 994/1    Fact Loss: 450.6929
+INFO:adv-cli.py:Epoch: 995/1    Loss: 0.0028 ± 0.0005
+INFO:adv-cli.py:Epoch: 995/1    Fact Loss: 390.7763
+INFO:adv-cli.py:Epoch: 996/1    Loss: 0.0028 ± 0.0009
+INFO:adv-cli.py:Epoch: 996/1    Fact Loss: 392.9878
+INFO:adv-cli.py:Epoch: 997/1    Loss: 0.0028 ± 0.0005
+INFO:adv-cli.py:Epoch: 997/1    Fact Loss: 391.4912
+INFO:adv-cli.py:Epoch: 998/1    Loss: 0.0026 ± 0.0003
+INFO:adv-cli.py:Epoch: 998/1    Fact Loss: 362.8399
+INFO:adv-cli.py:Epoch: 999/1    Loss: 0.0026 ± 0.0006
+INFO:adv-cli.py:Epoch: 999/1    Fact Loss: 365.5944
+INFO:adv-cli.py:Epoch: 1000/1   Loss: 0.0025 ± 0.0007
+INFO:adv-cli.py:Epoch: 1000/1   Fact Loss: 354.8261
 [..]
 INFO:inferbeddings.evaluation.base:### MICRO (valid filtered):
-INFO:inferbeddings.evaluation.base:     -- left   >> mean: 456.7884, median: 2.0, mrr: 0.472, hits@10: 91.74%
-INFO:inferbeddings.evaluation.base:     -- right  >> mean: 457.314, median: 2.0, mrr: 0.481, hits@10: 93.58%
-INFO:inferbeddings.evaluation.base:     -- global >> mean: 457.0512, median: 2.0, mrr: 0.476, hits@10: 92.66%
+INFO:inferbeddings.evaluation.base:     -- left   >> mean: 472.5754, median: 2.0, mrr: 0.491, hits@10: 94.22%
+INFO:inferbeddings.evaluation.base:     -- right  >> mean: 480.887, median: 2.0, mrr: 0.495, hits@10: 94.26%
+INFO:inferbeddings.evaluation.base:     -- global >> mean: 476.7312, median: 2.0, mrr: 0.493, hits@10: 94.24%
 [..]
 INFO:inferbeddings.evaluation.base:### MICRO (test filtered):
-INFO:inferbeddings.evaluation.base:     -- left   >> mean: 384.1844, median: 2.0, mrr: 0.468, hits@10: 92.38%
-INFO:inferbeddings.evaluation.base:     -- right  >> mean: 396.3276, median: 2.0, mrr: 0.479, hits@10: 93.56%
-INFO:inferbeddings.evaluation.base:     -- global >> mean: 390.256, median: 2.0, mrr: 0.474, hits@10: 92.97%
+INFO:inferbeddings.evaluation.base:     -- left   >> mean: 399.6008, median: 2.0, mrr: 0.493, hits@10: 94.24%
+INFO:inferbeddings.evaluation.base:     -- right  >> mean: 424.7734, median: 2.0, mrr: 0.493, hits@10: 94.28%
+INFO:inferbeddings.evaluation.base:     -- global >> mean: 412.1871, median: 2.0, mrr: 0.493, hits@10: 94.26%
 ```
 
 [1] Bordes, A. et al. - [Translating Embeddings for Modeling Multi-relational Data](https://www.utc.fr/~bordesan/dokuwiki/_media/en/transe_nips13.pdf) - NIPS 2013
