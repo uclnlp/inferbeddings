@@ -19,7 +19,7 @@ class ClosedForm:
 
         self.entity_embedding_size = self.entity_embeddings.shape[0]
 
-    def _distmult_unitbox(self, clause):
+    def _distmult_unit_cube(self, clause):
         head, body = clause.head, clause.body
 
         # At the moment, only simple rules as in "q(X, Y) :- p(X, Y)" are supported
@@ -38,7 +38,7 @@ class ClosedForm:
 
         return {var_name: optimal_emb for var_name in variable_names}
 
-    def _distmult_unitball(self, clause):
+    def _distmult_unit_sphere(self, clause):
         head, body = clause.head, clause.body
 
         # At the moment, only simple rules as in "q(X, Y) :- p(X, Y)" are supported
@@ -64,4 +64,5 @@ class ClosedForm:
     def __call__(self, clause):
         if self.model_class == BilinearDiagonalModel:
             # We are using DistMult
+            pass
 

@@ -38,7 +38,7 @@ similarity_function = similarities.get_function('dot')
 model_parameters = dict(similarity_function=similarity_function)
 
 
-def test_distmult_unitball():
+def test_distmult_unit_cube():
     for seed in range(128):
         tf.reset_default_graph()
 
@@ -62,7 +62,7 @@ def test_distmult_unitball():
                                   model_parameters=model_parameters,
                                   batch_size=1)
 
-        adv_projection_steps = [constraints.unit_ball(adv_emb_layer, norm=1.0) for adv_emb_layer in adversarial.parameters]
+        adv_projection_steps = [constraints.unit_cube(adv_emb_layer) for adv_emb_layer in adversarial.parameters]
 
         v_errors, v_loss = adversarial.errors, adversarial.loss
 
@@ -82,13 +82,11 @@ def test_distmult_unitball():
 
             # Analytically computing the best adversarial embeddings
             p_emb_val, q_emb_val = session.run([p_emb, q_emb])
+            opt_emb = (p_emb_val >= q_emb_val).astype(np.float32)
 
-            j = np.square(p_emb_val - q_emb_val).argmax(axis=0)
-            opt_emb_s, opt_emb_o = np.zeros(entity_embedding_size), np.zeros(entity_embedding_size)
-            opt_emb_s[j], opt_emb_o[j] = 1, 1 if (p_emb_val[j] > q_emb_val[j]) else -1
-
-            session.run([adversarial.parameters[0][0, :].assign(opt_emb_s)])
-            session.run([adversarial.parameters[1][0, :].assign(opt_emb_o)])
+            assert len(adversarial.parameters) == 2
+            session.run([adversarial.parameters[0][0, :].assign(opt_emb)])
+            session.run([adversarial.parameters[1][0, :].assign(opt_emb)])
 
             for projection_step in adv_projection_steps:
                 session.run([projection_step])
@@ -103,7 +101,6 @@ def test_distmult_unitball():
 
                 for projection_step in adv_projection_steps:
                     session.run([projection_step])
-                    session.run([predicate_embedding_layer.assign(predicate_embedding_layer_value)])
 
                 v_errors_val, v_loss_val = session.run([v_errors, v_loss])
 

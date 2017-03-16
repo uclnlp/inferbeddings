@@ -146,7 +146,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
         loss_function += adv_weight * violation_loss
 
-        adv_entity_projections = [constraints.unit_ball(adv_embedding_layer, norm=1.0) for adv_embedding_layer in adversarial.parameters]
+        adv_entity_projections = [constraints.unit_sphere(adv_embedding_layer, norm=1.0) for adv_embedding_layer in adversarial.parameters]
         if unit_cube:
             adv_entity_projections = [constraints.unit_cube(adv_embedding_layer) for adv_embedding_layer in adversarial.parameters]
 
@@ -221,7 +221,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
 
     # We enforce all entity embeddings to have an unitary norm, or to live in the unit cube.
-    entity_projection = constraints.unit_ball(entity_embedding_layer, norm=1.0)
+    entity_projection = constraints.unit_sphere(entity_embedding_layer, norm=1.0)
     if unit_cube:
         entity_projection = constraints.unit_cube(entity_embedding_layer)
     projection_steps = [entity_projection]
