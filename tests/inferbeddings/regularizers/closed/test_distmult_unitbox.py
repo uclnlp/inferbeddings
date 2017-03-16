@@ -39,7 +39,7 @@ model_parameters = dict(similarity_function=similarity_function)
 
 
 def test_distmult_unitbox():
-    for seed in range(1024):
+    for seed in range(128):
         tf.reset_default_graph()
 
         np.random.seed(seed)
@@ -78,6 +78,7 @@ def test_distmult_unitbox():
 
         with tf.Session() as session:
             session.run(init_op)
+            predicate_embedding_layer_value = session.run([predicate_embedding_layer])[0]
 
             # Analytically computing the best adversarial embeddings
             p_emb_val, q_emb_val = session.run([p_emb, q_emb])
@@ -93,6 +94,7 @@ def test_distmult_unitbox():
             v_opt_errors_val, v_opt_loss_val = session.run([v_errors, v_loss])
 
             session.run(init_op)
+            session.run([predicate_embedding_layer.assign(predicate_embedding_layer_value)])
 
             for finding_epoch in range(1, 100 + 1):
                 _ = session.run([v_training_step])
@@ -105,7 +107,7 @@ def test_distmult_unitbox():
                 print('{} <= {}'.format(v_loss_val, v_opt_loss_val))
 
                 assert v_opt_errors_val >= v_errors_val
-                assert v_opt_loss_val + 1e-1 >= v_loss_val
+                assert v_opt_loss_val >= v_loss_val
 
 if __name__ == '__main__':
     pytest.main([__file__])
