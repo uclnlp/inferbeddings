@@ -12,10 +12,12 @@ logger = logging.getLogger(__name__)
 class ClosedForm:
     def __init__(self, parser,
                  entity_embeddings, predicate_embeddings,
-                 model_class, model_parameters):
+                 model_class, model_parameters,
+                 is_unit_cube):
         self.parser = parser
         self.entity_embeddings, self.predicate_embeddings = entity_embeddings, predicate_embeddings
         self.model_class, self.model_parameters = model_class, model_parameters
+        self.is_unit_cube = is_unit_cube
 
         self.entity_embedding_size = self.entity_embeddings.shape[0]
 
@@ -62,7 +64,14 @@ class ClosedForm:
         return {variable_names_lst[0]: opt_emb_X, variable_names_lst[1]: opt_emb_Y}
 
     def __call__(self, clause):
+        opt_adv_emb = None
         if self.model_class == BilinearDiagonalModel:
             # We are using DistMult
-            pass
+            if self.is_unit_cube:
+                opt_adv_emb = self._distmult_unit_cube(clause)
+            else:
+                opt_adv_emb = self._distmult_unit_sphere(clause)
+
+        assert opt_adv_emb is not None
+        return opt_adv_emb
 
