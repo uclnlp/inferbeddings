@@ -26,8 +26,8 @@ EXPERIMENTS = ['{}_c{}'.format(exp, conf) for exp in EXPERIMENTS for conf in con
 #EXPERIMENTS = ['exp_symm', 'exp_impl', 'exp_impl_inv', 'exp_impl_conj', 'exp_trans_single', 'exp_trans_diff']
 
 #USER = '/home/pminervi/workspace/'
-#USER = '/users/tdmeeste/workspace/'
-USER = '~/workspace/'
+USER = '/users/tdmeeste/workspace/'
+#USER = '~/workspace/'
 
 """
 Notes:
@@ -48,10 +48,10 @@ def to_cmd(c, _path=None):
     if _path is None:
         _path = USER + 'inferbeddings/'
     command = 'python3 {}/bin/adv-cli.py --auc' \
-              ' --train {}/data/synth/synth_v1/{}_train.tsv' \
-              ' --valid {}/data/synth/synth_v1/{}_valid.tsv' \
-              ' --test {}/data/synth/synth_v1/{}_test.tsv' \
-              ' --clauses {}/data/synth/synth_v1/{}_clauses.pl' \
+              ' --train {}/data/synth/sampled/{}_train.tsv' \
+              ' --valid {}/data/synth/sampled/{}_valid.tsv' \
+              ' --test {}/data/synth/sampled/{}_test.tsv' \
+              ' --clauses {}/data/synth/sampled/{}_clauses.pl' \
               ' --nb-epochs {}' \
               ' --lr {}' \
               ' --nb-batches {}' \
@@ -125,7 +125,7 @@ def main(argv):
     configurations_transe = cartesian_product(hyperparameters_space_transe)
     configurations_distmult_complex = cartesian_product(hyperparameters_space_distmult_complex)
 
-    path = USER + 'inferbeddings/logs/synth/'
+    path = USER + 'inferbeddings/logs/synth/synth_v1'
     if not os.path.exists(path):
         os.makedirs(path)
 

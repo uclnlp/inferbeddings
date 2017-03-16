@@ -196,7 +196,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         fact_loss += pairwise_loss(score, margin=margin)
 
     if predicate_l2 is not None:
-        fact_loss += tf.nn.l2_loss(predicate_embedding_layer)
+        fact_loss += predicate_l2 * tf.nn.l2_loss(predicate_embedding_layer)
 
     loss_function += fact_loss
 

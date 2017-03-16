@@ -170,8 +170,7 @@ if __name__=="__main__":
     #fixed args
     sampled_unobserved_per_true = 1 # number of false (unobserved) test facts added for each true test fact (inferred from clause)
     simple_transitivities = False
-    seed = 846
-    np.random.seed(seed)
+
 
     #input args
     argparser = argparse.ArgumentParser('create artificial dataset (train+test) with rules (all arity 2)')
@@ -200,8 +199,12 @@ if __name__=="__main__":
                            help='target directory')
     argparser.add_argument('--tag', type=str, default='synth',
                            help='experiment tag')
+    argparser.add_argument('--seed', type=int, default=846,
+                           help='random seed')
 
     args = argparser.parse_args(sys.argv[1:])
+    np.random.seed(args.seed)
+
     cmd = ' '.join(arg for arg in sys.argv[1:])
 
     Ne = args.entities
@@ -225,7 +228,7 @@ if __name__=="__main__":
                       num_impl_conj=[0, num_impl_conj, 0],
                       num_trans_single=num_trans_single,
                       num_trans_diff=num_trans_diff,
-                      seed=seed
+                      seed=args.seed
                       ).get_kb()
 
     N_original_facts = len(testKB.get_all_facts(of_types=TRAIN_LABEL))
@@ -264,7 +267,7 @@ if __name__=="__main__":
                   'symm', 'impl', 'impl_inv', 'impl_conj', 'trans_single', 'trans_diff',
                   'dir']:
             rf.write('{}\t{}\n'.format(k, vars(args)[k]))
-        rf.write('seed\t{}\n'.format(seed))
+        rf.write('seed\t{}\n'.format(args.seed))
         rf.write('sampled_unobserved_per_true\t{}\n'.format(sampled_unobserved_per_true))
         rf.write('simple_transitivities\t{}\n'.format(simple_transitivities))
         rf.write('\n#stats:\n')
