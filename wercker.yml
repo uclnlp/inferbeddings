@@ -41,7 +41,7 @@ test-light:
     - script:
         name: Run unit tests
         code: |
-          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" python3 -m pytest tests -v -m "(not slow) and (not veryslow)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not slow) and (not veryslow)"
 
 test-slow:
   steps:
@@ -53,7 +53,7 @@ test-slow:
     - script:
         name: Run slow unit tests
         code: |
-          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" python3 -m pytest tests -v -m "(slow) and (not veryslow)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(slow) and (not veryslow)"
 
 test-veryslow:
   steps:
@@ -67,4 +67,4 @@ test-veryslow:
     - script:
         name: Run very slow unit tests
         code: |
-          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" python3 -m pytest tests -v -m "(not slow) and (veryslow)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not slow) and (veryslow)"
