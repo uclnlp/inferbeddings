@@ -11,19 +11,9 @@ from inferbeddings.models.training import constraints
 
 from inferbeddings.adversarial import Adversarial
 
+from inferbeddings.adversarial.closedform.util import score_complex as score
+
 import pytest
-
-
-def dot3(a, b, c):
-    return np.sum(a * b * c)
-
-
-def score(subject_embedding, predicate_embedding, object_embedding):
-    n = subject_embedding.shape[0]
-    s_re, s_im = subject_embedding[:n // 2], subject_embedding[n // 2:]
-    p_re, p_im = predicate_embedding[:n // 2], predicate_embedding[n // 2:]
-    o_re, o_im = object_embedding[:n // 2], object_embedding[n // 2:]
-    return dot3(s_re, p_re, o_re) + dot3(s_re, p_im, o_im) + dot3(s_im, p_re, o_im) - dot3(s_im, p_im, o_re)
 
 
 triples = [
@@ -52,7 +42,7 @@ model_parameters = dict(similarity_function=similarity_function)
 
 
 def test_complex_unit_cube():
-    for seed in range(8192):
+    for seed in range(128):
         tf.reset_default_graph()
 
         np.random.seed(seed)

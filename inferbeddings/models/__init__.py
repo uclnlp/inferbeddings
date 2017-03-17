@@ -6,4 +6,5 @@ from inferbeddings.models.base import BilinearModel
 
 __all__ = ['TranslatingModel',
            'BilinearDiagonalModel',
-           'BilinearModel']
+           'BilinearModel',
+           'ComplexModel']
