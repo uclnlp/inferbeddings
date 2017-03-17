@@ -30,10 +30,28 @@ build:
           echo "pip3 version $(pip3 --version) running"
           ls
 
+test-light:
+  steps:
+    - pip-install
+
+    - script:
+        name: install
+        code: |
+          python3 setup.py install
+
     - script:
         name: Run unit tests
         code: |
           LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v -m "(not slow) and (not veryslow)"
+
+test-slow:
+  steps:
+    - pip-install
+
+    - script:
+        name: install
+        code: |
+          python3 setup.py install
 
     - script:
         name: Run slow unit tests
