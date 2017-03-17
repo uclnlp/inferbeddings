@@ -33,6 +33,8 @@ build:
 
 test-light:
   steps:
+    - pip-install
+
     - script:
         name: install
         code: |
@@ -45,6 +47,8 @@ test-light:
 
 test-slow:
   steps:
+    - pip-install
+
     - script:
         name: install
         code: |
