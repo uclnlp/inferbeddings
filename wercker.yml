@@ -11,8 +11,7 @@ build:
         name: setup
         code: |
           sudo apt-get update
-          sudo apt-get -y install apt-utils build-essential libatlas-base-dev
-          sudo apt-get -y build-dep python3-numpy
+          sudo apt-get -y install apt-utils build-essential libatlas-base-dev python3-numpy
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libtcmalloc-minimal4
           sudo pip3 install --no-binary=:all: numpy
           sudo pip3 install --upgrade tensorflow
