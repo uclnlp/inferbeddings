@@ -7,6 +7,16 @@ command-timeout: 60
 
 build:
   steps:
+    - script:
+      name: echo system information
+      code: |
+        uname -a
+        echo "python3 version $(python3 --version) running"
+        echo "pip3 version $(pip3 --version) running"
+        ls
+
+test-light:
+  steps:
     - pip-install
 
     - script:
@@ -14,31 +24,11 @@ build:
         code: |
           sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
-          sudo python3 setup.py install
 
     - script:
         name: install
         code: |
           python3 setup.py install
-
-
-    - script:
-        name: echo python3 information
-        code: |
-          echo "python3 version $(python3 --version) running"
-          echo "pip3 version $(pip3 --version) running"
-          ls
-
-test-light:
-  steps:
-    - pip-install
-
-    - script:
-        name: install
-        code: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
-          sudo python3 setup.py install
 
     - script:
         name: Run unit tests
@@ -50,11 +40,15 @@ test-slow:
     - pip-install
 
     - script:
-        name: install
+        name: setup
         code: |
           sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
-          sudo python3 setup.py install
+
+    - script:
+        name: install
+        code: |
+          python3 setup.py install
 
     - script:
         name: Run slow unit tests
@@ -66,11 +60,15 @@ test-veryslow:
     - pip-install
 
     - script:
-        name: install
+        name: setup
         code: |
           sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
-          sudo python3 setup.py install
+
+    - script:
+        name: install
+        code: |
+          python3 setup.py install
 
     - script:
         name: Run very slow unit tests
