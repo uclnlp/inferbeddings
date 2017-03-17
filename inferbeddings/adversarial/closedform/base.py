@@ -2,7 +2,9 @@
 
 import numpy as np
 
-from inferbeddings.models import BilinearDiagonalModel
+from inferbeddings.models import BilinearDiagonalModel, ComplexModel
+
+from inferbeddings.adversarial.closedform.util import dot3, score_complex
 
 import logging
 
@@ -20,6 +22,50 @@ class ClosedForm:
         self.is_unit_cube = is_unit_cube
 
         self.entity_embedding_size = self.entity_embeddings.shape[0]
+
+    def _complex_unit_cube(self, clause):
+        head, body = clause.head, clause.body
+
+        # At the moment, only simple rules as in "q(X, Y) :- p(X, Y)" are supported
+        assert len(body) == 1
+        body_atom = body[0]
+
+        variable_names = {argument.name for argument in head.arguments}
+
+        head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
+        body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
+
+        head_predicate_emb = self.predicate_embeddings[head_predicate_idx, :]
+        body_predicate_emb = self.predicate_embeddings[body_predicate_idx, :]
+
+        n = head_predicate_emb.shape[0]
+        opt_emb_X, opt_emb_Y = np.zeros(n), np.zeros(n)
+
+        for j in range(n // 2):
+            candidates = [
+                # (0., 0., 0., 0.), (0., 1., 0., 0.), (1., 0., 0., 0.), (1., 1., 0., 0.),
+                # (0., 0., 0., 1.), (0., 1., 0., 1.), (1., 0., 0., 1.), (1., 1., 0., 1.),
+                # (0., 0., 1., 0.), (0., 1., 1., 0.), (1., 0., 1., 0.), (1., 1., 1., 0.),
+                # (0., 0., 1., 1.), (0., 1., 1., 1.), (1., 0., 1., 1.), (1., 1., 1., 1.),
+                (1.0, 1.0, 1.0, 1.0), (1.0, 1.0, 0.0, 1.0), (1.0, 1.0, 1.0, 0.0),
+                (0.0, 1.0, 1.0, 0.0), (1.0, 0.0, 0.0, 1.0)
+            ]
+            highest_loss_value, best_candidate = None, None
+            for (sR_j, oR_j, sI_j, oI_j) in candidates:
+                _opt_emb_s, _opt_emb_o = np.copy(opt_emb_X), np.copy(opt_emb_Y)
+                _opt_emb_s[j], _opt_emb_o[j] = sR_j, oR_j
+                _opt_emb_s[(n // 2) + j], _opt_emb_o[(n // 2) + j] = sI_j, oI_j
+                loss_value = score_complex(_opt_emb_o, body_predicate_emb, _opt_emb_s) -\
+                             score_complex(_opt_emb_s, head_predicate_emb, _opt_emb_o)
+                if highest_loss_value is None or loss_value > highest_loss_value:
+                    highest_loss_value = loss_value
+                    best_candidate = (sR_j, oR_j, sI_j, oI_j)
+            print('XXX', best_candidate)
+            opt_emb_X[j], opt_emb_Y[j] = best_candidate[0], best_candidate[1]
+            opt_emb_X[(n // 2) + j], opt_emb_Y[(n // 2) + j] = best_candidate[2], best_candidate[3]
+
+        variable_names_lst = list(variable_names)
+        return {variable_names_lst[0]: opt_emb_X, variable_names_lst[1]: opt_emb_Y}
 
     def _distmult_unit_cube(self, clause):
         head, body = clause.head, clause.body
