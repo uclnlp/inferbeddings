@@ -539,6 +539,7 @@ def main(argv):
     adv_ground_samples, adv_ground_tol = args.adv_ground_samples, args.adv_ground_tol
     adv_batch_size, adv_init_ground = args.adv_batch_size, args.adv_init_ground
     adv_pooling = args.adv_pooling
+    adv_closed_form = args.adv_closed_form
 
     subsample_size = args.subsample_size
     head_subsample_size = args.head_subsample_size
