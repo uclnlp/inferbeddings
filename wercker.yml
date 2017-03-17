@@ -22,6 +22,11 @@ build:
           echo "pip3 version $(pip3 --version) running"
           ls
 
+
+test-light:
+  steps:
+    - pip-install
+
     - script:
         name: Run unit tests
         code: |
