@@ -8,14 +8,6 @@ build:
     - pip-install
 
     - script:
-        name: install
-        code: |
-          sudo apt-get update
-          sudo apt-get -y install libtcmalloc-minimal4
-          pip3 install --upgrade tensorflow pytest-faulthandler
-          python3 setup.py install
-
-    - script:
         name: echo python3 information
         code: |
           echo "python3 version $(python3 --version) running"
@@ -27,6 +19,14 @@ test-light:
     - pip-install
 
     - script:
+        name: install
+        code: |
+          sudo apt-get update
+          sudo apt-get -y install libtcmalloc-minimal4
+          pip3 install --upgrade tensorflow
+          python3 setup.py install
+
+    - script:
         name: Run unit tests
         code: |
           LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v
@@ -34,6 +34,14 @@ test-light:
 test-slow:
   steps:
     - pip-install
+
+    - script:
+        name: install
+        code: |
+          sudo apt-get update
+          sudo apt-get -y install libtcmalloc-minimal4
+          pip3 install --upgrade tensorflow
+          python3 setup.py install
 
     - script:
         name: Run slow unit tests
