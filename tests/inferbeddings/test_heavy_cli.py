@@ -6,13 +6,8 @@ import subprocess
 import sys
 sys.setrecursionlimit(65535)
 
-slow = pytest.mark.skipif(
-    not pytest.config.getoption("--runslow"),
-    reason="need --runslow option to run"
-)
 
-
-@slow
+@pytest.mark.slow
 def test_wordnet_complex_cli():
     # Checking if results are still nice
     cmd = ['./bin/adv-cli.py',
@@ -31,7 +26,7 @@ def test_wordnet_complex_cli():
     assert float(err.split()[-1][:-1]) > 91.0
 
 
-@slow
+@pytest.mark.veryslow
 def test_wordnet_translating_cli():
     # Checking if results are still nice
     cmd = ['./bin/adv-cli.py',

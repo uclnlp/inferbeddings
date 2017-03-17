@@ -30,3 +30,12 @@ test-light:
         name: Run unit tests
         code: |
           LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v
+
+test-slow:
+  steps:
+    - pip-install
+
+    - script:
+        name: Run unit tests
+        code: |
+          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v -m slow
