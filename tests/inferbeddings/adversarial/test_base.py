@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-
 import numpy as np
 import tensorflow as tf
 
@@ -11,6 +9,8 @@ from inferbeddings.models import base as models
 from inferbeddings.models import similarities
 
 from inferbeddings.adversarial import Adversarial
+
+import pytest
 
 
 def test_adversarial():
