@@ -36,7 +36,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
           sar_weight, sar_similarity,
           adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
-          adv_pooling,
+          adv_pooling, adv_closed_form,
           predicate_l2, predicate_norm, debug, debug_embeddings, all_one_entities):
     index_gen = index.GlorotIndexGenerator()
 
@@ -668,7 +668,7 @@ def main(argv):
                                           sar_weight, sar_similarity,
                                           adv_lr, adversary_epochs, discriminator_epochs, adv_weight, adv_margin,
                                           adv_batch_size, adv_init_ground, adv_ground_samples, adv_ground_tol,
-                                          adv_pooling,
+                                          adv_pooling, adv_closed_form,
                                           predicate_l2, predicate_norm, debug, debug_embeddings, all_one_entities)
 
         if args.debug_scores is not None:
