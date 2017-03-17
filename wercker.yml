@@ -11,7 +11,7 @@ build:
         name: setup
         code: |
           sudo apt-get update
-          sudo apt-get -y install apt-utils build-essential gfortran libatlas-base-dev python3-numpy python3-scipy
+          sudo apt-get -y install apt-utils build-essential gfortran libatlas-base-dev python3-numpy python3-scipy python3-sklearn python3-sklearn-lib
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libtcmalloc-minimal4
           sudo pip3 install --upgrade tensorflow
           sudo python3 setup.py install
