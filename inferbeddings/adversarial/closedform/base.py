@@ -126,6 +126,10 @@ class ClosedForm:
                 opt_adv_emb = self._distmult_unit_cube(clause)
             else:
                 opt_adv_emb = self._distmult_unit_sphere(clause)
+        elif self.model_class == ComplexModel:
+            # We are using ComplEx
+            if self.is_unit_cube:
+                opt_adv_emb = self._complex_unit_cube(clause)
 
         assert opt_adv_emb is not None
         return opt_adv_emb
