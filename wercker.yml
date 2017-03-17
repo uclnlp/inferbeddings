@@ -14,7 +14,7 @@ build:
         code: |
           sudo apt-get update
           sudo apt-get -y install apt-utils
-          sudo apt-get -y install libtcmalloc-minimal4
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libtcmalloc-minimal4
           sudo pip3 install --no-binary=:all: numpy
           sudo pip3 install --upgrade tensorflow
           sudo python3 setup.py install
