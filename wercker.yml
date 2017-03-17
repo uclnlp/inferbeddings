@@ -27,9 +27,9 @@ build:
     - script:
         name: Run unit tests
         code: |
-          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v
+          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v -m "(not slow) and (not veryslow)"
 
     - script:
         name: Run slow unit tests
         code: |
-          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v -m slow
+          LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" pytest tests -v -m "(slow) and (not veryslow)"
