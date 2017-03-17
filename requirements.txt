@@ -1,4 +1,5 @@
 pytest
+numpy
 tensorflow>=1.0
 scikit-learn>=0.17
 scipy>=0.18.0
