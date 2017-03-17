@@ -4,7 +4,7 @@ import numpy as np
 
 from inferbeddings.models import BilinearDiagonalModel, ComplexModel
 
-from inferbeddings.adversarial.closedform.util import dot3, score_complex
+from inferbeddings.adversarial.closedform.util import score_complex
 
 import logging
 
@@ -30,7 +30,11 @@ class ClosedForm:
         assert len(body) == 1
         body_atom = body[0]
 
-        variable_names = {argument.name for argument in head.arguments}
+        assert head.arguments[0].name != head.arguments[1].name
+        assert body_atom.arguments[0].name != body_atom.arguments[1].name
+
+        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
+        assert len(variable_names) == 2
 
         head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
         body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
@@ -43,10 +47,6 @@ class ClosedForm:
 
         for j in range(n // 2):
             candidates = [
-                # (0., 0., 0., 0.), (0., 1., 0., 0.), (1., 0., 0., 0.), (1., 1., 0., 0.),
-                # (0., 0., 0., 1.), (0., 1., 0., 1.), (1., 0., 0., 1.), (1., 1., 0., 1.),
-                # (0., 0., 1., 0.), (0., 1., 1., 0.), (1., 0., 1., 0.), (1., 1., 1., 0.),
-                # (0., 0., 1., 1.), (0., 1., 1., 1.), (1., 0., 1., 1.), (1., 1., 1., 1.),
                 (1.0, 1.0, 1.0, 1.0), (1.0, 1.0, 0.0, 1.0), (1.0, 1.0, 1.0, 0.0),
                 (0.0, 1.0, 1.0, 0.0), (1.0, 0.0, 0.0, 1.0)
             ]
@@ -55,12 +55,19 @@ class ClosedForm:
                 _opt_emb_s, _opt_emb_o = np.copy(opt_emb_X), np.copy(opt_emb_Y)
                 _opt_emb_s[j], _opt_emb_o[j] = sR_j, oR_j
                 _opt_emb_s[(n // 2) + j], _opt_emb_o[(n // 2) + j] = sI_j, oI_j
-                loss_value = score_complex(_opt_emb_o, body_predicate_emb, _opt_emb_s) -\
-                             score_complex(_opt_emb_s, head_predicate_emb, _opt_emb_o)
+                loss_value = None
+                if head.arguments[0].name == body_atom.arguments[0].name and \
+                        head.arguments[1].name == body_atom.arguments[1].name:
+                    loss_value = score_complex(_opt_emb_s, body_predicate_emb, _opt_emb_o) - \
+                                 score_complex(_opt_emb_s, head_predicate_emb, _opt_emb_o)
+                elif head.arguments[0].name == body_atom.arguments[1].name and \
+                        head.arguments[1].name == body_atom.arguments[0].name:
+                    loss_value = score_complex(_opt_emb_o, body_predicate_emb, _opt_emb_s) -\
+                                 score_complex(_opt_emb_s, head_predicate_emb, _opt_emb_o)
+                assert loss_value is not None
                 if highest_loss_value is None or loss_value > highest_loss_value:
                     highest_loss_value = loss_value
                     best_candidate = (sR_j, oR_j, sI_j, oI_j)
-            print('XXX', best_candidate)
             opt_emb_X[j], opt_emb_Y[j] = best_candidate[0], best_candidate[1]
             opt_emb_X[(n // 2) + j], opt_emb_Y[(n // 2) + j] = best_candidate[2], best_candidate[3]
 
@@ -74,7 +81,8 @@ class ClosedForm:
         assert len(body) == 1
         body_atom = body[0]
 
-        variable_names = {argument.name for argument in head.arguments}
+        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
+        assert len(variable_names) == 2
 
         head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
         body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
@@ -93,7 +101,8 @@ class ClosedForm:
         assert len(body) == 1
         body_atom = body[0]
 
-        variable_names = {argument.name for argument in head.arguments}
+        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
+        assert len(variable_names) == 2
 
         head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
         body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
