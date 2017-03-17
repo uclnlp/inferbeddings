@@ -492,6 +492,9 @@ def main(argv):
     argparser.add_argument('--adv-pooling', action='store', type=str, default='sum',
                            help='Pooling method used for aggregating adversarial losses (sum, mean, max, logsumexp)')
 
+    argparser.add_argument('--adv-closed-form', action='store_true',
+                           help='Whenever possible, use closed form solutions for training the adversary')
+
     argparser.add_argument('--subsample-size', action='store', type=float, default=None,
                            help='Fraction of training facts to use during training (e.g. 0.1)')
     argparser.add_argument('--head-subsample-size', action='store', type=float, default=None,
