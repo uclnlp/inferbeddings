@@ -40,6 +40,7 @@ test-light:
         name: install
         code: |
           sudo python3 setup.py install
+          find / -type f -name "*libtcmalloc*.so*"
 
     - script:
         name: Run unit tests
