@@ -7,16 +7,16 @@ command-timeout: 60
 
 build:
   steps:
+    - pip-install
+
     - script:
         name: setup
         code: |
           sudo apt-get update
-          sudo apt-get -y install apt-utils build-essential gfortran libatlas-base-dev # python3-numpy python3-scipy
+          sudo apt-get -y install apt-utils build-essential gfortran libatlas-base-dev
           DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libtcmalloc-minimal4
-          sudo pip3 install --upgrade tensorflow
+          find / -type f -name "*libtcmalloc*.so*"
           sudo python3 setup.py install
-
-    - pip-install
 
     - script:
         name: install
@@ -37,7 +37,6 @@ test-light:
         name: install
         code: |
           sudo python3 setup.py install
-          find / -type f -name "*libtcmalloc*.so*"
 
     - script:
         name: Run unit tests
