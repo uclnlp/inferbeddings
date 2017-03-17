@@ -42,7 +42,7 @@ model_parameters = dict(similarity_function=similarity_function)
 
 
 def test_complex_unit_cube():
-    for seed in range(128):
+    for seed in range(32):
         tf.reset_default_graph()
 
         np.random.seed(seed)
