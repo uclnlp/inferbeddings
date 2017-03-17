@@ -69,6 +69,6 @@ test-veryslow:
           python3 setup.py install
 
     - script:
-        name: Run slow unit tests
+        name: Run very slow unit tests
         code: |
           LD_PRELOAD="/usr/lib/libtcmalloc_minimal.so.4" python3 -m pytest tests -v -m "(not slow) and (veryslow)"
