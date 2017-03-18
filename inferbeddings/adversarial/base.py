@@ -68,7 +68,8 @@ class Adversarial:
         self.weights = {}
 
         for clause_idx, clause in enumerate(clauses):
-            clause_errors, clause_loss, clause_parameters = self._parse_clause('clause_{}'.format(clause_idx), clause)
+            clause_errors, clause_loss, clause_parameters, variable_name_to_layer =\
+                self._parse_clause('clause_{}'.format(clause_idx), clause)
 
             self.errors += clause_errors
             self.loss += clause_loss
@@ -156,4 +157,4 @@ class Adversarial:
 
             # we leave the errors as is
 
-        return errors, loss, parameters
+        return errors, loss, parameters, variable_name_to_layer
