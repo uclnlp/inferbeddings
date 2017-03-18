@@ -380,6 +380,13 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                          model_class=model_class, model_parameters=model_parameters,
                                          is_unit_cube=unit_cube)
 
+                for clause, variable_name_to_layer in adversarial.clause_to_variable_name_to_layer.items():
+                    variable_name_to_value = closed_form(clause)
+                    assert set(variable_name_to_value.keys()) == set(variable_name_to_layer.keys())
+                    for variable_name in variable_name_to_value.keys():
+                        optimal_value = variable_name_to_value[variable_name]
+                        variable_layer = variable_name_to_layer[variable_name]
+
                 print('XXX', adversarial.parameters)
 
 
