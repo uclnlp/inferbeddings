@@ -370,6 +370,19 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
 
+            # Set the adversarial entity embedding to closed form solutions, whenever possible
+            if adv_closed_form:
+                from inferbeddings.adversarial.closedform import ClosedForm
+                entity_emb, predicate_emb = session.run([entity_embedding_layer, predicate_embedding_layer])
+                closed_form = ClosedForm(parser=parser,
+                                         entity_embeddings=entity_emb,
+                                         predicate_embeddings=predicate_emb,
+                                         model_class=model_class, model_parameters=model_parameters,
+                                         is_unit_cube=unit_cube)
+
+                print('XXX', adversarial.parameters)
+
+
             if debug_embeddings is not None:
                 # Saving the parameters of the generator/adversary (entity and predicate embeddings)
                 objects_to_serialize = {

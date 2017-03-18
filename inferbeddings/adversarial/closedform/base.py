@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
 from inferbeddings.models import BilinearDiagonalModel, ComplexModel
-
 from inferbeddings.adversarial.closedform.util import score_complex
 
 import logging
