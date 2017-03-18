@@ -391,6 +391,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                         reshaped_optimal_value = tf.reshape(tensor=tiled_optimal_value,
                                                             shape=[adv_batch_size, entity_embedding_size, ])
                         session.run([variable_layer.assign(reshaped_optimal_value)])
+                        # TODO (maybe) now we have the variables initialised to their closed form solutions.
+                        # Should we try one more training epoch, to make sure the loss does not increase?
 
             if debug_embeddings is not None:
                 # Saving the parameters of the generator/adversary (entity and predicate embeddings)
