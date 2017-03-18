@@ -41,7 +41,8 @@ class ClosedForm:
         body_predicate_emb = self.predicate_embeddings[body_predicate_idx, :]
 
         n = head_predicate_emb.shape[0]
-        opt_emb_X, opt_emb_Y = np.zeros(n), np.zeros(n)
+        opt_emb_X = np.zeros(n, dtype=np.float32)
+        opt_emb_Y = np.zeros(n, dtype=np.float32)
 
         for j in range(n // 2):
             candidates = [
@@ -110,7 +111,8 @@ class ClosedForm:
 
         j = np.square(body_predicate_emb - head_predicate_emb).argmax(axis=0)
 
-        opt_emb_X, opt_emb_Y = np.zeros(self.entity_embedding_size), np.zeros(self.entity_embedding_size)
+        opt_emb_X = np.zeros(self.entity_embedding_size, dtype=np.float32)
+        opt_emb_Y = np.zeros(self.entity_embedding_size, dtype=np.float32)
         opt_emb_X[j], opt_emb_Y[j] = 1, 1 if (opt_emb_X[j] > opt_emb_Y[j]) else -1
 
         variable_names_lst = list(variable_names)

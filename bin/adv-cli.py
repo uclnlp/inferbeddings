@@ -387,8 +387,10 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                         optimal_value = variable_name_to_value[variable_name]
                         variable_layer = variable_name_to_layer[variable_name]
 
-                print('XXX', adversarial.parameters)
-
+                        tiled_optimal_value = tf.tile(input=optimal_value, multiples=[adv_batch_size])
+                        reshaped_optimal_value = tf.reshape(tensor=tiled_optimal_value,
+                                                            shape=[adv_batch_size, entity_embedding_size, ])
+                        session.run([variable_layer.assign(reshaped_optimal_value)])
 
             if debug_embeddings is not None:
                 # Saving the parameters of the generator/adversary (entity and predicate embeddings)
