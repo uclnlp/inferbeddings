@@ -373,9 +373,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             # Set the adversarial entity embedding to closed form solutions, whenever possible
             if adv_closed_form:
                 from inferbeddings.adversarial.closedform import ClosedForm
-                entity_emb, predicate_emb = session.run([entity_embedding_layer, predicate_embedding_layer])
+                predicate_emb = session.run([predicate_embedding_layer])
                 closed_form = ClosedForm(parser=parser,
-                                         entity_embeddings=entity_emb,
                                          predicate_embeddings=predicate_emb,
                                          model_class=model_class, model_parameters=model_parameters,
                                          is_unit_cube=unit_cube)

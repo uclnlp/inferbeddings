@@ -11,15 +11,13 @@ logger = logging.getLogger(__name__)
 
 class ClosedForm:
     def __init__(self, parser,
-                 entity_embeddings, predicate_embeddings,
+                 predicate_embeddings,
                  model_class, model_parameters,
                  is_unit_cube):
         self.parser = parser
-        self.entity_embeddings, self.predicate_embeddings = entity_embeddings, predicate_embeddings
+        self.predicate_embeddings = predicate_embeddings
         self.model_class, self.model_parameters = model_class, model_parameters
         self.is_unit_cube = is_unit_cube
-
-        self.entity_embedding_size = self.entity_embeddings.shape[0]
 
     def _complex_unit_cube(self, clause):
         head, body = clause.head, clause.body
@@ -111,8 +109,9 @@ class ClosedForm:
 
         j = np.square(body_predicate_emb - head_predicate_emb).argmax(axis=0)
 
-        opt_emb_X = np.zeros(self.entity_embedding_size, dtype=np.float32)
-        opt_emb_Y = np.zeros(self.entity_embedding_size, dtype=np.float32)
+        entity_embedding_size = self.predicate_embeddings.shape[0]
+        opt_emb_X = np.zeros(entity_embedding_size, dtype=np.float32)
+        opt_emb_Y = np.zeros(entity_embedding_size, dtype=np.float32)
         opt_emb_X[j], opt_emb_Y[j] = 1, 1 if (opt_emb_X[j] > opt_emb_Y[j]) else -1
 
         variable_names_lst = list(variable_names)
