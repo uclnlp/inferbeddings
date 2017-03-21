@@ -370,29 +370,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
 
-            # Set the adversarial entity embedding to closed form solutions, whenever possible
-            if adv_closed_form:
-                from inferbeddings.adversarial.closedform import ClosedForm
-                predicate_emb = session.run([predicate_embedding_layer])
-                closed_form = ClosedForm(parser=parser,
-                                         predicate_embeddings=predicate_emb,
-                                         model_class=model_class, model_parameters=model_parameters,
-                                         is_unit_cube=unit_cube)
-
-                for clause, variable_name_to_layer in adversarial.clause_to_variable_name_to_layer.items():
-                    variable_name_to_value = closed_form(clause)
-                    assert set(variable_name_to_value.keys()) == set(variable_name_to_layer.keys())
-                    for variable_name in variable_name_to_value.keys():
-                        optimal_value = variable_name_to_value[variable_name]
-                        variable_layer = variable_name_to_layer[variable_name]
-
-                        tiled_optimal_value = tf.tile(input=optimal_value, multiples=[adv_batch_size])
-                        reshaped_optimal_value = tf.reshape(tensor=tiled_optimal_value,
-                                                            shape=[adv_batch_size, entity_embedding_size, ])
-                        session.run([variable_layer.assign(reshaped_optimal_value)])
-                        # TODO (maybe) now we have the variables initialised to their closed form solutions.
-                        # Should we try one more training epoch, to make sure the loss does not increase?
-
             if debug_embeddings is not None:
                 # Saving the parameters of the generator/adversary (entity and predicate embeddings)
                 objects_to_serialize = {
@@ -586,9 +563,8 @@ def main(argv):
     test_facts = [fact(s, p, o) for s, p, o in pos_test_triples] if pos_test_triples is not None else []
     test_facts_neg = [fact(s, p, o) for s, p, o in neg_test_triples] if neg_test_triples is not None else []
 
-    logger.info(
-        '#Training Triples: {}, #Validation Triples: {}, #Test Triples: {}'.format(len(train_facts), len(valid_facts),
-                                                                                   len(test_facts)))
+    logger.info('#Training: {}, #Validation: {}, #Test: {}'
+                .format(len(train_facts), len(valid_facts), len(test_facts)))
 
     parser = KnowledgeBaseParser(train_facts + valid_facts + test_facts)
 
