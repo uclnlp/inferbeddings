@@ -46,11 +46,11 @@ class ClosedFormLifted:
         r = tf.nn.embedding_lookup(self.predicate_embedding_layer, r_idx)
         b = tf.nn.embedding_lookup(self.predicate_embedding_layer, b_idx)
 
-        prefix = tf.reduce_sum(tf.square(b)) - tf.reduce_sum(tf.square(r))
+        prefix = tf.reduce_sum(tf.square(r)) - tf.reduce_sum(tf.square(b))
         if self.is_unit_cube:
-            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(b - r)))
+            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r - b)))
         else:
-            loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(b - r))))
+            loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
         return loss
 
     def _bilinear_diagonal_loss(self, clause):
