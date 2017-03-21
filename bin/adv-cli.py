@@ -46,10 +46,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # We can eventually also corrupt the relation index of a triple
     neg_rel_idxs = np.array(sorted(set(parser.predicate_to_index.values())))
 
-    subject_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs,
-                                                corrupt_objects=False)
-    object_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs,
-                                               corrupt_objects=True)
+    subject_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs, corrupt_objects=False)
+    object_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs, corrupt_objects=True)
     relation_corruptor = corrupt.SimpleRelationCorruptor(index_generator=index_gen, candidate_indices=neg_rel_idxs)
 
     # Saving training examples in two Numpy matrices, Xr (nb_samples, 1) containing predicate ids,
@@ -113,6 +111,10 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None
     initialize_violators, adversarial_optimizer_variables_initializer = None, None
 
+    # Note - you can either use adversarial training using Gradient Ascent, by setting adv_lr,
+    # or use closed-form solutions for the adversarial loss, by setting adv_closed_form, but not both.
+    assert not (adv_closed_form and (adv_lr is not None))
+
     if adv_lr is not None:
         adversarial = Adversarial(clauses=clauses, parser=parser,
                                   entity_embedding_layer=entity_embedding_layer,
@@ -126,20 +128,16 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             # For each clause, sample a list of 1024 {variable: entity} mappings
             entity_indices = sorted({idx for idx in parser.entity_to_index.values()})
-            clause_to_feed_dicts = {clause: GroundLoss.sample_mappings(GroundLoss.get_variable_names(clause),
-                                                                       entities=entity_indices,
-                                                                       sample_size=adv_ground_samples) for clause in
-                                    clauses}
+            clause_to_feed_dicts = {clause: GroundLoss.sample_mappings(GroundLoss.get_variable_names(clause), entities=entity_indices,
+                                                                       sample_size=adv_ground_samples) for clause in clauses}
 
         initialize_violators = tf.variables_initializer(var_list=adversarial.parameters, name='init_violators')
         violation_errors, violation_loss = adversarial.errors, adversarial.loss
 
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
-            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr,
-                                                                    initial_accumulator_value=initial_accumulator_value)
-            violation_training_step = violation_finding_optimizer.minimize(- violation_loss,
-                                                                           var_list=adversarial.parameters)
+            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr, initial_accumulator_value=initial_accumulator_value)
+            violation_training_step = violation_finding_optimizer.minimize(- violation_loss, var_list=adversarial.parameters)
 
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
@@ -151,6 +149,16 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             adv_entity_projections = [constraints.unit_cube(adv_embedding_layer) for adv_embedding_layer in adversarial.parameters]
 
         adversarial_projection_steps = adv_entity_projections
+
+    if adv_closed_form:
+        from inferbeddings.adversarial.closedform import ClosedFormLifted
+        closed_form_lifted = ClosedFormLifted(parser=parser,
+                                              predicate_embedding_layer=predicate_embedding_layer,
+                                              model_class=model_class, model_parameters=model_parameters,
+                                              is_unit_cube=True)
+        for clause in clauses:
+            clause_violation_loss = closed_form_lifted(clause)
+            loss_function += adv_weight * clause_violation_loss
 
     # For each training triple, we have three versions: one (positive) triple and two (negative) triples,
     # obtained by corrupting the original training triple.
