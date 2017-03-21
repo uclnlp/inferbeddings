@@ -48,7 +48,7 @@ class ClosedFormLifted:
 
         prefix = tf.reduce_sum(tf.square(r)) - tf.reduce_sum(tf.square(b))
         if self.is_unit_cube:
-            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(b - r)))
+            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r - b)))
         else:
             loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
         return loss
@@ -96,7 +96,14 @@ class ClosedFormLifted:
         b_re, b_im = b[:n // 2], b[n // 2:]
 
         if self.is_unit_cube:
-            loss = None
+            loss = tf.reduce_max(tf.nn.relu(b_re - r_re))
+
+            e_r_re, e_r_im = tf.expand_dims(r_re, 1), tf.expand_dims(r_im, 1)
+            e_b_re, e_b_im = tf.expand_dims(b_re, 1), tf.expand_dims(b_im, 1)
+            _concat = tf.concat([e_b_re - e_r_re, tf.abs(e_b_im - e_r_im)], 1)
+            _losses = tf.reduce_max(_concat, axis=1)
+
+            loss += tf.reduce_max(_losses)
         else:
             loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im - r_im)))
         return loss
@@ -109,6 +116,9 @@ class ClosedFormLifted:
         elif self.model_class == TranslatingModel:
             # We are using DistMult
             loss = self._translating_loss(clause)
+        elif self.model_class == ComplexModel:
+            # We are using ComplEx
+            loss = self._complex_loss(clause)
 
         assert loss is not None
         return loss
