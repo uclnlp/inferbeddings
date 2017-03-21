@@ -95,7 +95,8 @@ def test_transe_unit_cube():
 
                 if violation_loss_val + 1e-1 > opt_adversarial_loss_val:
                     print('{} <= {}'.format(violation_loss_val, opt_adversarial_loss_val))
-                assert violation_loss_val <= opt_adversarial_loss_val
+
+                assert violation_loss_val <= (opt_adversarial_loss_val + 1e-4)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)

@@ -48,7 +48,7 @@ class ClosedFormLifted:
 
         prefix = tf.reduce_sum(tf.square(r)) - tf.reduce_sum(tf.square(b))
         if self.is_unit_cube:
-            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r - b)))
+            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(b - r)))
         else:
             loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
         return loss
