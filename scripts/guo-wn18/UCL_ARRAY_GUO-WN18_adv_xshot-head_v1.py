@@ -86,12 +86,17 @@ def main(argv):
     configurations_distmult_complex = cartesian_product(hyperparameters_space_distmult_complex)
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_guo-wn18_adv_xshot-head_v1/'
-    if not os.path.exists(path):
-        os.makedirs(path)
+
+    # Check that we are on the UCLCS cluster first
+    if os.path.exists('/home/pminervi/'):
+        # If the folder that will contain logs does not exist, create it
+        if not os.path.exists(path):
+            os.makedirs(path)
 
     configurations = list(configurations_distmult_complex)
 
-    for job_id, cfg in enumerate(configurations):
+    command_lines = set()
+    for cfg in configurations:
         logfile = to_logfile(cfg, path)
 
         completed = False
@@ -101,21 +106,31 @@ def main(argv):
                 completed = '### MICRO (test filtered)' in content
 
         if not completed:
-            line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_lines |= {command_line}
 
-            if args.debug:
-                print(line)
-            else:
-                file_name = 'ucl_guo-wn18_adv_xshot-head_v1_{}.job'.format(job_id)
-                alias = ''
-                job_script = '#$ -S /bin/bash\n' \
-                             '#$ -wd /tmp/\n' \
-                             '#$ -l h_vmem=8G,tmem=8G\n' \
-                             '#$ -l h_rt=8:00:00\n' \
-                             '{}\n{}\n'.format(alias, line)
+    # Sort command lines and remove duplicates
+    sorted_command_lines = sorted(command_lines)
+    nb_jobs = len(sorted_command_lines)
 
-                with open(file_name, 'w') as f:
-                    f.write(job_script)
+    header = """
+#!/bin/bash
+
+#$ -cwd
+#$ -S /bin/bash
+#$ -o /dev/null
+#$ -e /dev/null
+#$ -t 1-{}
+#$ -l h_vmem=8G,tmem=8G
+#$ -l h_rt=8:00:00
+
+""".format(nb_jobs)
+
+    print(header)
+
+    for job_id, command_line in enumerate(sorted_command_lines, 1):
+        print('test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
