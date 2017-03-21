@@ -43,6 +43,7 @@ similarity_function = similarities.get_function('l2_sqr')
 model_parameters = dict(similarity_function=similarity_function)
 
 
+@pytest.mark.closedform
 def test_transe_unit_sphere():
     for seed in range(256):
         tf.reset_default_graph()
