@@ -34,8 +34,14 @@ class ClosedFormLifted:
         assert len(variable_names) == 2
 
         # At te moment we only support "r(X, Y) :- b(X, Y)" rules, and not "r(X, Y) :- b(Y, X)"
-        assert head.arguments[0].name == body_atom.arguments[0].name
-        assert head.arguments[1].name == body_atom.arguments[1].name
+        # assert head.arguments[0].name == body_atom.arguments[0].name
+        # assert head.arguments[1].name == body_atom.arguments[1].name
+
+        # Check if it is an inverse rule, as in r(X, Y) :- b(Y, X), or not, as in r(X, Y) :- b(X, Y).
+        is_inverse = False
+        if head.arguments[0].name == body_atom.arguments[1].name:
+            if head.arguments[1].name == body_atom.arguments[0].name:
+                is_inverse = True
 
         # We only support TransE in its L2 squared distance formulation
         assert self.model_parameters['similarity_function'] == similarities.l2_sqr
@@ -47,10 +53,16 @@ class ClosedFormLifted:
         b = tf.nn.embedding_lookup(self.predicate_embedding_layer, b_idx)
 
         prefix = tf.reduce_sum(tf.square(r)) - tf.reduce_sum(tf.square(b))
-        if self.is_unit_cube:
-            loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r - b)))
+        if is_inverse:
+            if self.is_unit_cube:
+                loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r + b)))
+            else:
+                loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r + b))))
         else:
-            loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
+            if self.is_unit_cube:
+                loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r - b)))
+            else:
+                loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
         return loss
 
     def _bilinear_diagonal_loss(self, clause):
