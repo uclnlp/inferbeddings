@@ -2,7 +2,7 @@
 
 from pyDatalog import pyDatalog
 
-from inferbeddings.knowledgebase import Fact, KnowledgeBaseParser
+from inferbeddings.knowledgebase import Fact
 
 import logging
 
