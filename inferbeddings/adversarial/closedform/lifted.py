@@ -33,10 +33,6 @@ class ClosedFormLifted:
         variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
         assert len(variable_names) == 2
 
-        # At te moment we only support "r(X, Y) :- b(X, Y)" rules, and not "r(X, Y) :- b(Y, X)"
-        # assert head.arguments[0].name == body_atom.arguments[0].name
-        # assert head.arguments[1].name == body_atom.arguments[1].name
-
         # Check if it is an inverse rule, as in r(X, Y) :- b(Y, X), or not, as in r(X, Y) :- b(X, Y).
         is_inverse = False
         if head.arguments[0].name == body_atom.arguments[1].name:
@@ -97,6 +93,12 @@ class ClosedFormLifted:
         variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
         assert len(variable_names) == 2
 
+        # Check if it is an inverse rule, as in r(X, Y) :- b(Y, X), or not, as in r(X, Y) :- b(X, Y).
+        is_inverse = False
+        if head.arguments[0].name == body_atom.arguments[1].name:
+            if head.arguments[1].name == body_atom.arguments[0].name:
+                is_inverse = True
+
         # Indices of q and r, respectively
         r_idx, b_idx = self._to_idx(head.predicate.name), self._to_idx(body_atom.predicate.name)
 
@@ -107,17 +109,24 @@ class ClosedFormLifted:
         r_re, r_im = r[:n // 2], r[n // 2:]
         b_re, b_im = b[:n // 2], b[n // 2:]
 
-        if self.is_unit_cube:
-            loss = tf.reduce_max(tf.nn.relu(b_re - r_re))
-
-            e_r_re, e_r_im = tf.expand_dims(r_re, 1), tf.expand_dims(r_im, 1)
-            e_b_re, e_b_im = tf.expand_dims(b_re, 1), tf.expand_dims(b_im, 1)
-            _concat = tf.concat([e_b_re - e_r_re, tf.abs(e_b_im - e_r_im)], 1)
-            _losses = tf.reduce_max(_concat, axis=1)
-
-            loss += tf.reduce_max(_losses)
+        if is_inverse:
+            if self.is_unit_cube:
+                loss = None
+            else:
+                loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im + r_im)))
         else:
-            loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im - r_im)))
+            if self.is_unit_cube:
+                # WRONG but not an issue
+                loss = tf.reduce_max(tf.nn.relu(b_re - r_re))
+
+                e_r_re, e_r_im = tf.expand_dims(r_re, 1), tf.expand_dims(r_im, 1)
+                e_b_re, e_b_im = tf.expand_dims(b_re, 1), tf.expand_dims(b_im, 1)
+                _concat = tf.concat([e_b_re - e_r_re, tf.abs(e_b_im - e_r_im)], 1)
+                _losses = tf.reduce_max(_concat, axis=1)
+
+                loss += tf.reduce_max(_losses)
+            else:
+                loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im - r_im)))
         return loss
 
     def __call__(self, clause):
