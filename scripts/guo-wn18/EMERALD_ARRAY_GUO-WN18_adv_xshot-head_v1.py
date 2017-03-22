@@ -111,8 +111,7 @@ def main(argv):
     sorted_command_lines = sorted(command_lines)
     nb_jobs = len(sorted_command_lines)
 
-    header = """
-#BSUB -o /dev/null
+    header = """#BSUB -o /dev/null
 #BSUB -e /dev/null
 #BSUB -J "myarray[1-{}]"
 #BSUB -W 4:00
