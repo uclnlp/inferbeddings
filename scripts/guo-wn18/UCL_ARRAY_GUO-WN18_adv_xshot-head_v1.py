@@ -28,8 +28,8 @@ def to_cmd(c, _path=None):
               ' --test {}/data/guo-emnlp16/wn18/wn18.triples.test' \
               ' --clauses {}/data/guo-emnlp16/wn18/clauses/wn18-clauses.pl' \
               ' --nb-epochs {}' \
-              ' --lr {}' \
-              ' --nb-batches {}' \
+              ' --lr 0.1' \
+              ' --nb-batches 10' \
               ' --model {}' \
               ' --similarity {}' \
               ' --margin {}' \
@@ -39,7 +39,7 @@ def to_cmd(c, _path=None):
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {} --adv-pooling {}' \
               ''.format(_path, _path, _path, _path, _path,
-                        c['epochs'], c['lr'], c['batches'],
+                        c['epochs'],
                         c['model'], c['similarity'],
                         c['margin'], c['embedding_size'],
                         c['subsample_size'],
@@ -66,9 +66,6 @@ def main(argv):
 
     hyperparameters_space_distmult_complex = dict(
         epochs=[100],
-        optimizer=['adagrad'],
-        lr=[.1],
-        batches=[10],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1],
