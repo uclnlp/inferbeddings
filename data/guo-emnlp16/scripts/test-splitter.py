@@ -51,12 +51,12 @@ def main(argv):
     for clause in clauses:
         logging.info('Clause: {}'.format(clause))
 
-    m_train_facts = materialize(train_facts, clauses, parser.predicate_to_index)
-
     # Put all triples in the form of sets of tuples
     train_triples = {(fact.argument_names[0], fact.predicate_name, fact.argument_names[1]) for fact in train_facts}
     valid_triples = {(fact.argument_names[0], fact.predicate_name, fact.argument_names[1]) for fact in valid_facts}
     test_triples = {(fact.argument_names[0], fact.predicate_name, fact.argument_names[1]) for fact in test_facts}
+
+    m_train_facts = materialize(train_facts, clauses, parser)
     m_train_triples = {(fact.argument_names[0], fact.predicate_name, fact.argument_names[1]) for fact in m_train_facts}
 
     # Check if the sets of triples are non-empty
@@ -89,7 +89,6 @@ def main(argv):
 
     logger.info('#Test-I: {}, #Test-II: {}, #Test-ALL: {}'.format(nb_1_triples, nb_2_triples, nb_all_triples))
 
-    #print(m_train_triples - train_triples)
     print(test_triples & m_train_triples)
 
 if __name__ == '__main__':

@@ -644,11 +644,13 @@ def main(argv):
     if is_materialize:
         assert clauses is not None
         logger.info('Materializing the Knowledge Base using Logical Inference')
-        logger.info('Number of starting facts: {}'.format(len(train_facts)))
+        nb_train_facts = len(train_facts)
+        logger.info('Number of starting facts: {}'.format(nb_train_facts))
         from inferbeddings.logic import materialize
-        _train_facts = materialize(train_facts, clauses, parser.predicate_to_index)
-        train_facts = _train_facts
-        logger.info('Number of inferred facts: {}'.format(len(train_facts)))
+        inferred_train_facts = materialize(train_facts, clauses, parser)
+        nb_inferred_facts = len(inferred_train_facts)
+        logger.info('Number of (new) inferred facts: {}'.format(nb_inferred_facts - nb_train_facts))
+        train_facts = inferred_train_facts
 
     train_sequences = parser.facts_to_sequences(train_facts)
 
