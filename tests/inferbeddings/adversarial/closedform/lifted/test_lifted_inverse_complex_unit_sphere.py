@@ -29,8 +29,8 @@ parser = KnowledgeBaseParser(facts)
 nb_entities = len(parser.entity_to_index)
 nb_predicates = len(parser.predicate_to_index)
 
-entity_embedding_size = 10
-predicate_embedding_size = 10
+entity_embedding_size = 2
+predicate_embedding_size = 2
 
 # Clauses
 clause_str = 'q(X, Y) :- p(Y, X)'

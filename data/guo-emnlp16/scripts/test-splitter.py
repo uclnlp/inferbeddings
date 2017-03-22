@@ -49,9 +49,9 @@ def main(argv):
         clauses = [parse_clause(line.strip()) for line in f.readlines()]
 
     for clause in clauses:
-        logging.info(clause)
+        logging.info('Clause: {}'.format(clause))
 
-    m_train_facts = materialize(train_facts + valid_facts, clauses, parser.predicate_to_index)
+    m_train_facts = materialize(train_facts, clauses, parser.predicate_to_index)
 
     # Put all triples in the form of sets of tuples
     train_triples = {(fact.argument_names[0], fact.predicate_name, fact.argument_names[1]) for fact in train_facts}
@@ -63,7 +63,7 @@ def main(argv):
     assert len(train_triples) > 0
     assert len(valid_triples) > 0
     assert len(test_triples) > 0
-    assert len(m_train_triples) >= len(train_triples)
+    assert len(m_train_triples) > len(train_triples)
 
     # Check that their intersections are empty (e.g. no test triple appear in the training set etc.)
     assert len(train_triples & valid_triples) == 0
