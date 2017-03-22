@@ -24,12 +24,14 @@ def main(argv):
     argparser.add_argument('valid', action='store', type=str, default=None)
     argparser.add_argument('test', action='store', type=str, default=None)
     argparser.add_argument('clauses', action='store', type=str, default=None)
-    argparser.add_argument('--output-type', '-t', type=int, default=1, choices=[1, 2])
+
+    argparser.add_argument('--test-I', '-1', type=str, default='./testI.tsv')
+    argparser.add_argument('--test-II', '-2', type=str, default='./testII.tsv')
 
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
-    output_type = args.output_type
+    test_I_path, test_II_path = args.test_I, args.test_II
 
     train_triples, _ = read_triples(train_path)
     valid_triples, _ = read_triples(valid_path)
@@ -49,7 +51,7 @@ def main(argv):
         clauses = [parse_clause(line.strip()) for line in f.readlines()]
 
     for clause in clauses:
-        logging.info('Clause: {}'.format(clause))
+        logging.debug('Clause: {}'.format(clause))
 
     # Put all triples in the form of sets of tuples
     train_triples = {(fact.argument_names[0], fact.predicate_name, fact.argument_names[1]) for fact in train_facts}
@@ -75,7 +77,6 @@ def main(argv):
     # The former contains triples that cannot be directly inferred by pure logical inference, and the latter the
     # remaining test triples. Table 3 gives some statistics of the datasets, including the number of entities,
     # relations, triples in training/validation/test-I/test-II set, and ground rules.
-    assert output_type in {1, 2}
 
     # Triples that cannot be directly inferred by pure logical inference
     test_1_triples = test_triples - m_train_triples
@@ -89,7 +90,13 @@ def main(argv):
 
     logger.info('#Test-I: {}, #Test-II: {}, #Test-ALL: {}'.format(nb_1_triples, nb_2_triples, nb_all_triples))
 
-    print(test_triples & m_train_triples)
+    if test_I_path is not None:
+        with open(test_I_path, 'w') as f:
+            f.writelines(['{}\t{}\t{}\n'.format(s, p, o) for s, p, o in test_1_triples])
+
+    if test_II_path is not None:
+        with open(test_II_path, 'w') as f:
+            f.writelines(['{}\t{}\t{}\n'.format(s, p, o) for s, p, o in test_2_triples])
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
