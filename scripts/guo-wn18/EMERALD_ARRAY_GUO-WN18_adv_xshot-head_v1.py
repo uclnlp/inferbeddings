@@ -86,7 +86,7 @@ def main(argv):
     path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/ucl_guo-wn18_adv_xshot-head_v1/'
 
     # Check that we are on the UCLCS cluster first
-    if os.path.exists('/home/ucl/'):
+    if os.path.exists('/home/ucl/eisuc296/'):
         # If the folder that will contain logs does not exist, create it
         if not os.path.exists(path):
             os.makedirs(path)
@@ -113,14 +113,14 @@ def main(argv):
 
     header = """#BSUB -o /dev/null
 #BSUB -e /dev/null
-#BSUB -J "myarray[1-{}]"
+#BSUB -J "myarray[1-""" + nb_jobs + """]"
 #BSUB -W 4:00
 
 alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
 
 export CUDA_VISIBLE_DEVICES=`~/bin/lugpu.sh`
 
-""".format(nb_jobs)
+"""
 
     print(header)
 
