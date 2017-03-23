@@ -12,6 +12,15 @@ class Fact:
     def __repr__(self):
         return '<Fact {0!r}({1!r})>'.format(repr(self.predicate_name), repr(self.argument_names))
 
+    def __eq__(self, other):
+        if isinstance(other, Fact):
+            return (self.predicate_name == other.predicate_name) and (self.argument_names == other.argument_names)
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class KnowledgeBaseParser:
     def __init__(self, facts):
