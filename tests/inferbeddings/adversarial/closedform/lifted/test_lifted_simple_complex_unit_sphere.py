@@ -29,9 +29,6 @@ parser = KnowledgeBaseParser(facts)
 nb_entities = len(parser.entity_to_index)
 nb_predicates = len(parser.predicate_to_index)
 
-entity_embedding_size = 10
-predicate_embedding_size = 10
-
 # Clauses
 clause_str = 'q(X, Y) :- p(X, Y)'
 clauses = [parse_clause(clause_str)]
@@ -50,6 +47,9 @@ def test_complex_unit_sphere():
 
         np.random.seed(seed)
         tf.set_random_seed(seed)
+
+        entity_embedding_size = np.random.randint(low=1, high=5) * 2
+        predicate_embedding_size = entity_embedding_size
 
         # Instantiating entity and predicate embedding layers
         entity_embedding_layer = tf.get_variable('entities',
