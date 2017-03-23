@@ -113,7 +113,7 @@ def main(argv):
 
     header = """#BSUB -o /dev/null
 #BSUB -e /dev/null
-#BSUB -J "myarray[1-""" + nb_jobs + """]"
+#BSUB -J "myarray[1-""" + str(nb_jobs) + """]"
 #BSUB -W 4:00
 
 alias python3="LD_LIBRARY_PATH='${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}' '${HOME}/utils/libc6_2.17/lib/x86_64-linux-gnu/ld-2.17.so' $(command -v python3)"
