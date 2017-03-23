@@ -116,15 +116,22 @@ class ClosedFormLifted:
                 loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im + r_im)))
         else:
             if self.is_unit_cube:
-                # WRONG but not an issue
-                loss = tf.reduce_max(tf.nn.relu(b_re - r_re))
+                delta_re, delta_im = b_re - r_re, b_im - r_im
+                abs_delta_square = tf.square(delta_re) + tf.square(delta_im)
 
-                e_r_re, e_r_im = tf.expand_dims(r_re, 1), tf.expand_dims(r_im, 1)
-                e_b_re, e_b_im = tf.expand_dims(b_re, 1), tf.expand_dims(b_im, 1)
-                _concat = tf.concat([e_b_re - e_r_re, tf.abs(e_b_im - e_r_im)], 1)
-                _losses = tf.reduce_max(_concat, axis=1)
+                # For each index, the loss will be the maximum across such values
+                case_1 = 2 * delta_re
+                case_2 = tf.abs(delta_im)
+                case_3 = delta_re + tf.abs(delta_im)
+                case_4 = - abs_delta_square / delta_im
+                case_5 = abs_delta_square / delta_re
 
-                loss += tf.reduce_max(_losses)
+                # The result will be a [k, 5]-dimensional tensor
+                _cases = tf.transpose(tf.stack([case_1, case_2, case_3, case_4, case_5]))
+                # Computing the maximum on dimension 1, leading to a [k]-dimensional tensor
+                _losses = tf.reduce_max(_cases, axis=1)
+
+                loss = tf.reduce_sum(_losses)
             else:
                 loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im - r_im)))
         return loss
