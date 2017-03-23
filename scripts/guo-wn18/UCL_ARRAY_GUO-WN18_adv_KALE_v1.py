@@ -48,7 +48,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_guo-wn18_adv_xshot-head_v1.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_guo-wn18_adv_KALE_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -79,7 +79,7 @@ def main(argv):
 
     configurations_distmult_complex = cartesian_product(hyperparameters_space_distmult_complex)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_guo-wn18_adv_xshot-head_v1/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_guo-wn18_adv_KALE_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pminervi/'):
@@ -115,7 +115,7 @@ def main(argv):
 #$ -e /dev/null
 #$ -t 1-{}
 #$ -l h_vmem=6G,tmem=6G
-#$ -l h_rt=8:00:00
+#$ -l h_rt=4:00:00
 
 """.format(nb_jobs)
 
