@@ -91,6 +91,6 @@ test-closedform:
           python3 setup.py install
 
     - script:
-        name: Run very slow unit tests
+        name: Run closed form solutions unit tests
         code: |
           LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not slow) and (not veryslow) and (closedform)"
