@@ -70,7 +70,7 @@ def test_wn18_cli():
             assert line.split()[4] == "0.7526"
         if "Epoch: 3/1\\tLoss:" in line:
             assert line.split()[2] == "1.0932"
-            assert line.split()[4] == "0.0353"
+            assert line.split()[4] == "0.6586"
         if "Epoch: 4/1\\tLoss:" in line:
             assert line.split()[2] == "0.6326"
             assert line.split()[4] == "0.4441"
