@@ -162,13 +162,13 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         # violation_loss = adversarial.loss
 
         violation_loss = .0
-        for clause in clauses:
+        for clause, clause_loss in adversarial.clause_to_loss.items():
             clause_weight = adv_weight
             if is_simple_clause(clause):
                 clause_weight = adv_weight_simple
             elif is_simple_inverse_clause(clause):
                 clause_weight = adv_weight_simple_inverse
-            violation_loss += clause_weight * adversarial.clause_to_loss[clause]
+            violation_loss += clause_weight * clause_loss
 
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
@@ -178,7 +178,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
-        loss_function += adv_weight * violation_loss
+        # loss_function += adv_weight * violation_loss
+        loss_function += violation_loss
 
         adv_entity_projections = [constraints.unit_sphere(adv_embedding_layer, norm=1.0) for adv_embedding_layer in adversarial.parameters]
         if unit_cube:
