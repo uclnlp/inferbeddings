@@ -69,12 +69,14 @@ class Adversarial:
 
         # Mapping {clause:v2l} where "clause" is a clause, and v2l is a {var_name:layer} mapping
         self.clause_to_variable_name_to_layer = dict()
+        self.clause_to_loss = dict()
 
         for clause_idx, clause in enumerate(clauses):
             clause_errors, clause_loss, clause_parameters, variable_name_to_layer =\
                 self._parse_clause('clause_{}'.format(clause_idx), clause)
 
             self.clause_to_variable_name_to_layer[clause] = variable_name_to_layer
+            self.clause_to_loss[clause] = clause_loss
 
             self.errors += clause_errors
             self.loss += clause_loss
