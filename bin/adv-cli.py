@@ -178,8 +178,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
-        # loss_function += adv_weight * violation_loss
-        loss_function += violation_loss
+        loss_function += adv_weight * violation_loss
+        # loss_function += violation_loss
 
         adv_entity_projections = [constraints.unit_sphere(adv_embedding_layer, norm=1.0) for adv_embedding_layer in adversarial.parameters]
         if unit_cube:
