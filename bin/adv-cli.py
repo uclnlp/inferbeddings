@@ -156,7 +156,19 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                                                        sample_size=adv_ground_samples) for clause in clauses}
 
         initialize_violators = tf.variables_initializer(var_list=adversarial.parameters, name='init_violators')
-        violation_errors, violation_loss = adversarial.errors, adversarial.loss
+        violation_errors = adversarial.errors
+
+        # Use specific weights depending on the type of clauses
+        # violation_loss = adversarial.loss
+
+        violation_loss = .0
+        for clause in clauses:
+            clause_weight = adv_weight
+            if is_simple_clause(clause):
+                clause_weight = adv_weight_simple
+            elif is_simple_inverse_clause(clause):
+                clause_weight = adv_weight_simple_inverse
+            violation_loss += clause_weight * adversarial.clause_to_loss[clause]
 
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
