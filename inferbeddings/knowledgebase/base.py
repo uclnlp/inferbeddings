@@ -21,6 +21,9 @@ class Fact:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash((self.predicate_name, tuple(self.argument_names)))
+
 
 class KnowledgeBaseParser:
     def __init__(self, facts):
