@@ -111,7 +111,27 @@ class ClosedFormLifted:
 
         if is_inverse:
             if self.is_unit_cube:
-                loss = None
+                # This ha the same form as the simple implications case,
+                # but with r replaced by \compl{r} or, more specifically,
+                # r_im replaced by - r_im.
+                r_im = - r_im
+
+                delta_re, delta_im = b_re - r_re, b_im - r_im
+                abs_delta_square = tf.square(delta_re) + tf.square(delta_im)
+
+                # For each index, the loss will be the maximum across such values
+                case_1 = 2 * delta_re
+                case_2 = tf.abs(delta_im)
+                case_3 = delta_re + tf.abs(delta_im)
+                case_4 = - abs_delta_square / delta_im
+                case_5 = abs_delta_square / delta_re
+
+                # The result will be a [k, 5]-dimensional tensor
+                _cases = tf.transpose(tf.stack([case_1, case_2, case_3, case_4, case_5]))
+                # Computing the maximum on dimension 1, leading to a [k]-dimensional tensor
+                _losses = tf.reduce_max(_cases, axis=1)
+
+                loss = tf.reduce_sum(_losses)
             else:
                 loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im + r_im)))
         else:
