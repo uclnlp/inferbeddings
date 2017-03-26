@@ -163,4 +163,5 @@ class ClosedFormLifted:
             loss = self._complex_loss(clause)
 
         assert loss is not None
-        return loss
+
+        return tf.nn.relu(loss)
