@@ -84,6 +84,9 @@ class GroundLoss:
         score_body = self._score_conjunction(body, feed_dict)
         return int(not ((score_body - self.tolerance) <= score_head))
 
+    def continuous_errors(self, clause, feed_dicts):
+        return sum([self.continuous_error(clause, feed_dict) for feed_dict in feed_dicts])
+
     def continuous_error(self, clause, feed_dict):
         """
         Compute the violation error of a clause w.r.t. of a variable assignment feed_dict
