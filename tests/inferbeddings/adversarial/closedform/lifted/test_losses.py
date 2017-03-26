@@ -32,16 +32,14 @@ b_idx = parser.entity_to_index['b']
 nb_entities = len(parser.entity_to_index)
 nb_predicates = len(parser.predicate_to_index)
 
-# Clauses
-clause = parse_clause('q(X, Y) :- p(X, Y)')
-
 
 def cartesian_product(dicts):
     return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
 
 hyperparams = {
     'unit_cube': [True, False],
-    'model_name': ['DistMult', 'ComplEx']
+    'model_name': ['DistMult', 'ComplEx'],
+    'clause': ['q(X, Y) :- p(X, Y)', 'q(X, Y) :- p(Y, X)']
 }
 
 
@@ -51,6 +49,8 @@ def test_losses():
     hyperparam_configurations = list(cartesian_product(hyperparams))
 
     for hyperparam_configuration in hyperparam_configurations:
+        # Clauses
+        clause = parse_clause(hyperparam_configuration['clause'])
 
         # Instantiating the model parameters
         model_class = models.get_function(hyperparam_configuration['model_name'])
@@ -116,15 +116,14 @@ def test_losses():
                     return session.run(score, feed_dict={walk_inputs: args[0], entity_inputs: args[1]})
 
                 ground_loss = GroundLoss(clauses=[clause], parser=parser, scoring_function=scoring_function)
-                feed_dicts = [{'X': a_idx, 'Y': b_idx}]
-
-                continuous_loss_0 = ground_loss.continuous_errors(clause, feed_dicts=feed_dicts)
+                feed_dict = {'X': a_idx, 'Y': b_idx}
+                continuous_loss_0 = ground_loss.continuous_error(clause, feed_dict=feed_dict)
 
                 for epoch in range(1, 100 + 1):
                     _ = session.run([v_training_step])
-                    print(ground_loss.continuous_errors(clause, feed_dicts=feed_dicts))
+                    print(ground_loss.continuous_error(clause, feed_dict=feed_dict))
 
-                continuous_loss_final = ground_loss.continuous_errors(clause, feed_dicts=feed_dicts)
+                continuous_loss_final = ground_loss.continuous_error(clause, feed_dict=feed_dict)
 
                 assert continuous_loss_0 <= .0 or continuous_loss_final <= continuous_loss_0
 
