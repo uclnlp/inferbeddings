@@ -66,7 +66,7 @@ def main(argv):
         epochs=[100],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
-        margin=[1],
+        margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         loss=['hinge'],
         adv_lr=[.1],
