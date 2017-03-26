@@ -192,7 +192,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         closed_form_lifted = ClosedFormLifted(parser=parser,
                                               predicate_embedding_layer=predicate_embedding_layer,
                                               model_class=model_class, model_parameters=model_parameters,
-                                              is_unit_cube=True)
+                                              is_unit_cube=unit_cube)
         for clause in clauses:
             clause_violation_loss = closed_form_lifted(clause)
 

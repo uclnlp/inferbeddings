@@ -117,7 +117,6 @@ class ClosedFormLifted:
                 r_im = - r_im
 
                 delta_re, delta_im = b_re - r_re, b_im - r_im
-                abs_delta_square = tf.square(delta_re) + tf.square(delta_im)
 
                 # For each index, the loss will be the maximum across such values
                 case_1 = 2 * delta_re
@@ -135,7 +134,6 @@ class ClosedFormLifted:
         else:
             if self.is_unit_cube:
                 delta_re, delta_im = b_re - r_re, b_im - r_im
-                abs_delta_square = tf.square(delta_re) + tf.square(delta_im)
 
                 # For each index, the loss will be the maximum across such values
                 case_1 = 2 * delta_re
