@@ -123,11 +123,9 @@ class ClosedFormLifted:
                 case_1 = 2 * delta_re
                 case_2 = tf.abs(delta_im)
                 case_3 = delta_re + tf.abs(delta_im)
-                case_4 = - abs_delta_square / delta_im
-                case_5 = abs_delta_square / delta_re
 
-                # The result will be a [k, 5]-dimensional tensor
-                _cases = tf.transpose(tf.stack([case_1, case_2, case_3, case_4, case_5]))
+                # The result will be a [k, 3]-dimensional tensor
+                _cases = tf.transpose(tf.stack([case_1, case_2, case_3]))
                 # Computing the maximum on dimension 1, leading to a [k]-dimensional tensor
                 _losses = tf.reduce_max(_cases, axis=1)
 
@@ -143,11 +141,9 @@ class ClosedFormLifted:
                 case_1 = 2 * delta_re
                 case_2 = tf.abs(delta_im)
                 case_3 = delta_re + tf.abs(delta_im)
-                case_4 = - abs_delta_square / delta_im
-                case_5 = abs_delta_square / delta_re
 
-                # The result will be a [k, 5]-dimensional tensor
-                _cases = tf.transpose(tf.stack([case_1, case_2, case_3, case_4, case_5]))
+                # The result will be a [k, 3]-dimensional tensor
+                _cases = tf.transpose(tf.stack([case_1, case_2, case_3]))
                 # Computing the maximum on dimension 1, leading to a [k]-dimensional tensor
                 _losses = tf.reduce_max(_cases, axis=1)
 
