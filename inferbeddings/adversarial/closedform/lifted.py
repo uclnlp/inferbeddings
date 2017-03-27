@@ -61,7 +61,7 @@ class ClosedFormLifted:
                 loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
         return loss
 
-    def _bilinear_diagonal_loss(self, clause):
+    def _bilinear_diagonal_loss_one(self, clause):
         head, body = clause.head, clause.body
 
         # At the moment, only simple rules as in "r(X, Y) :- b(X, Y)" are supported
@@ -81,6 +81,49 @@ class ClosedFormLifted:
             loss = tf.reduce_sum(tf.nn.relu(b - r))
         else:
             loss = tf.reduce_max(tf.abs(b - r))
+        return loss
+
+    def _bilinear_diagonal_loss_two(self, clause):
+        head, body = clause.head, clause.body
+
+        # At the moment, only simple rules as in "r(X, Z) :- b1(X, Y), b2(Y, Z)" are supported
+        assert len(body) == 2
+        body_atom_1 = body[0]
+        body_atom_2 = body[1]
+
+        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom_1.arguments} | {arg.name for arg in body_atom_2.arguments}
+        assert len(variable_names) == 3
+
+        assert body_atom_1.arguments[0].name == head.arguments[0].name
+        assert body_atom_2.arguments[1].name == head.arguments[1].name
+
+        # Indices of b1, b2 and r, respectively
+        r_idx = self._to_idx(head.predicate.name)
+        b1_idx = self._to_idx(body_atom_1.predicate.name)
+        b2_idx = self._to_idx(body_atom_2.predicate.name)
+
+        r = tf.nn.embedding_lookup(self.predicate_embedding_layer, r_idx)
+        b1 = tf.nn.embedding_lookup(self.predicate_embedding_layer, b1_idx)
+        b2 = tf.nn.embedding_lookup(self.predicate_embedding_layer, b2_idx)
+
+        if self.is_unit_cube:
+            # Creating a [k, 2]-dimensional tensor containing RELU(b1) and RELU(b2)
+            _b = tf.transpose(tf.stack([tf.nn.relu(b1), tf.nn.relu(b2)]))
+            # Computing min(relu(b1), relu(b2))
+            _left = tf.reduce_min(_b, axis=1)
+
+            # Computing - min(r, 0) = max(- r, 0)
+            _right = tf.nn.relu(- r)
+
+            # Computing \sum_i min(relu(b1_i), relu(b2_i)) - min(r_i, 0)
+            loss = tf.reduce_sum(_left + _right)
+        else:
+            # Creating a [k, 2]-dimensional tensor containing abs(b1) and abs(b2)
+            _b = tf.transpose(tf.stack([tf.abs(b1), tf.abs(b2)]))
+            # Computing min(abs(b1), abs(b2))
+            _left = tf.reduce_min(_b, axis=1)
+
+            loss = tf.reduce_max(_left + tf.abs(r))
         return loss
 
     def _complex_loss(self, clause):
@@ -151,10 +194,15 @@ class ClosedFormLifted:
         return loss
 
     def __call__(self, clause):
+        clause_body = clause.body
+
         loss = None
         if self.model_class == BilinearDiagonalModel:
             # We are using DistMult
-            loss = self._bilinear_diagonal_loss(clause)
+            if len(clause_body) == 1:
+                loss = self._bilinear_diagonal_loss_one(clause)
+            elif len(clause_body) == 2:
+                loss = self._bilinear_diagonal_loss_two(clause)
         elif self.model_class == TranslatingModel:
             # We are using DistMult
             loss = self._translating_loss(clause)
