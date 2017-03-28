@@ -64,7 +64,7 @@ def main(argv):
     hyperparameters_space_distmult_complex = dict(
         epochs=[100],
         model=['TransE'],
-        similarity=['l2'],
+        similarity=['l2_sqr'],
         margin=[1],
         embedding_size=[100, 150, 200],
         loss=['hinge'],
