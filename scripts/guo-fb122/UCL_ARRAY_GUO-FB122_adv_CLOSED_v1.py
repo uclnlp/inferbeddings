@@ -63,7 +63,7 @@ def main(argv):
 
     hyperparameters_space_distmult_complex = dict(
         epochs=[100],
-        model=['DistMult', 'ComplEx'],
+        model=['DistMult'],  # model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1],
         embedding_size=[20, 50, 100, 150, 200],
