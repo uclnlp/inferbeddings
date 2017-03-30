@@ -107,23 +107,35 @@ class ClosedFormLifted:
         b2 = tf.nn.embedding_lookup(self.predicate_embedding_layer, b2_idx)
 
         if self.is_unit_cube:
-            # Creating a [k, 2]-dimensional tensor containing RELU(b1) and RELU(b2)
-            _b = tf.transpose(tf.stack([tf.nn.relu(b1), tf.nn.relu(b2)]))
-            # Computing min(relu(b1), relu(b2))
-            _left = tf.reduce_min(_b, axis=1)
+            case_0 = tf.zeros_like(r)
+            case_1 = - r
+            case_2 = - r + tf.minimum(b1, b2)
+            case_3 = tf.minimum(tf.zeros_like(r), b1)
+            case_4 = tf.minimum(tf.zeros_like(r), b2)
 
-            # Computing - min(r, 0) = max(- r, 0)
-            _right = tf.nn.relu(- r)
+            # Creating a [k, 5]-dimensional tensor
+            _cases = tf.transpose(tf.stack([case_0, case_1, case_2, case_3, case_4]))
 
-            # Computing \sum_i min(relu(b1_i), relu(b2_i)) - min(r_i, 0)
-            loss = tf.reduce_sum(_left + _right)
+            # Computing max(case_i)
+            _losses = tf.reduce_max(_cases, axis=1)
+
+            # Computing \sum_i max(case_i)
+            loss = tf.reduce_sum(_losses)
         else:
-            # Creating a [k, 2]-dimensional tensor containing abs(b1) and abs(b2)
-            _b = tf.transpose(tf.stack([tf.abs(b1), tf.abs(b2)]))
-            # Computing min(abs(b1), abs(b2))
-            _left = tf.reduce_min(_b, axis=1)
+            case_0 = tf.zeros_like(r)
+            case_1 = tf.minimum(b1, b2) - r
+            case_2 = tf.minimum(- b1, - b2) - r
+            case_3 = tf.minimum(b1, - b2) + r
+            case_4 = tf.minimum(- b1, b2) + r
 
-            loss = tf.reduce_max(_left + tf.abs(r))
+            # Creating a [k, 5]-dimensional tensor
+            _cases = tf.transpose(tf.stack([case_0, case_1, case_2, case_3, case_4]))
+
+            # Computing max(case_i)
+            _losses = tf.reduce_max(_cases, axis=1)
+
+            # Computing \max_i max(case_i)
+            loss = tf.reduce_max(_losses)
         return loss
 
     def _complex_loss(self, clause):
