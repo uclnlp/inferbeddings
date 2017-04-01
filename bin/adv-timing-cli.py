@@ -455,7 +455,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         'predicate_embedding_layer': predicate_embedding_layer
     }
 
-    logger.info('Adversarial Training Time (s): %s'.format(adversarial_training_time))
+    logger.info('Adversarial Training Time (s): {}'.format(adversarial_training_time))
 
     return scoring_function, objects
 
