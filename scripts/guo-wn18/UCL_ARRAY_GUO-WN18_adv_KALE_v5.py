@@ -22,6 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
+    unit_cube_str = '--unit-cube' if c['unit_cube'] else ''
     command = 'python3 {}/bin/adv-cli.py' \
               ' --train {}/data/guo-emnlp16/wn18/wn18.triples.train' \
               ' --valid {}/data/guo-emnlp16/wn18/wn18.triples.valid' \
@@ -36,14 +37,15 @@ def to_cmd(c, _path=None):
               ' --embedding-size {}' \
               ' --hidden-size {}' \
               ' --loss {}' \
-              ' --unit-cube --adv-lr {} --adv-init-ground --adversary-epochs {}' \
+              ' {}' \
+              ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {} --adv-pooling {}' \
               ''.format(_path, _path, _path, _path, _path,
                         c['epochs'],
                         c['model'], c['similarity'],
                         c['margin'], c['embedding_size'], c['hidden_size'],
                         c['loss'],
-                        c['adv_lr'], c['adv_epochs'],
+                        unit_cube_str, c['adv_lr'], c['adv_epochs'],
                         c['disc_epochs'], c['adv_weight'], c['adv_batch_size'], c['adv_pooling'])
     return command
 
@@ -76,7 +78,8 @@ def main(argv):
         adv_weight=[0, 1, 100, 10000, 1000000],
         adv_batch_size=[1, 10, 100],
         adv_pooling=['sum', 'mean', 'max'],
-        hidden_size=[1, 10, 20, 50, 100, 200]
+        hidden_size=[1, 10, 20, 50, 100, 200],
+        unit_cube=[True, False]
     )
 
     configurations_distmult_complex = cartesian_product(hyperparameters_space_distmult_complex)
