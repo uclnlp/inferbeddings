@@ -426,7 +426,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             if debug_embeddings is not None:
                 # Saving the parameters of the generator/adversary (entity and predicate embeddings)
                 objects_to_serialize = {
-                    'entity_to_index': parser.entity_to_index,
                     'predicate_to_index': parser.predicate_to_index,
                     'variables': {variable.name: variable.eval() for variable in adversarial.parameters},
                     'predicates': predicate_embedding_layer.eval()
