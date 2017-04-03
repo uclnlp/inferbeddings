@@ -65,7 +65,7 @@ def main(argv):
 
     args = argparser.parse_args(argv)
 
-    hyperparameters_space_distmult_complex = dict(
+    hyperparameters_space = dict(
         epochs=[100],
         model=['ERMLP'],
         similarity=['dot'],
@@ -82,7 +82,7 @@ def main(argv):
         unit_cube=[True, False]
     )
 
-    configurations_distmult_complex = cartesian_product(hyperparameters_space_distmult_complex)
+    configurations = cartesian_product(hyperparameters_space)
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_guo-wn18_adv_KALE_v5/'
 
@@ -92,7 +92,7 @@ def main(argv):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    configurations = list(configurations_distmult_complex)
+    configurations = list(configurations)
 
     command_lines = set()
     for cfg in configurations:
