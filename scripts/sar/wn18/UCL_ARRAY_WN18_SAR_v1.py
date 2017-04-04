@@ -59,26 +59,26 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        epochs=[1000],
+        epochs=[500],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         unit_cube=[True, False],
-        sar_weight=[0, .001, .01, .1, 1, 10, 100, 1000, 10000, 100000, 1000000],
+        sar_weight=[0, .001, 1, 100, 10000, 1000000],
         sar_similarity=['dot', 'l1', 'l2', 'l2_sqr']
     )
 
     hyperparameters_space_2 = dict(
-        epochs=[1000],
+        epochs=[500],
         model=['TransE'],
         similarity=['l1', 'l2'],
         margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         unit_cube=[True, False],
-        sar_weight=[0, .001, .01, .1, 1, 10, 100, 1000, 10000, 100000, 1000000],
+        sar_weight=[0, .001, 1, 100, 10000, 1000000],
         sar_similarity=['dot', 'l1', 'l2', 'l2_sqr']
     )
 
