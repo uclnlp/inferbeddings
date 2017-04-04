@@ -7,6 +7,8 @@ import math
 import sys
 import os
 
+import time
+
 import numpy as np
 import tensorflow as tf
 
@@ -284,6 +286,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
     prev_embedding_matrix = None
 
+    adversarial_training_time = .0
+    discriminator_training_time = .0
+
     for epoch in range(1, nb_epochs + 1):
 
         # This is a {clause:list[dict]} dictionary that maps each clause to a list[feed_dict], where each feed_dict
@@ -297,6 +302,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             logger.info('Epoch: {}\tSum of Zero-One Errors: {}'.format(epoch, sum_errors))
 
         for disc_epoch in range(1, discriminator_epochs + 1):
+            discriminator_training_t0 = time.time()
+
             order = random_state.permutation(nb_samples)
             Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
@@ -352,6 +359,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 for projection_step in projection_steps:
                     session.run([projection_step])
 
+            discriminator_training_t1 = time.time()
+            discriminator_training_time += discriminator_training_t1 - discriminator_training_t0
+
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
 
@@ -401,6 +411,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 session.run([projection_step])
 
             for finding_epoch in range(1, adversary_epochs + 1):
+
+                adversarial_training_t0 = time.time()
+
                 _, violation_errors_value, violation_loss_value = session.run(
                     [violation_training_step, violation_errors, violation_loss])
 
@@ -412,10 +425,12 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 for projection_step in adversarial_projection_steps:
                     session.run([projection_step])
 
+                adversarial_training_t1 = time.time()
+                adversarial_training_time += adversarial_training_t1 - adversarial_training_t0
+
             if debug_embeddings is not None:
                 # Saving the parameters of the generator/adversary (entity and predicate embeddings)
                 objects_to_serialize = {
-                    'entity_to_index': parser.entity_to_index,
                     'predicate_to_index': parser.predicate_to_index,
                     'variables': {variable.name: variable.eval() for variable in adversarial.parameters},
                     'predicates': predicate_embedding_layer.eval()
@@ -443,6 +458,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         'entity_embedding_layer': entity_embedding_layer,
         'predicate_embedding_layer': predicate_embedding_layer
     }
+
+    logger.info('Total Discriminator Training Time (seconds): {}'.format(discriminator_training_time))
+    logger.info('Total Adversarial Training Time (seconds): {}'.format(adversarial_training_time))
 
     return scoring_function, objects
 
