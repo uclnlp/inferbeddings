@@ -29,7 +29,7 @@ def clauses_to_equality_loss(model_name, clauses, similarity_name,
     regularizer_class = _model_name_to_regularizer_class(model_name)
     assert regularizer_class is not None
 
-    _added_clauses = {}
+    _added_clauses = set()
 
     for clause in clauses:
         head, body = clause.head, clause.body
