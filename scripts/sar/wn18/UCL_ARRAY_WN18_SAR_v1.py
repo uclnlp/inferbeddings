@@ -66,7 +66,7 @@ def main(argv):
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         unit_cube=[True, False],
-        sar_weight=[0, .001, 1, 100, 10000, 1000000],
+        sar_weight=[0, .01, 1, 100, 10000, 1000000],
         sar_similarity=['dot', 'l1', 'l2', 'l2_sqr']
     )
 
@@ -78,7 +78,7 @@ def main(argv):
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         unit_cube=[True, False],
-        sar_weight=[0, .001, 1, 100, 10000, 1000000],
+        sar_weight=[0, .01, 1, 100, 10000, 1000000],
         sar_similarity=['dot', 'l1', 'l2', 'l2_sqr']
     )
 
