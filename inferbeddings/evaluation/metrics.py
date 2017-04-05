@@ -3,8 +3,9 @@
 import abc
 import numpy as np
 
-import itertools
 from sklearn import metrics
+
+from inferbeddings.evaluation.util import apk
 
 import logging
 
@@ -14,6 +15,40 @@ logger = logging.getLogger(__name__)
 class BaseRanker(metaclass=abc.ABCMeta):
     def __call__(self, pos_triples, neg_triples=None):
         raise NotImplementedError
+
+
+class MeanAveragePrecision(BaseRanker):
+    def __init__(self, scoring_function):
+        self.scoring_function = scoring_function
+
+    def __call__(self, pos_triples, neg_triples=None):
+        # First, create a list wih all relation indices
+        p_idxs = sorted({p for (_, p, _) in pos_triples + (neg_triples if neg_triples else [])})
+
+        average_precisions = []
+
+        # Iterate over each predicate p and create a list of positive and a list of negative triples for p
+        for p_idx in p_idxs:
+            p_pos_triples = [(s, p, o) for (s, p, o) in pos_triples if p == p_idx]
+            p_neg_triples = [(s, p, o) for (s, p, o) in neg_triples if p == p_idx]
+
+            # Score such triples:
+            n = len(p_pos_triples + p_neg_triples)
+            Xr = np.full(shape=(n, 1), fill_value=p_idx, dtype=np.int32)
+            Xe = np.full(shape=(n, 2), fill_value=0, dtype=np.int32)
+
+            for i, (s_idx, _p_idx, o_idx) in enumerate(p_pos_triples + p_neg_triples):
+                assert _p_idx == p_idx
+                Xe[i, 0], Xe[i, 1] = s_idx, o_idx
+
+            scores = self.scoring_function([Xr, Xe])
+
+            actual = range(1, len(p_pos_triples) + 1)
+            predicted = 1 + np.argsort(scores)[::-1]
+
+            average_precision = apk(actual=actual, predicted=predicted, k=n)
+            average_precisions += [average_precision]
+        return np.mean(average_precisions)
 
 
 class Ranker(BaseRanker):

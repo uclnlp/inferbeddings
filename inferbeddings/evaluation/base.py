@@ -41,14 +41,18 @@ def ranking_summary(res, n=10, tag=None):
                  round(dres['microgmrr'], 3), n, round(dres['microghits@n'], 3)))
 
 
+def evaluate_map(scoring_function, pos_triples, neg_triples, tag=None):
+    _map = metrics.MeanAveragePrecision(scoring_function)
+    map_value = _map(pos_triples, neg_triples)
+    logger.info('[{}]\tMean Average Precision (MAP): {}'.format(tag, map_value))
+    return map_value
+
+
 def evaluate_auc(scoring_function, pos_triples, neg_triples, nb_entities, nb_predicates, tag=None):
     auc = metrics.AUC(scoring_function=scoring_function, nb_entities=nb_entities, nb_predicates=nb_predicates)
-
     auc_roc_value, auc_pr_value = auc(pos_triples, neg_triples)
-
     logger.info('[{}]\tAUC-ROC: {}'.format(tag, auc_roc_value))
     logger.info('[{}]\tAUC-PR: {}'.format(tag, auc_pr_value))
-
     return auc_roc_value, auc_pr_value
 
 

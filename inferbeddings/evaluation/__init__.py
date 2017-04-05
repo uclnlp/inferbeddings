@@ -4,4 +4,5 @@ from inferbeddings.evaluation.base import evaluate_auc, evaluate_ranks, ranking_
 
 __all__ = ['evaluate_auc',
            'evaluate_ranks',
+           'evaluate_map',
            'ranking_summary']

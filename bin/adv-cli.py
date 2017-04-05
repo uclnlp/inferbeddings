@@ -474,8 +474,12 @@ def main(argv):
     argparser = argparse.ArgumentParser('Rule Injection via Adversarial Training', formatter_class=formatter)
 
     argparser.add_argument('--train', '-t', required=True, action='store', type=str, default=None)
+
     argparser.add_argument('--valid', '-v', action='store', type=str, default=None)
+    argparser.add_argument('--valid-neg', action='store', type=str, default=None)
+
     argparser.add_argument('--test', '-T', action='store', type=str, default=None)
+    argparser.add_argument('--test-neg', action='store', type=str, default=None)
 
     argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
     argparser.add_argument('--debug-scores', nargs='+', type=str,
@@ -519,6 +523,8 @@ def main(argv):
 
     argparser.add_argument('--auc', '-a', action='store_true',
                            help='Measure the predictive accuracy using AUC-PR and AUC-ROC')
+    argparser.add_argument('--map', action='store_true',
+                           help='Measure the predictive accuracy using Mean Average Precision (MAP)')
     argparser.add_argument('--seed', '-S', action='store', type=int, default=0, help='Seed for the PRNG')
 
     argparser.add_argument('--clauses', '-c', action='store', type=str, default=None,
@@ -576,6 +582,8 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
+    valid_neg_path, test_neg_path = args.valid_neg, args.test_neg
+
     nb_batches, nb_epochs = args.nb_batches, args.nb_epochs
     learning_rate, initial_accumulator_value, margin = args.lr, args.initial_accumulator_value, args.margin
 
@@ -593,7 +601,7 @@ def main(argv):
     if predicate_embedding_size is None:
         predicate_embedding_size = entity_embedding_size
 
-    is_auc = args.auc
+    is_auc, is_map = args.auc, args.map
     seed = args.seed
     debug = args.debug
     debug_embeddings = args.debug_embeddings
@@ -619,8 +627,15 @@ def main(argv):
 
     assert train_path is not None
     pos_train_triples, _ = read_triples(train_path)
+
     pos_valid_triples, neg_valid_triples = read_triples(valid_path) if valid_path else (None, None)
     pos_test_triples, neg_test_triples = read_triples(test_path) if test_path else (None, None)
+
+    if valid_neg_path:
+        neg_valid_triples, _ = read_triples(valid_neg_path)
+
+    if test_neg_path:
+        neg_test_triples, _ = read_triples(test_neg_path)
 
     def fact(s, p, o):
         return Fact(predicate_name=p, argument_names=[s, o])
@@ -789,6 +804,8 @@ def main(argv):
             if is_auc:
                 evaluation.evaluate_auc(scoring_function, valid_triples, valid_triples_neg,
                                         nb_entities, nb_predicates, tag='valid')
+            elif is_map:
+                evaluation.evaluate_map(scoring_function, valid_triples, valid_triples_neg, tag='valid')
             else:
                 evaluation.evaluate_ranks(scoring_function, valid_triples,
                                           nb_entities, true_triples=true_triples, tag='valid',
@@ -798,6 +815,8 @@ def main(argv):
             if is_auc:
                 evaluation.evaluate_auc(scoring_function, test_triples, test_triples_neg,
                                         nb_entities, nb_predicates, tag='test')
+            elif is_map:
+                evaluation.evaluate_map(scoring_function, test_triples, test_triples_neg, tag='test')
             else:
                 evaluation.evaluate_ranks(scoring_function, test_triples,
                                           nb_entities, true_triples=true_triples, tag='test',
