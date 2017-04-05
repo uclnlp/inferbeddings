@@ -122,6 +122,8 @@ def main(argv):
 #$ -l h_vmem=6G,tmem=6G
 #$ -l h_rt=4:00:00
 
+export LANG="en_GB.UTF-8"
+
 """.format(nb_jobs)
 
     print(header)
