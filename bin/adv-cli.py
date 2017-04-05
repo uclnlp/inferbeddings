@@ -527,7 +527,7 @@ def main(argv):
                            help='Measure the predictive accuracy using Mean Average Precision (MAP)')
     argparser.add_argument('--seed', '-S', action='store', type=int, default=0, help='Seed for the PRNG')
 
-    argparser.add_argument('--clauses', '-c', action='store', type=str, default=None,
+    argparser.add_argument('--clauses', '-c', nargs='+', type=str,
                            help='File containing background knowledge expressed as Horn clauses')
 
     argparser.add_argument('--sar-weight', action='store', type=float, default=None,
@@ -606,7 +606,7 @@ def main(argv):
     debug = args.debug
     debug_embeddings = args.debug_embeddings
 
-    clauses_path = args.clauses
+    clauses_paths = args.clauses
 
     sar_weight, sar_similarity = args.sar_weight, args.similarity
 
@@ -677,9 +677,11 @@ def main(argv):
 
     # Parse the clauses
     clauses = None
-    if clauses_path is not None:
-        with open(clauses_path, 'r') as f:
-            clauses = [parse_clause(line.strip()) for line in f.readlines()]
+    if clauses_paths is not None:
+        clauses = []
+        for clauses_path in clauses_paths:
+            with open(clauses_path, 'r') as f:
+                clauses += [parse_clause(line.strip()) for line in f.readlines()]
 
     # Subsampling training facts that appear in the clause heads for X-shot learning
     if head_subsample_size is not None and head_subsample_size < 1:
@@ -744,7 +746,7 @@ def main(argv):
     test_sequences_neg = parser.facts_to_sequences(test_facts_neg)
 
     if adv_lr is not None:
-        assert clauses_path is not None
+        assert clauses_paths is not None
 
     # Do not take up all the GPU memory, all the time.
     sess_config = tf.ConfigProto()
