@@ -28,6 +28,7 @@ def to_cmd(c, _path=None):
         loss_str = '--loss hinge'
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
+    assert loss_str is not None
     command = 'python3 {}/bin/adv-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
@@ -73,7 +74,7 @@ def main(argv):
         unit_cube=[True, False],
         sar_weight=[-100, -1, - .01, 0, .01, 1, 100, 10000, 1000000],
         sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
-        loss=['hinge', 'parwise_hinge'],
+        loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
     )
 
@@ -87,7 +88,7 @@ def main(argv):
         unit_cube=[True, False],
         sar_weight=[-100, -1, - .01, 0, .01, 1, 100, 10000, 1000000],
         sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
-        loss=['hinge', 'parwise_hinge'],
+        loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
     )
 
