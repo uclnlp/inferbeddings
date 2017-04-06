@@ -23,6 +23,12 @@ def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
     unit_cube_str = '--unit-cube' if c['unit_cube'] else ''
+    loss_str = ''
+    if c['loss'] == 'hinge':
+        loss_str = '--loss hinge'
+    elif c['loss'] == 'pairwise_hinge':
+        loss_str = '--pairwise-loss hinge'
+    assert loss_str is not None
     command = 'python3 {}/bin/adv-cli.py' \
               ' --train {}/data/yago3_mte10_5k/yago3_mte10-train.tsv.gz' \
               ' --valid {}/data/yago3_mte10_5k/yago3_mte10-valid.tsv.gz' \
@@ -34,12 +40,12 @@ def to_cmd(c, _path=None):
               ' --similarity {}' \
               ' --margin {}' \
               ' --embedding-size {}' \
-              ' {} --sar-weight {} --sar-similarity {}' \
+              ' {} {} --sar-weight {} --sar-similarity {}' \
               ''.format(_path, _path, _path, _path, _path,
                         c['epochs'],
                         c['model'], c['similarity'],
                         c['margin'], c['embedding_size'],
-                        unit_cube_str, c['sar_weight'], c['sar_similarity'])
+                        loss_str, unit_cube_str, c['sar_weight'], c['sar_similarity'])
     return command
 
 
@@ -66,8 +72,9 @@ def main(argv):
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         unit_cube=[True, False],
-        sar_weight=[0, .01, 1, 100, 10000, 1000000],
-        sar_similarity=['dot', 'l1', 'l2', 'l2_sqr']
+        sar_weight=[-100, -1, - .01, 0, .01, 1, 100, 10000, 1000000],
+        sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
+        loss=['hinge', 'pairwise_hinge']
     )
 
     hyperparameters_space_2 = dict(
@@ -78,8 +85,9 @@ def main(argv):
         embedding_size=[20, 50, 100, 150, 200],
         adv_lr=[.1],
         unit_cube=[True, False],
-        sar_weight=[0, .01, 1, 100, 10000, 1000000],
-        sar_similarity=['dot', 'l1', 'l2', 'l2_sqr']
+        sar_weight=[-100, -1, - .01, 0, .01, 1, 100, 10000, 1000000],
+        sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
+        loss=['hinge', 'pairwise_hinge']
     )
 
     configurations = cartesian_product(hyperparameters_space_1) + cartesian_product(hyperparameters_space_2)
