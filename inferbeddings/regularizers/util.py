@@ -26,6 +26,7 @@ def clauses_to_equality_loss(model_name, clauses, similarity_name,
                              predicate_embedding_layer,
                              predicate_to_index):
     loss = 0.0
+
     regularizer_class = _model_name_to_regularizer_class(model_name)
     assert regularizer_class is not None
 

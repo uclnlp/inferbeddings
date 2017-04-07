@@ -616,7 +616,7 @@ def main(argv):
 
     clauses_paths = args.clauses
 
-    sar_weight, sar_similarity = args.sar_weight, args.similarity
+    sar_weight, sar_similarity = args.sar_weight, args.sar_similarity
 
     adv_lr, adv_weight, adv_margin = args.adv_lr, args.adv_weight, args.adv_margin
     adv_weight_simple, adv_weight_simple_inverse = args.adv_weight_simple, args.adv_weight_simple_inverse
