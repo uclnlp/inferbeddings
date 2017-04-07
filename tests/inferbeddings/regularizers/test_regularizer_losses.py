@@ -35,27 +35,33 @@ def test_losses():
                                     predicate_embedding_layer,
                                     parser.predicate_to_index)
 
-    init_op = tf.global_variables_initializer()
+    for i in range(32):
+        optimizer = tf.train.AdagradOptimizer(0.1)
+        minimization_step = optimizer.minimize(loss, var_list=[predicate_embedding_layer])
 
-    for i in range(1024):
+        init_op = tf.global_variables_initializer()
+
         with tf.Session() as session:
             session.run(init_op)
 
-            loss_value = session.run([loss])[0]
+            for j in range(32):
+                session.run([minimization_step])
 
-            p_idx, q_idx = parser.predicate_to_index['p'], parser.predicate_to_index['q']
-            r_idx, s_idx = parser.predicate_to_index['r'], parser.predicate_to_index['s']
+                loss_value = session.run([loss])[0]
 
-            predicate_embedding_layer_value = session.run([predicate_embedding_layer])[0]
+                p_idx, q_idx = parser.predicate_to_index['p'], parser.predicate_to_index['q']
+                r_idx, s_idx = parser.predicate_to_index['r'], parser.predicate_to_index['s']
 
-            p_value, q_value = predicate_embedding_layer_value[p_idx, :], predicate_embedding_layer_value[q_idx, :]
-            r_value, s_value = predicate_embedding_layer_value[r_idx, :], predicate_embedding_layer_value[s_idx, :]
+                predicate_embedding_layer_value = session.run([predicate_embedding_layer])[0]
 
-            estimated_loss_value = np.square(p_value + q_value).sum() + np.square(r_value - s_value).sum()
+                p_value, q_value = predicate_embedding_layer_value[p_idx, :], predicate_embedding_layer_value[q_idx, :]
+                r_value, s_value = predicate_embedding_layer_value[r_idx, :], predicate_embedding_layer_value[s_idx, :]
 
-            assert loss_value > 0
-            assert estimated_loss_value > 0
-            np.testing.assert_allclose(loss_value, estimated_loss_value, 4)
+                estimated_loss_value = np.square(p_value + q_value).sum() + np.square(r_value - s_value).sum()
+
+                assert loss_value > 0
+                assert estimated_loss_value > 0
+                np.testing.assert_allclose(loss_value, estimated_loss_value, 4)
 
 if __name__ == '__main__':
     pytest.main([__file__])
