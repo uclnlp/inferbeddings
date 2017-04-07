@@ -46,6 +46,9 @@ def clauses_to_equality_loss(model_name, clauses, similarity_name,
             is_inverse = True
         assert is_inverse is not None
 
+        assert head.predicate.name in predicate_to_index
+        assert body_atom.predicate.name in predicate_to_index
+
         head_predicate_idx = predicate_to_index[head.predicate.name]
         body_predicate_idx = predicate_to_index[body_atom.predicate.name]
 
@@ -58,10 +61,7 @@ def clauses_to_equality_loss(model_name, clauses, similarity_name,
             head_predicate_embedding = tf.nn.embedding_lookup(predicate_embedding_layer, head_predicate_idx)
             body_predicate_embedding = tf.nn.embedding_lookup(predicate_embedding_layer, body_predicate_idx)
 
-            regularizer = regularizer_class(x1=head_predicate_embedding,
-                                            x2=body_predicate_embedding,
-                                            is_inverse=is_inverse,
-                                            similarity_name=similarity_name)
+            regularizer = regularizer_class(x1=head_predicate_embedding, x2=body_predicate_embedding,
+                                            is_inverse=is_inverse, similarity_name=similarity_name)
             loss += regularizer()
-
     return loss

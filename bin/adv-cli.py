@@ -315,7 +315,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
             batches = make_batches(nb_samples, batch_size)
 
-            loss_values, violation_loss_values = [], []
+            loss_values, violation_loss_values, sar_loss_values = [], [], []
             total_fact_loss_value = 0
 
             for batch_start, batch_end in batches:
@@ -348,6 +348,10 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                     _, loss_value, fact_loss_value, violation_loss_value = session.run(
                         [training_step, loss_function, fact_loss, violation_loss], feed_dict=loss_args)
                     violation_loss_values += [violation_loss_value]
+                elif sar_weight is not None:
+                    _, loss_value, fact_loss_value, sar_loss_value = session.run([training_step, loss_function, fact_loss, sar_loss],
+                                                                                 feed_dict=loss_args)
+                    sar_loss_values += [sar_loss_value]
                 else:
                     _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
                                                                  feed_dict=loss_args)
@@ -365,7 +369,11 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
 
+            print('Loss values', loss_values)
+            print('SAR Loss values', sar_loss_values)
             logger.info('Epoch: {0}/{1}\tLoss: {2}'.format(epoch, disc_epoch, stats(loss_values)))
+            if sar_weight:
+                logger.info('Epoch: {0}/{1}\tSAR Loss: {2}'.format(epoch, disc_epoch, stats(sar_loss_values)))
             logger.info('Epoch: {0}/{1}\tFact Loss: {2:.4f}'.format(epoch, disc_epoch, total_fact_loss_value))
 
             if adv_lr is not None:
@@ -727,8 +735,18 @@ def main(argv):
         nb_train_facts = len(set(train_facts))
         logger.info('Number of starting unique facts: {}'.format(nb_train_facts))
 
+        clauses_to_materialize = []
+        for clause in clauses:
+            clauses_to_materialize += [clause]
+
+            # In SAR, p \equiv q implies q \equiv p - we should do inference in both directions
+            if sar_weight is not None:
+                from inferbeddings.parse.clauses import Clause
+                inverse_clause = Clause(clause.body[0], [clause.head])
+                clauses_to_materialize += [inverse_clause]
+
         from inferbeddings.logic import materialize
-        inferred_train_facts = materialize(train_facts, clauses, parser)
+        inferred_train_facts = materialize(train_facts, clauses_to_materialize, parser)
         nb_inferred_facts = len(set(inferred_train_facts))
         logger.info('Number of (new) inferred unique facts: {}'.format(nb_inferred_facts - nb_train_facts))
 
