@@ -29,7 +29,7 @@ def to_cmd(c, _path=None):
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
     assert loss_str is not None
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = '{}/bin/adv-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
               ' --test {}/data/wn18/wordnet-mlj12-test.txt' \
@@ -50,7 +50,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/legion_wn18_SAR_v2.%s.log" % (path, summary(c))
+    outfile = "%s/legion_wn18_SAR_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -94,7 +94,7 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space_1) + cartesian_product(hyperparameters_space_2)
 
-    path = '/home/ucacmin/Scratch/inferbeddings/logs/sar/legion_wn18_SAR_v2/'
+    path = '/home/ucacmin/Scratch/inferbeddings/logs/sar/legion_wn18_SAR_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pminervi/'):
