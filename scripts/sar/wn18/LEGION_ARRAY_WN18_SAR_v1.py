@@ -97,7 +97,7 @@ def main(argv):
     path = '/home/ucacmin/Scratch/inferbeddings/logs/sar/legion_wn18_SAR_v1/'
 
     # Check that we are on the UCLCS cluster first
-    if os.path.exists('/home/pminervi/'):
+    if os.path.exists('/home/ucacmin/'):
         # If the folder that will contain logs does not exist, create it
         if not os.path.exists(path):
             os.makedirs(path)
