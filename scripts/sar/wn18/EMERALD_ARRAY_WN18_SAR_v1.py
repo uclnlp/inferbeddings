@@ -94,7 +94,7 @@ def main(argv):
 
     path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/sar/emerald_wn18_SAR_v1/'
 
-    # Check that we are on the UCLCS cluster first
+    # Check that we are on the EMERALD cluster first
     if os.path.exists('/home/ucl/eisuc296/'):
         # If the folder that will contain logs does not exist, create it
         if not os.path.exists(path):
