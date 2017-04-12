@@ -369,8 +369,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
 
-            print('Loss values', loss_values)
-            print('SAR Loss values', sar_loss_values)
             logger.info('Epoch: {0}/{1}\tLoss: {2}'.format(epoch, disc_epoch, stats(loss_values)))
             if sar_weight:
                 logger.info('Epoch: {0}/{1}\tSAR Loss: {2}'.format(epoch, disc_epoch, stats(sar_loss_values)))
