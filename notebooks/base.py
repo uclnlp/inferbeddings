@@ -3,8 +3,7 @@
 import sys
 import os
 
-import time
-
+import math
 import numpy as np
 import tensorflow as tf
 
@@ -59,19 +58,19 @@ class Inferbeddings:
         self.entity_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, self.entity_inputs)
         self.predicate_embeddings = tf.nn.embedding_lookup(self.predicate_embedding_layer, self.walk_inputs)
 
-        model_class = models.get_function(model_name)
-        model_parameters = dict(entity_embeddings=self.entity_embeddings,
-                                predicate_embeddings=self.predicate_embeddings,
-                                similarity_function=self.similarity_function)
-        self.model = model_class(**model_parameters)
+        self.model_class = models.get_function(self.model_name)
+        self.similarity_function = similarities.get_function(self.similarity_name)
+
+        self.model_parameters = dict(entity_embeddings=self.entity_embeddings,
+                                     predicate_embeddings=self.predicate_embeddings,
+                                     similarity_function=self.similarity_function)
+        self.model = self.model_class(**self.model_parameters)
 
         # Scoring function used for scoring arbitrary triples.
         self.score = self.model()
 
-    def train(self, session, nb_epochs=1,
-              nb_discriminator_epochs=1,
-              nb_adversary_epochs=1,
-              nb_batches=10):
+    def train(self, session, optimizer,
+              nb_epochs=1, nb_discriminator_epochs=1, nb_adversary_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
         neg_idxs = np.array(sorted(set(self.parser.entity_to_index.values())))
 
@@ -92,5 +91,61 @@ class Inferbeddings:
         batch_size = math.ceil(nb_samples / nb_batches)
         logger.info("Samples: %d, no. batches: %d -> batch size: %d" % (nb_samples, nb_batches, batch_size))
 
+        nb_versions = 3
+
+        hinge_loss = losses.get_function('hinge')
+
+        # array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, ...], dtype=int32)
+        target = (tf.range(0, limit=tf.shape(self.score)[0]) % nb_versions) < 1
+        fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
+
+        loss_function = fact_loss
+
+        trainable_var_list = [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.get_params()
+        training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
+
         for epoch in range(1, nb_epochs + 1):
+
+            for disc_epoch in range(1, nb_discriminator_epochs + 1):
+                order = self.random_state.permutation(nb_samples)
+                Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
+
+                Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
+                Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
+
+                batches = make_batches(nb_samples, batch_size)
+
+                loss_values = []
+                total_fact_loss_value = 0
+
+                for batch_start, batch_end in batches:
+                    curr_batch_size = batch_end - batch_start
+
+                    Xr_batch = np.zeros((curr_batch_size * nb_versions, Xr_shuf.shape[1]), dtype=Xr_shuf.dtype)
+                    Xe_batch = np.zeros((curr_batch_size * nb_versions, Xe_shuf.shape[1]), dtype=Xe_shuf.dtype)
+
+                    # Positive Example
+                    Xr_batch[0::nb_versions, :] = Xr_shuf[batch_start:batch_end, :]
+                    Xe_batch[0::nb_versions, :] = Xe_shuf[batch_start:batch_end, :]
+
+                    # Negative examples (corrupting subject)
+                    Xr_batch[1::nb_versions, :] = Xr_sc[batch_start:batch_end, :]
+                    Xe_batch[1::nb_versions, :] = Xe_sc[batch_start:batch_end, :]
+
+                    # Negative examples (corrupting object)
+                    Xr_batch[2::nb_versions, :] = Xr_oc[batch_start:batch_end, :]
+                    Xe_batch[2::nb_versions, :] = Xe_oc[batch_start:batch_end, :]
+
+                    # Safety check - each positive example is followed by two negative (corrupted) examples
+                    assert Xr_batch[0] == Xr_batch[1] == Xr_batch[2]
+                    assert Xe_batch[0, 0] == Xe_batch[2, 0] and Xe_batch[0, 1] == Xe_batch[1, 1]
+
+                    loss_args = {self.walk_inputs: Xr_batch, self.entity_inputs: Xe_batch}
+
+                    _, loss_value, fact_loss_value = session.run([training_step, loss_function, fact_loss],
+                                                                 feed_dict=loss_args)
+
+                    loss_values += [loss_value / (Xr_batch.shape[0] / nb_versions)]
+                    total_fact_loss_value += fact_loss_value
+
 
