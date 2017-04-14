@@ -73,7 +73,7 @@ def main(argv):
         unit_cube=[True, False],
         sar_weight=[0, .01, 1, 100, 10000, 1000000],
         sar_similarity=['l2_sqr'],  # sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
-        loss=['pairwise_hinge'],  # loss=['hinge', 'pairwise_hinge'],
+        loss=['pairwise_hinge', 'hinge'], #  loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
     )
 
@@ -86,7 +86,7 @@ def main(argv):
         unit_cube=[True, False],
         sar_weight=[0, .01, 1, 100, 10000, 1000000],
         sar_similarity=['l2_sqr'],  # sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
-        loss=['hinge'], #  loss=['hinge', 'pairwise_hinge'],
+        loss=['pairwise_hinge'], #  loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
     )
 
