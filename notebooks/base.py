@@ -30,11 +30,11 @@ logger = logging.getLogger(__name__)
 class Inferbeddings:
     def __init__(self, triples,
                  entity_embedding_size, predicate_embedding_size,
-                 model_name, similarity_name, unit_cube=True,
+                 model_name, similarity_name,
                  random_state=None):
         self.triples = triples
         self.entity_embedding_size, self.predicate_embedding_size = entity_embedding_size, predicate_embedding_size
-        self.model_name, self.similarity_name, self.unit_cube = model_name, similarity_name, unit_cube
+        self.model_name, self.similarity_name = model_name, similarity_name
         self.random_state = random_state or np.random.RandomState(seed=0)
 
         def fact(s, p, o):
@@ -70,7 +70,7 @@ class Inferbeddings:
         self.score = self.model()
 
     def train(self, session, optimizer,
-              nb_epochs=1, nb_discriminator_epochs=1, nb_adversary_epochs=1, nb_batches=10):
+              unit_cube=True, nb_epochs=1, nb_discriminator_epochs=1, nb_adversary_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
         neg_idxs = np.array(sorted(set(self.parser.entity_to_index.values())))
 
@@ -103,6 +103,11 @@ class Inferbeddings:
 
         trainable_var_list = [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.get_params()
         training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
+
+        entity_projection = constraints.unit_sphere(self.entity_embedding_layer, norm=1.0)
+        if unit_cube:
+            entity_projection = constraints.unit_cube(self.entity_embedding_layer)
+        projection_steps = [entity_projection]
 
         for epoch in range(1, nb_epochs + 1):
 
@@ -147,5 +152,10 @@ class Inferbeddings:
 
                     loss_values += [loss_value / (Xr_batch.shape[0] / nb_versions)]
                     total_fact_loss_value += fact_loss_value
+
+                    for projection_step in projection_steps:
+                        session.run([projection_step])
+
+
 
 
