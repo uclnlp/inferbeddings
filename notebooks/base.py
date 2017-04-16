@@ -1,27 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import sys
-import os
-
 import math
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.io import read_triples, save
 from inferbeddings.knowledgebase import Fact, KnowledgeBaseParser
-
-from inferbeddings.parse import parse_clause
 
 from inferbeddings.models import base as models
 from inferbeddings.models import similarities
 
-from inferbeddings.models.training import losses, pairwise_losses, constraints, corrupt, index
+from inferbeddings.models.training import losses, constraints, corrupt, index
 from inferbeddings.models.training.util import make_batches
 
-from inferbeddings.adversarial import Adversarial, GroundLoss
-
-from inferbeddings import evaluation
-
+from inferbeddings.adversarial import Adversarial
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,6 +28,9 @@ class Inferbeddings:
         self.entity_embedding_size, self.predicate_embedding_size = entity_embedding_size, predicate_embedding_size
         self.model_name, self.similarity_name = model_name, similarity_name
         self.random_state = random_state or np.random.RandomState(seed=0)
+
+        if clauses is None:
+            clauses = []
 
         def fact(s, p, o):
             return Fact(predicate_name=p, argument_names=[s, o])
@@ -77,7 +71,7 @@ class Inferbeddings:
         target = (tf.range(0, limit=tf.shape(self.score)[0]) % self.nb_versions) < 1
         self.fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
 
-        self.discriminator_loss_function = self.fact_loss
+        self.loss_function = self.fact_loss
 
         trainable_var_list = [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.get_params()
         self.optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
@@ -94,7 +88,7 @@ class Inferbeddings:
 
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
-            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr, initial_accumulator_value=initial_accumulator_value)
+            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr)
             self.violation_training_step = violation_finding_optimizer.minimize(- self.violation_loss,
                                                                                 var_list=self.adversarial.parameters)
 
@@ -177,26 +171,29 @@ class Inferbeddings:
                     session.run([projection_step])
 
     def train_adversary(self, session,
-                        unit_cube=True, nb_epochs=1, nb_batches=10, adv_init_ground=True):
+                        unit_cube=True, nb_epochs=1, adv_init_ground=True):
         if unit_cube:
             projs = [constraints.unit_cube(adv_embedding_layer) for adv_embedding_layer in self.adversarial.parameters]
         else:
             projs = [constraints.unit_sphere(adv_embedding_layer, norm=1.0) for adv_embedding_layer in self.adversarial.parameters]
 
         if adv_init_ground:
-                # Initialize the violating embeddings using real embeddings
-                def ground_init_op(violating_embeddings):
-                    # Select adv_batch_size random entity indices - first collect all entity indices
-                    _ent_indices = np.array(sorted(parser.index_to_entity.keys()))
-                    # Then select a subset of size adv_batch_size of such indices
-                    rnd_ent_indices = _ent_indices[
-                        random_state.randint(low=0, high=len(_ent_indices), size=adv_batch_size)]
-                    # Assign the embeddings of the entities at such indices to the violating embeddings
-                    _ent_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, rnd_ent_indices)
-                    return violating_embeddings.assign(_ent_embeddings)
+            # Initialize the violating embeddings using real embeddings
+            def ground_init_op(violating_embeddings):
+                # Select adv_batch_size random entity indices - first collect all entity indices
+                _ent_indices = np.array(sorted(self.parser.index_to_entity.keys()))
+                # Then select a subset of size adv_batch_size of such indices
+                rnd_ent_indices = _ent_indices[self.random_state.randint(low=0, high=len(_ent_indices),
+                                                                         size=self.adv_batch_size)]
+                # Assign the embeddings of the entities at such indices to the violating embeddings
+                _ent_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, rnd_ent_indices)
+                return violating_embeddings.assign(_ent_embeddings)
 
-                assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
-                session.run(assignment_ops)
+            assignment_ops = [ground_init_op(violating_emb) for violating_emb in self.adversarial.parameters]
+            session.run(assignment_ops)
+
+        for projection_step in projs:
+            session.run([projection_step])
 
         for epoch in range(1, nb_epochs + 1):
             train_steps = [self.violation_training_step, self.violation_loss]
