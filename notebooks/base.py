@@ -69,7 +69,6 @@ class Inferbeddings:
 
         # Scoring function used for scoring arbitrary triples.
         self.score = self.model()
-
         self.nb_versions = 3
 
         hinge_loss = losses.get_function('hinge')
@@ -126,11 +125,11 @@ class Inferbeddings:
         batch_size = math.ceil(nb_samples / nb_batches)
         logger.info("Samples: %d, no. batches: %d -> batch size: %d" % (nb_samples, nb_batches, batch_size))
 
-        entity_projection = constraints.unit_sphere(self.entity_embedding_layer, norm=1.0)
         if unit_cube:
-            entity_projection = constraints.unit_cube(self.entity_embedding_layer)
-
-        projection_steps = [entity_projection]
+            proj = constraints.unit_cube(self.entity_embedding_layer)
+        else:
+            proj = constraints.unit_sphere(self.entity_embedding_layer, norm=1.0)
+        projection_steps = [proj]
 
         for epoch in range(1, nb_epochs + 1):
             order = self.random_state.permutation(nb_samples)
@@ -178,7 +177,30 @@ class Inferbeddings:
                     session.run([projection_step])
 
     def train_adversary(self, session,
-                        unit_cube=True, nb_epochs=1, nb_batches=10):
+                        unit_cube=True, nb_epochs=1, nb_batches=10, adv_init_ground=True):
+        if unit_cube:
+            projs = [constraints.unit_cube(adv_embedding_layer) for adv_embedding_layer in self.adversarial.parameters]
+        else:
+            projs = [constraints.unit_sphere(adv_embedding_layer, norm=1.0) for adv_embedding_layer in self.adversarial.parameters]
+
+        if adv_init_ground:
+                # Initialize the violating embeddings using real embeddings
+                def ground_init_op(violating_embeddings):
+                    # Select adv_batch_size random entity indices - first collect all entity indices
+                    _ent_indices = np.array(sorted(parser.index_to_entity.keys()))
+                    # Then select a subset of size adv_batch_size of such indices
+                    rnd_ent_indices = _ent_indices[
+                        random_state.randint(low=0, high=len(_ent_indices), size=adv_batch_size)]
+                    # Assign the embeddings of the entities at such indices to the violating embeddings
+                    _ent_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, rnd_ent_indices)
+                    return violating_embeddings.assign(_ent_embeddings)
+
+                assignment_ops = [ground_init_op(violating_emb) for violating_emb in adversarial.parameters]
+                session.run(assignment_ops)
+
         for epoch in range(1, nb_epochs + 1):
             train_steps = [self.violation_training_step, self.violation_loss]
             _, violation_loss_value = session.run(train_steps)
+
+            for projection_step in projs:
+                session.run([projection_step])
