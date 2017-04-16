@@ -31,6 +31,7 @@ class Inferbeddings:
     def __init__(self, triples,
                  entity_embedding_size, predicate_embedding_size,
                  model_name, similarity_name,
+                 clauses=None, adv_lr=0.1, adv_weight=1, adv_batch_size=1,
                  random_state=None):
         self.triples = triples
         self.entity_embedding_size, self.predicate_embedding_size = entity_embedding_size, predicate_embedding_size
@@ -77,14 +78,34 @@ class Inferbeddings:
         target = (tf.range(0, limit=tf.shape(self.score)[0]) % self.nb_versions) < 1
         self.fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
 
-        self.loss_function = self.fact_loss
+        self.discriminator_loss_function = self.fact_loss
 
         trainable_var_list = [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.get_params()
         self.optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
-        self.training_step = self.optimizer.minimize(self.loss_function, var_list=trainable_var_list)
+        self.discriminator_training_step = self.optimizer.minimize(self.loss_function, var_list=trainable_var_list)
 
-    def train(self, session,
-              unit_cube=True, nb_epochs=1, nb_discriminator_epochs=1, nb_adversary_epochs=1, nb_batches=10):
+        self.adversarial = Adversarial(clauses=clauses, parser=self.parser,
+                                       entity_embedding_layer=self.entity_embedding_layer,
+                                       predicate_embedding_layer=self.predicate_embedding_layer,
+                                       model_class=self.model_class, model_parameters=self.model_parameters,
+                                       pooling='max', batch_size=adv_batch_size)
+
+        self.initialize_violators = tf.variables_initializer(var_list=self.adversarial.parameters, name='init_violators')
+        self.violation_loss = self.adversarial.loss
+
+        adv_opt_scope_name = 'adversarial/optimizer'
+        with tf.variable_scope(adv_opt_scope_name):
+            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr, initial_accumulator_value=initial_accumulator_value)
+            self.violation_training_step = violation_finding_optimizer.minimize(- self.violation_loss,
+                                                                                var_list=self.adversarial.parameters)
+
+        adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
+        self.adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
+
+        self.loss_function += adv_weight * self.violation_loss
+
+    def train_discriminator(self, session,
+                            unit_cube=True, nb_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
         neg_idxs = np.array(sorted(set(self.parser.entity_to_index.values())))
 
@@ -112,48 +133,52 @@ class Inferbeddings:
         projection_steps = [entity_projection]
 
         for epoch in range(1, nb_epochs + 1):
+            order = self.random_state.permutation(nb_samples)
+            Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
-            for disc_epoch in range(1, nb_discriminator_epochs + 1):
-                order = self.random_state.permutation(nb_samples)
-                Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
+            Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
+            Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
 
-                Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
-                Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
+            batches = make_batches(nb_samples, batch_size)
 
-                batches = make_batches(nb_samples, batch_size)
+            loss_values = []
+            total_fact_loss_value = 0
 
-                loss_values = []
-                total_fact_loss_value = 0
+            for batch_start, batch_end in batches:
+                curr_batch_size = batch_end - batch_start
 
-                for batch_start, batch_end in batches:
-                    curr_batch_size = batch_end - batch_start
+                Xr_batch = np.zeros((curr_batch_size * self.nb_versions, Xr_shuf.shape[1]), dtype=Xr_shuf.dtype)
+                Xe_batch = np.zeros((curr_batch_size * self.nb_versions, Xe_shuf.shape[1]), dtype=Xe_shuf.dtype)
 
-                    Xr_batch = np.zeros((curr_batch_size * self.nb_versions, Xr_shuf.shape[1]), dtype=Xr_shuf.dtype)
-                    Xe_batch = np.zeros((curr_batch_size * self.nb_versions, Xe_shuf.shape[1]), dtype=Xe_shuf.dtype)
+                # Positive Example
+                Xr_batch[0::self.nb_versions, :] = Xr_shuf[batch_start:batch_end, :]
+                Xe_batch[0::self.nb_versions, :] = Xe_shuf[batch_start:batch_end, :]
 
-                    # Positive Example
-                    Xr_batch[0::self.nb_versions, :] = Xr_shuf[batch_start:batch_end, :]
-                    Xe_batch[0::self.nb_versions, :] = Xe_shuf[batch_start:batch_end, :]
+                # Negative examples (corrupting subject)
+                Xr_batch[1::self.nb_versions, :] = Xr_sc[batch_start:batch_end, :]
+                Xe_batch[1::self.nb_versions, :] = Xe_sc[batch_start:batch_end, :]
 
-                    # Negative examples (corrupting subject)
-                    Xr_batch[1::self.nb_versions, :] = Xr_sc[batch_start:batch_end, :]
-                    Xe_batch[1::self.nb_versions, :] = Xe_sc[batch_start:batch_end, :]
+                # Negative examples (corrupting object)
+                Xr_batch[2::self.nb_versions, :] = Xr_oc[batch_start:batch_end, :]
+                Xe_batch[2::self.nb_versions, :] = Xe_oc[batch_start:batch_end, :]
 
-                    # Negative examples (corrupting object)
-                    Xr_batch[2::self.nb_versions, :] = Xr_oc[batch_start:batch_end, :]
-                    Xe_batch[2::self.nb_versions, :] = Xe_oc[batch_start:batch_end, :]
+                # Safety check - each positive example is followed by two negative (corrupted) examples
+                assert Xr_batch[0] == Xr_batch[1] == Xr_batch[2]
+                assert Xe_batch[0, 0] == Xe_batch[2, 0] and Xe_batch[0, 1] == Xe_batch[1, 1]
 
-                    # Safety check - each positive example is followed by two negative (corrupted) examples
-                    assert Xr_batch[0] == Xr_batch[1] == Xr_batch[2]
-                    assert Xe_batch[0, 0] == Xe_batch[2, 0] and Xe_batch[0, 1] == Xe_batch[1, 1]
+                loss_args = {self.walk_inputs: Xr_batch, self.entity_inputs: Xe_batch}
 
-                    loss_args = {self.walk_inputs: Xr_batch, self.entity_inputs: Xe_batch}
+                train_steps = [self.discriminator_training_step, self.loss_function, self.fact_loss]
+                _, loss_value, fact_loss_value = session.run(train_steps, feed_dict=loss_args)
 
-                    _, loss_value, fact_loss_value = session.run([self.training_step, self.loss_function, self.fact_loss],
-                                                                 feed_dict=loss_args)
+                loss_values += [loss_value / (Xr_batch.shape[0] / self.nb_versions)]
+                total_fact_loss_value += fact_loss_value
 
-                    loss_values += [loss_value / (Xr_batch.shape[0] / self.nb_versions)]
-                    total_fact_loss_value += fact_loss_value
+                for projection_step in projection_steps:
+                    session.run([projection_step])
 
-                    for projection_step in projection_steps:
-                        session.run([projection_step])
+    def train_adversary(self, session,
+                        unit_cube=True, nb_epochs=1, nb_batches=10):
+        for epoch in range(1, nb_epochs + 1):
+            train_steps = [self.violation_training_step, self.violation_loss]
+            _, violation_loss_value = session.run(train_steps)
