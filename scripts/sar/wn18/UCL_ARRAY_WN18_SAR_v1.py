@@ -65,7 +65,7 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        epochs=[200, 1000],
+        epochs=[1000],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1],  # margin=[1, 2, 5, 10],
@@ -78,7 +78,7 @@ def main(argv):
     )
 
     hyperparameters_space_2 = dict(
-        epochs=[200, 1000],
+        epochs=[1000],
         model=['TransE'],
         similarity=['l1', 'l2'],
         margin=[1],  # margin=[1, 2, 5, 10],
