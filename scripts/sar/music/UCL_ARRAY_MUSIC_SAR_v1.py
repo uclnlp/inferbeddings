@@ -71,7 +71,7 @@ def main(argv):
         margin=[1],  # margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         unit_cube=[True, False],
-        sar_weight=[0, .01, 1, 100, 10000, 1000000],
+        sar_weight=[0, .0001, .01, 1, 100, 10000, 1000000],
         sar_similarity=['l2_sqr'],  # sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
         loss=['pairwise_hinge', 'hinge'], #  loss=['hinge', 'pairwise_hinge'],
     )
@@ -83,7 +83,7 @@ def main(argv):
         margin=[1],  # margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         unit_cube=[True, False],
-        sar_weight=[0, .01, 1, 100, 10000, 1000000],
+        sar_weight=[0, .0001, .01, 1, 100, 10000, 1000000],
         sar_similarity=['l2_sqr'],  # sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
         loss=['pairwise_hinge'], #  loss=['hinge', 'pairwise_hinge'],
     )
