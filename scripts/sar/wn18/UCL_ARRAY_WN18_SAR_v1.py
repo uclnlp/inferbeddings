@@ -65,26 +65,26 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        epochs=[1000],
+        epochs=[200, 1000],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1],  # margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         unit_cube=[True, False],
-        sar_weight=[0, .01, 1, 100, 10000, 1000000],
+        sar_weight=[0, .0001, .01, 1, 100, 10000, 1000000],
         sar_similarity=['l2_sqr'],  # sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
         loss=['pairwise_hinge', 'hinge'], #  loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
     )
 
     hyperparameters_space_2 = dict(
-        epochs=[1000],
+        epochs=[200, 1000],
         model=['TransE'],
         similarity=['l1', 'l2'],
         margin=[1],  # margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         unit_cube=[True, False],
-        sar_weight=[0, .01, 1, 100, 10000, 1000000],
+        sar_weight=[0, .0001, .01, 1, 100, 10000, 1000000],
         sar_similarity=['l2_sqr'],  # sar_similarity=['dot', 'l1', 'l2', 'l2_sqr'],
         loss=['pairwise_hinge', 'hinge'], #  loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
