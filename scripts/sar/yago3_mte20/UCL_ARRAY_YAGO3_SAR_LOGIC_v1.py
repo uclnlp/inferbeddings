@@ -45,7 +45,7 @@ def to_cmd(c, _path=None):
                         c['epochs'],
                         c['model'], c['similarity'],
                         c['margin'], c['embedding_size'],
-                        loss_str, unit_cube_str, c['sar_weight'], c['sar_similarity'])
+                        loss_str, unit_cube_str)
     return command
 
 
