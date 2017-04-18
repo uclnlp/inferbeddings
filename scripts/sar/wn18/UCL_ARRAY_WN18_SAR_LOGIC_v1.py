@@ -40,7 +40,7 @@ def to_cmd(c, _path=None):
               ' --similarity {}' \
               ' --margin {}' \
               ' --embedding-size {}' \
-              ' {} {} --materialize' \
+              ' {} {} --materialize --sar-weight 0.0' \
               ''.format(_path, _path, _path, _path, _path,
                         c['clauses'], c['epochs'],
                         c['model'], c['similarity'],

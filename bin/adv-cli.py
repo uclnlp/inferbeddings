@@ -740,8 +740,10 @@ def main(argv):
             # In SAR, p \equiv q implies q \equiv p - we should do inference in both directions
             if sar_weight is not None:
                 from inferbeddings.parse.clauses import Clause
-                inverse_clause = Clause(clause.body[0], [clause.head])
+                inverse_clause = Clause(clause.body[0], clause.head)
                 clauses_to_materialize += [inverse_clause]
+
+        print(clauses_to_materialize)
 
         from inferbeddings.logic import materialize
         inferred_train_facts = materialize(train_facts, clauses_to_materialize, parser)
