@@ -82,7 +82,7 @@ def main(argv):
         margin=[1],  # margin=[1, 2, 5, 10],
         embedding_size=[20, 50, 100, 150, 200],
         unit_cube=[True, False],
-        loss=['pairwise_hinge', 'hinge'], #  loss=['hinge', 'pairwise_hinge'],
+        loss=['pairwise_hinge'], #  loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
     )
 
