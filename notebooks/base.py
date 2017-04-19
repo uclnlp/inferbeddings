@@ -22,8 +22,7 @@ class Inferbeddings:
     def __init__(self, triples,
                  entity_embedding_size, predicate_embedding_size,
                  model_name, similarity_name,
-                 clauses=None, adv_lr=0.1, adv_weight=1, adv_batch_size=1,
-                 random_state=None):
+                 clauses=None, adv_weight=1, random_state=None):
         self.triples = triples
         self.entity_embedding_size, self.predicate_embedding_size = entity_embedding_size, predicate_embedding_size
         self.model_name, self.similarity_name = model_name, similarity_name
@@ -77,6 +76,7 @@ class Inferbeddings:
         self.optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
         self.discriminator_training_step = self.optimizer.minimize(self.loss_function, var_list=trainable_var_list)
 
+    def init_adversary(self, clauses, adv_weight=1, adv_lr=0.1, adv_batch_size=1):
         self.adversarial = Adversarial(clauses=clauses, parser=self.parser,
                                        entity_embedding_layer=self.entity_embedding_layer,
                                        predicate_embedding_layer=self.predicate_embedding_layer,
@@ -88,14 +88,13 @@ class Inferbeddings:
 
         adv_opt_scope_name = 'adversarial/optimizer'
         with tf.variable_scope(adv_opt_scope_name):
-            violation_finding_optimizer = tf.train.AdagradOptimizer(learning_rate=adv_lr)
-            self.violation_training_step = violation_finding_optimizer.minimize(- self.violation_loss,
-                                                                                var_list=self.adversarial.parameters)
+            violation_opt = tf.train.AdagradOptimizer(learning_rate=adv_lr)
+            self.violation_training_step = violation_opt.minimize(-violation_loss, var_list=self.adversarial.parameters)
 
         adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
         self.adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
-        self.loss_function += adv_weight * self.violation_loss
+        self.loss_function = self.fact_loss + adv_weight * self.violation_loss
 
     def train_discriminator(self, session,
                             unit_cube=True, nb_epochs=1, nb_batches=10):
