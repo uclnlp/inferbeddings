@@ -21,15 +21,11 @@ logger = logging.getLogger(__name__)
 class Inferbeddings:
     def __init__(self, triples,
                  entity_embedding_size, predicate_embedding_size,
-                 model_name, similarity_name,
-                 clauses=None, adv_weight=1, random_state=None):
+                 model_name, similarity_name, random_state=None):
         self.triples = triples
         self.entity_embedding_size, self.predicate_embedding_size = entity_embedding_size, predicate_embedding_size
         self.model_name, self.similarity_name = model_name, similarity_name
         self.random_state = random_state or np.random.RandomState(seed=0)
-
-        if clauses is None:
-            clauses = []
 
         def fact(s, p, o):
             return Fact(predicate_name=p, argument_names=[s, o])
@@ -76,25 +72,33 @@ class Inferbeddings:
         self.optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
         self.discriminator_training_step = self.optimizer.minimize(self.loss_function, var_list=trainable_var_list)
 
+        self.adversarial = None
+        self.violation_loss = 0
+
     def init_adversary(self, clauses, adv_weight=1, adv_lr=0.1, adv_batch_size=1):
-        self.adversarial = Adversarial(clauses=clauses, parser=self.parser,
-                                       entity_embedding_layer=self.entity_embedding_layer,
-                                       predicate_embedding_layer=self.predicate_embedding_layer,
-                                       model_class=self.model_class, model_parameters=self.model_parameters,
-                                       pooling='max', batch_size=adv_batch_size)
+        if not clauses:
+            clauses = []
 
-        self.initialize_violators = tf.variables_initializer(var_list=self.adversarial.parameters, name='init_violators')
-        self.violation_loss = self.adversarial.loss
+        adv_scope_name = 'adversary'
+        with tf.variable_scope(adv_scope_name):
+            self.adversarial = Adversarial(clauses=clauses, parser=self.parser,
+                                           entity_embedding_layer=self.entity_embedding_layer,
+                                           predicate_embedding_layer=self.predicate_embedding_layer,
+                                           model_class=self.model_class, model_parameters=self.model_parameters,
+                                           pooling='max', batch_size=adv_batch_size)
 
-        adv_opt_scope_name = 'adversarial/optimizer'
-        with tf.variable_scope(adv_opt_scope_name):
+            self.initialize_violators = tf.variables_initializer(var_list=self.adversarial.parameters,
+                                                                 name='init_violators')
+            self.violation_loss = self.adversarial.loss
+
             violation_opt = tf.train.AdagradOptimizer(learning_rate=adv_lr)
-            self.violation_training_step = violation_opt.minimize(-violation_loss, var_list=self.adversarial.parameters)
+            self.violation_training_step = violation_opt.minimize(- self.violation_loss,
+                                                                  var_list=self.adversarial.parameters)
 
-        adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
-        self.adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
+            adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_scope_name)
+            self.adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
-        self.loss_function = self.fact_loss + adv_weight * self.violation_loss
+            self.loss_function = self.fact_loss + adv_weight * self.violation_loss
 
     def train_discriminator(self, session,
                             unit_cube=True, nb_epochs=1, nb_batches=10):
@@ -171,6 +175,11 @@ class Inferbeddings:
 
     def train_adversary(self, session,
                         unit_cube=True, nb_epochs=1, adv_init_ground=True):
+        session.run(self.initialize_violators)
+
+        if not self.adversarial:
+            return
+
         if unit_cube:
             projs = [constraints.unit_cube(adv_embedding_layer) for adv_embedding_layer in self.adversarial.parameters]
         else:
@@ -183,7 +192,7 @@ class Inferbeddings:
                 _ent_indices = np.array(sorted(self.parser.index_to_entity.keys()))
                 # Then select a subset of size adv_batch_size of such indices
                 rnd_ent_indices = _ent_indices[self.random_state.randint(low=0, high=len(_ent_indices),
-                                                                         size=self.adv_batch_size)]
+                                                                         size=self.adversarial.batch_size)]
                 # Assign the embeddings of the entities at such indices to the violating embeddings
                 _ent_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, rnd_ent_indices)
                 return violating_embeddings.assign(_ent_embeddings)
@@ -193,6 +202,8 @@ class Inferbeddings:
 
         for projection_step in projs:
             session.run([projection_step])
+
+        session.run(self.adversarial_optimizer_variables_initializer)
 
         for epoch in range(1, nb_epochs + 1):
             train_steps = [self.violation_training_step, self.violation_loss]
