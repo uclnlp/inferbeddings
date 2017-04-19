@@ -59,7 +59,7 @@ class Adversarial:
                 _violation_losses(body_scores, head_scores, margin=loss_margin)
 
         # Symbolic functions computing the number of ground errors and the continuous loss
-        self.errors, self.loss = 0, .0
+        self.errors, self.loss = 0, tf.constant(.0)
 
         # Trainable parameters of the adversarial model
         self.parameters = []
