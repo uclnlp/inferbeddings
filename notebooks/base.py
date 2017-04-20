@@ -87,6 +87,7 @@ class Inferbeddings:
 
         logger.info('Initialising the Adversary computational graph ..')
 
+        self.adversaries = []
         for clause_idx, (clause, clause_weight) in enumerate(clauses):
             with tf.variable_scope('adversary/{}'.format(clause_idx), reuse=reuse):
                 adversarial = Adversarial(clauses=[clause], parser=self.parser,
@@ -94,6 +95,7 @@ class Inferbeddings:
                                           predicate_embedding_layer=self.predicate_embedding_layer,
                                           model_class=self.model_class, model_parameters=self.model_parameters,
                                           pooling='max', batch_size=1)
+                self.adversaries += [adversarial]
 
                 initialize_violators = tf.variables_initializer(var_list=adversarial.parameters)
                 session.run([initialize_violators])
@@ -188,26 +190,42 @@ class Inferbeddings:
                     session.run([projection_step])
 
     def train_adversary(self, session, nb_epochs=1):
-        #projs = [constraints.unit_cube(adv_embedding_layer) if self.unit_cube
-        #         else constraints.unit_sphere(adv_embedding_layer, norm=1.0)
-        #         for adv_embedding_layer in self.adversarial.parameters]
+        projs = [constraints.unit_cube(adv_embedding_layer) if self.unit_cube
+                 else constraints.unit_sphere(adv_embedding_layer, norm=1.0)
+                 for a in self.adversaries for adv_embedding_layer in a.parameters]
 
         # Initialize the violating embeddings using real embeddings
-        #def ground_init_op(violating_embeddings):
-        #    _ent_indices = np.array(sorted(self.parser.index_to_entity.keys()))
-        #    rnd_ent_indices = _ent_indices[self.random_state.randint(low=0, high=len(_ent_indices),
-        #                                                             size=self.adversarial.batch_size)]
-        #    _ent_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, rnd_ent_indices)
-        #    return violating_embeddings.assign(_ent_embeddings)
+        def ground_init_op(violating_embeddings):
+            _ent_indices = np.array(sorted(self.parser.index_to_entity.keys()))
+            rnd_ent_indices = _ent_indices[self.random_state.randint(low=0, high=len(_ent_indices),
+                                                                     size=self.adversaries[0].batch_size)]
+            _ent_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, rnd_ent_indices)
+            return violating_embeddings.assign(_ent_embeddings)
 
-        #assignment_ops = [ground_init_op(violating_emb) for violating_emb in self.adversarial.parameters]
-        #session.run(assignment_ops)
+        assignment_ops = [ground_init_op(violating_emb) for a in self.adversaries for violating_emb in a.parameters]
+        session.run(assignment_ops)
 
-        #for projection_step in projs:
-        #    session.run([projection_step])
+        for projection_step in projs:
+            session.run([projection_step])
 
         for epoch in range(1, nb_epochs + 1):
             session.run([self.violation_training_step])
 
-        #    for projection_step in projs:
-        #        session.run([projection_step])
+            for projection_step in projs:
+                session.run([projection_step])
+
+    def get_embeddings(self, session):
+        """
+        returns dict mapping entity symbols to embeddings,
+        and dict mapping predicate symbols to embeddings, in current session.
+        """
+
+        ent_embeddings = session.run(self.entity_embedding_layer)
+        pred_embeddings = session.run(self.predicate_embedding_layer)
+
+        print(ent_embeddings.shape, pred_embeddings.shape)
+
+        ent_to_emb = {ent:list(ent_embeddings[i,:]) for i, ent in self.parser.index_to_entity.items()}
+        pred_to_emb = {pred:list(pred_embeddings[i,:]) for i, pred in self.parser.index_to_predicate.items()}
+
+        return ent_to_emb, pred_to_emb
