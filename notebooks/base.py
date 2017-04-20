@@ -219,9 +219,7 @@ class Inferbeddings:
         returns dict mapping entity symbols to embeddings,
         and dict mapping predicate symbols to embeddings, in current session.
         """
-        ent_embeddings = session.run(self.entity_embedding_layer)
-        pred_embeddings = session.run(self.predicate_embedding_layer)
-
+        ent_embeddings, pred_embeddings = session.run([self.entity_embedding_layer, self.predicate_embedding_layer])
         print(ent_embeddings.shape, pred_embeddings.shape)
 
         ent_to_emb = {ent: list(ent_embeddings[i, :]) for i, ent in self.parser.index_to_entity.items()}
