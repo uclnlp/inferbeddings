@@ -106,6 +106,8 @@ class Inferbeddings:
 
         self.loss_function = self.fact_loss + adv_weight * self.violation_loss
 
+
+
     def train_discriminator(self, session,
                             unit_cube=True, nb_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
@@ -208,3 +210,19 @@ class Inferbeddings:
 
             for projection_step in projs:
                 session.run([projection_step])
+
+    def get_embeddings(self, session):
+        """
+        returns dict mapping entity symbols to embeddings,
+        and dict mapping predicate symbols to embeddings, in current session.
+        """
+
+        ent_embeddings = session.run(self.entity_embedding_layer)
+        pred_embeddings = session.run(self.predicate_embedding_layer)
+
+        print(ent_embeddings.shape, pred_embeddings.shape)
+
+        ent_to_emb = {ent:list(ent_embeddings[i,:]) for i, ent in self.parser.index_to_entity.items()}
+        pred_to_emb = {pred:list(pred_embeddings[i,:]) for i, pred in self.parser.index_to_predicate.items()}
+
+        return ent_to_emb, pred_to_emb
