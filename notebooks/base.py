@@ -226,3 +226,16 @@ class Inferbeddings:
         pred_to_emb = {pred: list(pred_embeddings[i, :]) for i, pred in self.parser.index_to_predicate.items()}
 
         return ent_to_emb, pred_to_emb
+
+
+    def write_embeddings(self, session, pred_file=None, ent_file=None):
+        ent_to_emb, pred_to_emb = self.get_embeddings(session)
+
+        if pred_file:
+            with open(pred_file, 'w') as fID:
+                for pred in sorted(pred_to_emb.keys()):
+                    fID.write('%s\t%s\n' % (pred, ','.join(['%.8f' % c for c in pred_to_emb[pred]])))
+        if ent_file:
+            with open(ent_file, 'w') as fID:
+                for ent in sorted(ent_to_emb.keys()):
+                    fID.write('%s\t%s\n' % (ent, ','.join(['%.8f' % c for c in ent_to_emb[ent]])))
