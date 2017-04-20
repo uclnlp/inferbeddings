@@ -15,21 +15,30 @@ def main(argv):
         ('a', 'p', 'b'),
         ('c', 'p', 'd')
     ]
-    clauses = [parse_clause('p(X, Y) :- p(Y, X)')]
 
-    inferbeddings = Inferbeddings(triples,
-                                  entity_embedding_size=10,
-                                  predicate_embedding_size=10,
-                                  model_name='DistMult',
-                                  similarity_name='dot')
-
-    init_op = tf.global_variables_initializer()
+    clause_one = parse_clause('p(X, Y) :- p(Y, X)')
+    clause_two = parse_clause('p(X, Y) :- p(X, Y)')
 
     with tf.Session() as session:
-        session.run(init_op)
+        clauses = [
+            (clause_one, 0.0),
+            (clause_two, 1.0)
+        ]
 
-        inferbeddings.init_adversary(clauses=clauses)
-        for epoch in range(1, 11):
+        inferbeddings = Inferbeddings(session=session, triples=triples, clauses=clauses)
+
+        for epoch in range(1, 6):
+            inferbeddings.train_adversary(session=session)
+            inferbeddings.train_discriminator(session=session)
+
+        clauses = [
+            (clause_one, 1.0),
+            (clause_two, 0.0)
+        ]
+
+        inferbeddings.init_adversary(session, clauses)
+
+        for epoch in range(1, 6):
             inferbeddings.train_adversary(session=session)
             inferbeddings.train_discriminator(session=session)
 
