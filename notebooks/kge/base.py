@@ -38,7 +38,7 @@ class KGEmbeddings:
     def parameters(self):
         return [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.parameters
 
-    def __init__(self, triples,
+    def __init__(self, triples, optimizer,
                  model_name='DistMult', similarity_name='dot',
                  entity_embedding_size=10, predicate_embedding_size=10,
                  random_state=None):
@@ -85,23 +85,23 @@ class KGEmbeddings:
         # Scoring function used for scoring arbitrary triples.
         self.score = self.model()
 
-    def train(self, session, optimizer, unit_cube=True, nb_epochs=1, nb_batches=10):
         logger.info('Instantiating the fact loss function computational graph ..')
         hinge_loss = losses.get_function('hinge')
 
+        self.nb_versions = 3
+
         # array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, ...], dtype=int32)
-        target = (tf.range(0, limit=tf.shape(self.score)[0]) % 3) < 1
-        fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
+        target = (tf.range(0, limit=tf.shape(self.score)[0]) % self.nb_versions) < 1
+        self.fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
 
-        training_step = optimizer.minimize(fact_loss, var_list=self.parameters)
+        self.training_step = optimizer.minimize(self.fact_loss, var_list=self.parameters)
 
+    def train(self, session, unit_cube=True, nb_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
         neg_idxs = np.array(sorted(set(self.parser.entity_to_index.values())))
 
-        subject_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs,
-                                                    corrupt_objects=False)
-        object_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs,
-                                                   corrupt_objects=True)
+        subj_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs, corrupt_objects=False)
+        obj_corruptor = corrupt.SimpleCorruptor(index_generator=index_gen, candidate_indices=neg_idxs, corrupt_objects=True)
 
         train_sequences = self.parser.facts_to_sequences(self.facts)
 
@@ -119,8 +119,8 @@ class KGEmbeddings:
             order = self.random_state.permutation(nb_samples)
             Xr_shuf, Xe_shuf = Xr[order, :], Xe[order, :]
 
-            Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
-            Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
+            Xr_sc, Xe_sc = subj_corruptor(Xr_shuf, Xe_shuf)
+            Xr_oc, Xe_oc = obj_corruptor(Xr_shuf, Xe_shuf)
 
             batches = make_batches(nb_samples, batch_size)
 
@@ -151,13 +151,18 @@ class KGEmbeddings:
 
                 loss_args = {self.walk_inputs: Xr_batch, self.entity_inputs: Xe_batch}
 
-                _, loss_value = session.run([training_step, fact_loss], feed_dict=loss_args)
+                _, loss_value = session.run([self.training_step, self.fact_loss], feed_dict=loss_args)
 
-                loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
+                loss_values += [loss_value / (Xr_batch.shape[0] / self.nb_versions)]
                 total_loss_value += loss_value
 
                 for projection_step in projection_steps:
                     session.run([projection_step])
+
+            def stats(values):
+                return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+
+            logger.info('Epoch: {0}\tLoss: {1}'.format(epoch, stats(loss_values)))
 
     def get_embeddings(self, session):
         """
@@ -171,7 +176,6 @@ class KGEmbeddings:
         pred_to_emb = {pred: list(pred_embeddings[i, :]) for i, pred in self.parser.index_to_predicate.items()}
 
         return ent_to_emb, pred_to_emb
-
 
     def write_embeddings(self, session, pred_file=None, ent_file=None):
         ent_to_emb, pred_to_emb = self.get_embeddings(session)
