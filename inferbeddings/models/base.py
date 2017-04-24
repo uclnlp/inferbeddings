@@ -29,7 +29,8 @@ class BaseModel(metaclass=abc.ABCMeta):
     def __call__(self):
         raise NotImplementedError
 
-    def get_params(self):
+    @property
+    def parameters(self):
         return []
 
 
@@ -157,8 +158,9 @@ class ERMLP(BaseModel):
 
         return f_ijk
 
-    def get_params(self):
-        params = super().get_params() + [self.C, self.w]
+    @property
+    def parameters(self):
+        params = super().parameters + [self.C, self.w]
         return params
 
 

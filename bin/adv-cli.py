@@ -261,7 +261,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
     # Optimization algorithm being used.
     optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate,
                                           initial_accumulator_value=initial_accumulator_value)
-    trainable_var_list = [entity_embedding_layer, predicate_embedding_layer] + model.get_params()
+    trainable_var_list = [entity_embedding_layer, predicate_embedding_layer] + model.parameters
     training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
 
     # We enforce all entity embeddings to have an unitary norm, or to live in the unit cube.

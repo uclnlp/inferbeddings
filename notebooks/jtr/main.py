@@ -56,6 +56,7 @@ class TestDatasets(object):
 
 
 train, dev, test = TestDatasets.generate_SNLI()
+train = train[:10]
 
 print(len(train))
 print(train[0])
@@ -63,8 +64,10 @@ print(train[0])
 # We creates hooks which keep track of the loss
 # We also create 'the standard hook' for our model
 from jtr.jack.train.hooks import LossHook
-hooks = [LossHook(reader, iter_interval=10), readers.eval_hooks['snli_reader'](reader, dev, iter_interval=25)]
-
+hooks = [
+    LossHook(reader, iter_interval=10),
+    readers.eval_hooks['snli_reader'](reader, dev, iter_interval=25)
+]
 
 # Here we initialize our optimizer
 # we choose Adam with standard momentum values and learning rate 0.001
@@ -73,7 +76,8 @@ optim = tf.train.AdamOptimizer(learning_rate)
 
 # Lets train the reader on the CPU for 2 epochs
 reader.train(optim, train,
-             hooks=hooks, max_epochs=1,
+             hooks=hooks,
+             max_epochs=1,
              device='/cpu:0')
 
 print(vocab.sym2id)

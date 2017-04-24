@@ -12,22 +12,43 @@ from inferbeddings.models import similarities
 from inferbeddings.models.training import losses, constraints, corrupt, index
 from inferbeddings.models.training.util import make_batches
 
-from inferbeddings.adversarial import Adversarial
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class Inferbeddings:
-    model_name = 'DistMult'
-    similarity_name = 'dot'
-    entity_embedding_size, predicate_embedding_size = 10, 10
+class KGEmbeddings:
+    @property
+    def model_name(self):
+        return self._model_name
 
-    unit_cube = False
-    nb_batches = 10
+    @property
+    def similarity_name(self):
+        return self._similarity_name
 
-    def __init__(self, session, triples, clauses, random_state=None):
-        self.triples, self.clauses = triples, clauses
+    @property
+    def entity_embedding_size(self):
+        return self._entity_embedding_size
+
+    @property
+    def predicate_embedding_size(self):
+        return self._predicate_embedding_size
+
+    @property
+    def parameters(self):
+        return [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.parameters
+
+    def __init__(self, triples,
+                 model_name='DistMult', similarity_name='dot',
+                 entity_embedding_size=10, predicate_embedding_size=10,
+                 random_state=None):
+        self.triples = triples
+
+        self._model_name = model_name
+        self._similarity_name = similarity_name
+        self._entity_embedding_size = entity_embedding_size
+        self._predicate_embedding_size = predicate_embedding_size
+
         self.random_state = random_state or np.random.RandomState(seed=0)
 
         logger.info('Parsing the facts in the Knowledge Base ..')
@@ -36,25 +57,17 @@ class Inferbeddings:
 
         self.nb_entities, self.nb_predicates = len(self.parser.entity_vocabulary), len(self.parser.predicate_vocabulary)
 
-        self.__init_discriminator(session)
-        self.__init_adversary(session, clauses)
-
-    def __init_discriminator(self, session):
         logger.info('Initialising the Discriminator computational graph ..')
         self.entity_inputs = tf.placeholder(tf.int32, shape=[None, 2])
         self.walk_inputs = tf.placeholder(tf.int32, shape=[None, None])
 
-        with tf.variable_scope('discriminator', reuse=False):
-            self.entity_embedding_layer = tf.get_variable('entity_embeddings',
-                                                          shape=[self.nb_entities + 1, self.entity_embedding_size],
-                                                          initializer=tf.contrib.layers.xavier_initializer())
-            self.predicate_embedding_layer = tf.get_variable('predicate_embeddings',
-                                                             shape=[self.nb_predicates + 1, self.predicate_embedding_size],
-                                                             initializer=tf.contrib.layers.xavier_initializer())
+        self.entity_embedding_layer = tf.get_variable('entity_embeddings',
+                                                      shape=[self.nb_entities + 1, self.entity_embedding_size],
+                                                      initializer=tf.contrib.layers.xavier_initializer())
 
-        discriminator_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='discriminator')
-        initialize_discriminator = tf.variables_initializer(discriminator_variables)
-        session.run([initialize_discriminator])
+        self.predicate_embedding_layer = tf.get_variable('predicate_embeddings',
+                                                         shape=[self.nb_predicates + 1, self.predicate_embedding_size],
+                                                         initializer=tf.contrib.layers.xavier_initializer())
 
         self.entity_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, self.entity_inputs)
         self.predicate_embeddings = tf.nn.embedding_lookup(self.predicate_embedding_layer, self.walk_inputs)
@@ -62,10 +75,12 @@ class Inferbeddings:
         self.model_class = models.get_function(self.model_name)
         self.similarity_function = similarities.get_function(self.similarity_name)
 
-        self.model_parameters = dict(entity_embeddings=self.entity_embeddings,
-                                     predicate_embeddings=self.predicate_embeddings,
-                                     similarity_function=self.similarity_function)
-        self.model = self.model_class(**self.model_parameters)
+        model_parameters = {
+            'entity_embeddings': self.entity_embeddings,
+            'predicate_embeddings': self.predicate_embeddings,
+            'similarity_function': self.similarity_function
+        }
+        self.model = self.model_class(**model_parameters)
 
         # Scoring function used for scoring arbitrary triples.
         self.score = self.model()
@@ -78,51 +93,9 @@ class Inferbeddings:
         target = (tf.range(0, limit=tf.shape(self.score)[0]) % self.nb_versions) < 1
         self.fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
 
-    def init_adversary(self, session, clauses):
-        self.__init_adversary(session, clauses, reuse=True)
+        training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
 
-    def __init_adversary(self, session, clauses, reuse=False):
-        self.loss_function = self.fact_loss
-
-        logger.info('Initialising the Adversary computational graph ..')
-
-        self.adversaries = []
-        for clause_idx, (clause, clause_weight) in enumerate(clauses):
-            with tf.variable_scope('adversary/{}'.format(clause_idx), reuse=reuse):
-                adversarial = Adversarial(clauses=[clause], parser=self.parser,
-                                          entity_embedding_layer=self.entity_embedding_layer,
-                                          predicate_embedding_layer=self.predicate_embedding_layer,
-                                          model_class=self.model_class, model_parameters=self.model_parameters,
-                                          pooling='max', batch_size=1)
-                self.adversaries += [adversarial]
-
-                initialize_violators = tf.variables_initializer(var_list=adversarial.parameters)
-                session.run([initialize_violators])
-
-                violation_loss = adversarial.loss
-
-            scope_name = 'adversary/{}/optimizer'.format(clause_idx)
-            with tf.variable_scope(scope_name, reuse=reuse):
-                violation_opt = tf.train.AdagradOptimizer(learning_rate=0.1)
-                self.violation_training_step = violation_opt.minimize(- violation_loss, var_list=adversarial.parameters)
-
-            adversarial_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope_name)
-            initialize_violation_finder = tf.variables_initializer(adversarial_optimizer_variables)
-            session.run([initialize_violation_finder])
-
-            self.loss_function += clause_weight * violation_loss
-
-        scope_name = 'discriminator/optimizer'
-        with tf.variable_scope(scope_name, reuse=reuse):
-            self.optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
-            trainable_var_list = [self.entity_embedding_layer, self.predicate_embedding_layer] + self.model.parameters
-            self.discriminator_training_step = self.optimizer.minimize(self.loss_function, var_list=trainable_var_list)
-
-        discriminator_optimizer_variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope_name)
-        initialize_discriminator_optimizer_variables = tf.variables_initializer(discriminator_optimizer_variables)
-        session.run([initialize_discriminator_optimizer_variables])
-
-    def train_discriminator(self, session, nb_epochs=1):
+    def train(self, session, nb_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
         neg_idxs = np.array(sorted(set(self.parser.entity_to_index.values())))
 
@@ -137,8 +110,8 @@ class Inferbeddings:
         Xe = np.array([ent_idxs for (_, ent_idxs) in train_sequences])
 
         nb_samples = Xr.shape[0]
-        batch_size = math.ceil(nb_samples / self.nb_batches)
-        logger.info("Samples: {}, no. batches: {} -> batch size: {}".format(nb_samples, self.nb_batches, batch_size))
+        batch_size = math.ceil(nb_samples / nb_batches)
+        logger.info("Samples: {}, no. batches: {} -> batch size: {}".format(nb_samples, nb_batches, batch_size))
 
         projection_steps = [constraints.unit_cube(self.entity_embedding_layer) if self.unit_cube
                             else constraints.unit_sphere(self.entity_embedding_layer, norm=1.0)]
