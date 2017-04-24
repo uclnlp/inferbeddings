@@ -85,17 +85,16 @@ class KGEmbeddings:
         # Scoring function used for scoring arbitrary triples.
         self.score = self.model()
 
+    def train(self, session, optimizer, unit_cube=True, nb_epochs=1, nb_batches=10):
         logger.info('Instantiating the fact loss function computational graph ..')
-        self.nb_versions = 3
         hinge_loss = losses.get_function('hinge')
 
         # array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, ...], dtype=int32)
-        target = (tf.range(0, limit=tf.shape(self.score)[0]) % self.nb_versions) < 1
-        self.fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
+        target = (tf.range(0, limit=tf.shape(self.score)[0]) % 3) < 1
+        fact_loss = hinge_loss(self.score, tf.cast(target, self.score.dtype), margin=1)
 
-        training_step = optimizer.minimize(loss_function, var_list=trainable_var_list)
+        training_step = optimizer.minimize(fact_loss, var_list=self.parameters)
 
-    def train(self, session, nb_epochs=1, nb_batches=10):
         index_gen = index.GlorotIndexGenerator()
         neg_idxs = np.array(sorted(set(self.parser.entity_to_index.values())))
 
@@ -113,7 +112,7 @@ class KGEmbeddings:
         batch_size = math.ceil(nb_samples / nb_batches)
         logger.info("Samples: {}, no. batches: {} -> batch size: {}".format(nb_samples, nb_batches, batch_size))
 
-        projection_steps = [constraints.unit_cube(self.entity_embedding_layer) if self.unit_cube
+        projection_steps = [constraints.unit_cube(self.entity_embedding_layer) if unit_cube
                             else constraints.unit_sphere(self.entity_embedding_layer, norm=1.0)]
 
         for epoch in range(1, nb_epochs + 1):
@@ -126,7 +125,7 @@ class KGEmbeddings:
             batches = make_batches(nb_samples, batch_size)
 
             loss_values = []
-            total_fact_loss_value = 0
+            total_loss_value = 0
 
             for batch_start, batch_end in batches:
                 curr_batch_size = batch_end - batch_start
@@ -152,39 +151,12 @@ class KGEmbeddings:
 
                 loss_args = {self.walk_inputs: Xr_batch, self.entity_inputs: Xe_batch}
 
-                train_steps = [self.discriminator_training_step, self.loss_function, self.fact_loss]
-                _, loss_value, fact_loss_value = session.run(train_steps, feed_dict=loss_args)
+                _, loss_value = session.run([training_step, fact_loss], feed_dict=loss_args)
 
-                loss_values += [loss_value / (Xr_batch.shape[0] / self.nb_versions)]
-                total_fact_loss_value += fact_loss_value
+                loss_values += [loss_value / (Xr_batch.shape[0] / 3)]
+                total_loss_value += loss_value
 
                 for projection_step in projection_steps:
-                    session.run([projection_step])
-
-    def train_adversary(self, session, nb_epochs=1):
-        # Initialize the violating embeddings using real embeddings
-        if self.adversaries:
-            projections = [constraints.unit_cube(adv_embedding_layer) if self.unit_cube
-                           else constraints.unit_sphere(adv_embedding_layer, norm=1.0)
-                           for a in self.adversaries for adv_embedding_layer in a.parameters]
-
-            def ground_init_op(violating_embeddings):
-                _ent_indices = np.array(sorted(self.parser.index_to_entity.keys()))
-                rnd_ent_indices = _ent_indices[self.random_state.randint(low=0, high=len(_ent_indices),
-                                                                         size=self.adversaries[0].batch_size)]
-                _ent_embeddings = tf.nn.embedding_lookup(self.entity_embedding_layer, rnd_ent_indices)
-                return violating_embeddings.assign(_ent_embeddings)
-
-            assignment_ops = [ground_init_op(violating_emb) for a in self.adversaries for violating_emb in a.parameters]
-            session.run(assignment_ops)
-
-            for projection_step in projections:
-                session.run([projection_step])
-
-            for epoch in range(1, nb_epochs + 1):
-                session.run([self.violation_training_step])
-
-                for projection_step in projections:
                     session.run([projection_step])
 
     def get_embeddings(self, session):
