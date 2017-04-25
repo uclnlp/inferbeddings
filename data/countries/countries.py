@@ -7,6 +7,7 @@ import os
 from typing import NamedTuple, List
 import json
 
+from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 import logging
@@ -20,7 +21,7 @@ def norm(name):
 def write_to_file(path, instances):
     with open(path, 'w') as f:
         for instance in instances:
-            f.write(instance)
+            f.write('{}\n'.format(instance))
 
 
 def write_triples_to_file(path, triples):
@@ -87,19 +88,16 @@ def main(argv):
         return True
 
     country_names_lst = sorted(country_names)
-    consistent, seed = None, 0
+    consistent_set, seed = None, 0
 
-    while consistent is None:
+    for seed, _ in tqdm(enumerate(iter(lambda: consistent_set is not None, True))):
         logging.debug('Trying seed {} ..'.format(seed))
         train, valid_test = train_test_split(country_names_lst, train_size=0.8, random_state=seed)
         valid, test = train_test_split(valid_test, train_size=0.5, random_state=seed)
-
         if is_consistent(train, test):
-            consistent = (train, valid, test)
-        seed += 1
+            consistent_set = (train, valid, test)
 
-    train, valid, test = consistent
-    print(len(train), len(valid), len(test))
+    train, valid, test = consistent_set
 
     write_to_file('./countries_train.lst', sorted(train))
     write_to_file('./countries_valid.lst', sorted(valid))
@@ -108,41 +106,62 @@ def main(argv):
     if not os.path.exists('s1'):
         os.makedirs('s1')
 
-    s1_triples = set()
+    s1_triples_train, s1_triples_valid, s1_triples_test = set(), set(), set()
     for s, p, o in triples:
         if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names):
-            s1_triples |= {(s, p, o)}
+            s1_triples_train |= {(s, p, o)}
+        elif s in valid:
+            s1_triples_valid |= {(s, p, o)}
+        elif s in test:
+            s1_triples_test |= {(s, p, o)}
 
-    write_triples_to_file('s1/triples_s1.tsv', s1_triples)
+    write_triples_to_file('s1/triples.tsv', sorted(triples))
+    write_triples_to_file('s1/s1_train.tsv', sorted(s1_triples_train))
+    write_triples_to_file('s1/s1_valid.tsv', sorted(s1_triples_valid))
+    write_triples_to_file('s1/s1_test.tsv', sorted(s1_triples_test))
 
     if not os.path.exists('s2'):
         os.makedirs('s2')
 
-    s2_triples = set()
+    s2_triples_train, s2_triples_valid, s2_triples_test = set(), set(), set()
     for s, p, o in triples:
-        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names):
-            if not ((s in valid or s in test) and p == 'locatedIn' and o in subregion_names):
-                s2_triples |= {(s, p, o)}
+        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names) and\
+                not ((s in valid or s in test) and p == 'locatedIn' and o in subregion_names):
+            s2_triples_train |= {(s, p, o)}
+        elif s in valid:
+            s2_triples_valid |= {(s, p, o)}
+        elif s in test:
+            s2_triples_test |= {(s, p, o)}
 
-    write_triples_to_file('s2/triples_s2.tsv', s2_triples)
+    write_triples_to_file('s2/triples.tsv', sorted(triples))
+    write_triples_to_file('s2/s2_train.tsv', sorted(s2_triples_train))
+    write_triples_to_file('s2/s2_valid.tsv', sorted(s2_triples_valid))
+    write_triples_to_file('s2/s2_test.tsv', sorted(s2_triples_test))
 
     if not os.path.exists('s3'):
         os.makedirs('s3')
 
-    def has_neighbor_in_test(country_name):
+    def has_neighbor_in_test_set(country_name, test_set):
         for _s, _p, _o in triples:
-            if _s == country_name and _p == 'neighborOf' and (_o in valid or _o in test):
+            if _s == country_name and _p == 'neighborOf' and (_o in valid or _o in test_set):
                 return True
         return False
 
-    s3_triples = set()
+    s3_triples_train, s3_triples_valid, s3_triples_test = set(), set(), set()
     for s, p, o in triples:
-        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names):
-            if not ((s in valid or s in test) and p == 'locatedIn' and o in subregion_names):
-                if not (has_neighbor_in_test(s) and p == 'locatedIn' and o in region_names):
-                    s3_triples |= {(s, p, o)}
+        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names) and\
+                not ((s in valid or s in test) and p == 'locatedIn' and o in subregion_names) and\
+                not (has_neighbor_in_test_set(s, valid + test) and p == 'locatedIn' and o in region_names):
+            s3_triples_train |= {(s, p, o)}
+        elif s in valid or has_neighbor_in_test_set(s, valid):
+            s3_triples_valid |= {(s, p, o)}
+        elif s in test or has_neighbor_in_test_set(s, test):
+            s3_triples_test |= {(s, p, o)}
 
-    write_triples_to_file('s3/triples_s2.tsv', s3_triples)
+    write_triples_to_file('s3/triples.tsv', sorted(triples))
+    write_triples_to_file('s3/s3_train.tsv', sorted(s3_triples_train))
+    write_triples_to_file('s3/s3_valid.tsv', sorted(s3_triples_valid))
+    write_triples_to_file('s3/s3_test.tsv', sorted(s3_triples_test))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
