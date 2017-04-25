@@ -1,88 +1,149 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import random
-
 import sys
 import os
+
+from typing import NamedTuple, List
+import json
+
+from sklearn.model_selection import train_test_split
 
 import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
-def clean(x):
-    return x.replace(' ', '_').replace('(', '').replace(')', '').lower()
+def norm(name):
+    return name.replace(' ', '_').replace("'", '').lower()
 
 
-acronym2name = {}
-table = []
+def write_to_file(path, instances):
+    with open(path, 'w') as f:
+        for instance in instances:
+            f.write(instance)
 
-countries = set()
-regions = set()
-subregions = set()
 
-country2neighbors = {}
+def write_triples_to_file(path, triples):
+    with open(path, 'w') as f:
+        for s, p, o in triples:
+            f.write('{}\t{}\t{}\n'.format(s, p, o))
 
-with open('data/countries.csv', 'r') as f_in:
-    for line in f_in.readlines()[1:]:
-        line = line.strip().split(';')
-        country = clean(line[0][1:-1].split(',')[0])
-        acronym = line[4][1:-1]
-        acronym2name[acronym] = country
-        capital = line[8]
-        region = clean(line[10][1:-1])
-        subregion = clean(line[11][1:-1])
-        borders = line[17][1:-1].split(',')
-        if borders == ['']:
-            borders = []
 
-        assert country != ''
+def main(argv):
+    Country = NamedTuple('Country', [('name', str), ('region', str), ('subregion', str), ('neighbors', List[str])])
+    code_to_country, country_name_to_country = dict(), dict()
 
-        if region:
-            regions.add(region)
-        if subregion:
-            subregions.add(subregion)
+    with open('countries.json', 'r') as fp:
+        countries = json.load(fp)
 
-        if region and subregion:
-            table.append((country, region, subregion, borders))
-            countries.add(country)
+    for c in countries:
+        country = Country(norm(c['name']['official']), c['region'], c['subregion'], c['borders'])
+        for code in {c['cca2'], c['ccn3'], c['cca3']}:
+            code_to_country[code] = country
+            country_name_to_country[norm(c['name']['official'])] = country
 
-facts = set()
+    triples = set()
+    country_names, region_names, subregion_names = set(), set(), set()
 
-country2facts = {}
+    for c in countries:
+        if len(c['region']) > 0:
+            triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['region']))}
 
-for country, region, subregion, borders in table:
-    country_facts = [
-        '{}\tlocatedIn\t{}\n'.format(country, region),
-        '{}\tlocatedIn\t{}\n'.format(country, subregion),
-        '{}\tlocatedIn\t{}\n'.format(subregion, region)
-    ]
-    neighbors = [
-        '{}\tneighborOf\t{}\n'.format(country, acronym2name[x]) for x in borders
-    ]
-    country2neighbors[country] = set(acronym2name[x] for x in borders)
-    for neighbor in neighbors:
-        country_facts.append(neighbor)
-    for fact in country_facts:
-        facts.add(fact)
-    country2facts[country] = country_facts
+        if len(c['subregion']) > 0:
+            triples |= {(norm(c['region']), 'locatedIn', norm(c['subregion']))}
+            triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['subregion']))}
 
-assert len(countries) == 244
-assert len(regions) == 5
-assert len(subregions) == 23
+        for border in c['borders']:
+            neighbor_name = code_to_country[border].name
+            triples |= {(norm(c['name']['official']), 'neighborOf', neighbor_name)}
 
-with open('countries.tsv', 'w') as f_out:
-    for fact in sorted(facts):
-        f_out.write(fact)
+        country_names |= {norm(c['name']['official'])}
 
-with open('data/countries.lst', 'w') as f_out:
-    for country in sorted(countries):
-        f_out.write('{}\n'.format(country))
+        if len(c['region']) > 0:
+            region_names |= {norm(c['region'])}
 
-with open('data/regions.lst', 'w') as f_out:
-    for region in sorted(regions):
-        f_out.write('{}\n'.format(region))
+        if len(c['subregion']) > 0:
+            subregion_names |= {norm(c['subregion'])}
 
-with open('data/subregions.lst', 'w') as f_out:
-    for region in sorted(subregions):
-        f_out.write('{}\n'.format(region))
+    assert len(country_names) == 248
+    assert len(region_names) == 5
+    assert len(subregion_names) == 23
+
+    if not os.path.exists('data'):
+        os.makedirs('data')
+
+    write_to_file('data/countries.lst', sorted(country_names))
+    write_to_file('data/regions.lst', sorted(region_names))
+    write_to_file('data/subregions.lst', sorted(subregion_names))
+
+    def is_consistent(_train, _test):
+        for test_country_name in _test:
+            _is_consistent = False
+            for neighbor_code in country_name_to_country[test_country_name].neighbors:
+                _neighbor_name = code_to_country[neighbor_code].name
+                _is_consistent = _is_consistent or _neighbor_name in _train
+            if not _is_consistent:
+                return False
+        return True
+
+    country_names_lst = sorted(country_names)
+    consistent, seed = None, 0
+
+    while consistent is None:
+        logging.debug('Trying seed {} ..'.format(seed))
+        train, valid_test = train_test_split(country_names_lst, train_size=0.8, random_state=seed)
+        valid, test = train_test_split(valid_test, train_size=0.5, random_state=seed)
+
+        if is_consistent(train, test):
+            consistent = (train, valid, test)
+        seed += 1
+
+    train, valid, test = consistent
+    print(len(train), len(valid), len(test))
+
+    write_to_file('./countries_train.lst', sorted(train))
+    write_to_file('./countries_valid.lst', sorted(valid))
+    write_to_file('./countries_test.lst', sorted(test))
+
+    if not os.path.exists('s1'):
+        os.makedirs('s1')
+
+    s1_triples = set()
+    for s, p, o in triples:
+        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names):
+            s1_triples |= {(s, p, o)}
+
+    write_triples_to_file('s1/triples_s1.tsv', s1_triples)
+
+    if not os.path.exists('s2'):
+        os.makedirs('s2')
+
+    s2_triples = set()
+    for s, p, o in triples:
+        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names):
+            if not ((s in valid or s in test) and p == 'locatedIn' and o in subregion_names):
+                s2_triples |= {(s, p, o)}
+
+    write_triples_to_file('s2/triples_s2.tsv', s2_triples)
+
+    if not os.path.exists('s3'):
+        os.makedirs('s3')
+
+    def has_neighbor_in_test(country_name):
+        for _s, _p, _o in triples:
+            if _s == country_name and _p == 'neighborOf' and (_o in valid or _o in test):
+                return True
+        return False
+
+    s3_triples = set()
+    for s, p, o in triples:
+        if not ((s in valid or s in test) and p == 'locatedIn' and o in region_names):
+            if not ((s in valid or s in test) and p == 'locatedIn' and o in subregion_names):
+                if not (has_neighbor_in_test(s) and p == 'locatedIn' and o in region_names):
+                    s3_triples |= {(s, p, o)}
+
+    write_triples_to_file('s3/triples_s2.tsv', s3_triples)
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])
