@@ -29,6 +29,7 @@ import json
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
+import argparse
 import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
@@ -52,53 +53,8 @@ def write_tuples_to_file(path, tuples):
             f.write('{}\n'.format("\t".join(t)))
 
 
-def main(argv):
-    Country = NamedTuple('Country', [('name', str), ('region', str), ('subregion', str), ('neighbors', List[str])])
-    code_to_country, country_name_to_country = dict(), dict()
-
-    with open('countries.json', 'r') as fp:
-        countries = json.load(fp)
-
-    for c in countries:
-        country = Country(norm(c['name']['official']), c['region'], c['subregion'], c['borders'])
-        for code in {c['cca2'], c['ccn3'], c['cca3']}:
-            code_to_country[code] = country
-            country_name_to_country[norm(c['name']['official'])] = country
-
-    triples = set()
-    country_names, region_names, subregion_names = set(), set(), set()
-
-    for c in countries:
-        if len(c['region']) > 0:
-            triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['region']))}
-
-        if len(c['subregion']) > 0:
-            triples |= {(norm(c['region']), 'locatedIn', norm(c['subregion']))}
-            triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['subregion']))}
-
-        for border in c['borders']:
-            neighbor_name = code_to_country[border].name
-            triples |= {(norm(c['name']['official']), 'neighborOf', neighbor_name)}
-
-        country_names |= {norm(c['name']['official'])}
-
-        if len(c['region']) > 0:
-            region_names |= {norm(c['region'])}
-
-        if len(c['subregion']) > 0:
-            subregion_names |= {norm(c['subregion'])}
-
-    assert len(country_names) == 248
-    assert len(region_names) == 5
-    assert len(subregion_names) == 23
-
-    if not os.path.exists('data'):
-        os.makedirs('data')
-
-    write_to_file('data/countries.lst', sorted(country_names))
-    write_to_file('data/regions.lst', sorted(region_names))
-    write_to_file('data/subregions.lst', sorted(subregion_names))
-
+def generate(triples, country_name_to_country, code_to_country,
+             country_names, region_names, subregion_names):
     def is_consistent(_train, _test):
         for test_country_name in _test:
             _is_consistent = False
@@ -222,6 +178,65 @@ def main(argv):
 
     assert s1_triples_valid == s2_triples_valid == s3_triples_valid
     assert s1_triples_test == s2_triples_test == s3_triples_test
+
+
+def main(argv):
+    def formatter(prog):
+        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
+
+    argparser = argparse.ArgumentParser('Countries dataset generator', formatter_class=formatter)
+    argparser.add_argument('--k', '-k', action='store', type=int, default=None, help='K in K-Fold CV')
+    args = argparser.parse_args(argv)
+
+    k = args.k
+
+    Country = NamedTuple('Country', [('name', str), ('region', str), ('subregion', str), ('neighbors', List[str])])
+    code_to_country, country_name_to_country = dict(), dict()
+
+    with open('countries.json', 'r') as fp:
+        countries = json.load(fp)
+
+    for c in countries:
+        country = Country(norm(c['name']['official']), c['region'], c['subregion'], c['borders'])
+        for code in {c['cca2'], c['ccn3'], c['cca3']}:
+            code_to_country[code] = country
+            country_name_to_country[norm(c['name']['official'])] = country
+
+    triples = set()
+    country_names, region_names, subregion_names = set(), set(), set()
+
+    for c in countries:
+        if len(c['region']) > 0:
+            triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['region']))}
+
+        if len(c['subregion']) > 0:
+            triples |= {(norm(c['region']), 'locatedIn', norm(c['subregion']))}
+            triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['subregion']))}
+
+        for border in c['borders']:
+            neighbor_name = code_to_country[border].name
+            triples |= {(norm(c['name']['official']), 'neighborOf', neighbor_name)}
+
+        country_names |= {norm(c['name']['official'])}
+
+        if len(c['region']) > 0:
+            region_names |= {norm(c['region'])}
+
+        if len(c['subregion']) > 0:
+            subregion_names |= {norm(c['subregion'])}
+
+    assert len(country_names) == 248
+    assert len(region_names) == 5
+    assert len(subregion_names) == 23
+
+    if not os.path.exists('data'):
+        os.makedirs('data')
+
+    write_to_file('data/countries.lst', sorted(country_names))
+    write_to_file('data/regions.lst', sorted(region_names))
+    write_to_file('data/subregions.lst', sorted(subregion_names))
+
+    generate(triples, country_name_to_country, code_to_country, country_names, region_names, subregion_names)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
