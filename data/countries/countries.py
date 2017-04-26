@@ -137,6 +137,7 @@ def main(argv):
             s1_triples_test |= {(s, p, o, 1)}
             s1_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif not (s in country_names and p == 'locatedIn' and o in region_names):
+            # Not to be cross-validated
             s1_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s1/triples.tsv', sorted(triples))
@@ -158,6 +159,7 @@ def main(argv):
             s2_triples_test |= {(s, p, o, 1)}
             s2_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif not (s in country_names and p == 'locatedIn' and o in (region_names | subregion_names)):
+            # Not to be cross-validated
             s2_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s2/triples.tsv', sorted(triples))
@@ -170,7 +172,7 @@ def main(argv):
 
     def has_neighbor_in(country_name, test_set):
         for _s, _p, _o in triples:
-            if _s == country_name and _p == 'neighborOf' and (_o in valid or _o in test_set):
+            if _s == country_name and _p == 'neighborOf' and _o in test_set:
                 return True
         return False
 
@@ -185,6 +187,7 @@ def main(argv):
             s3_triples_test |= {(s, p, o, 1)}
             s3_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif not ((s in country_names and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names)):
+            # Not to be cross-validated
             s3_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s3/triples.tsv', sorted(triples))
