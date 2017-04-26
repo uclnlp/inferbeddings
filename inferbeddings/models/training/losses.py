@@ -15,7 +15,7 @@ def logistic_loss(scores, targets, *args, **kwargs):
     array([  4.53988992e-05,   6.71534849e-03])
     >> tf.nn.softplus(- np.array([10., -5.]) * np.array([1., -1])).eval()
     array([  4.53988992e-05,   6.71534849e-03])
-    >> tf.nn.sigmoid_cross_entropy_with_logits(np.array([10., -5.]), np.array([1., 0.])).eval()
+    >> tf.nn.sigmoid_cross_entropy_with_logits(logits=np.array([10., -5.]), labels=np.array([1., 0.])).eval()
     array([  4.53988992e-05,   6.71534849e-03])
 
     :param scores: (N,) Tensor containing scores of examples.
