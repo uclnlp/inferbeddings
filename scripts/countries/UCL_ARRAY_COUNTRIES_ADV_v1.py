@@ -113,7 +113,7 @@ def main(argv):
     hyperparameters_space_3 = dict(
         epochs=[100],
         model=['TransE'],
-        similarity=['dot'],
+        similarity=['l1', 'l2'],
         margin=[1, 2, 5, 10],
         embedding_size=[10, 20, 50, 100],
         loss=['pairwise_hinge'],
