@@ -211,11 +211,8 @@ def main(argv):
 
     assert len(s3_triples_train) < len(s2_triples_train) < len(s1_triples_train)
 
-    for a in s2_triples_train:
-        assert a in s1_triples_train
-
-    for a in s3_triples_train:
-        assert a in s2_triples_train
+    assert all([a in s1_triples_train for a in s2_triples_train])
+    assert all([a in s2_triples_train for a in s3_triples_train])
 
     assert s1_triples_valid == s2_triples_valid == s3_triples_valid
     assert s1_triples_test == s2_triples_test == s3_triples_test
