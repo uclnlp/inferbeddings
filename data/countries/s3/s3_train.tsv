@@ -503,8 +503,8 @@ republic_of_chile	locatedIn	south_america
 republic_of_chile	neighborOf	argentine_republic
 republic_of_chile	neighborOf	plurinational_state_of_bolivia
 republic_of_chile	neighborOf	republic_of_peru
-republic_of_china_(taiwan)	locatedIn	asia
-republic_of_china_(taiwan)	locatedIn	eastern_asia
+republic_of_china_taiwan	locatedIn	asia
+republic_of_china_taiwan	locatedIn	eastern_asia
 republic_of_colombia	locatedIn	south_america
 republic_of_colombia	neighborOf	bolivarian_republic_of_venezuela
 republic_of_colombia	neighborOf	federative_republic_of_brazil
