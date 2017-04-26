@@ -29,7 +29,7 @@ def to_cmd(c, _path=None):
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
     hidden_str = '--hidden-size {}'.format(c['hidden_size']) if 'hidden_size' in c else ''
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/adv-cli.py --auc' \
               ' --train {}/data/countries/s{}/s{}_train.tsv' \
               ' --valid {}/data/countries/s{}/s{}_valid.tsv' \
               ' --test {}/data/countries/s{}/s{}_test.tsv' \
@@ -166,8 +166,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=1G,tmem=1G
-#$ -l h_rt=1:00:00
+#$ -l h_vmem=500M,tmem=500M
+#$ -l h_rt=00:10:00
 
 """.format(nb_jobs)
 
