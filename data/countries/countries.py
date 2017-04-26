@@ -27,6 +27,9 @@ def write_to_file(path, instances):
 def write_tuples_to_file(path, tuples):
     with open(path, 'w') as f:
         for t in tuples:
+            if len(t) == 4:
+                s, p, o, i = t
+                t = (s, p, o, str(i))
             f.write('{}\n'.format("\t".join(t)))
 
 

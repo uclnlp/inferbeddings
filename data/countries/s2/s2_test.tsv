@@ -1,50 +1,125 @@
+bosnia_and_herzegovina	locatedIn	africa	0
+bosnia_and_herzegovina	locatedIn	americas	0
+bosnia_and_herzegovina	locatedIn	asia	0
 bosnia_and_herzegovina	locatedIn	europe
-bosnia_and_herzegovina	locatedIn	southern_europe
+bosnia_and_herzegovina	locatedIn	oceania	0
+canada	locatedIn	africa	0
 canada	locatedIn	americas
-canada	locatedIn	northern_america
+canada	locatedIn	asia	0
+canada	locatedIn	europe	0
+canada	locatedIn	oceania	0
+co-operative_republic_of_guyana	locatedIn	africa	0
 co-operative_republic_of_guyana	locatedIn	americas
-co-operative_republic_of_guyana	locatedIn	south_america
+co-operative_republic_of_guyana	locatedIn	asia	0
+co-operative_republic_of_guyana	locatedIn	europe	0
+co-operative_republic_of_guyana	locatedIn	oceania	0
+democratic_peoples_republic_of_korea	locatedIn	africa	0
+democratic_peoples_republic_of_korea	locatedIn	americas	0
 democratic_peoples_republic_of_korea	locatedIn	asia
-democratic_peoples_republic_of_korea	locatedIn	eastern_asia
+democratic_peoples_republic_of_korea	locatedIn	europe	0
+democratic_peoples_republic_of_korea	locatedIn	oceania	0
 democratic_republic_of_the_congo	locatedIn	africa
-democratic_republic_of_the_congo	locatedIn	middle_africa
+democratic_republic_of_the_congo	locatedIn	americas	0
+democratic_republic_of_the_congo	locatedIn	asia	0
+democratic_republic_of_the_congo	locatedIn	europe	0
+democratic_republic_of_the_congo	locatedIn	oceania	0
 federal_democratic_republic_of_ethiopia	locatedIn	africa
-federal_democratic_republic_of_ethiopia	locatedIn	eastern_africa
+federal_democratic_republic_of_ethiopia	locatedIn	americas	0
+federal_democratic_republic_of_ethiopia	locatedIn	asia	0
+federal_democratic_republic_of_ethiopia	locatedIn	europe	0
+federal_democratic_republic_of_ethiopia	locatedIn	oceania	0
+kingdom_of_belgium	locatedIn	africa	0
+kingdom_of_belgium	locatedIn	americas	0
+kingdom_of_belgium	locatedIn	asia	0
 kingdom_of_belgium	locatedIn	europe
-kingdom_of_belgium	locatedIn	western_europe
+kingdom_of_belgium	locatedIn	oceania	0
+lebanese_republic	locatedIn	africa	0
+lebanese_republic	locatedIn	americas	0
 lebanese_republic	locatedIn	asia
-lebanese_republic	locatedIn	western_asia
+lebanese_republic	locatedIn	europe	0
+lebanese_republic	locatedIn	oceania	0
+macao_special_administrative_region_of_the_peoples_republic_of_china	locatedIn	africa	0
+macao_special_administrative_region_of_the_peoples_republic_of_china	locatedIn	americas	0
 macao_special_administrative_region_of_the_peoples_republic_of_china	locatedIn	asia
-macao_special_administrative_region_of_the_peoples_republic_of_china	locatedIn	eastern_asia
+macao_special_administrative_region_of_the_peoples_republic_of_china	locatedIn	europe	0
+macao_special_administrative_region_of_the_peoples_republic_of_china	locatedIn	oceania	0
+nation_of_brunei,_abode_of_peace	locatedIn	africa	0
+nation_of_brunei,_abode_of_peace	locatedIn	americas	0
 nation_of_brunei,_abode_of_peace	locatedIn	asia
-nation_of_brunei,_abode_of_peace	locatedIn	south-eastern_asia
+nation_of_brunei,_abode_of_peace	locatedIn	europe	0
+nation_of_brunei,_abode_of_peace	locatedIn	oceania	0
+netherlands	locatedIn	africa	0
+netherlands	locatedIn	americas	0
+netherlands	locatedIn	asia	0
 netherlands	locatedIn	europe
-netherlands	locatedIn	western_europe
+netherlands	locatedIn	oceania	0
+republic_of_albania	locatedIn	africa	0
+republic_of_albania	locatedIn	americas	0
+republic_of_albania	locatedIn	asia	0
 republic_of_albania	locatedIn	europe
-republic_of_albania	locatedIn	southern_europe
+republic_of_albania	locatedIn	oceania	0
 republic_of_cameroon	locatedIn	africa
-republic_of_cameroon	locatedIn	middle_africa
+republic_of_cameroon	locatedIn	americas	0
+republic_of_cameroon	locatedIn	asia	0
+republic_of_cameroon	locatedIn	europe	0
+republic_of_cameroon	locatedIn	oceania	0
 republic_of_chad	locatedIn	africa
-republic_of_chad	locatedIn	middle_africa
+republic_of_chad	locatedIn	americas	0
+republic_of_chad	locatedIn	asia	0
+republic_of_chad	locatedIn	europe	0
+republic_of_chad	locatedIn	oceania	0
+republic_of_ecuador	locatedIn	africa	0
 republic_of_ecuador	locatedIn	americas
-republic_of_ecuador	locatedIn	south_america
+republic_of_ecuador	locatedIn	asia	0
+republic_of_ecuador	locatedIn	europe	0
+republic_of_ecuador	locatedIn	oceania	0
+republic_of_haiti	locatedIn	africa	0
 republic_of_haiti	locatedIn	americas
-republic_of_haiti	locatedIn	caribbean
+republic_of_haiti	locatedIn	asia	0
+republic_of_haiti	locatedIn	europe	0
+republic_of_haiti	locatedIn	oceania	0
+republic_of_kazakhstan	locatedIn	africa	0
+republic_of_kazakhstan	locatedIn	americas	0
 republic_of_kazakhstan	locatedIn	asia
-republic_of_kazakhstan	locatedIn	central_asia
+republic_of_kazakhstan	locatedIn	europe	0
+republic_of_kazakhstan	locatedIn	oceania	0
 republic_of_kenya	locatedIn	africa
-republic_of_kenya	locatedIn	eastern_africa
-republic_of_kosovo	locatedIn	eastern_europe
+republic_of_kenya	locatedIn	americas	0
+republic_of_kenya	locatedIn	asia	0
+republic_of_kenya	locatedIn	europe	0
+republic_of_kenya	locatedIn	oceania	0
+republic_of_kosovo	locatedIn	africa	0
+republic_of_kosovo	locatedIn	americas	0
+republic_of_kosovo	locatedIn	asia	0
 republic_of_kosovo	locatedIn	europe
+republic_of_kosovo	locatedIn	oceania	0
 republic_of_malawi	locatedIn	africa
-republic_of_malawi	locatedIn	eastern_africa
+republic_of_malawi	locatedIn	americas	0
+republic_of_malawi	locatedIn	asia	0
+republic_of_malawi	locatedIn	europe	0
+republic_of_malawi	locatedIn	oceania	0
+republic_of_nicaragua	locatedIn	africa	0
 republic_of_nicaragua	locatedIn	americas
-republic_of_nicaragua	locatedIn	central_america
+republic_of_nicaragua	locatedIn	asia	0
+republic_of_nicaragua	locatedIn	europe	0
+republic_of_nicaragua	locatedIn	oceania	0
+republic_of_peru	locatedIn	africa	0
 republic_of_peru	locatedIn	americas
-republic_of_peru	locatedIn	south_america
+republic_of_peru	locatedIn	asia	0
+republic_of_peru	locatedIn	europe	0
+republic_of_peru	locatedIn	oceania	0
+republic_of_the_union_of_myanmar	locatedIn	africa	0
+republic_of_the_union_of_myanmar	locatedIn	americas	0
 republic_of_the_union_of_myanmar	locatedIn	asia
-republic_of_the_union_of_myanmar	locatedIn	south-eastern_asia
+republic_of_the_union_of_myanmar	locatedIn	europe	0
+republic_of_the_union_of_myanmar	locatedIn	oceania	0
+state_of_palestine	locatedIn	africa	0
+state_of_palestine	locatedIn	americas	0
 state_of_palestine	locatedIn	asia
-state_of_palestine	locatedIn	western_asia
+state_of_palestine	locatedIn	europe	0
+state_of_palestine	locatedIn	oceania	0
 tunisian_republic	locatedIn	africa
-tunisian_republic	locatedIn	northern_africa
+tunisian_republic	locatedIn	americas	0
+tunisian_republic	locatedIn	asia	0
+tunisian_republic	locatedIn	europe	0
+tunisian_republic	locatedIn	oceania	0
