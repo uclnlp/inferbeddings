@@ -81,7 +81,7 @@ def main(argv):
         similarity=['dot'],
         margin=[1, 2, 5, 10],
         embedding_size=[10, 20, 50, 100],
-        loss=['hinge'],
+        loss=['hinge', 'pairwise_hinge'],
         adv_lr=[.1],
         adv_epochs=[0, 10],
         disc_epochs=[10],
