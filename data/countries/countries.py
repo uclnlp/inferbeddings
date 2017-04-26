@@ -133,6 +133,12 @@ def main(argv):
         os.makedirs('s1')
 
     s1_triples_train, s1_triples_valid, s1_triples_test = set(), set(), set()
+    """
+    In the basic setting we only set locatedIn(c, r) to missing for the countries in the test data.
+    In this setting, the correct relations can be predicted from patterns of the form:
+        locatedIn(c, s) ∧ locatedIn(s, r) ⇒ locatedIn(c, r)
+    where s refers to the country’s subregion.
+    """
     for s, p, o in triples:
         if s in train and p == 'locatedIn' and o in region_names:
             s1_triples_train |= {(s, p, o)}
@@ -155,6 +161,14 @@ def main(argv):
         os.makedirs('s2')
 
     s2_triples_train, s2_triples_valid, s2_triples_test = set(), set(), set()
+    """
+    In addition to the instances of S1, we set locatedIn(c, s) to missing for all countries c
+    in the test/validation set and all subregions s in the data. In this setting, the correct
+    triples can be predicted from:
+        neighborOf(c1, c2) ∧ locatedIn(c2, r) ⇒ locatedIn(c1, r)
+    This is a harder task than S1, since a country can have multiple neighbors and these can
+    be in different regions.
+    """
     for s, p, o in triples:
         if s in train and p == 'locatedIn' and o in (region_names | subregion_names):
             s2_triples_train |= {(s, p, o)}
@@ -183,6 +197,14 @@ def main(argv):
         return False
 
     s3_triples_train, s3_triples_valid, s3_triples_test = set(), set(), set()
+    """
+    In addition to the instances of S1 and S2 we set all locatedIn(n, r) to missing for all
+    neighbors n of all countries in the test/validation set and all regions r in the data.
+    In this setting, the correct triples can be predicted from patterns of the form:
+        neighborOf(c1, c2) ∧ locatedIn(c2, s) ∧ locatedIn(s, r) ⇒ locatedIn(c1, r)
+    This is the most difficult task, as it not only involves the neighborOf relation, but
+    also a path of length 3.
+    """
     for s, p, o in triples:
         if (s in train and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names):
             s3_triples_train |= {(s, p, o)}
