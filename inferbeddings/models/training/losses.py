@@ -22,7 +22,7 @@ def logistic_loss(scores, targets, *args, **kwargs):
     :param targets: (N,) Tensor containing {0, 1} targets of examples.
     :return: Loss value.
     """
-    logistic_losses = tf.nn.sigmoid_cross_entropy_with_logits(scores, targets)
+    logistic_losses = tf.nn.sigmoid_cross_entropy_with_logits(logits=scores, labels=targets)
     loss = tf.reduce_sum(logistic_losses)
     return loss
 
