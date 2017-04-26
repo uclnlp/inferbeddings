@@ -33,7 +33,7 @@ def to_cmd(c, _path=None):
               ' --train {}/data/countries/s{}/s{}_train.tsv' \
               ' --valid {}/data/countries/s{}/s{}_valid.tsv' \
               ' --test {}/data/countries/s{}/s{}_test.tsv' \
-              ' --clauses {}/data/countries/clauses/s{}.tsv' \
+              ' --clauses {}/data/countries/clauses/s{}.pl' \
               ' --nb-epochs {}' \
               ' --lr 0.1' \
               ' --nb-batches 10' \
@@ -166,8 +166,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=500M,tmem=500M
-#$ -l h_rt=00:10:00
+#$ -l h_vmem=2G,tmem=2G
+#$ -l h_rt=1:00:00
 
 """.format(nb_jobs)
 
