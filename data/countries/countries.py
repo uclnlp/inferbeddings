@@ -136,6 +136,8 @@ def main(argv):
         elif s in test and p == 'locatedIn' and o in region_names:
             s1_triples_test |= {(s, p, o, 1)}
             s1_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
+        elif not (s in country_names and p == 'locatedIn' and o in region_names):
+            s1_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s1/triples.tsv', sorted(triples))
     write_tuples_to_file('s1/s1_train.tsv', sorted(s1_triples_train))
@@ -155,6 +157,8 @@ def main(argv):
         elif s in test and p == 'locatedIn' and o in region_names:
             s2_triples_test |= {(s, p, o, 1)}
             s2_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
+        elif not (s in country_names and p == 'locatedIn' and o in (region_names | subregion_names)):
+            s2_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s2/triples.tsv', sorted(triples))
     write_tuples_to_file('s2/s2_train.tsv', sorted(s2_triples_train))
@@ -180,6 +184,8 @@ def main(argv):
         elif s in test and p == 'locatedIn' and o in region_names:
             s3_triples_test |= {(s, p, o, 1)}
             s3_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
+        elif not ((s in country_names and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names)):
+            s3_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s3/triples.tsv', sorted(triples))
     write_tuples_to_file('s3/s3_train.tsv', sorted(s3_triples_train))
