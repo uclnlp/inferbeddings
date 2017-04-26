@@ -39,18 +39,16 @@ def norm(name):
 
 
 def write_to_file(path, instances):
+    folder_path = os.path.dirname(os.path.realpath(path))
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
     with open(path, 'w') as f:
         for instance in instances:
             f.write('{}\n'.format(instance))
 
 
 def write_tuples_to_file(path, tuples):
-    with open(path, 'w') as f:
-        for t in tuples:
-            if len(t) == 4:
-                s, p, o, i = t
-                t = (s, p, o, str(i))
-            f.write('{}\n'.format("\t".join(t)))
+    write_to_file(path, ['{}'.format("\t".join([str(x) for x in t])) for t in tuples])
 
 
 def generate(triples, country_name_to_country, code_to_country,
@@ -91,9 +89,6 @@ def generate(triples, country_name_to_country, code_to_country,
     write_to_file('./countries_valid.lst', sorted(valid))
     write_to_file('./countries_test.lst', sorted(test))
 
-    if not os.path.exists('s1'):
-        os.makedirs('s1')
-
     s1_triples_train, s1_triples_valid, s1_triples_test = set(), set(), set()
     """
     In the basic setting we only set locatedIn(c, r) to missing for the countries in the test data.
@@ -119,9 +114,6 @@ def generate(triples, country_name_to_country, code_to_country,
     write_tuples_to_file('s1/s1_valid.tsv', sorted(s1_triples_valid))
     write_tuples_to_file('s1/s1_test.tsv', sorted(s1_triples_test))
 
-    if not os.path.exists('s2'):
-        os.makedirs('s2')
-
     s2_triples_train, s2_triples_valid, s2_triples_test = set(), s1_triples_valid.copy(), s1_triples_test.copy()
     """
     In addition to the instances of S1, we set locatedIn(c, s) to missing for all countries c
@@ -141,9 +133,6 @@ def generate(triples, country_name_to_country, code_to_country,
     write_tuples_to_file('s2/s2_train.tsv', sorted(s2_triples_train))
     write_tuples_to_file('s2/s2_valid.tsv', sorted(s2_triples_valid))
     write_tuples_to_file('s2/s2_test.tsv', sorted(s2_triples_test))
-
-    if not os.path.exists('s3'):
-        os.makedirs('s3')
 
     def has_neighbor_in(country_name, test_set):
         for _s, _p, _o in triples:
@@ -228,9 +217,6 @@ def main(argv):
     assert len(country_names) == 248
     assert len(region_names) == 5
     assert len(subregion_names) == 23
-
-    if not os.path.exists('data'):
-        os.makedirs('data')
 
     write_to_file('data/countries.lst', sorted(country_names))
     write_to_file('data/regions.lst', sorted(region_names))
