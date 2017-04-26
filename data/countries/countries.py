@@ -154,12 +154,6 @@ def main(argv):
         elif not (s in country_names and p == 'locatedIn' and o in region_names):
             # Not a location(c, r) triple
             s1_triples_train |= {(s, p, o)}
-        elif s in (valid | test) and p == 'locatedIn' and o in subregion_names:
-            # location(c, s) does not belong to training, validation or test set
-            pass
-        else:
-            logger.error('Do not know how to handle <{}, {}, {}>'.format(s, p, o))
-            assert False
 
     write_tuples_to_file('s1/triples.tsv', sorted(triples))
     write_tuples_to_file('s1/s1_train.tsv', sorted(s1_triples_train))
@@ -169,7 +163,7 @@ def main(argv):
     if not os.path.exists('s2'):
         os.makedirs('s2')
 
-    s2_triples_train, s2_triples_valid, s2_triples_test = set(), set(), set()
+    s2_triples_train, s2_triples_valid, s2_triples_test = set(), s1_triples_valid.copy(), s1_triples_test.copy()
     """
     In addition to the instances of S1, we set locatedIn(c, s) to missing for all countries c
     in the test/validation set and all subregions s in the data. In this setting, the correct
@@ -178,27 +172,11 @@ def main(argv):
     This is a harder task than S1, since a country can have multiple neighbors and these can
     be in different regions.
     """
-    for s, p, o in triples:
-        if s in train and p == 'locatedIn' and o in (region_names | subregion_names):
-            # Country c is in the training set - location(c, r) and location(c, s) are available
-            s2_triples_train |= {(s, p, o)}
-        elif s in valid and p == 'locatedIn' and o in region_names:
-            # Country c is in the validation set - location(c, r) is in the validation set
-            s2_triples_valid |= {(s, p, o, 1)}
-            s2_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
-        elif s in test and p == 'locatedIn' and o in region_names:
-            # Country c is in the test set - location(c, r) is in the test set
-            s2_triples_test |= {(s, p, o, 1)}
-            s2_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
-        elif not (s in country_names and p == 'locatedIn' and o in (region_names | subregion_names)):
-            # Not to be cross-validated
-            s2_triples_train |= {(s, p, o)}
-        elif s in (valid + test) and p == 'locatedIn' and o in subregion_names:
-            # location(c, s) does not belong to training, validation or test set
+    for s, p, o in s1_triples_train:
+        if s in (valid + test) and p == 'locatedIn' and o in subregion_names:
             pass
         else:
-            logger.error('Do not know how to handle <{}, {}, {}>'.format(s, p, o))
-            assert False
+            s2_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s2/triples.tsv', sorted(triples))
     write_tuples_to_file('s2/s2_train.tsv', sorted(s2_triples_train))
@@ -214,7 +192,7 @@ def main(argv):
                 return True
         return False
 
-    s3_triples_train, s3_triples_valid, s3_triples_test = set(), set(), set()
+    s3_triples_train, s3_triples_valid, s3_triples_test = set(), s2_triples_valid.copy(), s2_triples_test.copy()
     """
     In addition to the instances of S1 and S2 we set all locatedIn(n, r) to missing for all
     neighbors n of all countries in the test/validation set and all regions r in the data.
@@ -223,29 +201,27 @@ def main(argv):
     This is the most difficult task, as it not only involves the neighborOf relation, but
     also a path of length 3.
     """
-    for s, p, o in triples:
-        if (s in train and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names):
-            s3_triples_train |= {(s, p, o)}
-        elif s in valid and p == 'locatedIn' and o in region_names:
-            s3_triples_valid |= {(s, p, o, 1)}
-            s3_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
-        elif s in test and p == 'locatedIn' and o in region_names:
-            s3_triples_test |= {(s, p, o, 1)}
-            s3_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
-        elif not ((s in country_names and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names)):
-            # Not to be cross-validated
-            s3_triples_train |= {(s, p, o)}
-        elif s in (valid + test) and p == 'locatedIn' and o in subregion_names:
-            # location(c, s) does not belong to training, validation or test set
+    for s, p, o in s2_triples_train:
+        if has_neighbor_in(s, valid + test) and p == 'locatedIn' and o in region_names:
             pass
         else:
-            logger.error('Do not know how to handle <{}, {}, {}>'.format(s, p, o))
-            assert False
+            s3_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s3/triples.tsv', sorted(triples))
     write_tuples_to_file('s3/s3_train.tsv', sorted(s3_triples_train))
     write_tuples_to_file('s3/s3_valid.tsv', sorted(s3_triples_valid))
     write_tuples_to_file('s3/s3_test.tsv', sorted(s3_triples_test))
+
+    assert len(s3_triples_train) < len(s2_triples_train) < len(s1_triples_train)
+
+    for a in s2_triples_train:
+        assert a in s1_triples_train
+
+    for a in s3_triples_train:
+        assert a in s2_triples_train
+
+    assert s1_triples_valid == s2_triples_valid == s3_triples_valid
+    assert s1_triples_test == s2_triples_test == s3_triples_test
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
