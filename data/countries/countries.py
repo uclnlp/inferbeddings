@@ -119,6 +119,12 @@ def main(argv):
 
     train, valid, test = consistent_set
 
+    train_set, valid_set, test_set = set(train), set(valid), set(test)
+    assert train_set & valid_set == set()
+    assert train_set & test_set == set()
+    assert valid_set & test_set == set()
+    assert train_set | valid_set | test_set == country_names
+
     write_to_file('./countries_train.lst', sorted(train))
     write_to_file('./countries_valid.lst', sorted(valid))
     write_to_file('./countries_test.lst', sorted(test))
