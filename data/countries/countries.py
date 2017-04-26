@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+yes, I am measuring AUC-*ROC* on the locatedIn relation
+
+[12:51] 
+but only for locatedIn(c,r) where c is a test country and r a region (not a subregion!)
+
+[12:51] 
+this is how I understood the experimental setup in Nickel 2015
+
+-- @rockt on Slack :)
+"""
+
+
 import sys
 import os
 
@@ -137,10 +150,10 @@ def main(argv):
         if s in train and p == 'locatedIn' and o in (region_names | subregion_names):
             s2_triples_train |= {(s, p, o)}
         elif s in valid and p == 'locatedIn' and o in region_names:
-            s2_triples_valid |= {(s, p, o)}
+            s2_triples_valid |= {(s, p, o, 1)}
             s2_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif s in test and p == 'locatedIn' and o in region_names:
-            s2_triples_test |= {(s, p, o)}
+            s2_triples_test |= {(s, p, o, 1)}
             s2_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
 
     write_tuples_to_file('s2/triples.tsv', sorted(triples))
@@ -162,10 +175,10 @@ def main(argv):
         if (s in train and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names):
             s3_triples_train |= {(s, p, o)}
         elif s in valid and p == 'locatedIn' and o in region_names:
-            s3_triples_valid |= {(s, p, o)}
+            s3_triples_valid |= {(s, p, o, 1)}
             s3_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif s in test and p == 'locatedIn' and o in region_names:
-            s3_triples_test |= {(s, p, o)}
+            s3_triples_test |= {(s, p, o, 1)}
             s3_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
 
     write_tuples_to_file('s3/triples.tsv', sorted(triples))
