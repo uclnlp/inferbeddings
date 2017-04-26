@@ -110,7 +110,7 @@ def main(argv):
                 'in the test set there is at least one neighbor in the training set, as in [1] ..\n\n'
                 '[1] https://cbmm.mit.edu/sites/default/files/publications/holographic-embeddings.pdf')
 
-    for seed, _ in tqdm(enumerate(iter(lambda: consistent_set is not None, True))):
+    for seed, _ in tqdm(enumerate(iter(lambda: consistent_set is not None, True), start=180000)):
         logger.debug('Trying seed {} ..'.format(seed))
         train, valid_test = train_test_split(country_names_lst, train_size=0.8, random_state=seed)
         valid, test = train_test_split(valid_test, train_size=0.5, random_state=seed)
@@ -141,16 +141,25 @@ def main(argv):
     """
     for s, p, o in triples:
         if s in train and p == 'locatedIn' and o in region_names:
+            # Country c is in the training set - location(c, r) is available
             s1_triples_train |= {(s, p, o)}
         elif s in valid and p == 'locatedIn' and o in region_names:
+            # Country c is in the validation set - location(c, r) is in the validation set
             s1_triples_valid |= {(s, p, o, 1)}
             s1_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif s in test and p == 'locatedIn' and o in region_names:
+            # Country c is in the test set - location(c, r) is in the test set
             s1_triples_test |= {(s, p, o, 1)}
             s1_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif not (s in country_names and p == 'locatedIn' and o in region_names):
-            # Not to be cross-validated
+            # Not a location(c, r) triple
             s1_triples_train |= {(s, p, o)}
+        elif s in (valid | test) and p == 'locatedIn' and o in subregion_names:
+            # location(c, s) does not belong to training, validation or test set
+            pass
+        else:
+            logger.error('Do not know how to handle <{}, {}, {}>'.format(s, p, o))
+            assert False
 
     write_tuples_to_file('s1/triples.tsv', sorted(triples))
     write_tuples_to_file('s1/s1_train.tsv', sorted(s1_triples_train))
@@ -171,16 +180,25 @@ def main(argv):
     """
     for s, p, o in triples:
         if s in train and p == 'locatedIn' and o in (region_names | subregion_names):
+            # Country c is in the training set - location(c, r) and location(c, s) are available
             s2_triples_train |= {(s, p, o)}
         elif s in valid and p == 'locatedIn' and o in region_names:
+            # Country c is in the validation set - location(c, r) is in the validation set
             s2_triples_valid |= {(s, p, o, 1)}
             s2_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif s in test and p == 'locatedIn' and o in region_names:
+            # Country c is in the test set - location(c, r) is in the test set
             s2_triples_test |= {(s, p, o, 1)}
             s2_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
         elif not (s in country_names and p == 'locatedIn' and o in (region_names | subregion_names)):
             # Not to be cross-validated
             s2_triples_train |= {(s, p, o)}
+        elif s in (valid + test) and p == 'locatedIn' and o in subregion_names:
+            # location(c, s) does not belong to training, validation or test set
+            pass
+        else:
+            logger.error('Do not know how to handle <{}, {}, {}>'.format(s, p, o))
+            assert False
 
     write_tuples_to_file('s2/triples.tsv', sorted(triples))
     write_tuples_to_file('s2/s2_train.tsv', sorted(s2_triples_train))
@@ -217,6 +235,12 @@ def main(argv):
         elif not ((s in country_names and not has_neighbor_in(s, valid + test)) and p == 'locatedIn' and o in (region_names | subregion_names)):
             # Not to be cross-validated
             s3_triples_train |= {(s, p, o)}
+        elif s in (valid + test) and p == 'locatedIn' and o in subregion_names:
+            # location(c, s) does not belong to training, validation or test set
+            pass
+        else:
+            logger.error('Do not know how to handle <{}, {}, {}>'.format(s, p, o))
+            assert False
 
     write_tuples_to_file('s3/triples.tsv', sorted(triples))
     write_tuples_to_file('s3/s3_train.tsv', sorted(s3_triples_train))
