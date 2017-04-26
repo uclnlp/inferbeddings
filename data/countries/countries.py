@@ -140,10 +140,7 @@ def main(argv):
     where s refers to the country’s subregion.
     """
     for s, p, o in triples:
-        if s in train and p == 'locatedIn' and o in region_names:
-            # Country c is in the training set - location(c, r) is available
-            s1_triples_train |= {(s, p, o)}
-        elif s in valid and p == 'locatedIn' and o in region_names:
+        if s in valid and p == 'locatedIn' and o in region_names:
             # Country c is in the validation set - location(c, r) is in the validation set
             s1_triples_valid |= {(s, p, o, 1)}
             s1_triples_valid |= {(s, p, _o, 0) for _o in region_names if _o != o}
@@ -151,8 +148,8 @@ def main(argv):
             # Country c is in the test set - location(c, r) is in the test set
             s1_triples_test |= {(s, p, o, 1)}
             s1_triples_test |= {(s, p, _o, 0) for _o in region_names if _o != o}
-        elif not (s in country_names and p == 'locatedIn' and o in region_names):
-            # Not a location(c, r) triple
+        else:
+            # All triples not in the validation or test set
             s1_triples_train |= {(s, p, o)}
 
     write_tuples_to_file('s1/triples.tsv', sorted(triples))
