@@ -29,7 +29,7 @@ def to_cmd(c, _path=None):
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
     hidden_str = '--hidden-size {}'.format(c['hidden_size']) if 'hidden_size' in c else ''
-    command = 'python3 {}/bin/adv-cli.py --auc --nb-batches 1' \
+    command = 'python3 {}/bin/adv-cli.py --auc --nb-batches 1 --seed {}' \
               ' --train {}/data/countries/s{}/s{}_train.tsv' \
               ' --valid {}/data/countries/s{}/s{}_valid.tsv' \
               ' --test {}/data/countries/s{}/s{}_test.tsv' \
@@ -46,7 +46,7 @@ def to_cmd(c, _path=None):
               ' {}' \
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {} --adv-pooling {}' \
-              ''.format(_path,
+              ''.format(_path, c['seed'],
                         _path, c['s'], c['s'],
                         _path, c['s'], c['s'],
                         _path, c['s'], c['s'],
@@ -90,7 +90,8 @@ def main(argv):
         adv_pooling=['max'],
         hidden_size=[1, 10, 20, 50, 100],
         unit_cube=[True, False],
-        s=[1, 2, 3]
+        s=[1, 2, 3],
+        seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
     hyperparameters_space_2 = dict(
@@ -107,7 +108,8 @@ def main(argv):
         adv_batch_size=[1, 10, 100],
         adv_pooling=['max'],
         unit_cube=[True, False],
-        s=[1, 2, 3]
+        s=[1, 2, 3],
+        seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
     hyperparameters_space_3 = dict(
@@ -124,7 +126,8 @@ def main(argv):
         adv_batch_size=[1, 10, 100],
         adv_pooling=['max'],
         unit_cube=[True, False],
-        s=[1, 2, 3]
+        s=[1, 2, 3],
+        seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1)) +\
