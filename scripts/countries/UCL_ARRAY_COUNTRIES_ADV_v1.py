@@ -112,27 +112,7 @@ def main(argv):
         seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
-    hyperparameters_space_3 = dict(
-        epochs=[100],
-        model=['TransE'],
-        similarity=['l1', 'l2'],
-        margin=[1, 2, 5, 10],
-        embedding_size=[10, 20, 50],
-        loss=['pairwise_hinge'],
-        adv_lr=[.1],
-        adv_epochs=[0, 10],
-        disc_epochs=[10],
-        adv_weight=[0, 1, 100, 10000, 1000000],
-        adv_batch_size=[100],
-        adv_pooling=['max'],
-        unit_cube=[True, False],
-        s=[1, 2, 3],
-        seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    )
-
-    configurations = list(cartesian_product(hyperparameters_space_1)) +\
-                     list(cartesian_product(hyperparameters_space_2)) +\
-                     list(cartesian_product(hyperparameters_space_3))
+    configurations = list(cartesian_product(hyperparameters_space_1)) + list(cartesian_product(hyperparameters_space_2))
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v1/'
 
