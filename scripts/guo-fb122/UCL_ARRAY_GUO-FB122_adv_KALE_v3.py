@@ -77,7 +77,7 @@ def main(argv):
         disc_epochs=[10],
         adv_weight=[0, 1, 100, 10000, 1000000],
         adv_batch_size=[1, 10, 100],
-        adv_pooling=['sum', 'mean', 'max'],
+        adv_pooling=['max'],
         hidden_size=[1, 10, 20, 50, 100, 200],
         unit_cube=[True, False]
     )
