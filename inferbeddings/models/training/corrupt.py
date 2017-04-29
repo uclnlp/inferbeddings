@@ -7,8 +7,7 @@ import numpy as np
 class ACorruptor(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __call__(self, steps, entities):
-        while False:
-            yield None
+        raise NotImplementedError
 
 
 class SimpleCorruptor(ACorruptor):
