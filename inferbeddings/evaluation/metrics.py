@@ -92,7 +92,7 @@ class Ranker(BaseRanker):
 
 
 class AUC(BaseRanker):
-    def __init__(self, scoring_function, nb_entities, nb_predicates, rescale_predictions=True):
+    def __init__(self, scoring_function, nb_entities, nb_predicates, rescale_predictions=False):
         self.scoring_function = scoring_function
         self.nb_entities = nb_entities
         self.nb_predicates = nb_predicates
