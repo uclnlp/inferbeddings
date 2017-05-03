@@ -70,19 +70,29 @@ def main(argv):
 
     argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=formatter)
 
-    argparser.add_argument('--train', required=True, action='store', type=str,
-                           default='data/snli/snli_1.0_train.jsonl.gz')
-    argparser.add_argument('--valid', action='store', type=str,
-                           default='data/snli/snli_1.0_dev.jsonl.gz')
-    argparser.add_argument('--test', action='store', type=str,
-                           default='data/snli/snli_1.0_test.jsonl.gz')
+    argparser.add_argument('--train', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
+    argparser.add_argument('--valid', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
+    argparser.add_argument('--test', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
+
+    argparser.add_argument('--embedding-size', action='store', type=int, default=300)
+    argparser.add_argument('--batch-size', action='store', type=int, default=1024)
+    argparser.add_argument('--num-units', action='store', type=int, default=300)
+    argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
+    argparser.add_argument('--dropout-keep-prob', action='store', type=int, default=1.0)
+    argparser.add_argument('--learning-rate', action='store', type=int, default=0.001)
 
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
 
-    logger.debug('Reading corpus ..')
+    embedding_size = args.embedding_size
+    batch_size = args.batch_size
+    num_units = args.num_units
+    nb_epochs = args.nb_epochs
+    dropout_keep_prob = args.dropout_keep_prob
+    learning_rate = args.learning_rate
 
+    logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
         train_path=train_path, valid_path=valid_path, test_path=test_path)
 
@@ -96,14 +106,8 @@ def main(argv):
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
-    embedding_size = 300
-    batch_size = 1024
-    num_units = 300
-    nb_epochs = 10000
-    dropout_keep_prob = 1.0
     max_len = None
-
-    optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 
     train_dataset = to_corpus(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = to_corpus(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
