@@ -25,46 +25,40 @@ def to_feed_dict(model, dataset):
         model.label: dataset['answers']}
 
 
-def to_dataset(corpus, max_len=None):
-    q, qlen = corpus['question'], corpus['question_lengths']
-    s, slen = corpus['support'], corpus['support_lengths']
-    return {
-        'questions': pad_sequences(q, max_len=max_len),
-        'supports': pad_sequences([_s for [_s] in s], max_len=max_len),
-        'question_lengths': np.clip(a=np.array(qlen), a_min=0, a_max=max_len),
-        'support_lengths': np.clip(a=np.array(slen)[:, 0], a_min=0, a_max=max_len),
-        'answers': np.array(corpus['answers'])}
-
-
 def train_tokenizer_on_instances(instances, num_words=None):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
-
     qs_tokenizer, a_tokenizer = keras.preprocessing.text.Tokenizer(num_words=num_words), keras.preprocessing.text.Tokenizer()
-
     qs_tokenizer.fit_on_texts(question_texts + support_texts)
     a_tokenizer.fit_on_texts(answer_texts)
-
     return qs_tokenizer, a_tokenizer
 
 
-def to_corpus(instances, qs_tokenizer, a_tokenizer):
+def to_corpus(instances, qs_tokenizer, a_tokenizer, max_len=None):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
+
     assert qs_tokenizer is not None and a_tokenizer is not None
-    corpus = {
-        'question': qs_tokenizer.texts_to_sequences(question_texts),
-        'support': [[s] for s in qs_tokenizer.texts_to_sequences(support_texts)],
-        'candidates': [0, 1, 2] * len(question_texts),
-        'answers': [a - 1 for [a] in a_tokenizer.texts_to_sequences(answer_texts)]}
-    assert {a for a in corpus['answers']} == {0, 1, 2}
-    # Note - those parts feel redundant
-    corpus['question_lengths'] = [len(q) for q in corpus['question']]
-    corpus['support_lengths'] = [[len(s)] for [s] in corpus['support']]
-    corpus['ids'] = list(range(len(corpus['question'])))
-    return corpus
+
+    questions = qs_tokenizer.texts_to_sequences(question_texts)
+    question_lenths = [len(_q) for _q in questions]
+
+    supports = [[s] for s in qs_tokenizer.texts_to_sequences(support_texts)]
+    support_lenghs = [[len(s)] for [s] in supports]
+
+    answers = [answers - 1 for [answers] in a_tokenizer.texts_to_sequences(answer_texts)]
+
+    assert set(answers) == {0, 1, 2}
+
+    return {
+        'questions': pad_sequences(questions, max_len=max_len),
+        'supports': pad_sequences([s for [s] in supports], max_len=max_len),
+        'question_lengths': np.clip(a=np.array(question_lenths), a_min=0, a_max=max_len),
+        'support_lengths': np.clip(a=np.array(support_lenghs)[:, 0], a_min=0, a_max=max_len),
+        'answers': np.array(answers)
+    }
 
 
 def main(argv):
@@ -76,15 +70,12 @@ def main(argv):
         test_path='data/snli/snli_1.0_dev.jsonl.gz'
     )
     train = dev = test = train[:10]
+    logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train), len(dev), len(test)))
 
     logger.debug('Parsing corpus ..')
 
     num_words = None
     qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(train + dev + test, num_words=num_words)
-
-    train_corpus = to_corpus(train, qs_tokenizer, a_tokenizer)
-    dev_corpus = to_corpus(dev, qs_tokenizer, a_tokenizer)
-    test_corpus = to_corpus(test, qs_tokenizer, a_tokenizer)
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
@@ -97,11 +88,9 @@ def main(argv):
 
     optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
 
-    logger.info('Train size: {}\tDev size: {}\tTest size: {}'
-                .format(len(train_corpus['question']), len(dev_corpus['question']), len(test_corpus['question'])))
-
-    train_dataset = to_dataset(train_corpus, max_len=max_len)
-    dev_dataset, test_dataset = to_dataset(dev_corpus, max_len=max_len), to_dataset(test_corpus, max_len=max_len)
+    train_dataset = to_corpus(train, qs_tokenizer, a_tokenizer, max_len=max_len)
+    dev_dataset = to_corpus(dev, qs_tokenizer, a_tokenizer, max_len=max_len)
+    test_dataset = to_corpus(test, qs_tokenizer, a_tokenizer, max_len=max_len)
 
     questions, supports = train_dataset['questions'], train_dataset['supports']
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
@@ -132,8 +121,7 @@ def main(argv):
             from derte.io.embeddings import load_glove
             logger.info('Initialising the embeddings with GloVe vectors ..')
 
-            word_set = {w for w, w_idx in qs_tokenizer.word_index.items()
-                        if w_idx < vocab_size}
+            word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
             with open(glove_path, 'r') as stream:
                 word_to_embedding = load_glove(stream=stream, words=word_set)
 
