@@ -20,20 +20,20 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def to_feed_dict(model, dataset):
     return {
-        model.sentence1: dataset.sentences1, model.sentence2: dataset.sentences2,
-        model.sentence1_size: dataset.sizes1, model.sentence2_size: dataset.sizes2,
-        model.label: dataset.labels}
+        model.sentence1: dataset['questions'], model.sentence2: dataset['supports'],
+        model.sentence1_size: dataset['question_lengths'], model.sentence2_size: dataset['support_lengths'],
+        model.label: dataset['answers']}
 
 
 def to_dataset(corpus, max_len=None):
     q, qlen = corpus['question'], corpus['question_lengths']
-    s, slen = corpus['support'], corpus['support_lengths'],
+    s, slen = corpus['support'], corpus['support_lengths']
     return {
         'questions': pad_sequences(q, max_len=max_len),
-        'sentences': pad_sequences([_s for [_s] in s], max_len=max_len),
+        'supports': pad_sequences([_s for [_s] in s], max_len=max_len),
         'question_lengths': np.clip(a=np.array(qlen), a_min=0, a_max=max_len),
-        'sentence_lengths': np.clip(a=np.array(slen)[:, 0], a_min=0, a_max=max_len),
-        'answers': corpus['answers']}
+        'support_lengths': np.clip(a=np.array(slen)[:, 0], a_min=0, a_max=max_len),
+        'answers': np.array(corpus['answers'])}
 
 
 def train_tokenizer_on_instances(instances, num_words=None):
@@ -71,10 +71,11 @@ def main(argv):
     logger.debug('Reading corpus ..')
 
     train, dev, test = SNLI.generate(
-        # train_path='data/snli/snli_1.0_dev.jsonl.gz',
-        # dev_path='data/snli/snli_1.0_dev.jsonl.gz',
-        # test_path='data/snli/snli_1.0_dev.jsonl.gz'
+        train_path='data/snli/snli_1.0_dev.jsonl.gz',
+        dev_path='data/snli/snli_1.0_dev.jsonl.gz',
+        test_path='data/snli/snli_1.0_dev.jsonl.gz'
     )
+    train = dev = test = train[:10]
 
     logger.debug('Parsing corpus ..')
 
@@ -102,8 +103,8 @@ def main(argv):
     train_dataset = to_dataset(train_corpus, max_len=max_len)
     dev_dataset, test_dataset = to_dataset(dev_corpus, max_len=max_len), to_dataset(test_corpus, max_len=max_len)
 
-    questions, sentences = train_dataset['questions'], train_dataset['sentences']
-    question_lengths, sentence_lengths = train_dataset['question_lengths'], train_dataset['sentence_lengths']
+    questions, supports = train_dataset['questions'], train_dataset['supports']
+    question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
     answers = train_dataset['answers']
 
     model = ConditionalBiLSTM(optimizer=optimizer, num_units=num_units, num_classes=3,
@@ -150,8 +151,8 @@ def main(argv):
         for epoch in range(1, nb_epochs + 1):
             order = random_state.permutation(nb_instances)
 
-            sentences1, sentences2 = questions[order], sentences[order]
-            sizes1, sizes2 = question_lengths[order], sentence_lengths[order]
+            sentences1, sentences2 = questions[order], supports[order]
+            sizes1, sizes2 = question_lengths[order], support_lengths[order]
             labels = answers[order]
 
             loss_values, correct_predictions_values = [], []
