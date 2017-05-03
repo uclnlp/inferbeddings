@@ -29,9 +29,10 @@ class SNLI:
             return res
 
     @staticmethod
-    def generate(train_path='data/snli/snli_1.0_train.jsonl.gz', dev_path='data/snli/snli_1.0_dev.jsonl.gz',
+    def generate(train_path='data/snli/snli_1.0_train.jsonl.gz',
+                 valid_path='data/snli/snli_1.0_dev.jsonl.gz',
                  test_path='data/snli/snli_1.0_test.jsonl.gz'):
-        train_corpus, dev_corpus, test_corpus = SNLI.parse(train_path), SNLI.parse(dev_path), SNLI.parse(test_path)
+        train_corpus, dev_corpus, test_corpus = SNLI.parse(train_path), SNLI.parse(valid_path), SNLI.parse(test_path)
         return [train_corpus, dev_corpus, test_corpus]
 
 

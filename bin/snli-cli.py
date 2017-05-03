@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import logging
+import argparse
+
 import os
 import sys
 
@@ -13,6 +14,8 @@ import tensorflow.contrib.keras as keras
 from inferbeddings.models.training.util import make_batches
 from inferbeddings.rte import ConditionalBiLSTM
 from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
+
+import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
@@ -62,20 +65,34 @@ def to_corpus(instances, qs_tokenizer, a_tokenizer, max_len=None):
 
 
 def main(argv):
+    def formatter(prog):
+        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
+
+    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=formatter)
+
+    argparser.add_argument('--train', required=True, action='store', type=str,
+                           default='data/snli/snli_1.0_train.jsonl.gz')
+    argparser.add_argument('--valid', action='store', type=str,
+                           default='data/snli/snli_1.0_dev.jsonl.gz')
+    argparser.add_argument('--test', action='store', type=str,
+                           default='data/snli/snli_1.0_test.jsonl.gz')
+
+    args = argparser.parse_args(argv)
+
+    train_path, valid_path, test_path = args.train, args.valid, args.test
+
     logger.debug('Reading corpus ..')
 
-    train, dev, test = SNLI.generate(
-        train_path='data/snli/snli_1.0_dev.jsonl.gz',
-        dev_path='data/snli/snli_1.0_dev.jsonl.gz',
-        test_path='data/snli/snli_1.0_dev.jsonl.gz'
-    )
-    train = dev = test = train[:100]
-    logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train), len(dev), len(test)))
+    train_instances, dev_instances, test_instances = SNLI.generate(
+        train_path=train_path, valid_path=valid_path, test_path=test_path)
+
+    train_instances = dev_instances = test_instances = train_instances[:100]
+    logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_instances), len(dev_instances), len(test_instances)))
 
     logger.debug('Parsing corpus ..')
 
     num_words = None
-    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(train + dev + test, num_words=num_words)
+    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(train_instances + dev_instances + test_instances, num_words=num_words)
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
@@ -88,9 +105,9 @@ def main(argv):
 
     optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
 
-    train_dataset = to_corpus(train, qs_tokenizer, a_tokenizer, max_len=max_len)
-    dev_dataset = to_corpus(dev, qs_tokenizer, a_tokenizer, max_len=max_len)
-    test_dataset = to_corpus(test, qs_tokenizer, a_tokenizer, max_len=max_len)
+    train_dataset = to_corpus(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    dev_dataset = to_corpus(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    test_dataset = to_corpus(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
     questions, supports = train_dataset['questions'], train_dataset['supports']
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
