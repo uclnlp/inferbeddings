@@ -90,7 +90,7 @@ def main(argv):
         adv_pooling=['max'],
         hidden_size=[1, 10, 20, 50],
         unit_cube=[True, False],
-        s=[1, 2, 3],
+        s=[1, 2, 3, 12, 123],
         seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
@@ -108,7 +108,7 @@ def main(argv):
         adv_batch_size=[100],
         adv_pooling=['max'],
         unit_cube=[True, False],
-        s=[1, 2, 3],
+        s=[1, 2, 3, 12, 123],
         seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
@@ -149,7 +149,7 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=2G,tmem=2G
+#$ -l h_vmem=4G,tmem=4G
 #$ -l h_rt=1:00:00
 
 """.format(nb_jobs)
