@@ -46,7 +46,7 @@ def to_corpus(instances, qs_tokenizer, a_tokenizer, max_len=None):
     assert qs_tokenizer is not None and a_tokenizer is not None
 
     questions = qs_tokenizer.texts_to_sequences(question_texts)
-    question_lenths = [len(_q) for _q in questions]
+    question_lenths = [len(q) for q in questions]
 
     supports = [[s] for s in qs_tokenizer.texts_to_sequences(support_texts)]
     support_lenghs = [[len(s)] for [s] in supports]
