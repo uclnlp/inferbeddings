@@ -69,7 +69,7 @@ def main(argv):
         dev_path='data/snli/snli_1.0_dev.jsonl.gz',
         test_path='data/snli/snli_1.0_dev.jsonl.gz'
     )
-    train = dev = test = train[:10]
+    train = dev = test = train[:100]
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train), len(dev), len(test)))
 
     logger.debug('Parsing corpus ..')
