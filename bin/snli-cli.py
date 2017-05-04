@@ -78,8 +78,8 @@ def main(argv):
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
     argparser.add_argument('--num-units', action='store', type=int, default=300)
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
-    argparser.add_argument('--dropout-keep-prob', action='store', type=int, default=1.0)
-    argparser.add_argument('--learning-rate', action='store', type=int, default=0.001)
+    argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
+    argparser.add_argument('--learning-rate', action='store', type=float, default=0.001)
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
