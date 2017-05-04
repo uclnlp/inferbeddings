@@ -194,6 +194,8 @@ def main(argv):
 
             logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
+    logger.info('Training finished.')
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
