@@ -7,4 +7,5 @@ __all__ = ['iopen',
            'read_triples',
            'save',
            'load_glove',
-           'load_word2vec']
+           'load_word2vec'
+]

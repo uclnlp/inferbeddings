@@ -11,6 +11,7 @@ import tensorflow as tf
 
 import tensorflow.contrib.keras as keras
 
+from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 from inferbeddings.rte import ConditionalBiLSTM
 from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
@@ -80,6 +81,9 @@ def main(argv):
     argparser.add_argument('--dropout-keep-prob', action='store', type=int, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=int, default=0.001)
 
+    argparser.add_argument('--glove', action='store', type=str, default=None)
+    argparser.add_argument('--word2vec', action='store', type=str, default=None)
+
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
@@ -90,6 +94,9 @@ def main(argv):
     nb_epochs = args.nb_epochs
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
+
+    glove_path = args.glove
+    word2vec_path = args.word2vec
 
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
@@ -136,19 +143,20 @@ def main(argv):
         session.run(init_op)
         logger.debug('Total parameters: {}'.format(count_parameters()))
 
-        glove_path = os.path.expanduser('~/data/glove/glove.840B.300d.txt')
-        if embedding_size == 300 and os.path.isfile(glove_path):
-            from derte.io.embeddings import load_glove
-            logger.info('Initialising the embeddings with GloVe vectors ..')
+        # Initialising pre-trained embeddings
+        word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
+        word_to_embedding = None
+        if glove_path:
+            word_to_embedding = load_glove(glove_path, word_set)
+        elif word2vec_path:
+            word_to_embedding = load_word2vec(glove_path, word_set)
 
-            word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
-            with open(glove_path, 'r') as stream:
-                word_to_embedding = load_glove(stream=stream, words=word_set)
-
+        if word_to_embedding:
+            logger.info('Initialising the embeddings pre-trained vectors ..')
             for word in word_to_embedding:
                 word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
+                assert embedding_size == len(word_embedding)
                 session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
-
             logger.info('Done!')
 
         random_state = np.random.RandomState(0)
