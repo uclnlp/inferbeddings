@@ -34,6 +34,7 @@ def load_word2vec(path, words=None, binary=True):
 
     model = gensim.models.KeyedVectors.load_word2vec_format(path, binary=binary)
     for word in words:
-        word_to_embedding[word] = model[word].tolist()
+        if word in model:
+            word_to_embedding[word] = model[word].tolist()
 
     return word_to_embedding
