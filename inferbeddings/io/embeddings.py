@@ -29,7 +29,7 @@ def load_glove(path, words=None):
     return word_to_embedding
 
 
-def load_word2vec_native(path, words=None, binary=False):
+def load_word2vec(path, words=None, binary=False):
     word_to_embedding = {}
 
     model = gensim.models.Word2Vec.load_word2vec_format(path, binary=binary)
