@@ -28,7 +28,7 @@ def test_load_word2vec():
     word2vec_path = os.path.expanduser('~/data/word2vec/GoogleNews-vectors-negative300.bin.gz')
     if os.path.isfile(word2vec_path):
         word_set = {'machine', 'learning'}
-        with iopen('data/word2vec/GoogleNews-vectors-negative300.bin.gz') as stream:
+        with iopen(word2vec_path) as stream:
             word_to_embedding = load_word2vec(stream=stream, words=word_set)
 
         machine_vector = word_to_embedding['machine']
