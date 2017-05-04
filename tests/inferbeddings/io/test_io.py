@@ -3,11 +3,10 @@
 import pytest
 
 import os
-import sys
 
 import numpy as np
 
-from inferbeddings.io import iopen, load_glove, load_word2vec
+from inferbeddings.io import load_glove, load_word2vec
 
 
 def test_load_glove_large():
