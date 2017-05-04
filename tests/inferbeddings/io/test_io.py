@@ -39,7 +39,7 @@ def test_load_word2vec():
 
 
 def test_load_glove():
-    glove_path = 'data/glove/glove.6B.50d.txt.gz'
+    glove_path = 'data/glove/glove.6B.50d.txt.gz_X'
     if os.path.isfile(glove_path):
         word_set = {'house'}
         with iopen(glove_path, 'r') as stream:
