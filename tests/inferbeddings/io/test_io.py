@@ -41,8 +41,9 @@ def test_load_word2vec():
 def test_load_glove():
     glove_path = 'data/glove/glove.6B.50d.txt.gz'
     if os.path.isfile(glove_path):
-        with iopen(glove_path, 'r') as f:
-            model = load_glove(f, {'house'})
+        word_set = {'house'}
+        with iopen(glove_path, 'r') as stream:
+            model = load_glove(stream=stream, words=word_set)
         assert 'house' in model
         assert 0.60136 < model['house'][0] < 0.60138
 
