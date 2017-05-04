@@ -14,7 +14,7 @@ def test_load_glove_large():
     glove_path = os.path.expanduser('~/data/glove/glove.840B.300d.txt')
     if os.path.isfile(glove_path):
         word_set = {'machine', 'learning'}
-        with open(glove_path, 'r') as stream:
+        with open(glove_path, 'rb') as stream:
             word_to_embedding = load_glove(stream=stream, words=word_set)
 
         machine_vector = word_to_embedding['machine']
