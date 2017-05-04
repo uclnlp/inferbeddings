@@ -31,6 +31,9 @@ def test_load_word2vec():
         machine_vector = word_to_embedding['machine']
         learning_vector = word_to_embedding['learning']
 
+        np.testing.assert_allclose(machine_vector[0:3], [0.255859375, -0.0220947265625, 0.029052734375])
+        np.testing.assert_allclose(learning_vector[0:3], [-0.08837890625, 0.1484375, -0.06298828125])
+
         print(word_to_embedding)
 
 
