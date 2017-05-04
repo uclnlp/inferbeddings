@@ -18,6 +18,7 @@ def load_glove(stream, words=None):
     word_to_embedding = {}
 
     for n, line in enumerate(stream):
+        line = line.decode('utf-8')
         split_line = line.split(' ')
         word = split_line[0]
 
