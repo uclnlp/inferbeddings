@@ -54,7 +54,10 @@ def load_word2vec(stream, words=None):
                 break
             else:
                 word += c
-        #word = word.decode('utf-8')
+
+        if not isinstance(word, str):
+            word = word.decode('utf-8')
+
         if words is None or word in words:
             try:
                 vector = np.fromstring(stream.read(byte_size), dtype=np.float32)

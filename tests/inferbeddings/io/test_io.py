@@ -20,8 +20,8 @@ def test_load_glove_large():
         machine_vector = word_to_embedding['machine']
         learning_vector = word_to_embedding['learning']
 
-        np.testing.assert_allclose(machine_vector[1:4], [-0.12538, 0.38888, 0.48011], rtol=1e-3)
-        np.testing.assert_allclose(learning_vector[1:4], [0.047511, 0.1404, -0.11736], rtol=1e-3)
+        np.testing.assert_allclose(machine_vector[0:3], [-0.12538, 0.38888, 0.48011], rtol=1e-3)
+        np.testing.assert_allclose(learning_vector[0:3], [0.047511, 0.1404, -0.11736], rtol=1e-3)
 
 
 def test_load_word2vec():
