@@ -14,8 +14,7 @@ def test_load_glove_large():
     glove_path = os.path.expanduser('~/data/glove/glove.840B.300d.txt')
     if os.path.isfile(glove_path):
         word_set = {'machine', 'learning'}
-        with open(glove_path, 'r') as stream:
-            word_to_embedding = load_glove(stream=stream, words=word_set)
+        word_to_embedding = load_glove(path=glove_path, words=word_set)
 
         machine_vector = word_to_embedding['machine']
         learning_vector = word_to_embedding['learning']
@@ -28,24 +27,19 @@ def test_load_word2vec():
     word2vec_path = os.path.expanduser('~/data/word2vec/GoogleNews-vectors-negative300.bin.gz')
     if os.path.isfile(word2vec_path):
         word_set = {'machine', 'learning'}
-        with iopen(word2vec_path, 'rb') as stream:
-            word_to_embedding = load_word2vec(stream=stream, words=word_set)
-
-        print(word_to_embedding)
+        word_to_embedding = load_word2vec(path=word2vec_path, words=word_set)
 
         machine_vector = word_to_embedding['machine']
         learning_vector = word_to_embedding['learning']
 
-        print(machine_vector)
-        print(learning_vector)
+        print(word_to_embedding)
 
 
 def test_load_glove():
     glove_path = 'data/glove/glove.6B.50d.txt.gz'
     if os.path.isfile(glove_path):
         word_set = {'house'}
-        with iopen(glove_path, 'r') as stream:
-            model = load_glove(stream=stream, words=word_set)
+        model = load_glove(path=glove_path, words=word_set)
         assert 'house' in model
         assert 0.60136 < model['house'][0] < 0.60138
 
