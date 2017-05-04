@@ -113,6 +113,7 @@ export CUDA_VISIBLE_DEVICES=`~/bin/lugpu.sh`
 
     for job_id, command_line in enumerate(sorted_command_lines, 1):
         print('test $LSB_JOBINDEX -eq {} && {}'.format(job_id, command_line))
+        print('sleep 1')
 
 
 if __name__ == '__main__':
