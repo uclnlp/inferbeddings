@@ -89,7 +89,7 @@ def main(argv):
                 completed = 'Training finished' in content
 
         if not completed:
-            command_line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
