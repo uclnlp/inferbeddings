@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-
 import gensim
 from inferbeddings.io import iopen
 
