@@ -38,7 +38,7 @@ def train_tokenizer_on_instances(instances, num_words=None):
     return qs_tokenizer, a_tokenizer
 
 
-def to_corpus(instances, qs_tokenizer, a_tokenizer, max_len=None):
+def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
@@ -60,8 +60,7 @@ def to_corpus(instances, qs_tokenizer, a_tokenizer, max_len=None):
         'supports': pad_sequences([s for [s] in supports], max_len=max_len),
         'question_lengths': np.clip(a=np.array(question_lenths), a_min=0, a_max=max_len),
         'support_lengths': np.clip(a=np.array(support_lenghs)[:, 0], a_min=0, a_max=max_len),
-        'answers': np.array(answers)
-    }
+        'answers': np.array(answers)}
 
 
 def main(argv):
@@ -109,9 +108,9 @@ def main(argv):
     max_len = None
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 
-    train_dataset = to_corpus(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
-    dev_dataset = to_corpus(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
-    test_dataset = to_corpus(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    train_dataset = to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    dev_dataset = to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    test_dataset = to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
     questions, supports = train_dataset['questions'], train_dataset['supports']
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
