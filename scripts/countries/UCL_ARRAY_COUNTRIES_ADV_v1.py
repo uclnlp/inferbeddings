@@ -135,7 +135,7 @@ def main(argv):
                 completed = '[valid]' in content and '[test]' in content and 'AUC-PR' in content
 
         if not completed:
-            command_line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
