@@ -31,6 +31,8 @@ def test_load_word2vec():
         with iopen(word2vec_path) as stream:
             word_to_embedding = load_word2vec(stream=stream, words=word_set)
 
+        print(word_to_embedding)
+
         machine_vector = word_to_embedding['machine']
         learning_vector = word_to_embedding['learning']
 
