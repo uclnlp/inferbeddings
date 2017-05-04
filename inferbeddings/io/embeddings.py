@@ -55,9 +55,8 @@ def load_word2vec(stream, words=None):
             else:
                 word += c
 
-        if not isinstance(word, str):
-            print(word, type(word))
-            word = word.decode('utf-8')
+        if isinstance(word, bytes):
+            word = word.decode('utf-8', errors='ignore')
 
         if words is None or word in words:
             try:
