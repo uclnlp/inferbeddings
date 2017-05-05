@@ -146,9 +146,11 @@ def main(argv):
         word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
         word_to_embedding = None
         if glove_path:
+            assert os.path.isfile(glove_path)
             word_to_embedding = load_glove(glove_path, word_set)
         elif word2vec_path:
-            word_to_embedding = load_word2vec(glove_path, word_set)
+            assert os.path.isfile(word2vec_path)
+            word_to_embedding = load_word2vec(word2vec_path, word_set)
 
         if word_to_embedding:
             logger.info('Initialising the embeddings pre-trained vectors ..')
