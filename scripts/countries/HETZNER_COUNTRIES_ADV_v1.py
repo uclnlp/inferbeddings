@@ -117,7 +117,7 @@ def main(argv):
     path = '/home/uclmr/workspace/inferbeddings/logs/ucl_countries_adv_v1/'
 
     # Check that we are on the UCLCS cluster first
-    if os.path.exists('/home/pminervi/'):
+    if os.path.exists('/home/uclmr/'):
         # If the folder that will contain logs does not exist, create it
         if not os.path.exists(path):
             os.makedirs(path)
