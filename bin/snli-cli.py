@@ -80,6 +80,7 @@ def main(argv):
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.001)
+    argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
@@ -94,9 +95,14 @@ def main(argv):
     nb_epochs = args.nb_epochs
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
+    seed = args.seed
 
     glove_path = args.glove
     word2vec_path = args.word2vec
+
+    np.random.seed(seed)
+    random_state = np.random.RandomState(seed)
+    tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
@@ -159,8 +165,6 @@ def main(argv):
                 assert embedding_size == len(word_embedding)
                 session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
             logger.info('Done!')
-
-        random_state = np.random.RandomState(0)
 
         nb_instances = questions.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
