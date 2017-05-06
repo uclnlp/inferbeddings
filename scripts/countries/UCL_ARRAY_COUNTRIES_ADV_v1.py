@@ -28,8 +28,12 @@ def to_cmd(c, _path=None):
         loss_str = '--loss hinge'
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
+    predicate_embedding_size = None
+    if c['model'] == 'RESCAL':
+        predicate_embedding_size = c['embedding_size'] ** 2
+    predicate_embedding_size_str = '' if predicate_embedding_size is None else '--predicate-embedding-size {}'.format(predicate_embedding_size)
     hidden_str = '--hidden-size {}'.format(c['hidden_size']) if 'hidden_size' in c else ''
-    command = 'python3 {}/bin/adv-cli.py --auc --nb-batches 1 --seed {}' \
+    command = 'python3 {}/bin/adv-cli.py --auc --nb-batches 1 --seed {} {}' \
               ' --train {}/data/countries/s{}/s{}_train.tsv' \
               ' --valid {}/data/countries/s{}/s{}_valid.tsv' \
               ' --test {}/data/countries/s{}/s{}_test.tsv' \
@@ -46,7 +50,7 @@ def to_cmd(c, _path=None):
               ' {}' \
               ' --adv-lr {} --adv-init-ground --adversary-epochs {}' \
               ' --discriminator-epochs {} --adv-weight {} --adv-batch-size {} --adv-pooling {}' \
-              ''.format(_path, c['seed'],
+              ''.format(_path, c['seed'], predicate_embedding_size_str,
                         _path, c['s'], c['s'],
                         _path, c['s'], c['s'],
                         _path, c['s'], c['s'],
@@ -112,7 +116,27 @@ def main(argv):
         seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
-    configurations = list(cartesian_product(hyperparameters_space_1)) + list(cartesian_product(hyperparameters_space_2))
+    hyperparameters_space_3 = dict(
+        epochs=[100],
+        model=['RESCAL'],
+        similarity=['dot'],
+        margin=[1],  # [1, 2, 5, 10],
+        embedding_size=[10, 20, 50],
+        loss=['hinge'],
+        adv_lr=[.1],
+        adv_epochs=[0, 10],
+        disc_epochs=[10],
+        adv_weight=[0, 1, 100, 10000, 1000000],
+        adv_batch_size=[100],
+        adv_pooling=['max'],
+        unit_cube=[True, False],
+        s=[1, 2, 3, 12, 123],
+        seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    )
+
+    configurations = list(cartesian_product(hyperparameters_space_1))\
+                     + list(cartesian_product(hyperparameters_space_2))\
+                     + list(cartesian_product(hyperparameters_space_3))
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v1/'
 
