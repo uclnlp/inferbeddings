@@ -65,7 +65,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_countries_adv_v2.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_countries_adv_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -83,16 +83,16 @@ def main(argv):
         epochs=[100],
         model=['ERMLP'],
         similarity=['dot'],
-        margin=[1],
-        embedding_size=[100],
+        margin=[1],  # [1, 2, 5, 10],
+        embedding_size=[10, 20, 50],
         loss=['hinge'],
         adv_lr=[.1],
         adv_epochs=[0, 10],
         disc_epochs=[10],
-        adv_weight=[0, 0.01, 0.1, 1, 100, 10000, 1000000],
+        adv_weight=[0, 0.1, 1, 100, 10000, 1000000],
         adv_batch_size=[100],
         adv_pooling=['max'],
-        hidden_size=[10, 20, 50],
+        hidden_size=[1, 10, 20, 50],
         unit_cube=[True, False],
         s=[1, 2, 3, 12, 123],
         seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -102,13 +102,13 @@ def main(argv):
         epochs=[100],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
-        margin=[1],
-        embedding_size=[100],
+        margin=[1],  # [1, 2, 5, 10],
+        embedding_size=[10, 20, 50],
         loss=['hinge'],
         adv_lr=[.1],
         adv_epochs=[0, 10],
         disc_epochs=[10],
-        adv_weight=[0, 0.01, 0.1, 1, 100, 10000, 1000000],
+        adv_weight=[0, 0.1, 1, 100, 10000, 1000000],
         adv_batch_size=[100],
         adv_pooling=['max'],
         unit_cube=[True, False],
@@ -120,13 +120,13 @@ def main(argv):
         epochs=[100],
         model=['RESCAL'],
         similarity=['dot'],
-        margin=[1],
-        embedding_size=[100],
+        margin=[1],  # [1, 2, 5, 10],
+        embedding_size=[10, 20, 50],
         loss=['hinge'],
         adv_lr=[.1],
         adv_epochs=[0, 10],
         disc_epochs=[10],
-        adv_weight=[0, 0.01, 0.1, 1, 100, 10000, 1000000],
+        adv_weight=[0, 1, 100, 10000, 1000000],
         adv_batch_size=[100],
         adv_pooling=['max'],
         unit_cube=[True, False],
@@ -138,7 +138,7 @@ def main(argv):
                      + list(cartesian_product(hyperparameters_space_2))\
                      + list(cartesian_product(hyperparameters_space_3))
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v2/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pminervi/'):
