@@ -199,7 +199,8 @@ def main(argv):
             triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['region']))}
 
         if len(c['subregion']) > 0:
-            triples |= {(norm(c['region']), 'locatedIn', norm(c['subregion']))}
+            #triples |= {(norm(c['region']), 'locatedIn', norm(c['subregion']))}
+            triples |= {(norm(c['subregion']), 'locatedIn', norm(c['region']))}
             triples |= {(norm(c['name']['official']), 'locatedIn', norm(c['subregion']))}
 
         for border in c['borders']:
