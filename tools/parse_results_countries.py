@@ -21,13 +21,15 @@ def main(argv):
 
     argparser = argparse.ArgumentParser('Parse Countries logs', formatter_class=formatter)
     argparser.add_argument('path', action='store', type=str)
+    argparser.add_argument('--regex', '-r', action='store', type=str, default='*')
     args = argparser.parse_args(argv)
 
     path = args.path
+    regex = args.regex
 
     path_to_valid_aucpr, path_to_test_aucpr = {}, {}
 
-    for file_path in glob.glob('{}/*.log'.format(path)):
+    for file_path in glob.glob('{}/*{}*.log'.format(path, regex)):
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
                 if '[valid]' in line and 'AUC-PR' in line:
