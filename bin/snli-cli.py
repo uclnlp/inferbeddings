@@ -17,6 +17,7 @@ from inferbeddings.models.training.util import make_batches
 from inferbeddings.rte import ConditionalBiLSTM
 from inferbeddings.rte.dam.base import DecomposableAttentionModel
 from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
+from inferbeddings.models.training import constraints
 
 import logging
 
@@ -110,6 +111,7 @@ def main(argv):
 
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
+    argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
@@ -129,6 +131,7 @@ def main(argv):
 
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
+    is_normalized_embeddings = args.normalized_embeddings
 
     glove_path = args.glove
     word2vec_path = args.word2vec
@@ -184,6 +187,10 @@ def main(argv):
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
     assign_word_embedding = model.embeddings[word_idx_ph, :].assign(word_embedding_ph)
 
+    projection_steps = []
+    if is_normalized_embeddings:
+        projection_steps += [constraints.unit_sphere(model.embeddings, norm=1.0)]
+
     correct_predictions = tf.equal(tf.cast(model.predictions, tf.int32), tf.cast(model.label, tf.int32))
     accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
@@ -214,6 +221,9 @@ def main(argv):
                 session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
             logger.info('Done!')
 
+        for projection_step in projection_steps:
+            session.run([projection_step])
+
         nb_instances = questions.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
@@ -238,6 +248,9 @@ def main(argv):
 
                 _, loss_value, correct_predictions_value =\
                     session.run([model.training_step, model.loss, correct_predictions], feed_dict=batch_feed_dict)
+
+                for projection_step in projection_steps:
+                    session.run([projection_step])
 
                 loss_values += loss_value.tolist()
                 correct_predictions_values += correct_predictions_value.tolist()
