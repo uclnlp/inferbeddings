@@ -70,7 +70,7 @@ def main(argv):
 
     name_to_regex = {}
     for model_name in model_names:
-        for s in [1, 2, 3]:
+        for s in [1, 12, 123]:
             name_to_regex['{}-ASR-S{}'.format(model_name, s)] = '*_model={}*_s={}_*.log'.format(model_name, s)
             name_to_regex['{}-S{}'.format(model_name, s)] = '*_adv_weight=0_*_model={}*_s={}_*.log'.format(model_name, s)
 
