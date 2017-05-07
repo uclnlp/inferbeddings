@@ -134,8 +134,9 @@ def main(argv):
         seed=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     )
 
-    configurations = list(cartesian_product(hyperparameters_space_1)) + list(cartesian_product(hyperparameters_space_2))#\
-                     #+ list(cartesian_product(hyperparameters_space_3))
+    configurations = list(cartesian_product(hyperparameters_space_1)) +\
+                     list(cartesian_product(hyperparameters_space_2)) +\
+                     list(cartesian_product(hyperparameters_space_3))
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v2/'
 
