@@ -6,7 +6,7 @@ import os
 import sys
 
 import numpy as np
-from tqdm import tqdm
+#from tqdm import tqdm
 import fnmatch
 
 import argparse
@@ -27,7 +27,7 @@ def main(argv):
 
     path_to_valid_aucpr, path_to_test_aucpr = {}, {}
 
-    for file_path in tqdm(glob.glob('{}/*_model=DistMult_*_unit_cube=False*.log'.format(path))):
+    for file_path in glob.glob('{}/*_model=DistMult_*_unit_cube=False*.log'.format(path)):
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
                 if '[valid]' in line and 'AUC-PR' in line:
@@ -42,7 +42,7 @@ def main(argv):
 
     new_path_to_valid_aucprs, new_path_to_test_aucprs = {}, {}
 
-    for path in tqdm(path_set):
+    for path in path_set:
         _new_path = path
         for i in range(10):
             _new_path = _new_path.replace('_seed={}'.format(i), '_seed=X')
