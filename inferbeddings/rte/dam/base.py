@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from abc import ABCMeta
 import tensorflow as tf
-
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class MultiFFN:
+class DecomposableAttentionModel(metaclass=ABCMeta):
     def __init__(self, optimizer, num_units, num_classes, vocab_size,
                  embedding_size=100, dropout_keep_prob=1.0, clip_value=100.0, l2_lambda=None):
 
@@ -31,16 +31,33 @@ class MultiFFN:
 
         logger.info('Building the Attend graph ..')
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = MultiFFN.attend(self.embedded1, self.embedded2)
+        self.alpha, self.beta = self.attend(self.embedded1, self.embedded2)
 
         logger.info('Building the Compare graph ..')
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v1 = MultiFFN.compare(self.embedded1, self.beta)
+        self.v1 = self.compare(self.embedded1, self.beta)
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v2 = MultiFFN.compare(self.embedded2, self.alpha)
+        self.v2 = self.compare(self.embedded2, self.alpha)
 
         logger.info('Building the Aggregate graph ..')
-        self.logits = MultiFFN.aggreate(self.v1, self.v2, self.num_classes)
+        self.logits = self.aggreate(self.v1, self.v2, self.num_classes)
+
+        self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
+
+        labels = tf.one_hot(self.label, num_classes)
+        self.loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=labels)
+
+        if l2_lambda is not None:
+            regularizer = l2_lambda * sum(tf.nn.l2_loss(var) for var in tf.trainable_variables()
+                                          if not ('noreg' in var.name or 'bias' in var.name or 'Bias' in var.name))
+            self.loss += regularizer
+
+        if clip_value is not None:
+            gradients, v = zip(*optimizer.compute_gradients(self.loss))
+            gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
+            self.training_step = optimizer.apply_gradients(zip(gradients, v))
+        else:
+            self.training_step = optimizer.minimize(self.loss)
 
     @staticmethod
     def attention_softmax3d(values):
@@ -57,8 +74,10 @@ class MultiFFN:
         # tensor with shape (batch_size, time_steps, time_steps)
         return tf.reshape(softmax_reshaped_values, original_shape)
 
-    @staticmethod
-    def attend(sequence1, sequence2):
+    def _transform_attend(self, sequence, reuse=False):
+        raise NotADirectoryError
+
+    def attend(self, sequence1, sequence2):
         """
         Attend phase.
         
@@ -66,26 +85,29 @@ class MultiFFN:
         :param sequence2: tensor with shape (batch_size, time_steps, num_units)
         :return: two tensors with shape (batch_size, time_steps, num_units)
         """
-        transformed_sequence1 = sequence1
-        transformed_sequence2 = sequence2
+        with tf.variable_scope('attend') as scope:
+            transformed_sequence1 = self._transform_attend(sequence1)
+            transformed_sequence2 = self._transform_attend(sequence2, True)
 
-        # tensor with shape (batch_size, num_units, time_steps)
-        transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
-        # tensor with shape (batch_size, time_steps, time_steps)
-        raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
-        attention_sentence1 = MultiFFN.attention_softmax3d(raw_attentions)
+            # tensor with shape (batch_size, num_units, time_steps)
+            transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
+            # tensor with shape (batch_size, time_steps, time_steps)
+            raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
+            attention_sentence1 = DecomposableAttentionModel.attention_softmax3d(raw_attentions)
 
-        # tensor with shape (batch_size, time_steps, time_steps)
-        attention_transposed = tf.transpose(raw_attentions, [0, 2, 1])
-        attention_sentence2 = MultiFFN.attention_softmax3d(attention_transposed)
+            # tensor with shape (batch_size, time_steps, time_steps)
+            attention_transposed = tf.transpose(raw_attentions, [0, 2, 1])
+            attention_sentence2 = DecomposableAttentionModel.attention_softmax3d(attention_transposed)
 
-        # tensors with shape (batch_size, time_steps, num_units)
-        alpha = tf.matmul(attention_sentence2, sequence1, name='alpha')
-        beta = tf.matmul(attention_sentence1, sequence2, name='beta')
-        return alpha, beta
+            # tensors with shape (batch_size, time_steps, num_units)
+            alpha = tf.matmul(attention_sentence2, sequence1, name='alpha')
+            beta = tf.matmul(attention_sentence1, sequence2, name='beta')
+            return alpha, beta
 
-    @staticmethod
-    def compare(sentence, soft_alignment):
+    def _transform_compare(self, sequence, reuse):
+        raise NotADirectoryError
+
+    def compare(self, sentence, soft_alignment):
         """
         Compare phase.
         
@@ -95,11 +117,10 @@ class MultiFFN:
         """
         # tensor with shape (batch, time_steps, num_units)
         sentence_and_alignment = tf.concat(axis=2, values=[sentence, soft_alignment])
-        transformed_sentence_and_alignment = sentence_and_alignment
+        transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment)
         return transformed_sentence_and_alignment
 
-    @staticmethod
-    def aggreate(v1, v2, num_classes):
+    def aggreate(self, v1, v2, num_classes):
         """
         Aggregate phase.
         
@@ -108,9 +129,13 @@ class MultiFFN:
         :param num_classes: number of output units
         :return: 
         """
-        v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
-        v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
-        logits = tf.contrib.layers.fully_connected(inputs=v1_v2, num_outputs=num_classes,
-                                                   weights_initializer=tf.random_normal_initializer(0.0, 0.1),
-                                                   biases_initializer=tf.zeros_initializer(), activation_fn=None)
+        with tf.variable_scope('aggregate') as scope:
+            v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
+            v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
+            logits = tf.contrib.layers.fully_connected(inputs=v1_v2,
+                                                       num_outputs=num_classes,
+                                                       weights_initializer=tf.random_normal_initializer(0.0, 0.1),
+                                                       biases_initializer=tf.zeros_initializer(),
+                                                       activation_fn=None,
+                                                       scope=scope)
         return logits

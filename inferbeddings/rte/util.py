@@ -15,8 +15,7 @@ class SNLI:
     @staticmethod
     def to_instance(d):
         _id, _support, _question, _answer = d['pairID'], d['sentence1'], d['sentence2'], d['gold_label']
-        res = {'id': _id, 'support': _support, 'question': _question, 'answer': _answer}
-        return res
+        return {'id': _id, 'support': _support, 'question': _question, 'answer': _answer}
 
     @staticmethod
     def parse(path):

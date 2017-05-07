@@ -13,7 +13,9 @@ import tensorflow.contrib.keras as keras
 
 from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
+
 from inferbeddings.rte import ConditionalBiLSTM
+from inferbeddings.rte.dam.base import DecomposableAttentionModel
 from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
 
 import logging
@@ -39,7 +41,7 @@ def train_tokenizer_on_instances(instances, num_words=None):
     return qs_tokenizer, a_tokenizer
 
 
-def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None):
+def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None, semi_sort=False):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
@@ -47,20 +49,41 @@ def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None):
     assert qs_tokenizer is not None and a_tokenizer is not None
 
     questions = qs_tokenizer.texts_to_sequences(question_texts)
-    question_lenths = [len(q) for q in questions]
-
-    supports = [[s] for s in qs_tokenizer.texts_to_sequences(support_texts)]
-    support_lenghs = [[len(s)] for [s] in supports]
-
+    supports = [s for s in qs_tokenizer.texts_to_sequences(support_texts)]
     answers = [answers - 1 for [answers] in a_tokenizer.texts_to_sequences(answer_texts)]
+
+    """
+    <<For efficient batching in TensorFlow, we semi-sorted the training data to first contain examples
+    where both sentences had length less than 20, followed by those with length less than 50, and
+    then the rest. This ensured that most training batches contained examples of similar length.>>
+
+    -- https://arxiv.org/pdf/1606.01933.pdf
+    """
+    if semi_sort:
+        triples_under_20, triples_under_50, triples_under_nfty = [], [], []
+        for q, s, a in zip(questions, supports, answers):
+            if len(q) < 20 and len(s) < 20:
+                triples_under_20 += [(q, s, a)]
+            elif len(q) < 50 and len(s) < 50:
+                triples_under_50 += [(q, s, a)]
+            else:
+                triples_under_nfty += [(q, s, a)]
+        questions, supports, answers = [], [], []
+        for q, s, a in triples_under_20 + triples_under_50 + triples_under_nfty:
+            questions += [q]
+            supports += [s]
+            answers += [a]
+
+    question_lenths = [len(q) for q in questions]
+    support_lenghs = [len(s) for s in supports]
 
     assert set(answers) == {0, 1, 2}
 
     return {
         'questions': pad_sequences(questions, max_len=max_len),
-        'supports': pad_sequences([s for [s] in supports], max_len=max_len),
+        'supports': pad_sequences(supports, max_len=max_len),
         'question_lengths': np.clip(a=np.array(question_lenths), a_min=0, a_max=max_len),
-        'support_lengths': np.clip(a=np.array(support_lenghs)[:, 0], a_min=0, a_max=max_len),
+        'support_lengths': np.clip(a=np.array(support_lenghs), a_min=0, a_max=max_len),
         'answers': np.array(answers)}
 
 
@@ -68,11 +91,14 @@ def main(argv):
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=formatter)
+    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation',
+                                        formatter_class=formatter)
 
-    argparser.add_argument('--train', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
-    argparser.add_argument('--valid', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
-    argparser.add_argument('--test', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
+    argparser.add_argument('--train', '-t', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
+    argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
+    argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
+
+    argparser.add_argument('--model', '-m', action='store', type=str, default=None)
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
@@ -82,6 +108,8 @@ def main(argv):
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.001)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
+    argparser.add_argument('--semi-sort', action='store_true')
+
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
@@ -89,6 +117,7 @@ def main(argv):
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
 
+    model_name = args.model
     embedding_size = args.embedding_size
     batch_size = args.batch_size
     num_units = args.num_units
@@ -96,6 +125,8 @@ def main(argv):
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
     seed = args.seed
+
+    is_semi_sort = args.semi_sort
 
     glove_path = args.glove
     word2vec_path = args.word2vec
@@ -120,7 +151,7 @@ def main(argv):
     max_len = None
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 
-    train_dataset = to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    train_dataset = to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
     dev_dataset = to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
@@ -128,9 +159,14 @@ def main(argv):
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
     answers = train_dataset['answers']
 
-    model = ConditionalBiLSTM(optimizer=optimizer, num_units=num_units, num_classes=3,
-                              vocab_size=vocab_size, embedding_size=embedding_size,
-                              dropout_keep_prob=dropout_keep_prob, l2_lambda=1e-5)
+    if model_name == 'dam':
+        model = DecomposableAttentionModel(optimizer=optimizer, num_units=num_units, num_classes=3,
+                                           vocab_size=vocab_size, embedding_size=embedding_size,
+                                           dropout_keep_prob=dropout_keep_prob, l2_lambda=1e-5)
+    else:
+        model = ConditionalBiLSTM(optimizer=optimizer, num_units=num_units, num_classes=3,
+                                  vocab_size=vocab_size, embedding_size=embedding_size,
+                                  dropout_keep_prob=dropout_keep_prob, l2_lambda=1e-5)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
@@ -170,7 +206,7 @@ def main(argv):
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
         for epoch in range(1, nb_epochs + 1):
-            order = random_state.permutation(nb_instances)
+            order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
             sentences1, sentences2 = questions[order], supports[order]
             sizes1, sizes2 = question_lengths[order], support_lengths[order]
