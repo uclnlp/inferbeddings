@@ -36,7 +36,6 @@ def main(argv):
                     path_to_test_aucpr[file_path] = line
 
     path_set = set(path_to_valid_aucpr.keys()) & set(path_to_test_aucpr.keys())
-
     # Use the following for debugging:
     # path_set = set(path_to_valid_aucpr.keys()) | set(path_to_test_aucpr.keys())
 
@@ -70,7 +69,7 @@ def main(argv):
 
     name_to_regex = {}
     for model_name in model_names:
-        for s in [1, 12, 123]:
+        for s in [1, 12, 123, 2, 3]:
             name_to_regex['{}-ASR-S{}'.format(model_name, s)] = '*_model={}*_s={}_*.log'.format(model_name, s)
             name_to_regex['{}-S{}'.format(model_name, s)] = '*_adv_weight=0_*_model={}*_s={}_*.log'.format(model_name, s)
 
