@@ -109,6 +109,7 @@ def main(argv):
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--semi-sort', action='store_true')
+    argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
@@ -127,6 +128,7 @@ def main(argv):
     seed = args.seed
 
     is_semi_sort = args.semi_sort
+    is_fixed_embeddings = args.fixed_embeddings
 
     glove_path = args.glove
     word2vec_path = args.word2vec
@@ -160,13 +162,23 @@ def main(argv):
     answers = train_dataset['answers']
 
     if model_name == 'dam':
-        model = DecomposableAttentionModel(optimizer=optimizer, num_units=num_units, num_classes=3,
-                                           vocab_size=vocab_size, embedding_size=embedding_size,
-                                           dropout_keep_prob=dropout_keep_prob, l2_lambda=1e-5)
+        model = DecomposableAttentionModel(optimizer=optimizer,
+                                           num_units=num_units,
+                                           num_classes=3,
+                                           vocab_size=vocab_size,
+                                           embedding_size=embedding_size,
+                                           dropout_keep_prob=dropout_keep_prob,
+                                           l2_lambda=1e-5,
+                                           trainable_embeddings=not is_fixed_embeddings)
     else:
-        model = ConditionalBiLSTM(optimizer=optimizer, num_units=num_units, num_classes=3,
-                                  vocab_size=vocab_size, embedding_size=embedding_size,
-                                  dropout_keep_prob=dropout_keep_prob, l2_lambda=1e-5)
+        model = ConditionalBiLSTM(optimizer=optimizer,
+                                  num_units=num_units,
+                                  num_classes=3,
+                                  vocab_size=vocab_size,
+                                  embedding_size=embedding_size,
+                                  dropout_keep_prob=dropout_keep_prob,
+                                  l2_lambda=1e-5,
+                                  trainable_embeddings=not is_fixed_embeddings)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')

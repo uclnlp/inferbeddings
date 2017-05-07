@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 class DecomposableAttentionModel(metaclass=ABCMeta):
     def __init__(self, optimizer, num_units, num_classes, vocab_size,
-                 embedding_size=100, dropout_keep_prob=1.0, clip_value=100.0, l2_lambda=None):
-
+                 embedding_size=100, dropout_keep_prob=1.0, clip_value=100.0, l2_lambda=None,
+                 trainable_embeddings=True):
         self.num_classes = 3
 
         self.sentence1 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -22,7 +22,8 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
         self.label = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
         self.embeddings = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                          initializer=tf.contrib.layers.xavier_initializer())
+                                          initializer=tf.contrib.layers.xavier_initializer(),
+                                          trainable=trainable_embeddings)
 
         # [batch, time_steps, embedding_size]
         self.embedded1 = tf.nn.embedding_lookup(self.embeddings, self.sentence1)
