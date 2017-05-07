@@ -67,7 +67,7 @@ def main(argv):
         new_path_to_valid_aucpr_stats[_new_path] = stats([float(l.split()[2]) for l in new_path_to_valid_aucprs[_new_path]])
         new_path_to_test_aucpr_stats[_new_path] = stats([float(l.split()[2]) for l in new_path_to_test_aucprs[_new_path]])
 
-    model_names = ['ERMLP', 'DistMult', 'ComplEx']
+    model_names = ['DistMult', 'ComplEx', 'ERMLP', 'RESCAL']
 
     name_to_regex = {}
     for model_name in model_names:
