@@ -27,7 +27,7 @@ def main(argv):
 
     path_to_valid_aucpr, path_to_test_aucpr = {}, {}
 
-    for file_path in glob.glob('{}/*_model=DistMult_*_unit_cube=False*.log'.format(path)):
+    for file_path in glob.glob('{}/*.log'.format(path)):
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
                 if '[valid]' in line and 'AUC-PR' in line:
@@ -55,7 +55,7 @@ def main(argv):
         new_path_to_valid_aucprs[_new_path] += [path_to_valid_aucpr[path]]
         new_path_to_test_aucprs[_new_path] += [path_to_test_aucpr[path]]
 
-    new_paths = set(new_path_to_valid_aucprs.keys()) | set(new_path_to_test_aucprs.keys())
+    new_paths = set(new_path_to_valid_aucprs.keys()) & set(new_path_to_test_aucprs.keys())
     new_path_to_valid_aucpr_stats, new_path_to_test_aucpr_stats = {}, {}
 
     def stats(values):
