@@ -66,21 +66,15 @@ def main(argv):
         new_path_to_valid_aucpr_stats[_new_path] = stats([float(l.split()[2]) for l in new_path_to_valid_aucprs[_new_path]])
         new_path_to_test_aucpr_stats[_new_path] = stats([float(l.split()[2]) for l in new_path_to_test_aucprs[_new_path]])
 
-    name_to_regex = {
-        'ADistMult-S1': '*_model=DistMult*_s=1_*.log',
-        'DistMult-S1': '*_adv_weight=0_*_model=DistMult*_s=1_*.log',
+    model_names = ['ERMLP', 'DistMult', 'ComplEx']
 
-        'ADistMult-S2': '*_model=DistMult*_s=2_*.log',
-        'DistMult-S2': '*_adv_weight=0_*_model=DistMult*_s=2_*.log',
+    name_to_regex = {}
+    for model_name in model_names:
+        for s in [1, 2, 3]:
+            name_to_regex['{}-ASR-S{}'.format(model_name, s)] = '*_model={}*_s={}_*.log'.format(model_name, s)
+            name_to_regex['{}-S{}'.format(model_name, s)] = '*_adv_weight=0_*_model={}*_s={}_*.log'.format(model_name, s)
 
-        'ADistMult-S3': '*_model=DistMult*_s=3_*.log',
-        'DistMult-S3': '*_adv_weight=0_*_model=DistMult*_s=3_*.log',
-
-        #'AComplEx-S1': '*_model=ComplEx_*.log',
-        #'ComplEx-S1': '*_adv_weight=0_*_model=ComplEx_*.log'
-    }
     regex_to_name = {regex: name for name, regex in name_to_regex.items()}
-
     regex_to_best_valid = {regex: None for _, regex in name_to_regex.items()}
 
     for path, stats in new_path_to_valid_aucpr_stats.items():
@@ -99,7 +93,9 @@ def main(argv):
         test_stats = new_path_to_test_aucpr_stats[path]
         name_to_best_test[name] = test_stats
 
-    for name, best_test in name_to_best_test.items():
+    sorted_names = sorted(name_to_regex.keys())
+    for name in sorted_names:
+        best_test = name_to_best_test[name]
         print(name, best_test)
 
 if __name__ == '__main__':
