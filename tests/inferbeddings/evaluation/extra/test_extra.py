@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import inferbeddings.evaluation.extra as metrics
+import inferbeddings.evaluation.extra.base as metrics
 import inferbeddings.evaluation.extra.davis as davis
 
 import math
