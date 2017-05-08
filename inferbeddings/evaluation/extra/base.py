@@ -6,7 +6,7 @@ import numpy as np
 from sklearn import metrics
 from sklearn.preprocessing import normalize
 
-import inferbeddings.evaluation.extra as extra
+import inferbeddings.evaluation.extra.davis as davis
 
 import math
 import logging
@@ -56,7 +56,7 @@ class AUCPRDavis(RankingEvaluationMetric):
         scores = self._preprocess_scores(scores)
         n, n_pos = len(scores), np.sum(y == self.pos_label)
 
-        metric = extra.AUC(n_pos, n - n_pos)
+        metric = davis.AUC(n_pos, n - n_pos)
         order = np.argsort(scores)[::-1]
         ordered_y = y[order]
 
@@ -70,7 +70,7 @@ class AUCPRDavis(RankingEvaluationMetric):
             _tp -= 1 if (i + 1) < ordered_y.shape[0] and ordered_y[i + 1] == self.pos_label else 0
             fp = n - _tp
 
-            point = extra.PNPoint(_tp, fp)
+            point = davis.PNPoint(_tp, fp)
             pn_points += [point]
 
         metric.set_pn_points(pn_points)
@@ -114,7 +114,7 @@ class AUCROCDavis(RankingEvaluationMetric):
         scores = self._preprocess_scores(scores)
         n, n_pos = len(scores), np.sum(y == self.pos_label)
 
-        metric = extra.AUC(n_pos, n - n_pos)
+        metric = davis.AUC(n_pos, n - n_pos)
         order = np.argsort(scores)[::-1]
         ordered_y = y[order]
 
@@ -128,7 +128,7 @@ class AUCROCDavis(RankingEvaluationMetric):
             _tp -= 1 if (i + 1) < ordered_y.shape[0] and ordered_y[i + 1] == self.pos_label else 0
             fp = n - _tp
 
-            point = extra.PNPoint(_tp, fp)
+            point = davis.PNPoint(_tp, fp)
             pn_points += [point]
 
         metric.set_pn_points(pn_points)
