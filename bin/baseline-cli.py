@@ -29,9 +29,12 @@ def main(argv):
     argparser.add_argument('--valid', '-v', action='store', type=str, default=None)
     argparser.add_argument('--test', '-T', action='store', type=str, default=None)
 
+    argparser.add_argument('--nb-runs', '-r', action='store', type=int, default=10)
+
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
+    nb_runs = args.nb_runs
 
     assert train_path is not None
     pos_train_triples, _ = read_triples(train_path)
@@ -77,7 +80,7 @@ def main(argv):
     valid_auc_roc_lst, valid_auc_pr_lst = [], []
     test_auc_roc_lst, test_auc_pr_lst = [], []
 
-    for seed in range(10):
+    for seed in range(nb_runs):
         random_state = np.random.RandomState(seed)
 
         def scoring_function(args):

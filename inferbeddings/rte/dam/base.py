@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 import tensorflow as tf
 import logging
 
@@ -8,6 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 class DecomposableAttentionModel(metaclass=ABCMeta):
+    @abstractmethod
+    def _transform_input(self, sequence, reuse=False):
+        raise NotImplementedError
+
     def __init__(self, optimizer, num_units, num_classes, vocab_size,
                  embedding_size=100, dropout_keep_prob=1.0, clip_value=100.0, l2_lambda=None,
                  trainable_embeddings=True):
@@ -75,8 +79,9 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
         # tensor with shape (batch_size, time_steps, time_steps)
         return tf.reshape(softmax_reshaped_values, original_shape)
 
+    @abstractmethod
     def _transform_attend(self, sequence, reuse=False):
-        raise NotADirectoryError
+        raise NotImplementedError
 
     def attend(self, sequence1, sequence2):
         """
@@ -105,8 +110,9 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
             beta = tf.matmul(attention_sentence1, sequence2, name='beta')
             return alpha, beta
 
+    @abstractmethod
     def _transform_compare(self, sequence, reuse):
-        raise NotADirectoryError
+        raise NotImplementedError
 
     def compare(self, sentence, soft_alignment):
         """
