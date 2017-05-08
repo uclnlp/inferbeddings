@@ -137,6 +137,7 @@ def main(argv):
     configurations = list(cartesian_product(hyperparameters_space_1)) +\
                      list(cartesian_product(hyperparameters_space_2)) +\
                      list(cartesian_product(hyperparameters_space_3))
+    configurations = list(cartesian_product(hyperparameters_space_2))
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v3/'
 
