@@ -3,7 +3,9 @@
 import pytest
 
 import numpy as np
-from inferbeddings.evaluation import metrics
+from inferbeddings.evaluation import metrics, ranking_summary
+
+import logging
 
 
 def scoring_function(args):
@@ -35,16 +37,23 @@ def scoring_function(args):
 
 
 def test_ranking_score():
+    logging.basicConfig(level=logging.INFO)
     ranker = metrics.Ranker(scoring_function, 4)
 
     (err_subj, err_obj), _ = ranker([(1, 1, 1)])
     assert(err_subj[0] == 2 and err_obj[0] == 3)
 
+    ranking_summary((err_subj, err_obj), n=2, tag='{} raw'.format('rankings'))
+
     (err_subj, err_obj), _ = ranker([(1, 1, 2)])
     assert(err_subj[0] == 1 and err_obj[0] == 2)
 
+    ranking_summary((err_subj, err_obj), n=1, tag='{} raw'.format('rankings'))
+
     (err_subj, err_obj), _ = ranker([(2, 1, 1)])
     assert(err_subj[0] == 3 and err_obj[0] == 3)
+
+    ranking_summary((err_subj, err_obj), n=1, tag='{} raw'.format('rankings'))
 
 
 if __name__ == '__main__':
