@@ -119,7 +119,6 @@ def main(argv):
                 assert walk_inputs[idx][0] == locatedIn_idx
                 region_idx = entity_inputs[idx][1]
                 res[idx] = region_idx_to_frequency[region_idx]
-            print(res)
             return res
 
         scoring_function = None
