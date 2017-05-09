@@ -117,9 +117,6 @@ def main(argv):
             res = np.zeros(nb_instances)
             for idx in range(nb_instances):
                 assert walk_inputs[idx][0] == locatedIn_idx
-                #if entity_inputs[idx][1] == most_frequent_region_idx:
-                #    res[idx] = 1.0
-                country_idx = entity_inputs[idx][0]
                 region_idx = entity_inputs[idx][1]
                 res[idx] = region_idx_to_frequency[region_idx]
             print(res)
