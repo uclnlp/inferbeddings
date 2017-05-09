@@ -29,11 +29,14 @@ def main(argv):
     argparser.add_argument('--valid', '-v', action='store', type=str, default=None)
     argparser.add_argument('--test', '-T', action='store', type=str, default=None)
 
+    argparser.add_argument('--model', '-m', action='store', type=str, choices=['random', 'frequency'], default=None)
     argparser.add_argument('--nb-runs', '-r', action='store', type=int, default=10)
 
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
+
+    model_name = args.model
     nb_runs = args.nb_runs
 
     assert train_path is not None
@@ -80,12 +83,55 @@ def main(argv):
     valid_auc_roc_lst, valid_auc_pr_lst = [], []
     test_auc_roc_lst, test_auc_pr_lst = [], []
 
+    region_lst = 'africa americas asia europe oceania'.split(' ')
+    subregion_lst = 'australia_and_new_zealand caribbean central_america central_asia central_europe eastern_africa eastern_asia eastern_europe melanesia micronesia middle_africa northern_africa northern_america northern_europe polynesia south-eastern_asia south_america southern_africa southern_asia southern_europe western_africa western_asia western_europe'.split(' ')
+
+    locatedIn_idx = None
+    if 'locatedin' in parser.predicate_to_index:
+        locatedIn_idx = parser.predicate_to_index['locatedin']
+    elif 'locatedIn' in parser.predicate_to_index:
+        locatedIn_idx = parser.predicate_to_index['locatedIn']
+    assert locatedIn_idx is not None
+
+    region_idx_lst = [parser.entity_to_index[region] for region in region_lst]
+    subregion_idx_lst = [parser.entity_to_index[subregion] for subregion in subregion_lst]
+
+    region_idx_to_frequency = {region_idx: 0 for region_idx in region_idx_lst}
+    for s, p, o in train_triples:
+        if s not in subregion_idx_lst and p == locatedIn_idx and o in region_idx_lst:
+            region_idx_to_frequency[o] += 1
+
+    most_frequent_region_idx = sorted(region_idx_to_frequency.items(), key=lambda x: x[1])[0]
+
     for seed in range(nb_runs):
         random_state = np.random.RandomState(seed)
 
-        def scoring_function(args):
+        def random_scoring_function(args):
             walk_inputs, entity_inputs = args[0], args[1]
             return random_state.rand(len(walk_inputs))
+
+        def frequency_scoring_function(args):
+            walk_inputs, entity_inputs = args[0], args[1]
+            nb_instances = len(walk_inputs)
+
+            res = np.zeros(nb_instances)
+            for idx in range(nb_instances):
+                assert walk_inputs[idx][0] == locatedIn_idx
+                #if entity_inputs[idx][1] == most_frequent_region_idx:
+                #    res[idx] = 1.0
+                country_idx = entity_inputs[idx][0]
+                region_idx = entity_inputs[idx][1]
+                res[idx] = region_idx_to_frequency[region_idx]
+            print(res)
+            return res
+
+        scoring_function = None
+        if model_name == 'random':
+            scoring_function = random_scoring_function
+        elif model_name == 'frequency':
+            scoring_function = frequency_scoring_function
+
+        assert scoring_function is not None
 
         valid_auc_roc, valid_auc_pr = evaluation.evaluate_auc(scoring_function,
                                                               valid_triples, valid_triples_neg,
@@ -102,10 +148,8 @@ def main(argv):
     def stats(values):
         return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
 
-    logger.info('VALID AUC-ROC: {}'.format(stats(valid_auc_roc_lst)))
-    logger.info('VALID AUC-PR: {}'.format(stats(valid_auc_pr_lst)))
-    logger.info('TEST AUC-ROC: {}'.format(stats(test_auc_roc_lst)))
-    logger.info('TEST AUC-PR: {}'.format(stats(test_auc_pr_lst)))
+    logger.info('[VALID]\tAUC-ROC: {}\tAUC-PR: {}'.format(stats(valid_auc_roc_lst), stats(valid_auc_pr_lst)))
+    logger.info('[TEST]\tAUC-ROC: {}\tAUC-PR: {}'.format(stats(test_auc_roc_lst), stats(test_auc_pr_lst)))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
