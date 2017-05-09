@@ -138,7 +138,7 @@ def main(argv):
                      list(cartesian_product(hyperparameters_space_2)) +\
                      list(cartesian_product(hyperparameters_space_3))
     # TODO - add back RESCAL if there's time/need
-    configurations = list(cartesian_product(hyperparameters_space_2)) +  list(cartesian_product(hyperparameters_space_1))
+    configurations = list(cartesian_product(hyperparameters_space_2))
 
     path = '/home/pminervi/workspace/inferbeddings/logs/ucl_countries_adv_v3/'
 
