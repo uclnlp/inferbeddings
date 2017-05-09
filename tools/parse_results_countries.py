@@ -91,7 +91,8 @@ def main(argv):
                     if float(stats.split(' ')[0]) > float(best_stats.split(' ')[0]):
                         regex_to_best_valid[regex] = (path, stats)
 
-    print(regex_to_best_valid)
+    for regex, best_valid in regex_to_best_valid.items():
+        print(regex, best_valid)
 
     name_to_best_test = {}
     for regex, (path, valid_stats) in regex_to_best_valid.items():
