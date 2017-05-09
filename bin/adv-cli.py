@@ -830,7 +830,7 @@ def main(argv):
         if valid_triples is not None:
             assert set(train_triples) & set(valid_triples) == set()
 
-        if pos_test_triples is not None:
+        if pos_test_triples is not None and not is_materialize:
             assert set(train_triples) & set(test_triples) == set()
 
         true_triples = train_triples + valid_triples + test_triples
