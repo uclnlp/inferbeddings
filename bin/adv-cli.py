@@ -776,6 +776,9 @@ def main(argv):
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
 
+    if not is_materialize:
+        assert len(train_sequences) == len(pos_train_triples)
+
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed,
                                           similarity_name,
