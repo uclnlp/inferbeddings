@@ -65,6 +65,7 @@ def test_ranking_score():
     assert (err_subj[1] == 1 and err_obj[1] == 2)
     assert (err_subj[2] == 3 and err_obj[2] == 3)
 
+    ranking_summary((err_subj, err_obj), n=1, tag='{} raw'.format('rankings'))
 
 if __name__ == '__main__':
     pytest.main([__file__])

@@ -824,6 +824,12 @@ def main(argv):
         test_triples = [(s, p, o) for (p, [s, o]) in test_sequences]
         test_triples_neg = [(s, p, o) for (p, [s, o]) in test_sequences_neg]
 
+        if valid_triples is not None:
+            assert set(train_triples) & set(valid_triples) == set()
+
+        if pos_test_triples is not None:
+            assert set(train_triples) & set(test_triples) == set()
+
         true_triples = train_triples + valid_triples + test_triples
 
         if valid_triples:
