@@ -44,17 +44,17 @@ def main(argv):
     new_path_to_valid_aucprs, new_path_to_test_aucprs = {}, {}
 
     for path in path_set:
-        _new_path = path
+        new_path = path
         for i in range(10):
-            _new_path = _new_path.replace('_seed={}'.format(i), '_seed=X')
+            new_path = new_path.replace('_seed={}'.format(i), '_seed=X')
 
-        if _new_path not in new_path_to_valid_aucprs:
-            new_path_to_valid_aucprs[_new_path] = []
-        if _new_path not in new_path_to_test_aucprs:
-            new_path_to_test_aucprs[_new_path] = []
+        if new_path not in new_path_to_valid_aucprs:
+            new_path_to_valid_aucprs[new_path] = []
+        if new_path not in new_path_to_test_aucprs:
+            new_path_to_test_aucprs[new_path] = []
 
-        new_path_to_valid_aucprs[_new_path] += [path_to_valid_aucpr[path]]
-        new_path_to_test_aucprs[_new_path] += [path_to_test_aucpr[path]]
+        new_path_to_valid_aucprs[new_path] += [path_to_valid_aucpr[path]]
+        new_path_to_test_aucprs[new_path] += [path_to_test_aucpr[path]]
 
     new_paths = set(new_path_to_valid_aucprs.keys()) & set(new_path_to_test_aucprs.keys())
     new_path_to_valid_aucpr_stats, new_path_to_test_aucpr_stats = {}, {}
@@ -63,11 +63,14 @@ def main(argv):
         return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))\
             if len(values) == 10 else '0'
 
-    for _new_path in new_paths:
-        new_path_to_valid_aucpr_stats[_new_path] = stats([float(l.split()[2]) for l in new_path_to_valid_aucprs[_new_path]])
-        new_path_to_test_aucpr_stats[_new_path] = stats([float(l.split()[2]) for l in new_path_to_test_aucprs[_new_path]])
+    for new_path in new_paths:
+        new_path_to_valid_aucpr_stats[new_path] = stats([float(l.split()[2]) for l in new_path_to_valid_aucprs[new_path]])
+        new_path_to_test_aucpr_stats[new_path] = stats([float(l.split()[2]) for l in new_path_to_test_aucprs[new_path]])
 
-    model_names = ['DistMult', 'ComplEx', 'ERMLP']#, 'RESCAL']
+    model_names = ['DistMult', 'ComplEx']
+
+    if any(['ERMLP' in new_path for new_path in new_paths]):
+        model_names += ['ERMLP']
 
     name_to_regex = {}
     for model_name in model_names:
