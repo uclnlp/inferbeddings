@@ -827,7 +827,7 @@ def main(argv):
         test_triples = [(s, p, o) for (p, [s, o]) in test_sequences]
         test_triples_neg = [(s, p, o) for (p, [s, o]) in test_sequences_neg]
 
-        if valid_triples is not None:
+        if valid_triples is not None and not is_materialize:
             assert set(train_triples) & set(valid_triples) == set()
 
         if pos_test_triples is not None and not is_materialize:
