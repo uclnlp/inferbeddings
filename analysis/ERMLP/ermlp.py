@@ -16,7 +16,7 @@ entity_embedding_size = 20
 predicate_embedding_size = 20
 
 seed = 0
-margin = 2
+margin = 5
 
 nb_epochs = 1000
 nb_batches = 10
