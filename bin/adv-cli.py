@@ -310,6 +310,9 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
             Xr_sc, Xe_sc = subject_corruptor(Xr_shuf, Xe_shuf)
             Xr_oc, Xe_oc = object_corruptor(Xr_shuf, Xe_shuf)
 
+            assert 0 not in Xr_sc and 0 not in Xe_sc
+            assert 0 not in Xr_oc and 0 not in Xe_oc
+
             if corrupt_relations:
                 Xr_rc, Xe_rc = relation_corruptor(Xr_shuf, Xe_shuf)
 
