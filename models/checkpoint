@@ -1,2 +1,0 @@
-model_checkpoint_path: "ComplEx_explosion_v1.model.ckpt"
-all_model_checkpoint_paths: "ComplEx_explosion_v1.model.ckpt"
