@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import math
 import sys
 import os
 
@@ -15,8 +16,14 @@ entity_embedding_size = 200
 predicate_embedding_size = 200
 
 seed = 0
+margin = 2
 
 nb_epochs = 1000
+nb_batches = 10
+
+np.random.seed(seed)
+random_state = np.random.RandomState(seed)
+tf.set_random_seed(seed)
 
 
 def read_triples(path):
@@ -28,11 +35,29 @@ def read_triples(path):
     return triples
 
 
+def renorm_update(var_matrix, norm=1.0, axis=1):
+    row_norms = tf.sqrt(tf.reduce_sum(tf.square(var_matrix), axis=axis))
+    scaled = var_matrix * tf.expand_dims(norm / row_norms, axis=axis)
+    return tf.assign(var_matrix, scaled)
+
+
+def pseudoboolean_linear_update(var_matrix):
+    pseudoboolean_linear = tf.minimum(1., tf.maximum(var_matrix, 0.))
+    return tf.assign(var_matrix, pseudoboolean_linear)
+
+
+def make_batches(size, batch_size):
+    nb_batch = int(np.ceil(size / float(batch_size)))
+    res = [(i * batch_size, min(size, (i + 1) * batch_size)) for i in range(0, nb_batch)]
+    return res
+
+
 class ERMLP:
-    def __init__(self, subject_embeddings=None, predicate_embeddings=None, object_embeddings=None, hidden_size=1, f=tf.tanh):
+    def __init__(self, subject_embeddings=None, predicate_embeddings=None, object_embeddings=None,
+                 hidden_size=1, f=tf.tanh):
         self.subject_embeddings, self.object_embeddings = subject_embeddings, object_embeddings
         self.predicate_embeddings = predicate_embeddings
-        self.f = f
+        self.f, self.hidden_size = f, hidden_size
 
         subject_emb_size = self.subject_embeddings.get_shape()[-1].value
         predicate_emb_size = self.predicate_embeddings.get_shape()[-1].value
@@ -40,8 +65,10 @@ class ERMLP:
 
         input_size = subject_emb_size + object_emb_size + predicate_emb_size
 
-        self.C = tf.get_variable('C', shape=[input_size, hidden_size], initializer=tf.contrib.layers.xavier_initializer())
-        self.w = tf.get_variable('w', shape=[hidden_size, 1], initializer=tf.contrib.layers.xavier_initializer())
+        self.C = tf.get_variable('C', shape=[input_size, self.hidden_size],
+                                 initializer=tf.contrib.layers.xavier_initializer())
+        self.w = tf.get_variable('w', shape=[self.hidden_size, 1],
+                                 initializer=tf.contrib.layers.xavier_initializer())
 
     def __call__(self):
         e_ijk = tf.concat(values=[self.subject_embeddings, self.object_embeddings, self.predicate_embeddings], axis=1)
@@ -49,6 +76,16 @@ class ERMLP:
         f_ijk = tf.squeeze(tf.matmul(self.f(h_ijk), self.w), axis=1)
 
         return f_ijk
+
+
+class IndexGenerator:
+    def __init__(self):
+        self.random_state = np.random.RandomState(0)
+
+    def __call__(self, n_samples, candidate_indices):
+        shuffled_indices = candidate_indices[self.random_state.permutation(len(candidate_indices))]
+        rand_ints = shuffled_indices[np.arange(n_samples) % len(shuffled_indices)]
+        return rand_ints
 
 
 def main(argv):
@@ -62,6 +99,7 @@ def main(argv):
     predicate_set = set([p for (s, p, o) in all_triples])
 
     nb_entities, nb_predicates = len(entity_set), len(predicate_set)
+    nb_examples = len(train_triples)
 
     entity_to_idx = {entity: idx for idx, entity in enumerate(sorted(entity_set))}
     predicate_to_idx = {predicate: idx for idx, predicate in enumerate(sorted(predicate_set))}
@@ -72,10 +110,75 @@ def main(argv):
     predicate_embedding_layer = tf.get_variable('predicates', shape=[nb_predicates, predicate_embedding_size],
                                                 initializer=tf.contrib.layers.xavier_initializer())
 
+    subject_inputs = tf.placeholder(tf.int32, shape=[None])
+    predicate_inputs = tf.placeholder(tf.int32, shape=[None])
+    object_inputs = tf.placeholder(tf.int32, shape=[None])
+    target_inputs = tf.placeholder(tf.int32, shape=[None])
 
+    subect_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, subject_inputs)
+    predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, predicate_inputs)
+    object_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, object_inputs)
+
+    model = ERMLP(subject_embeddings=subect_embeddings,
+                  predicate_embeddings=predicate_embeddings,
+                  object_embeddings=object_embeddings)
+
+    scores = model()
+
+    hinge_losses = tf.nn.relu(margin - scores * (2 * target_inputs - 1))
+    loss = tf.reduce_sum(hinge_losses)
+
+    optimizer = tf.train.AdagradOptimizer(learning_rate=0.1)
+    training_step = optimizer.minimize(loss)
+
+    projection_step = pseudoboolean_linear_update(entity_embedding_layer)
+
+    batch_size = math.ceil(nb_examples / nb_batches)
+    batches = make_batches(nb_examples, batch_size)
+
+    nb_versions = 3
+
+    Xs = np.array([entity_to_idx[s] for (s, p, o) in train_triples])
+    Xp = np.array([predicate_to_idx[p] for (s, p, o) in train_triples])
+    Xo = np.array([entity_to_idx[o] for (s, p, o) in train_triples])
+
+    index_gen = IndexGenerator()
 
     with tf.Session() as session:
-        pass
+        for epoch in range(nb_epochs + 1):
+            order = random_state.permutation(nb_examples)
+            Xs_shuf, Xp_shuf, Xo_shuf = Xs[order], Xp[order], Xo[order]
+
+            for batch_start, batch_end in batches:
+                curr_batch_size = batch_end - batch_start
+
+                Xs_batch = np.zeros(curr_batch_size * nb_versions, dtype=Xs_shuf.dtype)
+                Xp_batch = np.zeros(curr_batch_size * nb_versions, dtype=Xp_shuf.dtype)
+                Xo_batch = np.zeros(curr_batch_size * nb_versions, dtype=Xo_shuf.dtype)
+
+                Xs_batch[0::nb_versions] = Xs_shuf[batch_start:batch_end]
+                Xp_batch[0::nb_versions] = Xp_shuf[batch_start:batch_end]
+                Xo_batch[0::nb_versions] = Xo_shuf[batch_start:batch_end]
+
+                # Xs_batch[1::nb_versions] needs to be corrupted
+                Xs_batch[1::nb_versions] = index_gen(curr_batch_size, np.arange(nb_entities))
+                Xp_batch[1::nb_versions] = Xp_shuf[batch_start:batch_end]
+                Xo_batch[1::nb_versions] = Xo_shuf[batch_start:batch_end]
+
+                # Xo_batch[2::nb_versions] needs to be corrupted
+                Xs_batch[2::nb_versions] = Xs_shuf[batch_start:batch_end]
+                Xp_batch[2::nb_versions] = Xp_shuf[batch_start:batch_end]
+                Xo_batch[2::nb_versions] = index_gen(curr_batch_size, np.arange(nb_entities))
+
+                feed_dict = {
+                    subject_inputs: Xs_batch, predicate_inputs: Xp_batch, object_embeddings: Xo_batch,
+                    target_inputs: np.array([1, 0, 0] * curr_batch_size)
+                }
+
+                _, loss_value = session.run([training_step, loss], feed_dict=feed_dict)
+                logger.info('[{}] Loss value: {}'.format(epoch, loss_value))
+
+                session.run(projection_step)
 
 
 if __name__ == '__main__':
