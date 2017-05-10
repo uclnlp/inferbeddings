@@ -12,8 +12,8 @@ import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
-entity_embedding_size = 200
-predicate_embedding_size = 200
+entity_embedding_size = 20
+predicate_embedding_size = 20
 
 seed = 0
 margin = 2
@@ -113,13 +113,14 @@ def main(argv):
     subject_inputs = tf.placeholder(tf.int32, shape=[None])
     predicate_inputs = tf.placeholder(tf.int32, shape=[None])
     object_inputs = tf.placeholder(tf.int32, shape=[None])
-    target_inputs = tf.placeholder(tf.int32, shape=[None])
 
-    subect_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, subject_inputs)
+    target_inputs = tf.placeholder(tf.float32, shape=[None])
+
+    subject_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, subject_inputs)
     predicate_embeddings = tf.nn.embedding_lookup(predicate_embedding_layer, predicate_inputs)
     object_embeddings = tf.nn.embedding_lookup(entity_embedding_layer, object_inputs)
 
-    model = ERMLP(subject_embeddings=subect_embeddings,
+    model = ERMLP(subject_embeddings=subject_embeddings,
                   predicate_embeddings=predicate_embeddings,
                   object_embeddings=object_embeddings)
 
@@ -138,18 +139,22 @@ def main(argv):
 
     nb_versions = 3
 
-    Xs = np.array([entity_to_idx[s] for (s, p, o) in train_triples])
-    Xp = np.array([predicate_to_idx[p] for (s, p, o) in train_triples])
-    Xo = np.array([entity_to_idx[o] for (s, p, o) in train_triples])
+    Xs = np.array([entity_to_idx[s] for (s, p, o) in train_triples], dtype=np.int32)
+    Xp = np.array([predicate_to_idx[p] for (s, p, o) in train_triples], dtype=np.int32)
+    Xo = np.array([entity_to_idx[o] for (s, p, o) in train_triples], dtype=np.int32)
 
     index_gen = IndexGenerator()
 
+    init_op = tf.global_variables_initializer()
+
     with tf.Session() as session:
+        session.run(init_op)
+
         for epoch in range(nb_epochs + 1):
             order = random_state.permutation(nb_examples)
             Xs_shuf, Xp_shuf, Xo_shuf = Xs[order], Xp[order], Xo[order]
 
-            for batch_start, batch_end in batches:
+            for batch_no, (batch_start, batch_end) in enumerate(batches):
                 curr_batch_size = batch_end - batch_start
 
                 Xs_batch = np.zeros(curr_batch_size * nb_versions, dtype=Xs_shuf.dtype)
@@ -171,12 +176,14 @@ def main(argv):
                 Xo_batch[2::nb_versions] = index_gen(curr_batch_size, np.arange(nb_entities))
 
                 feed_dict = {
-                    subject_inputs: Xs_batch, predicate_inputs: Xp_batch, object_embeddings: Xo_batch,
-                    target_inputs: np.array([1, 0, 0] * curr_batch_size)
+                    subject_inputs: Xs_batch,
+                    predicate_inputs: Xp_batch,
+                    object_inputs: Xo_batch,
+                    target_inputs: np.array([1.0, 0.0, 0.0] * curr_batch_size)
                 }
 
                 _, loss_value = session.run([training_step, loss], feed_dict=feed_dict)
-                logger.info('[{}] Loss value: {}'.format(epoch, loss_value))
+                logger.info('Epoch {}/{} Loss value: {}'.format(epoch, batch_no, loss_value))
 
                 session.run(projection_step)
 
