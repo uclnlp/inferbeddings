@@ -176,9 +176,7 @@ def main(argv):
                 Xo_batch[2::nb_versions] = index_gen(curr_batch_size, np.arange(nb_entities))
 
                 feed_dict = {
-                    subject_inputs: Xs_batch,
-                    predicate_inputs: Xp_batch,
-                    object_inputs: Xo_batch,
+                    subject_inputs: Xs_batch, predicate_inputs: Xp_batch, object_inputs: Xo_batch,
                     target_inputs: np.array([1.0, 0.0, 0.0] * curr_batch_size)
                 }
 
@@ -187,6 +185,33 @@ def main(argv):
 
                 session.run(projection_step)
 
+        logger.info('End of training.')
+
+        err_corrupt_subj, err_corrupt_obj = [], []
+        for s, p, o in valid_triples:
+            s_idx, p_idx, o_idx = entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o]
+
+            Xs = np.full(shape=(nb_entities,), fill_value=s_idx, dtype=np.int32)
+            Xp = np.full(shape=(nb_entities,), fill_value=p_idx, dtype=np.int32)
+            Xo = np.full(shape=(nb_entities,), fill_value=o_idx, dtype=np.int32)
+
+            feed_dict_corrupt_subj = {subject_inputs: np.arange(nb_entities), predicate_inputs: Xp, object_inputs: Xo}
+            feed_dict_corrupt_obj = {subject_inputs: Xs, predicate_inputs: Xp, object_inputs: np.arange(nb_entities)}
+
+            # scores of (1, p, o), (2, p, o), .., (N, p, o)
+            scores_corrupt_subj = session.run(scores, feed_dict=feed_dict_corrupt_subj)
+
+            # scores of (s, p, 1), (s, p, 2), .., (s, p, N)
+            scores_corrupt_obj = session.run(scores, feed_dict=feed_dict_corrupt_obj)
+
+            err_corrupt_subj += [1 + np.sum(scores_corrupt_subj > scores_corrupt_subj[s_idx])]
+            err_corrupt_obj += [1 + np.sum(scores_corrupt_obj > scores_corrupt_obj[o_idx])]
+
+        err = err_corrupt_subj + err_corrupt_obj
+        logger.info('Mean Rank: {}'.format(np.mean(err)))
+
+        for k in [1, 3, 5, 10]:
+            logger.info('Hits@{}: {}'.format(k, np.mean(np.asarray(err) <= k) * 100))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)

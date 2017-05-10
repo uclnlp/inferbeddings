@@ -70,7 +70,11 @@ class Ranker(BaseRanker):
             Xe_s = np.full(shape=(self.nb_entities, 2), fill_value=subj_idx, dtype=np.int32)
             Xe_s[:, 1] = np.arange(1, self.nb_entities + 1)
 
-            scores_o, scores_s = self.scoring_function([Xr, Xe_o]), self.scoring_function([Xr, Xe_s])
+            # scores of (1, p, o), (2, p, o), .., (N, p, o)
+            scores_o = self.scoring_function([Xr, Xe_o])
+
+            # scores of (s, p, 1), (s, p, 2), .., (s, p, N)
+            scores_s = self.scoring_function([Xr, Xe_s])
 
             err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
             err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
