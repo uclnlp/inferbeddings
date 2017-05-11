@@ -9,6 +9,8 @@ import argparse
 import numpy as np
 import tensorflow as tf
 
+from tqdm import tqdm
+
 import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
@@ -195,33 +197,53 @@ def main(argv):
 
                 session.run(projection_step)
 
-        logger.info('End of training.')
+        logger.info('Evaluating ..')
 
-        err_corrupt_subj, err_corrupt_obj = [], []
-        for s, p, o in valid_triples:
-            s_idx, p_idx, o_idx = entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o]
+        for eval_name, eval_triples in [('valid', valid_triples), ('test', test_triples)]:
 
-            Xs = np.full(shape=(nb_entities,), fill_value=s_idx, dtype=np.int32)
-            Xp = np.full(shape=(nb_entities,), fill_value=p_idx, dtype=np.int32)
-            Xo = np.full(shape=(nb_entities,), fill_value=o_idx, dtype=np.int32)
+            ranks_subj, ranks_obj = [], []
+            filtered_ranks_subj, filtered_ranks_obj = [], []
 
-            feed_dict_corrupt_subj = {subject_inputs: np.arange(nb_entities), predicate_inputs: Xp, object_inputs: Xo}
-            feed_dict_corrupt_obj = {subject_inputs: Xs, predicate_inputs: Xp, object_inputs: np.arange(nb_entities)}
+            for s, p, o in tqdm(eval_triples):
+                s_idx, p_idx, o_idx = entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o]
 
-            # scores of (1, p, o), (2, p, o), .., (N, p, o)
-            scores_corrupt_subj = session.run(scores, feed_dict=feed_dict_corrupt_subj)
+                Xs = np.full(shape=(nb_entities,), fill_value=s_idx, dtype=np.int32)
+                Xp = np.full(shape=(nb_entities,), fill_value=p_idx, dtype=np.int32)
+                Xo = np.full(shape=(nb_entities,), fill_value=o_idx, dtype=np.int32)
 
-            # scores of (s, p, 1), (s, p, 2), .., (s, p, N)
-            scores_corrupt_obj = session.run(scores, feed_dict=feed_dict_corrupt_obj)
+                feed_dict_corrupt_subj = {subject_inputs: np.arange(nb_entities), predicate_inputs: Xp, object_inputs: Xo}
+                feed_dict_corrupt_obj = {subject_inputs: Xs, predicate_inputs: Xp, object_inputs: np.arange(nb_entities)}
 
-            err_corrupt_subj += [1 + np.sum(scores_corrupt_subj > scores_corrupt_subj[s_idx])]
-            err_corrupt_obj += [1 + np.sum(scores_corrupt_obj > scores_corrupt_obj[o_idx])]
+                # scores of (1, p, o), (2, p, o), .., (N, p, o)
+                scores_subj = session.run(scores, feed_dict=feed_dict_corrupt_subj)
 
-        err = err_corrupt_subj + err_corrupt_obj
-        logger.info('Mean Rank: {}'.format(np.mean(err)))
+                # scores of (s, p, 1), (s, p, 2), .., (s, p, N)
+                scores_obj = session.run(scores, feed_dict=feed_dict_corrupt_obj)
 
-        for k in [1, 3, 5, 10]:
-            logger.info('Hits@{}: {}'.format(k, np.mean(np.asarray(err) <= k) * 100))
+                ranks_subj += [1 + np.sum(scores_subj > scores_subj[s_idx])]
+                ranks_obj += [1 + np.sum(scores_obj > scores_obj[o_idx])]
+
+                filtered_scores_subj = scores_subj.copy()
+                filtered_scores_obj = scores_obj.copy()
+
+                rm_idx_s = [entity_to_idx[fs] for (fs, fp, fo) in all_triples if fs != s and fp == p and fo == o]
+                rm_idx_o = [entity_to_idx[fo] for (fs, fp, fo) in all_triples if fs == s and fp == p and fo != o]
+
+                filtered_scores_subj[rm_idx_s] = - np.inf
+                filtered_scores_obj[rm_idx_o] = - np.inf
+
+                filtered_ranks_subj += [1 + np.sum(filtered_scores_subj > filtered_scores_subj[s_idx])]
+                filtered_ranks_obj += [1 + np.sum(filtered_scores_obj > filtered_scores_obj[o_idx])]
+
+            ranks = ranks_subj + ranks_obj
+            filtered_ranks = filtered_ranks_subj + filtered_ranks_obj
+
+            for setting_name, setting_ranks in [('Raw', ranks), ('Filtered', filtered_ranks)]:
+                mean_rank = np.mean(setting_ranks)
+                logger.info('[{}] {} Mean Rank: {}'.format(eval_name, setting_name, mean_rank))
+                for k in [1, 3, 5, 10]:
+                    hits_at_k = np.mean(np.asarray(setting_ranks) <= k) * 100
+                    logger.info('[{}] {} Hits@{}: {}'.format(eval_name, setting_name, k, hits_at_k))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
