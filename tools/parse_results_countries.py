@@ -120,8 +120,8 @@ def main(argv):
             col_s12 = name_to_best_test['{}-S12'.format(local_model_name)]
             col_s123 = name_to_best_test['{}-S123'.format(local_model_name)]
 
-            print('(S1, S2, S3)\t{}\t&\t{}\t&\t{}\t&\t{}'.format(col_model, col_s1, col_s2, col_s3))
-            print('(S1, S12, S123)\t{}\t&\t{}\t&\t{}\t&\t{}'.format(col_model, col_s1, col_s12, col_s123))
+            print('(S1, S2, S3)\t{}\t\t&\t{}\t&\t{}\t&\t{}'.format(col_model, col_s1, col_s2, col_s3))
+            print('(S1, S12, S123)\t{}\t\t&\t{}\t&\t{}\t&\t{}'.format(col_model, col_s1, col_s12, col_s123))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
