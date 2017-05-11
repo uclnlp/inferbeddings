@@ -60,17 +60,19 @@ def main(argv):
     new_path_to_valid_aucpr_stats, new_path_to_test_aucpr_stats = {}, {}
 
     def stats(values):
-        return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))\
-            if len(values) == 10 else '0'
+        if len(values) != 10:
+            pass  # return "0 ± 0"
+        return '{0:.3f} ± {1:.3f}'.format(round(np.mean(values), 3), round(np.std(values), 3))
 
     for new_path in new_paths:
         new_path_to_valid_aucpr_stats[new_path] = stats([float(l.split()[2]) for l in new_path_to_valid_aucprs[new_path]])
         new_path_to_test_aucpr_stats[new_path] = stats([float(l.split()[2]) for l in new_path_to_test_aucprs[new_path]])
 
-    model_names = ['DistMult', 'ComplEx']
+    model_names = []
 
-    if any(['ERMLP' in new_path for new_path in new_paths]):
-        model_names += ['ERMLP']
+    for m in ['DistMult', 'ComplEx', 'ERMLP']:
+        if any([m in new_path for new_path in new_paths]):
+            model_names += [m]
 
     name_to_regex = {}
     for model_name in model_names:
