@@ -5,6 +5,7 @@ import math
 import sys
 import os
 
+import argparse
 import numpy as np
 import tensorflow as tf
 
@@ -89,9 +90,18 @@ class IndexGenerator:
 
 
 def main(argv):
-    train_triples = read_triples('wn18.triples.train')
-    valid_triples = read_triples('wn18.triples.valid')
-    test_triples = read_triples('wn18.triples.test')
+    def formatter(prog):
+        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
+
+    argparser = argparse.ArgumentParser('ER-MLP KBP Model', formatter_class=formatter)
+    argparser.add_argument('dataset', action='store', type=str, choices=['wn18', 'fb15k', 'fb122'])
+    args = argparser.parse_args(argv)
+
+    dataset_name = args.dataset
+
+    train_triples = read_triples('{}/{}.triples.train'.format(dataset_name, dataset_name))
+    valid_triples = read_triples('{}/{}.triples.valid'.format(dataset_name, dataset_name))
+    test_triples = read_triples('{}/{}.triples.test'.format(dataset_name, dataset_name))
 
     all_triples = train_triples + valid_triples + test_triples
 
