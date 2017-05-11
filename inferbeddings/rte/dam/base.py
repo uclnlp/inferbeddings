@@ -1,20 +1,30 @@
 # -*- coding: utf-8 -*-
 
 from abc import ABCMeta, abstractmethod
+
 import tensorflow as tf
 import logging
+
+from inferbeddings.rte.dam import util
 
 logger = logging.getLogger(__name__)
 
 
-class DecomposableAttentionModel(metaclass=ABCMeta):
+class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
     @abstractmethod
-    def _transform_input(self, sequence, reuse=False):
+    def _transform_embeddings(self, embeddings, reuse=False):
         raise NotImplementedError
 
-    def __init__(self, optimizer, num_units, num_classes, vocab_size,
-                 embedding_size=100, dropout_keep_prob=1.0, clip_value=100.0, l2_lambda=None,
-                 trainable_embeddings=True):
+    @abstractmethod
+    def _transform_attend(self, sequence, reuse=False):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _transform_compare(self, sequence, reuse=False):
+        raise NotImplementedError
+
+    def __init__(self, optimizer, vocab_size, embedding_size=300,
+                 clip_value=100.0, l2_lambda=None, trainable_embeddings=True):
         self.num_classes = 3
 
         self.sentence1 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -28,11 +38,12 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
         self.embeddings = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           trainable=trainable_embeddings)
+        self.transformed_embeddings = self._transform_embeddings(self.embeddings)
 
         # [batch, time_steps, embedding_size]
-        self.embedded1 = tf.nn.embedding_lookup(self.embeddings, self.sentence1)
+        self.embedded1 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence1)
         # [batch, time_steps, embedding_size]
-        self.embedded2 = tf.nn.embedding_lookup(self.embeddings, self.sentence2)
+        self.embedded2 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence2)
 
         logger.info('Building the Attend graph ..')
         # tensors with shape (batch_size, time_steps, num_units)
@@ -49,7 +60,7 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
 
         self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
 
-        labels = tf.one_hot(self.label, num_classes)
+        labels = tf.one_hot(self.label, self.num_classes)
         self.loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=labels)
 
         if l2_lambda is not None:
@@ -63,25 +74,6 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
             self.training_step = optimizer.apply_gradients(zip(gradients, v))
         else:
             self.training_step = optimizer.minimize(self.loss)
-
-    @staticmethod
-    def attention_softmax3d(values):
-        """
-        Performs a softmax over the attention values.
-        :param values: tensor with shape (batch_size, time_steps, time_steps)
-        :return: tensor with shape (batch_size, time_steps, time_steps)
-        """
-        original_shape = tf.shape(values)
-        # tensor with shape (batch_size * time_steps, time_steps)
-        reshaped_values = tf.reshape(tensor=values, shape=[-1, original_shape[2]])
-        # tensor with shape (batch_size * time_steps, time_steps)
-        softmax_reshaped_values = tf.nn.softmax(reshaped_values)
-        # tensor with shape (batch_size, time_steps, time_steps)
-        return tf.reshape(softmax_reshaped_values, original_shape)
-
-    @abstractmethod
-    def _transform_attend(self, sequence, reuse=False):
-        raise NotImplementedError
 
     def attend(self, sequence1, sequence2):
         """
@@ -99,20 +91,16 @@ class DecomposableAttentionModel(metaclass=ABCMeta):
             transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
             # tensor with shape (batch_size, time_steps, time_steps)
             raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
-            attention_sentence1 = DecomposableAttentionModel.attention_softmax3d(raw_attentions)
+            attention_sentence1 = util.attention_softmax3d(raw_attentions)
 
             # tensor with shape (batch_size, time_steps, time_steps)
             attention_transposed = tf.transpose(raw_attentions, [0, 2, 1])
-            attention_sentence2 = DecomposableAttentionModel.attention_softmax3d(attention_transposed)
+            attention_sentence2 = util.attention_softmax3d(attention_transposed)
 
             # tensors with shape (batch_size, time_steps, num_units)
             alpha = tf.matmul(attention_sentence2, sequence1, name='alpha')
             beta = tf.matmul(attention_sentence1, sequence2, name='beta')
             return alpha, beta
-
-    @abstractmethod
-    def _transform_compare(self, sequence, reuse):
-        raise NotImplementedError
 
     def compare(self, sentence, soft_alignment):
         """
