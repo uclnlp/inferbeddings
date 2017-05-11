@@ -110,11 +110,18 @@ def main(argv):
     for model_name in model_names:
         for is_asr in [False, True]:
             local_model_name = '{}{}'.format(model_name, '-ASR' if is_asr else '')
-            col1 = '{}'.format(local_model_name)
-            col2 = name_to_best_test['{}-S1'.format(local_model_name)]
-            col3 = name_to_best_test['{}-S2'.format(local_model_name)]
-            col4 = name_to_best_test['{}-S3'.format(local_model_name)]
-            print('{} & {} & {} & {}'.format(col1, col2, col3, col4))
+            col_model = '{}'.format(local_model_name)
+
+            col_s1 = name_to_best_test['{}-S1'.format(local_model_name)]
+
+            col_s2 = name_to_best_test['{}-S2'.format(local_model_name)]
+            col_s3 = name_to_best_test['{}-S3'.format(local_model_name)]
+
+            col_s12 = name_to_best_test['{}-S12'.format(local_model_name)]
+            col_s123 = name_to_best_test['{}-S123'.format(local_model_name)]
+
+            print('(S1, S2, S3)\t{}\t&\t{}\t&\t{}\t&\t{}'.format(col_model, col_s1, col_s2, col_s3))
+            print('(S1, S12, S123)\t{}\t&\t{}\t&\t{}\t&\t{}'.format(col_model, col_s1, col_s12, col_s123))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
