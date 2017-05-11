@@ -8,7 +8,7 @@ def main(argv):
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-    argparser = argparse.ArgumentParser('ER-MLP KBP Model', formatter_class=formatter)
+    argparser = argparse.ArgumentParser('Baseline', formatter_class=formatter)
     argparser.add_argument('dataset', action='store', type=str, choices=['wn18', 'fb15k', 'fb122'])
     args = argparser.parse_args(argv)
 
