@@ -107,6 +107,15 @@ def main(argv):
         best_test = name_to_best_test[name]
         print(name, best_test)
 
+    for model_name in model_names:
+        for is_asr in [False, True]:
+            local_model_name = '{}{}'.format(model_name, '-ASR' if is_asr else '')
+            col1 = '{}'.format(local_model_name)
+            col2 = name_to_best_test['{}-S1'.format(local_model_name)]
+            col3 = name_to_best_test['{}-S2'.format(local_model_name)]
+            col4 = name_to_best_test['{}-S3'.format(local_model_name)]
+            print('{} & {} & {} & {}'.format(col1, col2, col3, col4))
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main(sys.argv[1:])
