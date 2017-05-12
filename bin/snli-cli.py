@@ -169,7 +169,6 @@ def main(argv):
         optimizer=optimizer,
         vocab_size=vocab_size,
         embedding_size=embedding_size,
-        dropout_keep_prob=dropout_keep_prob,
         l2_lambda=1e-5,
         trainable_embeddings=not is_fixed_embeddings)
 
