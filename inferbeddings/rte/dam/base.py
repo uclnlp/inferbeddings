@@ -115,6 +115,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         
         :param sentence: tensor with shape (batch_size, time_steps, num_units)
         :param soft_alignment: tensor with shape (batch_size, time_steps, num_units)
+        :param reuse: reuse variables
         :return: tensor with shape (batch_size, time_steps, num_units)
         """
         # tensor with shape (batch, time_steps, num_units)
@@ -131,7 +132,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         :param num_classes: number of output units
         :return: 
         """
-        with tf.variable_scope('aggregate') as scope:
+        with tf.variable_scope('aggregate') as _:
             v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
             v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
             transformed_v1_v2 = self._transform_aggregate(v1_v2)
