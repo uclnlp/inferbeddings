@@ -84,8 +84,10 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         :param sequence2: tensor with shape (batch_size, time_steps, num_units)
         :return: two tensors with shape (batch_size, time_steps, num_units)
         """
-        with tf.variable_scope('attend') as scope:
+        with tf.variable_scope('attend') as _:
+            # tensor with shape (batch_size, time_steps, num_units)
             transformed_sequence1 = self._transform_attend(sequence1)
+            # tensor with shape (batch_size, time_steps, num_units)
             transformed_sequence2 = self._transform_attend(sequence2, True)
 
             # tensor with shape (batch_size, num_units, time_steps)
