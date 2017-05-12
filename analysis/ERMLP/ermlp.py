@@ -204,6 +204,10 @@ def main(argv):
             ranks_subj, ranks_obj = [], []
             filtered_ranks_subj, filtered_ranks_obj = [], []
 
+            scores_subj_lst, scores_obj_lst = [], []
+            filtered_scores_subj_lst, filtered_scores_obj_lst = [], []
+            eval_triples_idx = []
+
             for s, p, o in tqdm(eval_triples):
                 s_idx, p_idx, o_idx = entity_to_idx[s], predicate_to_idx[p], entity_to_idx[o]
 
@@ -234,6 +238,29 @@ def main(argv):
 
                 filtered_ranks_subj += [1 + np.sum(filtered_scores_subj > filtered_scores_subj[s_idx])]
                 filtered_ranks_obj += [1 + np.sum(filtered_scores_obj > filtered_scores_obj[o_idx])]
+
+                scores_subj_lst += [scores_subj]
+                scores_obj_lst += [scores_obj]
+                filtered_scores_subj_lst += [filtered_scores_subj]
+                filtered_scores_obj_lst += [filtered_scores_obj]
+                eval_triples_idx += [(s_idx, p_idx, o_idx)]
+
+            save_me = {
+                'scores_subj_lst': scores_subj_lst,
+                'scores_obj_lst': scores_obj_lst,
+                'ranks_subj': ranks_subj,
+                'ranks_obj': ranks_obj,
+                'filtered_ranks_subj': filtered_ranks_subj,
+                'filtered_ranks_obj': filtered_ranks_obj,
+                'filtered_scores_subj_lst': filtered_scores_subj_lst,
+                'filtered_scores_obj_lst': filtered_scores_obj_lst,
+                'entity_embeddings': session.run(entity_embedding_layer),
+                'predicate_embeddings': session.run(predicate_embedding_layer),
+            }
+
+            with open('save.p', 'wb') as f:
+                import pickle
+                pickle.dump(save_me, f)
 
             ranks = ranks_subj + ranks_obj
             filtered_ranks = filtered_ranks_subj + filtered_ranks_obj
