@@ -112,7 +112,7 @@ def main(argv):
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
-    argparser.add_argument('--learning-rate', action='store', type=float, default=0.001)
+    argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--semi-sort', action='store_true')
@@ -162,7 +162,7 @@ def main(argv):
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
     max_len = None
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
 
     train_dataset = to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
     dev_dataset = to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
