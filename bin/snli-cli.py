@@ -167,7 +167,6 @@ def main(argv):
 
     model_kwargs = dict(
         optimizer=optimizer,
-        num_classes=3,
         vocab_size=vocab_size,
         embedding_size=embedding_size,
         dropout_keep_prob=dropout_keep_prob,

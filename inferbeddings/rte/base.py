@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 class ConditionalBiLSTM:
-    def __init__(self, optimizer, hidden_size, num_classes, vocab_size,
+    def __init__(self, optimizer, hidden_size, vocab_size,
                  embedding_size=100, dropout_keep_prob=1.0, clip_value=100.0, l2_lambda=None,
                  trainable_embeddings=True):
+        self.num_classes = 3
         self.sentence1 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
         self.sentence2 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
 
@@ -51,13 +52,13 @@ class ConditionalBiLSTM:
         self.pre_logits = tf.concat(values=[self.encoded_sequence1, self.encoded_sequence2], axis=1)
 
         # [batch, 3]
-        self.logits = tf.contrib.layers.fully_connected(inputs=self.pre_logits, num_outputs=num_classes,
+        self.logits = tf.contrib.layers.fully_connected(inputs=self.pre_logits, num_outputs=self.num_classes,
                                                         weights_initializer=tf.random_normal_initializer(0.0, 0.1),
                                                         biases_initializer=tf.zeros_initializer(), activation_fn=None)
         self.logits = tf.contrib.layers.dropout(self.logits, keep_prob=dropout_keep_prob)
 
         self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
-        labels = tf.one_hot(self.label, num_classes)
+        labels = tf.one_hot(self.label, self.num_classes)
         self.loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=labels)
 
         if l2_lambda is not None:
