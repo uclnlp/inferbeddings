@@ -15,7 +15,7 @@ from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.rte import ConditionalBiLSTM
-from inferbeddings.rte.dam.base import DecomposableAttentionModel
+from inferbeddings.rte.dam import SimpleDecomposableAttentionModel
 from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
 from inferbeddings.models.training import constraints
 
@@ -99,7 +99,8 @@ def main(argv):
     argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
-    argparser.add_argument('--model', '-m', action='store', type=str, default=None)
+    argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
+                           choices=['cbilstm', 'simple-dam'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
@@ -164,24 +165,24 @@ def main(argv):
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
     answers = train_dataset['answers']
 
-    if model_name == 'dam':
-        model = DecomposableAttentionModel(optimizer=optimizer,
-                                           num_units=num_units,
-                                           num_classes=3,
-                                           vocab_size=vocab_size,
-                                           embedding_size=embedding_size,
-                                           dropout_keep_prob=dropout_keep_prob,
-                                           l2_lambda=1e-5,
-                                           trainable_embeddings=not is_fixed_embeddings)
-    else:
-        model = ConditionalBiLSTM(optimizer=optimizer,
-                                  num_units=num_units,
-                                  num_classes=3,
-                                  vocab_size=vocab_size,
-                                  embedding_size=embedding_size,
-                                  dropout_keep_prob=dropout_keep_prob,
-                                  l2_lambda=1e-5,
-                                  trainable_embeddings=not is_fixed_embeddings)
+    model_kwargs = dict(
+        optimizer=optimizer,
+        num_units=num_units,
+        num_classes=3,
+        vocab_size=vocab_size,
+        embedding_size=embedding_size,
+        dropout_keep_prob=dropout_keep_prob,
+        l2_lambda=1e-5,
+        trainable_embeddings=not is_fixed_embeddings)
+
+    RTEModel = None
+    if model_name == 'cbilstm':
+        RTEModel = ConditionalBiLSTM
+    elif model_name == 'simple-dam':
+        RTEModel = SimpleDecomposableAttentionModel
+
+    assert RTEModel is not None
+    model = RTEModel(**model_kwargs)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
