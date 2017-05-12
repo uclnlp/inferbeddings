@@ -59,7 +59,9 @@ class ConditionalBiLSTM:
 
         self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
         labels = tf.one_hot(self.label, self.num_classes)
-        self.loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=labels)
+
+        self.losses = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=labels)
+        self.loss = tf.reduce_mean(self.losses, axis=1)
 
         if l2_lambda is not None:
             regularizer = l2_lambda * sum(tf.nn.l2_loss(var) for var in tf.trainable_variables()
