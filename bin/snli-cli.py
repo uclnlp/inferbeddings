@@ -105,6 +105,8 @@ def main(argv):
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
                            choices=['cbilstm', 'simple-dam', 'ff-dam'])
+    argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
+                           choices=['adagrad', 'adam'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
@@ -128,6 +130,8 @@ def main(argv):
     train_path, valid_path, test_path = args.train, args.valid, args.test
 
     model_name = args.model
+    optimizer_name = args.optimizer
+
     embedding_size = args.embedding_size
     representation_size = args.representation_size
     hidden_size = args.hidden_size
@@ -163,7 +167,14 @@ def main(argv):
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
     max_len = None
-    optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
+    optimizer_class = None
+    if optimizer_name == 'adagrad':
+        optimizer_class = tf.train.AdagradOptimizer
+    elif optimizer_name == 'adam':
+        optimizer_class = tf.train.AdamOptimizer
+    assert optimizer_class is not None
+
+    optimizer = optimizer_class(learning_rate=learning_rate)
 
     train_dataset = to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
     dev_dataset = to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
@@ -272,7 +283,6 @@ def main(argv):
 
                     logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
-                    loss_values = []
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
                         best_dev_accuracy = dev_accuracy
                         best_test_accuracy = test_accuracy
