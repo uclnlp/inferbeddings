@@ -266,9 +266,9 @@ def main(argv):
                 for projection_step in projection_steps:
                     session.run([projection_step])
 
-                logger.debug('Epoch {0}/{1}\tLoss: {2}'.format(epoch, batch_idx, loss_value[0]))
+                logger.debug('Epoch {0}/{1}\tLoss: {2}'.format(epoch, batch_idx, loss_value))
 
-                loss_values += [loss_value[0]]
+                loss_values += [loss_value]
                 correct_predictions_values += correct_predictions_value.tolist()
 
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
