@@ -250,7 +250,7 @@ def main(argv):
 
             loss_values, correct_predictions_values = [], []
 
-            for i, (batch_start, batch_end) in enumerate(batches):
+            for batch_idx, (batch_start, batch_end) in enumerate(batches):
                 batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
                 batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
                 batch_labels = labels[batch_start:batch_end]
@@ -266,23 +266,25 @@ def main(argv):
                 for projection_step in projection_steps:
                     session.run([projection_step])
 
+                logger.debug('Epoch {0}/{1}\tLoss: {}'.format(epoch, batch_idx, loss_value))
+
                 loss_values += loss_value.tolist()
                 correct_predictions_values += correct_predictions_value.tolist()
 
-                if (i > 0 and i % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
+                if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
                     train_accuracy = np.mean(correct_predictions_values)
                     dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
                     test_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, test_dataset))
 
                     logger.debug('Epoch {0}/{1}\tTrain Accuracy: {2:.2f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
-                                 .format(epoch, i, train_accuracy * 100, dev_accuracy * 100, test_accuracy * 100))
+                                 .format(epoch, batch_idx, train_accuracy * 100, dev_accuracy * 100, test_accuracy * 100))
 
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
                         best_dev_accuracy = dev_accuracy
                         best_test_accuracy = test_accuracy
 
-                    logger.debug('Epoch {0}/{1}\tTrain Accuracy: {2:.2f}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
-                                 .format(epoch, i, train_accuracy * 100, best_dev_accuracy * 100, best_test_accuracy * 100))
+                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
+                                 .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
