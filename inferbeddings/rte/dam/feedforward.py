@@ -7,9 +7,9 @@ from inferbeddings.rte.dam import AbstractDecomposableAttentionModel
 
 class FeedForwardDAM(AbstractDecomposableAttentionModel):
     def __init__(self, representation_size=200, dropout_keep_prob=1.0, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.representation_size = representation_size
         self.dropout_keep_prob = dropout_keep_prob
+        super().__init__(*args, **kwargs)
 
     def _transform_embeddings(self, embeddings, reuse=False):
         with tf.variable_scope('transform_embeddings', reuse=reuse) as scope:
