@@ -33,7 +33,7 @@ def to_cmd(c, _path=None):
         predicate_embedding_size = c['embedding_size'] ** 2
     predicate_embedding_size_str = '' if predicate_embedding_size is None else '--predicate-embedding-size {}'.format(predicate_embedding_size)
     hidden_str = '--hidden-size {}'.format(c['hidden_size']) if 'hidden_size' in c else ''
-    command = 'python3 {}/bin/adv-cli.py --auc --nb-batches 1 --seed {} {}' \
+    command = '{}/bin/adv-cli.py --auc --nb-batches 1 --seed {} {}' \
               ' --train {}/data/countries/s{}/s{}_train.tsv' \
               ' --valid {}/data/countries/s{}/s{}_valid.tsv' \
               ' --test {}/data/countries/s{}/s{}_test.tsv' \
