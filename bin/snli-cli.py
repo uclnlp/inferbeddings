@@ -37,7 +37,10 @@ def train_tokenizer_on_instances(instances, num_words=None):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
-    qs_tokenizer, a_tokenizer = keras.preprocessing.text.Tokenizer(num_words=num_words), keras.preprocessing.text.Tokenizer()
+
+    qs_tokenizer = keras.preprocessing.text.Tokenizer(num_words=num_words)
+    a_tokenizer = keras.preprocessing.text.Tokenizer()
+
     qs_tokenizer.fit_on_texts(question_texts + support_texts)
     a_tokenizer.fit_on_texts(answer_texts)
     return qs_tokenizer, a_tokenizer
@@ -183,8 +186,8 @@ def main(argv):
         RTEModel = ConditionalBiLSTM
     elif model_name == 'simple-dam':
         RTEModel = SimpleDAM
-    if model_name == 'ff-dam':
-        ff_kwargs = dict(representation_size=representation_size)
+    elif model_name == 'ff-dam':
+        ff_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
 
