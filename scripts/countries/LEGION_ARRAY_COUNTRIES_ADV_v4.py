@@ -168,7 +168,7 @@ def main(argv):
     sorted_command_lines = sorted(command_lines)
     nb_jobs = len(sorted_command_lines)
 
-    header = """#!/bin/bash
+    header = """#!/bin/bash -l
 
 #$ -cwd
 #$ -S /bin/bash
