@@ -139,5 +139,6 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             logits = tf.contrib.layers.fully_connected(inputs=transformed_v1_v2,
                                                        num_outputs=self.num_classes,
                                                        weights_initializer=tf.random_normal_initializer(0.0, 0.01),
+                                                       biases_initializer=tf.zeros_initializer(),
                                                        activation_fn=None)
         return logits
