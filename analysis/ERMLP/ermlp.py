@@ -224,8 +224,8 @@ def main(argv):
                 # scores of (s, p, 1), (s, p, 2), .., (s, p, N)
                 scores_obj = session.run(scores, feed_dict=feed_dict_corrupt_obj)
 
-                ranks_subj += [1 + np.sum(scores_subj > scores_subj[s_idx])]
-                ranks_obj += [1 + np.sum(scores_obj > scores_obj[o_idx])]
+                ranks_subj += [np.sum(scores_subj >= scores_subj[s_idx])]
+                ranks_obj += [np.sum(scores_obj >= scores_obj[o_idx])]
 
                 filtered_scores_subj = scores_subj.copy()
                 filtered_scores_obj = scores_obj.copy()
@@ -236,8 +236,8 @@ def main(argv):
                 filtered_scores_subj[rm_idx_s] = - np.inf
                 filtered_scores_obj[rm_idx_o] = - np.inf
 
-                filtered_ranks_subj += [1 + np.sum(filtered_scores_subj > filtered_scores_subj[s_idx])]
-                filtered_ranks_obj += [1 + np.sum(filtered_scores_obj > filtered_scores_obj[o_idx])]
+                filtered_ranks_subj += [np.sum(filtered_scores_subj >= filtered_scores_subj[s_idx])]
+                filtered_ranks_obj += [np.sum(filtered_scores_obj >= filtered_scores_obj[o_idx])]
 
                 scores_subj_lst += [scores_subj]
                 scores_obj_lst += [scores_obj]
