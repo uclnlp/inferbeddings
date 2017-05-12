@@ -175,7 +175,10 @@ def main(argv):
 
     RTEModel = None
     if model_name == 'cbilstm':
-        cbilstm_kwargs = {'hidden_size': hidden_size}
+        cbilstm_kwargs = {
+            'hidden_size': hidden_size,
+            'dropout_keep_prob': dropout_keep_prob
+        }
         model_kwargs.update(cbilstm_kwargs)
 
         RTEModel = ConditionalBiLSTM
