@@ -40,7 +40,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.label = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
         self.embeddings = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                          initializer=tf.contrib.layers.xavier_initializer(),
+                                          initializer=tf.random_normal_initializer(0.0, 1.0),
                                           trainable=trainable_embeddings)
         self.transformed_embeddings = self._transform_embeddings(self.embeddings)
 
