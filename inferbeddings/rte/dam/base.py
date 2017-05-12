@@ -53,7 +53,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         # tensor with shape (batch_size, time_steps, num_units)
         self.v1 = self.compare(self.embedded1, self.beta)
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v2 = self.compare(self.embedded2, self.alpha)
+        self.v2 = self.compare(self.embedded2, self.alpha, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggreate(self.v1, self.v2, self.num_classes)
@@ -102,7 +102,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             beta = tf.matmul(attention_sentence1, sequence2, name='beta')
             return alpha, beta
 
-    def compare(self, sentence, soft_alignment):
+    def compare(self, sentence, soft_alignment, reuse=False):
         """
         Compare phase.
         
@@ -112,7 +112,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         """
         # tensor with shape (batch, time_steps, num_units)
         sentence_and_alignment = tf.concat(axis=2, values=[sentence, soft_alignment])
-        transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment)
+        transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment, reuse=reuse)
         return transformed_sentence_and_alignment
 
     def aggreate(self, v1, v2, num_classes):
