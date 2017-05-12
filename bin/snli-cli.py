@@ -108,6 +108,7 @@ def main(argv):
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
+    argparser.add_argument('--hidden-size', action='store', type=int, default=200)
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
@@ -128,8 +129,8 @@ def main(argv):
 
     model_name = args.model
     embedding_size = args.embedding_size
-    hidden_size = args.hidden_size
     representation_size = args.representation_size
+    hidden_size = args.hidden_size
 
     batch_size = args.batch_size
     nb_epochs = args.nb_epochs
