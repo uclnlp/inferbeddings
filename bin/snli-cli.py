@@ -269,7 +269,7 @@ def main(argv):
                     dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
                     test_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, test_dataset))
 
-                    logger.debug('Epoch {0}/{1}\tAverage loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
+                    logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
                     loss_values = []
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
