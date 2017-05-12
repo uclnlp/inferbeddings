@@ -107,7 +107,7 @@ def main(argv):
                            choices=['cbilstm', 'simple-dam', 'ff-dam'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
-    argparser.add_argument('--representation-size', action='store', type=int, default=200)
+    argparser.add_argument('--representation-size', action='store', type=int, default=300)
     argparser.add_argument('--hidden-size', action='store', type=int, default=200)
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
