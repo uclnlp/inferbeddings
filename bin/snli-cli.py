@@ -104,7 +104,7 @@ def main(argv):
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
-    argparser.add_argument('--num-units', action='store', type=int, default=300)
+    argparser.add_argument('--hidden-size', action='store', type=int, default=300)
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.001)
@@ -124,7 +124,7 @@ def main(argv):
     model_name = args.model
     embedding_size = args.embedding_size
     batch_size = args.batch_size
-    num_units = args.num_units
+    hidden_size = args.hidden_size
     nb_epochs = args.nb_epochs
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
@@ -167,7 +167,6 @@ def main(argv):
 
     model_kwargs = dict(
         optimizer=optimizer,
-        num_units=num_units,
         num_classes=3,
         vocab_size=vocab_size,
         embedding_size=embedding_size,
@@ -177,6 +176,9 @@ def main(argv):
 
     RTEModel = None
     if model_name == 'cbilstm':
+        cbilstm_kwargs = {'hidden_size': hidden_size}
+        model_kwargs.update(cbilstm_kwargs)
+
         RTEModel = ConditionalBiLSTM
     elif model_name == 'simple-dam':
         RTEModel = SimpleDecomposableAttentionModel
