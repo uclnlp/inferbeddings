@@ -15,3 +15,6 @@ class SimpleDAM(AbstractDecomposableAttentionModel):
 
     def _transform_compare(self, sequence, reuse=False):
         return sequence
+
+    def _transform_aggregate(self, v1_v2, reuse=False):
+        return v1_v2

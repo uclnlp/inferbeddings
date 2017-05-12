@@ -23,6 +23,10 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
     def _transform_compare(self, sequence, reuse=False):
         raise NotImplementedError
 
+    @abstractmethod
+    def _transform_aggregate(self, v1_v2, reuse=False):
+        raise NotImplementedError
+
     def __init__(self, optimizer, vocab_size, embedding_size=300,
                  clip_value=100.0, l2_lambda=None, trainable_embeddings=True):
         self.num_classes = 3
@@ -130,10 +134,9 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         with tf.variable_scope('aggregate') as scope:
             v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
             v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
-            logits = tf.contrib.layers.fully_connected(inputs=v1_v2,
-                                                       num_outputs=num_classes,
-                                                       weights_initializer=tf.random_normal_initializer(0.0, 0.1),
-                                                       biases_initializer=tf.zeros_initializer(),
-                                                       activation_fn=None,
-                                                       scope=scope)
+            transformed_v1_v2 = self._transform_aggregate(v1_v2)
+            logits = tf.contrib.layers.fully_connected(inputs=transformed_v1_v2,
+                                                       num_outputs=self.num_classes,
+                                                       weights_initializer=tf.random_normal_initializer(0.0, 0.01),
+                                                       activation_fn=None)
         return logits
