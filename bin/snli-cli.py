@@ -260,24 +260,20 @@ def main(argv):
                     model.sentence1_size: batch_sizes1, model.sentence2_size: batch_sizes2,
                     model.label: batch_labels}
 
-                _, loss_value, correct_predictions_value =\
-                    session.run([model.training_step, model.loss, correct_predictions], feed_dict=batch_feed_dict)
+                _, loss_value = session.run([model.training_step, model.loss], feed_dict=batch_feed_dict)
 
                 for projection_step in projection_steps:
                     session.run([projection_step])
 
-                logger.debug('Epoch {0}/{1}\tLoss: {2}'.format(epoch, batch_idx, loss_value))
+                # logger.debug('Epoch {0}/{1}\tLoss: {2}'.format(epoch, batch_idx, loss_value))
 
                 loss_values += [loss_value]
-                correct_predictions_values += correct_predictions_value.tolist()
-
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
-                    train_accuracy = np.mean(correct_predictions_values)
                     dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
                     test_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, test_dataset))
 
-                    logger.debug('Epoch {0}/{1}\tTrain Accuracy: {2:.2f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
-                                 .format(epoch, batch_idx, train_accuracy * 100, dev_accuracy * 100, test_accuracy * 100))
+                    logger.debug('Epoch {0}/{1}\tAverage loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
+                                 .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
 
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
                         best_dev_accuracy = dev_accuracy
