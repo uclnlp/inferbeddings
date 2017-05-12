@@ -3,7 +3,7 @@
 from inferbeddings.rte.dam import AbstractDecomposableAttentionModel
 
 
-class SimpleDecomposableAttentionModel(AbstractDecomposableAttentionModel):
+class SimpleDAM(AbstractDecomposableAttentionModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

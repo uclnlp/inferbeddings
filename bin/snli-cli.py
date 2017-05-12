@@ -15,8 +15,9 @@ from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.rte import ConditionalBiLSTM
-from inferbeddings.rte.dam import SimpleDecomposableAttentionModel
+from inferbeddings.rte.dam import SimpleDAM, FeedForwardDAM
 from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
+
 from inferbeddings.models.training import constraints
 
 import logging
@@ -100,11 +101,12 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'simple-dam'])
+                           choices=['cbilstm', 'simple-dam', 'ff-dam'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
+    argparser.add_argument('--representation-size', action='store', type=int, default=200)
+
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
-    argparser.add_argument('--hidden-size', action='store', type=int, default=300)
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.001)
@@ -123,8 +125,10 @@ def main(argv):
 
     model_name = args.model
     embedding_size = args.embedding_size
-    batch_size = args.batch_size
     hidden_size = args.hidden_size
+    representation_size = args.representation_size
+
+    batch_size = args.batch_size
     nb_epochs = args.nb_epochs
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
@@ -174,15 +178,15 @@ def main(argv):
 
     RTEModel = None
     if model_name == 'cbilstm':
-        cbilstm_kwargs = {
-            'hidden_size': hidden_size,
-            'dropout_keep_prob': dropout_keep_prob
-        }
+        cbilstm_kwargs = dict(hidden_size=hidden_size, dropout_keep_prob=dropout_keep_prob)
         model_kwargs.update(cbilstm_kwargs)
-
         RTEModel = ConditionalBiLSTM
     elif model_name == 'simple-dam':
-        RTEModel = SimpleDecomposableAttentionModel
+        RTEModel = SimpleDAM
+    if model_name == 'ff-dam':
+        ff_kwargs = dict(representation_size=representation_size)
+        model_kwargs.update(ff_kwargs)
+        RTEModel = FeedForwardDAM
 
     assert RTEModel is not None
     model = RTEModel(**model_kwargs)
