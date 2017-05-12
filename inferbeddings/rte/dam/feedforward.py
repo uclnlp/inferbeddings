@@ -54,4 +54,9 @@ class FeedForwardDAM(AbstractDecomposableAttentionModel):
                                                            biases_initializer=tf.zeros_initializer(),
                                                            activation_fn=tf.nn.relu)
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
+            projection = tf.contrib.layers.fully_connected(inputs=projection, num_outputs=self.representation_size,
+                                                           weights_initializer=tf.random_normal_initializer(0.0, 0.01),
+                                                           biases_initializer=tf.zeros_initializer(),
+                                                           activation_fn=tf.nn.relu)
+            projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
         return projection
