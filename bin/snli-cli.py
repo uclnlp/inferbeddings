@@ -262,8 +262,9 @@ def main(argv):
                 _, loss_value = session.run([model.training_step, model.loss], feed_dict=batch_feed_dict)
                 loss_values += [loss_value]
 
-                for projection_step in projection_steps:
-                    session.run([projection_step])
+                if not is_fixed_embeddings:
+                    for projection_step in projection_steps:
+                        session.run([projection_step])
 
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
                     dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
