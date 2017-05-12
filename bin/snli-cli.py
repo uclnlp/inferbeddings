@@ -248,8 +248,7 @@ def main(argv):
             sizes1, sizes2 = question_lengths[order], support_lengths[order]
             labels = answers[order]
 
-            loss_values, correct_predictions_values = [], []
-
+            loss_values = []
             for batch_idx, (batch_start, batch_end) in enumerate(batches):
                 batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
                 batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
@@ -261,20 +260,18 @@ def main(argv):
                     model.label: batch_labels}
 
                 _, loss_value = session.run([model.training_step, model.loss], feed_dict=batch_feed_dict)
+                loss_values += [loss_value]
 
                 for projection_step in projection_steps:
                     session.run([projection_step])
 
-                # logger.debug('Epoch {0}/{1}\tLoss: {2}'.format(epoch, batch_idx, loss_value))
-
-                loss_values += [loss_value]
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
                     dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
                     test_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, test_dataset))
 
                     logger.debug('Epoch {0}/{1}\tAverage loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
-
+                    loss_values = []
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
                         best_dev_accuracy = dev_accuracy
                         best_test_accuracy = test_accuracy
