@@ -239,6 +239,8 @@ def main(argv):
         nb_instances = questions.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
+        best_dev_accuracy, best_test_accuracy = None, None
+
         for epoch in range(1, nb_epochs + 1):
             order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
@@ -274,6 +276,13 @@ def main(argv):
 
                     logger.debug('Epoch {0}/{1}\tTrain Accuracy: {2:.2f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, i, train_accuracy * 100, dev_accuracy * 100, test_accuracy * 100))
+
+                    if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
+                        best_dev_accuracy = dev_accuracy
+                        best_test_accuracy = test_accuracy
+
+                    logger.debug('Epoch {0}/{1}\tTrain Accuracy: {2:.2f}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
+                                 .format(epoch, i, train_accuracy * 100, best_dev_accuracy * 100, best_test_accuracy * 100))
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
