@@ -283,7 +283,7 @@ def main(argv):
                         best_dev_accuracy = dev_accuracy
                         best_test_accuracy = test_accuracy
 
-                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
+                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
                                  .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
 
             def stats(values):
