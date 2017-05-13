@@ -79,7 +79,7 @@ class Ranker(BaseRanker):
             #err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
             #err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
 
-            err_subj += [1 + p.argsort(np.argsort(- scores_o))[subj_idx - 1]]
+            err_subj += [1 + np.argsort(np.argsort(- scores_o))[subj_idx - 1]]
             err_obj += [1 + np.argsort(np.argsort(- scores_s))[obj_idx - 1]]
 
             if self.true_triples:
