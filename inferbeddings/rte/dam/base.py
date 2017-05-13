@@ -50,6 +50,8 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.embedded2 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence2)
 
         logger.info('Building the Attend graph ..')
+        self.raw_attentions = None
+
         # tensors with shape (batch_size, time_steps, num_units)
         self.alpha, self.beta = self.attend(self.embedded1, self.embedded2)
 
@@ -96,11 +98,11 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             # tensor with shape (batch_size, num_units, time_steps)
             transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
             # tensor with shape (batch_size, time_steps, time_steps)
-            raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
-            attention_sentence1 = util.attention_softmax3d(raw_attentions)
+            self.raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
+            attention_sentence1 = util.attention_softmax3d(self.raw_attentions)
 
             # tensor with shape (batch_size, time_steps, time_steps)
-            attention_transposed = tf.transpose(raw_attentions, [0, 2, 1])
+            attention_transposed = tf.transpose(self.raw_attentions, [0, 2, 1])
             attention_sentence2 = util.attention_softmax3d(attention_transposed)
 
             # tensors with shape (batch_size, time_steps, num_units)

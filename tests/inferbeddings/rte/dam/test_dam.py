@@ -38,8 +38,8 @@ def test_ff_dam():
         session.run(init_op)
         nb_parameters = count_parameters()
 
-        sentence = [[1, 2, 3]]
-        sentence_length = [3]
+        sentence = [[1, 2, 3], [1, 2, 3]]
+        sentence_length = [3, 3]
 
         feed_dict = {
             model.sentence1: sentence, model.sentence2: sentence,
@@ -48,13 +48,26 @@ def test_ff_dam():
         embedded1_value = session.run(model.embedded1, feed_dict=feed_dict)
         embedded2_value = session.run(model.embedded2, feed_dict=feed_dict)
 
-        assert embedded1_value.shape == embedded2_value.shape == (1, sentence_length[0], representation_size)
+        assert embedded1_value.shape == embedded2_value.shape == (2, sentence_length[0], representation_size)
 
         np.testing.assert_allclose(embedded1_value, embedded2_value)
+        np.testing.assert_allclose(embedded1_value[0], embedded1_value[1])
 
-        alpha_value, beta_value = embedded2_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
+        raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)
+        assert raw_attentions_value.shape == (2, sentence_length[0], sentence_length[0])
+        np.testing.assert_allclose(raw_attentions_value[0], raw_attentions_value[1])
 
-        print(alpha_value.shape, beta_value.shape)
+        alpha_value, beta_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
+        assert alpha_value.shape == beta_value.shape == (2, sentence_length[0], representation_size)
+        np.testing.assert_allclose(alpha_value[0], alpha_value[1])
+
+        v1_value, v2_value = session.run([model.v1, model.v2], feed_dict=feed_dict)
+        assert v1_value.shape == v2_value.shape == (2, sentence_length[0], representation_size)
+        np.testing.assert_allclose(v1_value[0], v1_value[1])
+
+        logits_value = session.run(model.logits, feed_dict=feed_dict)
+        assert logits_value.shape == (2, 3)
+        np.testing.assert_allclose(logits_value[0], logits_value[1])
 
 
 if __name__ == '__main__':
