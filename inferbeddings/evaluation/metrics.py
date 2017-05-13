@@ -79,8 +79,8 @@ class Ranker(BaseRanker):
             #err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
             #err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
 
-            err_subj += [1 + np.argsort(np.argsort(- scores_o))[subj_idx - 1]]
-            err_obj += [1 + np.argsort(np.argsort(- scores_s))[obj_idx - 1]]
+            err_subj += [1 + np.argsort(- scores_o)[subj_idx - 1]]
+            err_obj += [1 + np.argsort(- scores_s)[obj_idx - 1]]
 
             if self.true_triples:
                 rm_idx_o = [o - 1 for (s, p, o) in self.true_triples if s == subj_idx and p == pred_idx and o != obj_idx]
@@ -95,8 +95,8 @@ class Ranker(BaseRanker):
             #filtered_err_subj += [1 + np.sum(scores_o > scores_o[subj_idx - 1])]
             #filtered_err_obj += [1 + np.sum(scores_s > scores_s[obj_idx - 1])]
 
-            filtered_err_subj += [1 + np.argsort(np.argsort(- scores_o))[subj_idx - 1]]
-            filtered_err_obj += [1 + np.argsort(np.argsort(- scores_s))[obj_idx - 1]]
+            filtered_err_subj += [1 + np.argsort(- scores_o)[subj_idx - 1]]
+            filtered_err_obj += [1 + np.argsort(- scores_s)[obj_idx - 1]]
 
         return (err_subj, err_obj), (filtered_err_subj, filtered_err_obj)
 
