@@ -57,6 +57,11 @@ def test_ff_dam():
         assert raw_attentions_value.shape == (2, sentence_length[0], sentence_length[0])
         np.testing.assert_allclose(raw_attentions_value[0], raw_attentions_value[1])
 
+        attention_sentence1_value, attention_sentence2_value =\
+            session.run([model.attention_sentence1, model.attention_sentence1], feed_dict=feed_dict)
+        np.testing.assert_allclose(attention_sentence1_value[0], attention_sentence1_value[1])
+        np.testing.assert_allclose(attention_sentence2_value[0], attention_sentence2_value[1])
+
         alpha_value, beta_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
         assert alpha_value.shape == beta_value.shape == (2, sentence_length[0], representation_size)
         np.testing.assert_allclose(alpha_value[0], alpha_value[1])

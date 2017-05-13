@@ -51,6 +51,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
 
         logger.info('Building the Attend graph ..')
         self.raw_attentions = None
+        self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
         self.alpha, self.beta = self.attend(self.embedded1, self.embedded2)
@@ -99,15 +100,15 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
             # tensor with shape (batch_size, time_steps, time_steps)
             self.raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
-            attention_sentence1 = util.attention_softmax3d(self.raw_attentions)
+            self.attention_sentence1 = util.attention_softmax3d(self.raw_attentions)
 
             # tensor with shape (batch_size, time_steps, time_steps)
             attention_transposed = tf.transpose(self.raw_attentions, [0, 2, 1])
-            attention_sentence2 = util.attention_softmax3d(attention_transposed)
+            self.attention_sentence2 = util.attention_softmax3d(attention_transposed)
 
             # tensors with shape (batch_size, time_steps, num_units)
-            alpha = tf.matmul(attention_sentence2, sequence1, name='alpha')
-            beta = tf.matmul(attention_sentence1, sequence2, name='beta')
+            alpha = tf.matmul(self.attention_sentence2, sequence1, name='alpha')
+            beta = tf.matmul(self.attention_sentence1, sequence2, name='beta')
             return alpha, beta
 
     def compare(self, sentence, soft_alignment, reuse=False):
