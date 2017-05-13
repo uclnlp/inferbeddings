@@ -9,14 +9,12 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-import tensorflow.contrib.keras as keras
-
 from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.rte import ConditionalBiLSTM
 from inferbeddings.rte.dam import SimpleDAM, FeedForwardDAM
-from inferbeddings.rte.util import SNLI, pad_sequences, count_parameters
+from inferbeddings.rte.util import SNLI, count_parameters, train_tokenizer_on_instances, to_dataset, to_feed_dict
 
 from inferbeddings.models.training import constraints
 
@@ -24,72 +22,6 @@ import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
-
-
-def to_feed_dict(model, dataset):
-    return {
-        model.sentence1: dataset['questions'], model.sentence2: dataset['supports'],
-        model.sentence1_size: dataset['question_lengths'], model.sentence2_size: dataset['support_lengths'],
-        model.label: dataset['answers']}
-
-
-def train_tokenizer_on_instances(instances, num_words=None):
-    question_texts = [instance['question'] for instance in instances]
-    support_texts = [instance['support'] for instance in instances]
-    answer_texts = [instance['answer'] for instance in instances]
-
-    qs_tokenizer = keras.preprocessing.text.Tokenizer(num_words=num_words)
-    a_tokenizer = keras.preprocessing.text.Tokenizer()
-
-    qs_tokenizer.fit_on_texts(question_texts + support_texts)
-    a_tokenizer.fit_on_texts(answer_texts)
-    return qs_tokenizer, a_tokenizer
-
-
-def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None, semi_sort=False):
-    question_texts = [instance['question'] for instance in instances]
-    support_texts = [instance['support'] for instance in instances]
-    answer_texts = [instance['answer'] for instance in instances]
-
-    assert qs_tokenizer is not None and a_tokenizer is not None
-
-    questions = qs_tokenizer.texts_to_sequences(question_texts)
-    supports = [s for s in qs_tokenizer.texts_to_sequences(support_texts)]
-    answers = [answers - 1 for [answers] in a_tokenizer.texts_to_sequences(answer_texts)]
-
-    """
-    <<For efficient batching in TensorFlow, we semi-sorted the training data to first contain examples
-    where both sentences had length less than 20, followed by those with length less than 50, and
-    then the rest. This ensured that most training batches contained examples of similar length.>>
-
-    -- https://arxiv.org/pdf/1606.01933.pdf
-    """
-    if semi_sort:
-        triples_under_20, triples_under_50, triples_under_nfty = [], [], []
-        for q, s, a in zip(questions, supports, answers):
-            if len(q) < 20 and len(s) < 20:
-                triples_under_20 += [(q, s, a)]
-            elif len(q) < 50 and len(s) < 50:
-                triples_under_50 += [(q, s, a)]
-            else:
-                triples_under_nfty += [(q, s, a)]
-        questions, supports, answers = [], [], []
-        for q, s, a in triples_under_20 + triples_under_50 + triples_under_nfty:
-            questions += [q]
-            supports += [s]
-            answers += [a]
-
-    question_lenths = [len(q) for q in questions]
-    support_lenghs = [len(s) for s in supports]
-
-    assert set(answers) == {0, 1, 2}
-
-    return {
-        'questions': pad_sequences(questions, max_len=max_len),
-        'supports': pad_sequences(supports, max_len=max_len),
-        'question_lengths': np.clip(a=np.array(question_lenths), a_min=0, a_max=max_len),
-        'support_lengths': np.clip(a=np.array(support_lenghs), a_min=0, a_max=max_len),
-        'answers': np.array(answers)}
 
 
 def main(argv):
