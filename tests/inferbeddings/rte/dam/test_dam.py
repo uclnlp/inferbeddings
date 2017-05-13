@@ -48,9 +48,13 @@ def test_ff_dam():
         embedded1_value = session.run(model.embedded1, feed_dict=feed_dict)
         embedded2_value = session.run(model.embedded2, feed_dict=feed_dict)
 
+        assert embedded1_value.shape == embedded2_value.shape == (1, sentence_length[0], representation_size)
+
         np.testing.assert_allclose(embedded1_value, embedded2_value)
 
         alpha_value, beta_value = embedded2_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
+
+        print(alpha_value.shape, beta_value.shape)
 
 
 if __name__ == '__main__':
