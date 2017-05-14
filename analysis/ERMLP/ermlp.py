@@ -256,6 +256,8 @@ def main(argv):
                 'filtered_scores_obj_lst': filtered_scores_obj_lst,
                 'entity_embeddings': session.run(entity_embedding_layer),
                 'predicate_embeddings': session.run(predicate_embedding_layer),
+                'C': session.run(model.C),
+                'w': session.run(model.w)
             }
 
             with open('save.p', 'wb') as f:

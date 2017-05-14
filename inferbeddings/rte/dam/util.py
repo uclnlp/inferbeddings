@@ -18,6 +18,34 @@ def attention_softmax3d(values):
     return tf.reshape(softmax_reshaped_values, original_shape)
 
 
+def mask_3d(sequences, sequence_sizes, mask_value, dimension=2):
+    """
+    Given a batch of matrices, each with shape m x n, mask the values in each
+    row after the positions indicated in sentence_sizes.
+    This function is supposed to mask the last columns in the raw attention
+    matrix (e_{i, j}) in cases where the sentence2 is smaller than the
+    maximum.
+    :param sequences: tensor with shape (batch_size, m, n)
+    :param sequence_sizes: tensor with shape (batch_size) containing the sentence sizes that
+        should be limited
+    :param mask_value: scalar value to assign to items after sentence size
+    :param dimension: over which dimension to mask values
+    :return: a tensor with the same shape as `values`
+    """
+    if dimension == 1:
+        sequences = tf.transpose(sequences, [0, 2, 1])
+    time_steps1 = tf.shape(sequences)[1]
+    time_steps2 = tf.shape(sequences)[2]
+    ones = tf.ones_like(sequences, dtype=tf.int32)
+    pad_values = mask_value * tf.cast(ones, tf.float32)
+    mask = tf.sequence_mask(sequence_sizes, time_steps2)
+    # mask is (batch_size, sentence2_size). we have to tile it for 3d
+    mask3d = tf.expand_dims(mask, 1)
+    mask3d = tf.tile(mask3d, (1, time_steps1, 1))
+    masked = tf.where(mask3d, sequences, pad_values)
+    return tf.transpose(masked, [0, 2, 1]) if dimension == 1 else masked
+
+
 def distance_biases(time_steps, window_size=10, reuse=False):
     """
     Return a 2-d tensor with the values of the distance biases to be applied

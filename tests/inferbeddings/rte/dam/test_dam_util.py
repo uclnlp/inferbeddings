@@ -10,6 +10,12 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
+def test_mask_3d():
+    batch_size = 1
+    m, n = 3, 4
+
+    tensor = tf.get_variable('embeddings', shape=[batch_size, m, n],
+                             initializer=tf.random_normal_initializer(0.0, 1.0))
 
 def test_attention_softmax3d():
     batch_size = 1
