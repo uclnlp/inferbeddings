@@ -53,6 +53,7 @@ def main(argv):
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
+    argparser.add_argument('--use-masking', action='store_true')
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
@@ -77,6 +78,7 @@ def main(argv):
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
+    use_masking = args.use_masking
 
     glove_path = args.glove
     word2vec_path = args.word2vec
@@ -125,13 +127,18 @@ def main(argv):
 
     RTEModel = None
     if model_name == 'cbilstm':
-        cbilstm_kwargs = dict(hidden_size=hidden_size, dropout_keep_prob=dropout_keep_prob)
+        cbilstm_kwargs = dict(hidden_size=hidden_size,
+                              dropout_keep_prob=dropout_keep_prob)
         model_kwargs.update(cbilstm_kwargs)
         RTEModel = ConditionalBiLSTM
     elif model_name == 'simple-dam':
+        sd_kwargs = dict(use_masking=use_masking)
+        model_kwargs.update(sd_kwargs)
         RTEModel = SimpleDAM
     elif model_name == 'ff-dam':
-        ff_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob)
+        ff_kwargs = dict(representation_size=representation_size,
+                         dropout_keep_prob=dropout_keep_prob,
+                         use_masking=use_masking)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
 
