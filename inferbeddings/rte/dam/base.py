@@ -2,6 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 
+import numpy as np
 import tensorflow as tf
 import logging
 
@@ -28,7 +29,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         raise NotImplementedError
 
     def __init__(self, optimizer, vocab_size, embedding_size=300,
-                 clip_value=100.0, l2_lambda=None, trainable_embeddings=True):
+                 clip_value=100.0, l2_lambda=None, trainable_embeddings=True, use_masking=False):
         self.num_classes = 3
 
         self.sentence1 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -54,7 +55,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = self.attend(self.embedded1, self.embedded2)
+        self.alpha, self.beta = self.attend(self.embedded1, self.embedded2, use_masking=use_masking)
 
         logger.info('Building the Compare graph ..')
         # tensor with shape (batch_size, time_steps, num_units)
@@ -63,7 +64,10 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.v2 = self.compare(self.embedded2, self.alpha, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
-        self.logits = self.aggreate(self.v1, self.v2, self.num_classes)
+        self.logits = self.aggregate(self.v1, self.v2, self.num_classes,
+                                     v1_lengths=self.sentence1_size,
+                                     v2_lengths=self.sentence2_size,
+                                     use_masking=use_masking)
 
         self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
 
@@ -82,12 +86,16 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         else:
             self.training_step = optimizer.minimize(self.loss)
 
-    def attend(self, sequence1, sequence2):
+    def attend(self, sequence1, sequence2,
+               sequence1_lengths=None, sequence2_lengths=None, use_masking=False):
         """
         Attend phase.
         
         :param sequence1: tensor with shape (batch_size, time_steps, num_units)
         :param sequence2: tensor with shape (batch_size, time_steps, num_units)
+        :param sequence1_lengths: time_steps in sequence1
+        :param sequence2_lengths: time_steps in sequence2
+        :param use_masking: use masking
         :return: two tensors with shape (batch_size, time_steps, num_units)
         """
         with tf.variable_scope('attend') as _:
@@ -100,11 +108,21 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
             # tensor with shape (batch_size, time_steps, time_steps)
             self.raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
-            self.attention_sentence1 = util.attention_softmax3d(self.raw_attentions)
+            masked_raw_attentions = self.raw_attentions
+            if use_masking:
+                masked_raw_attentions = util.mask_3d(sequences=self.raw_attentions,
+                                                     sequence_lengths=sequence1_lengths,
+                                                     mask_value=- np.inf, dimension=2)
+            self.attention_sentence1 = util.attention_softmax3d(masked_raw_attentions)
 
             # tensor with shape (batch_size, time_steps, time_steps)
             attention_transposed = tf.transpose(self.raw_attentions, [0, 2, 1])
-            self.attention_sentence2 = util.attention_softmax3d(attention_transposed)
+            masked_attention_transposed = attention_transposed
+            if use_masking:
+                masked_attention_transposed = util.mask_3d(sequences=attention_transposed,
+                                                           sequence_lengths=sequence2_lengths,
+                                                           mask_value=- np.inf, dimension=2)
+            self.attention_sentence2 = util.attention_softmax3d(masked_attention_transposed)
 
             # tensors with shape (batch_size, time_steps, num_units)
             alpha = tf.matmul(self.attention_sentence2, sequence1, name='alpha')
@@ -125,16 +143,23 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment, reuse=reuse)
         return transformed_sentence_and_alignment
 
-    def aggreate(self, v1, v2, num_classes):
+    def aggregate(self, v1, v2, num_classes,
+                  v1_lengths=None, v2_lengths=None, use_masking=False):
         """
         Aggregate phase.
         
         :param v1: tensor with shape (batch_size, time_steps, num_units)
         :param v2: tensor with shape (batch_size, time_steps, num_units)
         :param num_classes: number of output units
+        :param v1_lengths: time_steps in v1
+        :param v2_lengths: time_steps in v2
+        :param use_masking: use masking
         :return: 
         """
         with tf.variable_scope('aggregate') as _:
+            if use_masking:
+                v1 = util.mask_3d(sequences=v1, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
+                v2 = util.mask_3d(sequences=v2, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
             v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
             v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
             transformed_v1_v2 = self._transform_aggregate(v1_v2)

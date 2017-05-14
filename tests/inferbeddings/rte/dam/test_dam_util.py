@@ -10,12 +10,25 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
+
 def test_mask_3d():
     batch_size = 1
-    m, n = 3, 4
+    time_steps, embedding_size = 5, 4
+    sequence_lengths = [2]
 
-    tensor = tf.get_variable('embeddings', shape=[batch_size, m, n],
+    tensor = tf.get_variable('M', shape=[batch_size, time_steps, embedding_size],
                              initializer=tf.random_normal_initializer(0.0, 1.0))
+    masked_tensor = util.mask_3d(sequences=tensor, sequence_lengths=sequence_lengths,
+                                 mask_value=- np.inf, dimension=1)
+
+    init_op = tf.global_variables_initializer()
+
+    with tf.Session() as session:
+        session.run(init_op)
+        tensor_value, masked_tensor_value = session.run([tensor, masked_tensor])
+
+        np.testing.assert_allclose(tensor_value[:, :2, :], masked_tensor_value[:, :2, :])
+
 
 def test_attention_softmax3d():
     batch_size = 1
