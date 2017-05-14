@@ -7,10 +7,9 @@ from inferbeddings.rte.dam import FeedForwardDAM
 from inferbeddings.rte.util import count_parameters
 import logging
 
-logger = logging.getLogger(__name__)
-
-
 import pytest
+
+logger = logging.getLogger(__name__)
 
 
 def test_ff_dam():
@@ -29,12 +28,9 @@ def test_ff_dam():
 
     model = FeedForwardDAM(**kwargs)
 
-    session_config = tf.ConfigProto()
-    session_config.gpu_options.allow_growth = True
-
     init_op = tf.global_variables_initializer()
 
-    with tf.Session(config=session_config) as session:
+    with tf.Session() as session:
         session.run(init_op)
         nb_parameters = count_parameters()
 
