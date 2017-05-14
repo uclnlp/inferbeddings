@@ -55,7 +55,10 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = self.attend(self.embedded1, self.embedded2, use_masking=use_masking)
+        self.alpha, self.beta = self.attend(self.embedded1, self.embedded2,
+                                            sequence1_lengths=self.sentence1_size,
+                                            sequence2_lengths=self.sentence2_size,
+                                            use_masking=use_masking)
 
         logger.info('Building the Compare graph ..')
         # tensor with shape (batch_size, time_steps, num_units)
