@@ -66,7 +66,7 @@ def main(argv):
         similarity=['dot'],
         margin=[1, 2, 5, 10],
         embedding_size=[10, 20, 50, 100, 150, 200],
-        loss=['hinge', 'pairwise_hine']
+        loss=['hinge', 'pairwise_hinge']
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
