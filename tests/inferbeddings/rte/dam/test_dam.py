@@ -73,6 +73,7 @@ def test_ff_dam():
 
     tf.reset_default_graph()
 
+
 def test_ff_dam_v2():
     vocab_size = 1000
     embedding_size = 32
@@ -95,8 +96,8 @@ def test_ff_dam_v2():
         session.run(init_op)
         nb_parameters = count_parameters()
 
-        sentence1 = [[1, 2, 3], [1, 2, 3]]
-        sentence1_length = [3, 3]
+        sentence1 = [[1, 2, 3, 4], [1, 2, 3, 4]]
+        sentence1_length = [4, 4]
 
         sentence2 = [[1, 2, 3], [1, 2, 3]]
         sentence2_length = [3, 3]
@@ -108,6 +109,9 @@ def test_ff_dam_v2():
 
         embedded1_value = session.run(model.embedded1, feed_dict=feed_dict)
         embedded2_value = session.run(model.embedded2, feed_dict=feed_dict)
+
+        assert embedded1_value.shape == (2, 4, representation_size)
+        assert embedded2_value.shape == (2, 3, representation_size)
 
     tf.reset_default_graph()
 

@@ -31,6 +31,7 @@ def test_mask_3d():
 
     tf.reset_default_graph()
 
+
 def test_attention_softmax3d():
     batch_size = 1
     time_steps = 16
