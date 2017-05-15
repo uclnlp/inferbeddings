@@ -28,9 +28,9 @@ def to_cmd(c, _path=None):
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
     command = 'python3 {}/bin/adv-cli.py' \
-              ' --train {}/data/yago3_mte10_5k/yago3_mte10-train.tsv.gz' \
-              ' --valid {}/data/yago3_mte10_5k/yago3_mte10-valid.tsv.gz' \
-              ' --test {}/data/yago3_mte10_5k/yago3_mte10-test.tsv.gz' \
+              ' --train {}/data/schematic-memory/wn18_no_symmetric_v1/wn18-train.tsv' \
+              ' --valid {}/data/schematic-memory/wn18_no_symmetric_v1/wn18-valid.tsv' \
+              ' --test {}/data/schematic-memory/wn18_no_symmetric_v1/wn18-test.tsv' \
               ' --nb-epochs {}' \
               ' --lr 0.1' \
               ' --nb-batches 10' \
@@ -46,7 +46,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_yago3_v1.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_wn18_filtered_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -71,7 +71,7 @@ def main(argv):
 
     configurations = list(cartesian_product(hyperparameters_space_1))
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/schematic-memory/baselines/ucl_yago3_v1/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/schematic-memory/filtered/ucl_wn18_filtered_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pminervi/'):
