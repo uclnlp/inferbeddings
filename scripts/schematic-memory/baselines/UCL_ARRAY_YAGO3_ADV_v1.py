@@ -27,7 +27,7 @@ def to_cmd(c, _path=None):
         loss_str = '--loss hinge'
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
-    command = 'python3 {}/bin/adv-cli.py {}' \
+    command = 'python3 {}/bin/adv-cli.py' \
               ' --train {}/data/yago3_mte10_5k/yago3_mte10-train.tsv.gz' \
               ' --valid {}/data/yago3_mte10_5k/yago3_mte10-valid.tsv.gz' \
               ' --test {}/data/yago3_mte10_5k/yago3_mte10-test.tsv.gz' \
@@ -39,11 +39,8 @@ def to_cmd(c, _path=None):
               ' --margin {}' \
               ' --embedding-size {}' \
               ' {}' \
-              ' {}' \
- \
               ''.format(_path, _path, _path, _path,
-                        c['epochs'],
-                        c['model'], c['similarity'],
+                        c['epochs'], c['model'], c['similarity'],
                         c['margin'], c['embedding_size'], loss_str)
     return command
 
@@ -64,7 +61,7 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        epochs=[100, 500, 1000],
+        epochs=[100, 200, 500, 1000],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1, 2, 5, 10],
@@ -109,8 +106,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=4G,tmem=4G
-#$ -l h_rt=1:00:00
+#$ -l h_vmem=8G,tmem=8G
+#$ -l h_rt=6:00:00
 
 """.format(nb_jobs)
 
