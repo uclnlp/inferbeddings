@@ -107,10 +107,9 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             # tensor with shape (batch_size, time_steps, num_units)
             transformed_sequence2 = self._transform_attend(sequence2, True)
 
-            # tensor with shape (batch_size, num_units, time_steps)
-            transposed_sequence2 = tf.transpose(transformed_sequence2, [0, 2, 1])
             # tensor with shape (batch_size, time_steps, time_steps)
-            self.raw_attentions = tf.matmul(transformed_sequence1, transposed_sequence2)
+            self.raw_attentions = tf.matmul(transformed_sequence1, tf.transpose(transformed_sequence2, [0, 2, 1]))
+
             masked_raw_attentions = self.raw_attentions
             if use_masking:
                 masked_raw_attentions = util.mask_3d(sequences=self.raw_attentions,

@@ -39,7 +39,8 @@ def test_ff_dam():
 
         feed_dict = {
             model.sentence1: sentence, model.sentence2: sentence,
-            model.sentence1_size: sentence_length, model.sentence2_size: sentence_length}
+            model.sentence1_size: sentence_length, model.sentence2_size: sentence_length
+        }
 
         embedded1_value = session.run(model.embedded1, feed_dict=feed_dict)
         embedded2_value = session.run(model.embedded2, feed_dict=feed_dict)
@@ -69,6 +70,43 @@ def test_ff_dam():
         logits_value = session.run(model.logits, feed_dict=feed_dict)
         assert logits_value.shape == (2, 3)
         np.testing.assert_allclose(logits_value[0], logits_value[1])
+
+
+def test_ff_dam_v2():
+    vocab_size = 1000
+    embedding_size = 32
+    representation_size = 16
+    dropout_keep_prob = 1.0
+    is_fixed_embeddings = False
+    learning_rate = 0.1
+
+    optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
+
+    kwargs = dict(optimizer=optimizer, vocab_size=vocab_size, embedding_size=embedding_size,
+        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
+        l2_lambda=None, trainable_embeddings=not is_fixed_embeddings)
+
+    model = FeedForwardDAM(**kwargs)
+
+    init_op = tf.global_variables_initializer()
+
+    with tf.Session() as session:
+        session.run(init_op)
+        nb_parameters = count_parameters()
+
+        sentence1 = [[1, 2, 3], [1, 2, 3]]
+        sentence1_length = [3, 3]
+
+        sentence2 = [[1, 2, 3], [1, 2, 3]]
+        sentence2_length = [3, 3]
+
+        feed_dict = {
+            model.sentence1: sentence1, model.sentence2: sentence2,
+            model.sentence1_size: sentence1_length, model.sentence2_size: sentence2_length
+        }
+
+        embedded1_value = session.run(model.embedded1, feed_dict=feed_dict)
+        embedded2_value = session.run(model.embedded2, feed_dict=feed_dict)
 
 
 if __name__ == '__main__':
