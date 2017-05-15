@@ -29,6 +29,7 @@ def test_mask_3d():
 
         np.testing.assert_allclose(tensor_value[:, :2, :], masked_tensor_value[:, :2, :])
 
+    tf.reset_default_graph()
 
 def test_attention_softmax3d():
     batch_size = 1
@@ -48,6 +49,8 @@ def test_attention_softmax3d():
         assert attention_value.shape == (batch_size, time_steps, time_steps)
 
         np.testing.assert_allclose(attention_value[0].sum(axis=1), np.ones(shape=time_steps), rtol=1e-4)
+
+    tf.reset_default_graph()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

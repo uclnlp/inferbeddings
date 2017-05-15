@@ -71,6 +71,7 @@ def test_ff_dam():
         assert logits_value.shape == (2, 3)
         np.testing.assert_allclose(logits_value[0], logits_value[1])
 
+    tf.reset_default_graph()
 
 def test_ff_dam_v2():
     vocab_size = 1000
@@ -108,6 +109,7 @@ def test_ff_dam_v2():
         embedded1_value = session.run(model.embedded1, feed_dict=feed_dict)
         embedded2_value = session.run(model.embedded2, feed_dict=feed_dict)
 
+    tf.reset_default_graph()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
