@@ -34,7 +34,7 @@ def test_attention_softmax3d():
     batch_size = 1
     time_steps = 16
 
-    tensor = tf.get_variable('embeddings', shape=[batch_size, time_steps, time_steps],
+    tensor = tf.get_variable('V', shape=[batch_size, time_steps, time_steps],
                              initializer=tf.random_normal_initializer(0.0, 1.0))
     attention = util.attention_softmax3d(tensor)
 
