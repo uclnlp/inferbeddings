@@ -29,7 +29,8 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         raise NotImplementedError
 
     def __init__(self, optimizer, vocab_size, embedding_size=300,
-                 clip_value=100.0, l2_lambda=None, trainable_embeddings=True, use_masking=False):
+                 clip_value=100.0, l2_lambda=None, trainable_embeddings=True,
+                 use_masking=False, prepend_null_token=False):
         self.num_classes = 3
 
         self.sentence1 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -49,6 +50,16 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.embedded1 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence1)
         # [batch, time_steps, embedding_size]
         self.embedded2 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence2)
+
+        if prepend_null_token:
+            null_token_embedding = tf.get_variable('null_embedding', shape=[1, 1, embedding_size],
+                                                   initializer=tf.random_normal_initializer(0.0, 1.0),
+                                                   trainable=True)
+            null_token_embedding = self._transform_embeddings(null_token_embedding, reuse=True)
+            batch_size = tf.shape(self.embedded1)[0]
+            tiled_null_token_embedding = tf.tile(input=null_token_embedding, multiples=[batch_size, 1, 1])
+            self.embedded1 = tf.concat(values=[tiled_null_token_embedding, self.embedded1], axis=1)
+            self.embedded2 = tf.concat(values=[tiled_null_token_embedding, self.embedded2], axis=1)
 
         logger.info('Building the Attend graph ..')
         self.raw_attentions = None
