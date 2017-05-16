@@ -85,8 +85,9 @@ def test_ff_dam_v2():
     optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate)
 
     kwargs = dict(optimizer=optimizer, vocab_size=vocab_size, embedding_size=embedding_size,
-        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
-        l2_lambda=None, trainable_embeddings=not is_fixed_embeddings)
+                  representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
+                  l2_lambda=None, trainable_embeddings=not is_fixed_embeddings,
+                  use_masking=True)
 
     model = FeedForwardDAM(**kwargs)
 
@@ -97,10 +98,10 @@ def test_ff_dam_v2():
         nb_parameters = count_parameters()
 
         sentence1 = [[1, 2, 3, 4], [1, 2, 3, 4]]
-        sentence1_length = [4, 4]
+        sentence1_length = [4, 2]
 
         sentence2 = [[1, 2, 3], [1, 2, 3]]
-        sentence2_length = [3, 3]
+        sentence2_length = [3, 2]
 
         feed_dict = {
             model.sentence1: sentence1, model.sentence2: sentence2,
@@ -112,6 +113,21 @@ def test_ff_dam_v2():
 
         assert embedded1_value.shape == (2, 4, representation_size)
         assert embedded2_value.shape == (2, 3, representation_size)
+
+        raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)
+
+        assert raw_attentions_value.shape == (2, 4, 3)
+
+        attention_sentence1_value, attention_sentence2_value =\
+            session.run([model.attention_sentence1, model.attention_sentence2], feed_dict=feed_dict)
+
+        print(attention_sentence1_value)
+        print(attention_sentence2_value)
+
+        alpha_value, beta_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
+
+        assert alpha_value.shape == (2, 3, representation_size)
+        assert beta_value.shape == (2, 4, representation_size)
 
     tf.reset_default_graph()
 

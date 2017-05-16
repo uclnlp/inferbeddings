@@ -104,6 +104,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         with tf.variable_scope('attend') as _:
             # tensor with shape (batch_size, time_steps, num_units)
             transformed_sequence1 = self._transform_attend(sequence1)
+
             # tensor with shape (batch_size, time_steps, num_units)
             transformed_sequence2 = self._transform_attend(sequence2, True)
 
@@ -112,8 +113,8 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
 
             masked_raw_attentions = self.raw_attentions
             if use_masking:
-                masked_raw_attentions = util.mask_3d(sequences=self.raw_attentions,
-                                                     sequence_lengths=sequence1_lengths,
+                masked_raw_attentions = util.mask_3d(sequences=masked_raw_attentions,
+                                                     sequence_lengths=sequence2_lengths,
                                                      mask_value=- np.inf, dimension=2)
             self.attention_sentence1 = util.attention_softmax3d(masked_raw_attentions)
 
@@ -121,8 +122,8 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             attention_transposed = tf.transpose(self.raw_attentions, [0, 2, 1])
             masked_attention_transposed = attention_transposed
             if use_masking:
-                masked_attention_transposed = util.mask_3d(sequences=attention_transposed,
-                                                           sequence_lengths=sequence2_lengths,
+                masked_attention_transposed = util.mask_3d(sequences=masked_attention_transposed,
+                                                           sequence_lengths=sequence1_lengths,
                                                            mask_value=- np.inf, dimension=2)
             self.attention_sentence2 = util.attention_softmax3d(masked_attention_transposed)
 
