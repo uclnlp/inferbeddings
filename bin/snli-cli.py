@@ -163,6 +163,8 @@ def main(argv):
     projection_steps = []
     if is_normalized_embeddings:
         projection_steps += [constraints.unit_sphere(model.embeddings, norm=1.0)]
+        if model.null_token_embedding:
+            projection_steps += [constraints.unit_sphere(model.null_token_embedding, norm=1.0)]
 
     correct_predictions = tf.equal(tf.cast(model.predictions, tf.int32), tf.cast(model.label, tf.int32))
     accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
@@ -223,9 +225,8 @@ def main(argv):
                 _, loss_value = session.run([model.training_step, model.loss], feed_dict=batch_feed_dict)
                 loss_values += [loss_value]
 
-                if not is_fixed_embeddings:
-                    for projection_step in projection_steps:
-                        session.run([projection_step])
+                for projection_step in projection_steps:
+                    session.run([projection_step])
 
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
                     dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
