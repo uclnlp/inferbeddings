@@ -105,8 +105,8 @@ def main(argv):
 #$ -S /bin/bash
 #$ -o /dev/null
 #$ -e /dev/null
- #$ -t 1-{}
-#$ -l h_vmem=12G,tmem=12G
+#$ -t 1-{}
+#$ -l mem=12G
 #$ -l h_rt=10:00:00
 
 """.format(nb_jobs)
