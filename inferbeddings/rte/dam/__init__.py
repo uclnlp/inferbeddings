@@ -7,5 +7,6 @@ from inferbeddings.rte.dam.feedforward import FeedForwardDAM
 __all__ = [
     'AbstractDecomposableAttentionModel',
     'SimpleDAM',
-    'FeedForwardDAM'
+    'FeedForwardDAM',
+    'DAMP'
 ]

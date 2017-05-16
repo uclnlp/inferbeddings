@@ -13,7 +13,7 @@ from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.rte import ConditionalBiLSTM
-from inferbeddings.rte.dam import SimpleDAM, FeedForwardDAM
+from inferbeddings.rte.dam import SimpleDAM, FeedForwardDAM, DAMP
 from inferbeddings.rte.util import SNLI, count_parameters, train_tokenizer_on_instances, to_dataset, to_feed_dict
 
 from inferbeddings.models.training import constraints
@@ -36,7 +36,7 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'simple-dam', 'ff-dam'])
+                           choices=['cbilstm', 'simple-dam', 'ff-dam', 'damp'])
     argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
                            choices=['adagrad', 'adam'])
 
@@ -134,7 +134,8 @@ def main(argv):
         model_kwargs.update(cbilstm_kwargs)
         RTEModel = ConditionalBiLSTM
     elif model_name == 'simple-dam':
-        sd_kwargs = dict(use_masking=use_masking)
+        sd_kwargs = dict(use_masking=use_masking,
+                         prepend_null_token=prepend_null_token)
         model_kwargs.update(sd_kwargs)
         RTEModel = SimpleDAM
     elif model_name == 'ff-dam':
@@ -144,6 +145,13 @@ def main(argv):
                          prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
+    elif model_name == 'damp':
+        damp_kwargs = dict(representation_size=representation_size,
+                         dropout_keep_prob=dropout_keep_prob,
+                         use_masking=use_masking,
+                         prepend_null_token=prepend_null_token)
+        model_kwargs.update(damp_kwargs)
+        RTEModel = DAMP
 
     assert RTEModel is not None
     model = RTEModel(**model_kwargs)
