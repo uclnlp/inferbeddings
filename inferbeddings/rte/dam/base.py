@@ -56,9 +56,9 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             self.null_token_embedding = tf.get_variable('null_embedding', shape=[1, embedding_size],
                                                         initializer=tf.random_normal_initializer(0.0, 1.0),
                                                         trainable=True)
-            self.null_token_embedding = self._transform_embeddings(self.null_token_embedding, reuse=True)
+            transformed_null_token_embedding = self._transform_embeddings(self.null_token_embedding, reuse=True)
             batch_size = tf.shape(self.embedded1)[0]
-            tiled_null_token_embedding = tf.tile(input=tf.expand_dims(self.null_token_embedding, axis=0),
+            tiled_null_token_embedding = tf.tile(input=tf.expand_dims(transformed_null_token_embedding, axis=0),
                                                  multiples=[batch_size, 1, 1])
             self.embedded1 = tf.concat(values=[tiled_null_token_embedding, self.embedded1], axis=1)
             self.embedded2 = tf.concat(values=[tiled_null_token_embedding, self.embedded2], axis=1)
