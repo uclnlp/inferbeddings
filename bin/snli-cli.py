@@ -160,11 +160,21 @@ def main(argv):
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
     assign_word_embedding = model.embeddings[word_idx_ph, :].assign(word_embedding_ph)
 
-    projection_steps = []
+    init_projection_steps = []
+    learning_projection_steps = []
+
     if is_normalized_embeddings:
-        projection_steps += [constraints.unit_sphere(model.embeddings, norm=1.0)]
+        unit_sphere_embeddings = constraints.unit_sphere(model.embeddings, norm=1.0)
+
+        init_projection_steps += [unit_sphere_embeddings]
+        if not is_fixed_embeddings:
+            learning_projection_steps += [unit_sphere_embeddings]
+
         if prepend_null_token:
-            projection_steps += [constraints.unit_sphere(model.null_token_embedding, norm=1.0)]
+            unit_sphere_null_token = constraints.unit_sphere(model.null_token_embedding, norm=1.0)
+
+            init_projection_steps += [unit_sphere_null_token]
+            learning_projection_steps += [unit_sphere_null_token]
 
     correct_predictions = tf.equal(tf.cast(model.predictions, tf.int32), tf.cast(model.label, tf.int32))
     accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
@@ -196,7 +206,7 @@ def main(argv):
                 session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
             logger.info('Done!')
 
-        for projection_step in projection_steps:
+        for projection_step in init_projection_steps:
             session.run([projection_step])
 
         nb_instances = questions.shape[0]
@@ -225,7 +235,7 @@ def main(argv):
                 _, loss_value = session.run([model.training_step, model.loss], feed_dict=batch_feed_dict)
                 loss_values += [loss_value]
 
-                for projection_step in projection_steps:
+                for projection_step in learning_projection_steps:
                     session.run([projection_step])
 
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
