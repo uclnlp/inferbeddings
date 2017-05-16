@@ -163,7 +163,7 @@ def main(argv):
     projection_steps = []
     if is_normalized_embeddings:
         projection_steps += [constraints.unit_sphere(model.embeddings, norm=1.0)]
-        if model.null_token_embedding:
+        if prepend_null_token:
             projection_steps += [constraints.unit_sphere(model.null_token_embedding, norm=1.0)]
 
     correct_predictions = tf.equal(tf.cast(model.predictions, tf.int32), tf.cast(model.label, tf.int32))
