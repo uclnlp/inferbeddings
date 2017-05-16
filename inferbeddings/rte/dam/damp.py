@@ -25,12 +25,12 @@ class DAMP(AbstractDecomposableAttentionModel):
             projection = tf.contrib.layers.fully_connected(inputs=sequence, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer())
-            projection = activations.prelu(projection)
+            projection = activations.prelu(projection, name='1')
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
             projection = tf.contrib.layers.fully_connected(inputs=projection, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer())
-            projection = activations.prelu(projection)
+            projection = activations.prelu(projection, name='2')
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
         return projection
 
@@ -39,12 +39,12 @@ class DAMP(AbstractDecomposableAttentionModel):
             projection = tf.contrib.layers.fully_connected(inputs=sequence, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer())
-            projection = activations.prelu(projection)
+            projection = activations.prelu(projection, name='1')
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
             projection = tf.contrib.layers.fully_connected(inputs=projection, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer())
-            projection = activations.prelu(projection)
+            projection = activations.prelu(projection, name='2')
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
         return projection
 
@@ -53,11 +53,11 @@ class DAMP(AbstractDecomposableAttentionModel):
             projection = tf.contrib.layers.fully_connected(inputs=v1_v2, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer())
-            projection = activations.prelu(projection)
+            projection = activations.prelu(projection, name='1')
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
             projection = tf.contrib.layers.fully_connected(inputs=projection, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer())
-            projection = activations.prelu(projection)
+            projection = activations.prelu(projection, name='2')
             projection = tf.nn.dropout(projection, keep_prob=self.dropout_keep_prob)
         return projection
