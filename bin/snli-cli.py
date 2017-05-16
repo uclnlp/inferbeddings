@@ -54,6 +54,7 @@ def main(argv):
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
     argparser.add_argument('--use-masking', action='store_true')
+    argparser.add_argument('--prepend-null-token', action='store_true')
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
@@ -79,6 +80,7 @@ def main(argv):
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
     use_masking = args.use_masking
+    prepend_null_token = args.prepend_null_token
 
     glove_path = args.glove
     word2vec_path = args.word2vec
@@ -138,7 +140,8 @@ def main(argv):
     elif model_name == 'ff-dam':
         ff_kwargs = dict(representation_size=representation_size,
                          dropout_keep_prob=dropout_keep_prob,
-                         use_masking=use_masking)
+                         use_masking=use_masking,
+                         prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
 
