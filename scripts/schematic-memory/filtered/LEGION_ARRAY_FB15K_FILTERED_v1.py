@@ -71,7 +71,7 @@ def main(argv):
 
     configurations = list(cartesian_product(hyperparameters_space_1))
 
-    path = '/home/ucacmin/Scratch/inferbeddings/logs/logs/schematic-memory/filtered/legion_fb15k_filtered_v1/'
+    path = '/home/ucacmin/Scratch/inferbeddings/logs/schematic-memory/filtered/legion_fb15k_filtered_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/ucacmin/'):
