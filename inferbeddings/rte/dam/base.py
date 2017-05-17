@@ -39,6 +39,9 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         self.sentence1_size = tf.placeholder(dtype=tf.int32, shape=[None], name='sent1_size')
         self.sentence2_size = tf.placeholder(dtype=tf.int32, shape=[None], name='sent2_size')
 
+        sentence1_size = self.sentence1_size
+        sentence2_size = self.sentence2_size
+
         self.label = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
         self.embeddings = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
@@ -63,14 +66,17 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
             self.embedded1 = tf.concat(values=[tiled_null_token_embedding, self.embedded1], axis=1)
             self.embedded2 = tf.concat(values=[tiled_null_token_embedding, self.embedded2], axis=1)
 
+            sentence1_size += 1
+            sentence2_size += 1
+
         logger.info('Building the Attend graph ..')
         self.raw_attentions = None
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
         self.alpha, self.beta = self.attend(self.embedded1, self.embedded2,
-                                            sequence1_lengths=self.sentence1_size,
-                                            sequence2_lengths=self.sentence2_size,
+                                            sequence1_lengths=sentence1_size,
+                                            sequence2_lengths=sentence2_size,
                                             use_masking=use_masking)
 
         logger.info('Building the Compare graph ..')
@@ -81,8 +87,8 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
 
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggregate(self.v1, self.v2, self.num_classes,
-                                     v1_lengths=self.sentence1_size,
-                                     v2_lengths=self.sentence2_size,
+                                     v1_lengths=sentence1_size,
+                                     v2_lengths=sentence2_size,
                                      use_masking=use_masking)
 
         self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
