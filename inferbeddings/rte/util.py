@@ -45,7 +45,7 @@ class SNLI:
         return train_corpus, dev_corpus, test_corpus
 
 
-def count_parameters():
+def count_trainable_parameters():
     """
     Count the number of trainable tensorflow parameters loaded in
     the current graph.

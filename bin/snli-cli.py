@@ -14,7 +14,7 @@ from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.rte import ConditionalBiLSTM
 from inferbeddings.rte.dam import SimpleDAM, FeedForwardDAM, DAMP
-from inferbeddings.rte.util import SNLI, count_parameters, train_tokenizer_on_instances, to_dataset, to_feed_dict
+from inferbeddings.rte.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset, to_feed_dict
 
 from inferbeddings.models.training import constraints
 
@@ -190,7 +190,7 @@ def main(argv):
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        logger.debug('Total parameters: {}'.format(count_parameters()))
+        logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
 
         if restore_path:
             saver.restore(session, restore_path)

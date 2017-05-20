@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from inferbeddings.rte.dam import FeedForwardDAM
-from inferbeddings.rte.util import count_parameters
+from inferbeddings.rte.util import count_trainable_parameters
 import logging
 
 import pytest
@@ -32,7 +32,7 @@ def test_ff_dam():
 
     with tf.Session() as session:
         session.run(init_op)
-        nb_parameters = count_parameters()
+        nb_parameters = count_trainable_parameters()
 
         sentence = [[1, 2, 3], [1, 2, 3]]
         sentence_length = [3, 3]
@@ -95,7 +95,7 @@ def test_ff_dam_v2():
 
     with tf.Session() as session:
         session.run(init_op)
-        nb_parameters = count_parameters()
+        nb_parameters = count_trainable_parameters()
 
         sentence1 = [[1, 2, 3, 4], [1, 2, 3, 4]]
         sentence1_length = [4, 2]
