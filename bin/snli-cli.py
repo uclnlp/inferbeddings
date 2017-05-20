@@ -57,6 +57,8 @@ def main(argv):
     argparser.add_argument('--prepend-null-token', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
+    argparser.add_argument('--restore', action='store', type=str, default=None)
+
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
@@ -84,6 +86,8 @@ def main(argv):
     prepend_null_token = args.prepend_null_token
 
     save_path = args.save
+    restore_path = args.restore
+
     glove_path = args.glove
     word2vec_path = args.word2vec
 
@@ -189,29 +193,33 @@ def main(argv):
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        session.run(init_op)
         logger.debug('Total parameters: {}'.format(count_parameters()))
 
-        # Initialising pre-trained embeddings
-        word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
-        word_to_embedding = None
-        if glove_path:
-            assert os.path.isfile(glove_path)
-            word_to_embedding = load_glove(glove_path, word_set)
-        elif word2vec_path:
-            assert os.path.isfile(word2vec_path)
-            word_to_embedding = load_word2vec(word2vec_path, word_set)
+        if restore_path:
+            saver.restore(session, restore_path)
+        else:
+            session.run(init_op)
 
-        if word_to_embedding:
-            logger.info('Initialising the embeddings pre-trained vectors ..')
-            for word in word_to_embedding:
-                word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
-                assert embedding_size == len(word_embedding)
-                session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
-            logger.info('Done!')
+            # Initialising pre-trained embeddings
+            word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
+            word_to_embedding = None
+            if glove_path:
+                assert os.path.isfile(glove_path)
+                word_to_embedding = load_glove(glove_path, word_set)
+            elif word2vec_path:
+                assert os.path.isfile(word2vec_path)
+                word_to_embedding = load_word2vec(word2vec_path, word_set)
 
-        for projection_step in init_projection_steps:
-            session.run([projection_step])
+            if word_to_embedding:
+                logger.info('Initialising the embeddings pre-trained vectors ..')
+                for word in word_to_embedding:
+                    word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
+                    assert embedding_size == len(word_embedding)
+                    session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
+                logger.info('Done!')
+
+            for projection_step in init_projection_steps:
+                session.run([projection_step])
 
         nb_instances = questions.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
