@@ -126,12 +126,9 @@ def main(argv):
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
     answers = train_dataset['answers']
 
-    model_kwargs = dict(
-        optimizer=optimizer,
-        vocab_size=vocab_size,
-        embedding_size=embedding_size,
-        l2_lambda=None,
-        trainable_embeddings=not is_fixed_embeddings)
+    model_kwargs = dict(optimizer=optimizer, vocab_size=vocab_size,
+                        embedding_size=embedding_size, l2_lambda=None,
+                        trainable_embeddings=not is_fixed_embeddings)
 
     RTEModel = None
     if model_name == 'cbilstm':
