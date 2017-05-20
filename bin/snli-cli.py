@@ -56,6 +56,7 @@ def main(argv):
     argparser.add_argument('--use-masking', action='store_true')
     argparser.add_argument('--prepend-null-token', action='store_true')
 
+    argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
@@ -82,6 +83,7 @@ def main(argv):
     use_masking = args.use_masking
     prepend_null_token = args.prepend_null_token
 
+    save_path = args.save
     glove_path = args.glove
     word2vec_path = args.word2vec
 
@@ -147,9 +149,9 @@ def main(argv):
         RTEModel = FeedForwardDAM
     elif model_name == 'damp':
         damp_kwargs = dict(representation_size=representation_size,
-                         dropout_keep_prob=dropout_keep_prob,
-                         use_masking=use_masking,
-                         prepend_null_token=prepend_null_token)
+                           dropout_keep_prob=dropout_keep_prob,
+                           use_masking=use_masking,
+                           prepend_null_token=prepend_null_token)
         model_kwargs.update(damp_kwargs)
         RTEModel = DAMP
 
@@ -180,6 +182,8 @@ def main(argv):
     accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
     init_op = tf.global_variables_initializer()
+
+    saver = tf.train.Saver()
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
@@ -247,6 +251,10 @@ def main(argv):
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
                         best_dev_accuracy = dev_accuracy
                         best_test_accuracy = test_accuracy
+
+                        if save_path:
+                            ext_save_path = saver.save(session, save_path)
+                            logger.info('Model saved in file: {}'.format(ext_save_path))
 
                     logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
                                  .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
