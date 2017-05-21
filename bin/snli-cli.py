@@ -62,6 +62,9 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
+    argparser.add_argument('--symmetric-contradiction-regularizer', action='store',
+                           type=float, default=None)
+
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
@@ -104,7 +107,12 @@ def main(argv):
     logger.debug('Parsing corpus ..')
 
     num_words = None
-    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(train_instances + dev_instances + test_instances, num_words=num_words)
+    all_instances = train_instances + dev_instances + test_instances
+    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=num_words)
+
+    neutral_idx = a_tokenizer.word_index['neutral'] - 1
+    entailment_idx = a_tokenizer.word_index['entailment'] - 1
+    contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
@@ -126,9 +134,8 @@ def main(argv):
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
     answers = train_dataset['answers']
 
-    model_kwargs = dict(optimizer=optimizer, vocab_size=vocab_size,
-                        embedding_size=embedding_size, l2_lambda=None,
-                        trainable_embeddings=not is_fixed_embeddings)
+    model_kwargs = dict(optimizer=optimizer, vocab_size=vocab_size, embedding_size=embedding_size,
+                        l2_lambda=None, trainable_embeddings=not is_fixed_embeddings)
 
     RTEModel = None
     if model_name == 'cbilstm':
@@ -142,17 +149,13 @@ def main(argv):
         model_kwargs.update(sd_kwargs)
         RTEModel = SimpleDAM
     elif model_name == 'ff-dam':
-        ff_kwargs = dict(representation_size=representation_size,
-                         dropout_keep_prob=dropout_keep_prob,
-                         use_masking=use_masking,
-                         prepend_null_token=prepend_null_token)
+        ff_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
+                         use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
     elif model_name == 'damp':
-        damp_kwargs = dict(representation_size=representation_size,
-                           dropout_keep_prob=dropout_keep_prob,
-                           use_masking=use_masking,
-                           prepend_null_token=prepend_null_token)
+        damp_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
+                           use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(damp_kwargs)
         RTEModel = DAMP
 
