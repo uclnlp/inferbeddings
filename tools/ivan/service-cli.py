@@ -191,7 +191,6 @@ def main(argv):
             session_config = tf.ConfigProto()
             session_config.gpu_options.allow_growth = True
 
-            tf.reset_default_graph()
             with tf.Session(config=session_config) as session:
                 logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
                 saver.restore(session, restore_path)
@@ -223,7 +222,7 @@ def main(argv):
                 predictions = session.run(model.logits, feed_dict=feed_dict)[0]
 
                 print(predictions)
-    
+
                 answer = {
                     'neutral': str(predictions[neutral_idx]),
                     'contradiction': str(predictions[contradiction_idx]),
