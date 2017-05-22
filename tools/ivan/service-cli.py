@@ -184,17 +184,18 @@ def main(argv):
 
     saver = tf.train.Saver()
 
-    session_config = tf.ConfigProto()
-    session_config.gpu_options.allow_growth = True
+    class Service(View):
+        methods = ['GET', 'POST']
 
-    with tf.Session(config=session_config) as session:
-        logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
-        saver.restore(session, restore_path)
+        def dispatch_request(self):
+            session_config = tf.ConfigProto()
+            session_config.gpu_options.allow_growth = True
 
-        class Service(View):
-            methods = ['GET', 'POST']
+            tf.reset_default_graph()
+            with tf.Session(config=session_config) as session:
+                logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
+                saver.restore(session, restore_path)
 
-            def dispatch_request(self):
                 sentence1 = request.args.get('sentence1')
                 sentence2 = request.args.get('sentence2')
 
@@ -222,7 +223,7 @@ def main(argv):
                 predictions = session.run(model.logits, feed_dict=feed_dict)[0]
 
                 print(predictions)
-
+    
                 answer = {
                     'neutral': str(predictions[neutral_idx]),
                     'contradiction': str(predictions[contradiction_idx]),
@@ -231,9 +232,9 @@ def main(argv):
 
                 return jsonify(answer)
 
-        app.add_url_rule('/v1/dam', view_func=Service.as_view('request'))
+    app.add_url_rule('/v1/dam', view_func=Service.as_view('request'))
 
-        app.run(host='0.0.0.0', port=8889, debug=True)
+    app.run(host='0.0.0.0', port=8889, debug=True)
 
 
 if __name__ == '__main__':
