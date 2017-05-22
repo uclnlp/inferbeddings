@@ -169,6 +169,7 @@ def main(argv):
         methods = ['GET', 'POST']
 
         def dispatch_request(self):
+            tf.reset_default_graph()
             model = RTEModel(**model_kwargs)
 
             session_config = tf.ConfigProto()
