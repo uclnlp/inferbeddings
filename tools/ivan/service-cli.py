@@ -219,7 +219,7 @@ def main(argv):
 
                 print(feed_dict)
 
-                predictions = session.run(model.logits, feed_dict=feed_dict)
+                predictions = session.run(model.logits, feed_dict=feed_dict)[0]
 
                 print(predictions)
 
