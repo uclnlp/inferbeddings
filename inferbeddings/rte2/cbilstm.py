@@ -61,6 +61,3 @@ class ConditionalBiLSTM(BaseRTEModel):
 
         encoded = tf.concat(values=[output_state_fw.h, output_state_bw.h], axis=1)
         return encoded, (output_state_fw, output_state_bw)
-
-    def __call__(self):
-        pass

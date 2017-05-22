@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 import numpy as np
 import tensorflow as tf
-import logging
 
-from inferbeddings.rte2 import util
+from inferbeddings.rte2 import BaseRTEModel
+
+import logging
 
 logger = logging.getLogger(__name__)
 
 
-class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
+class BaseDecomposableAttentionModel(BaseRTEModel):
     @abstractmethod
     def _transform_embeddings(self, embeddings, reuse=False):
         raise NotImplementedError
@@ -28,48 +29,57 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
     def _transform_aggregate(self, v1_v2, reuse=False):
         raise NotImplementedError
 
-    def __init__(self, optimizer, vocab_size, embedding_size=300,
-                 clip_value=100.0, l2_lambda=None, trainable_embeddings=True,
-                 use_masking=False, prepend_null_token=False):
-        self.num_classes = 3
+    def __init__(self, use_masking=False, prepend_null_token=False, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.sentence1 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
-        self.sentence2 = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
+        batch1_size = tf.shape(self.sequence1)[0]
+        batch2_size = tf.shape(self.sequence2)[0]
 
-        self.sentence1_size = tf.placeholder(dtype=tf.int32, shape=[None], name='sent1_size')
-        self.sentence2_size = tf.placeholder(dtype=tf.int32, shape=[None], name='sent2_size')
+        assert batch1_size == batch2_size
 
-        sentence1_size = self.sentence1_size
-        sentence2_size = self.sentence2_size
+        embedding1_size = tf.shape(self.sequence1)[2]
+        embedding2_size = tf.shape(self.sequence2)[2]
 
-        self.label = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
+        assert embedding1_size == embedding2_size
 
-        self.embeddings = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                          initializer=tf.random_normal_initializer(0.0, 1.0),
-                                          trainable=trainable_embeddings)
-        self.transformed_embeddings = self._transform_embeddings(self.embeddings)
+        # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
+        self.transformed_sequence1 = self._transform_embeddings(self.sequence1, reuse=self.reuse)
 
-        # [batch, time_steps, embedding_size]
-        self.embedded1 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence1)
-        # [batch, time_steps, embedding_size]
-        self.embedded2 = tf.nn.embedding_lookup(self.transformed_embeddings, self.sentence2)
+        # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
+        self.transformed_sequence2 = self._transform_embeddings(self.sequence2, reuse=True)
+
+        sequence1 = self.sequence1
+        sequence2 = self.sequence2
+
+        sequence1_length = self.sequence1_length
+        sequence2_length = self.sequence2_length
 
         self.null_token_embedding = None
-        if prepend_null_token:
-            self.null_token_embedding = tf.get_variable('null_embedding', shape=[1, embedding_size],
-                                                        initializer=tf.random_normal_initializer(0.0, 1.0),
-                                                        trainable=True)
-            transformed_null_token_embedding = self._transform_embeddings(self.null_token_embedding, reuse=True)
-            batch_size = tf.shape(self.embedded1)[0]
-            tiled_null_token_embedding = tf.tile(input=tf.expand_dims(transformed_null_token_embedding, axis=0),
-                                                 multiples=[batch_size, 1, 1])
-            self.embedded1 = tf.concat(values=[tiled_null_token_embedding, self.embedded1], axis=1)
-            self.embedded2 = tf.concat(values=[tiled_null_token_embedding, self.embedded2], axis=1)
 
-            sentence1_size += 1
-            sentence2_size += 1
+        if prepend_null_token:
+            # [1, 1, embedding_size]
+            self.null_token_embedding = tf.get_variable('null_embedding',
+                                                        shape=[1, 1, embedding1_size],
+                                                        initializer=tf.random_normal_initializer(0.0, 1.0))
+
+            # [1, 1, representation_size]
+            transformed_null_token_embedding = self._transform_embeddings(self.null_token_embedding, reuse=True)
+
+            # [batch_size, 1, representation_size]
+            tiled_null_token_embedding = tf.tile(input=tf.expand_dims(transformed_null_token_embedding, axis=0),
+                                                 multiples=[batch1_size, 1, 1])
+
+            # [batch_size, time_steps + 1, representation_size]
+            sequence1 = tf.concat(values=[tiled_null_token_embedding, sequence1], axis=1)
+
+            # [batch_size, time_steps + 1, representation_size]
+            sequence2 = tf.concat(values=[tiled_null_token_embedding, sequence2], axis=1)
+
+            sequence1_length += 1
+            sequence2_length += 1
 
         logger.info('Building the Attend graph ..')
+
         self.raw_attentions = None
         self.attention_sentence1 = self.attention_sentence2 = None
 
@@ -79,40 +89,11 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
                                             sequence2_lengths=sentence2_size,
                                             use_masking=use_masking)
 
-        logger.info('Building the Compare graph ..')
-        # tensor with shape (batch_size, time_steps, num_units)
-        self.v1 = self.compare(self.embedded1, self.beta)
-        # tensor with shape (batch_size, time_steps, num_units)
-        self.v2 = self.compare(self.embedded2, self.alpha, reuse=True)
-
-        logger.info('Building the Aggregate graph ..')
-        self.logits = self.aggregate(self.v1, self.v2, self.num_classes,
-                                     v1_lengths=sentence1_size,
-                                     v2_lengths=sentence2_size,
-                                     use_masking=use_masking)
-
-        self.predictions = tf.argmax(self.logits, axis=1, name='predictions')
-
-        self.losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=self.label)
-        self.loss = tf.reduce_mean(self.losses)
-
-        if l2_lambda is not None:
-            regularizer = l2_lambda * sum(tf.nn.l2_loss(var) for var in tf.trainable_variables()
-                                          if not ('noreg' in var.name or 'bias' in var.name or 'Bias' in var.name))
-            self.loss += regularizer
-
-        if clip_value is not None:
-            gradients, v = zip(*optimizer.compute_gradients(self.loss))
-            gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
-            self.training_step = optimizer.apply_gradients(zip(gradients, v))
-        else:
-            self.training_step = optimizer.minimize(self.loss)
-
     def attend(self, sequence1, sequence2,
                sequence1_lengths=None, sequence2_lengths=None, use_masking=False):
         """
         Attend phase.
-        
+
         :param sequence1: tensor with shape (batch_size, time_steps, num_units)
         :param sequence2: tensor with shape (batch_size, time_steps, num_units)
         :param sequence1_lengths: time_steps in sequence1
@@ -154,7 +135,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
     def compare(self, sentence, soft_alignment, reuse=False):
         """
         Compare phase.
-        
+
         :param sentence: tensor with shape (batch_size, time_steps, num_units)
         :param soft_alignment: tensor with shape (batch_size, time_steps, num_units)
         :param reuse: reuse variables
@@ -169,7 +150,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
                   v1_lengths=None, v2_lengths=None, use_masking=False):
         """
         Aggregate phase.
-        
+
         :param v1: tensor with shape (batch_size, time_steps, num_units)
         :param v2: tensor with shape (batch_size, time_steps, num_units)
         :param num_classes: number of output units
@@ -181,7 +162,7 @@ class AbstractDecomposableAttentionModel(metaclass=ABCMeta):
         with tf.variable_scope('aggregate') as _:
             if use_masking:
                 v1 = util.mask_3d(sequences=v1, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
-                v2 = util.mask_3d(sequences=v2, sequence_lengths=v2_lengths, mask_value=0, dimension=1)
+                v2 = util.mask_3d(sequences=v2, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
             v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
             v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
             transformed_v1_v2 = self._transform_aggregate(v1_v2)
