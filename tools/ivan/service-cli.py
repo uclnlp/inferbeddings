@@ -165,8 +165,6 @@ def main(argv):
 
     assert RTEModel is not None
 
-    saver = tf.train.Saver()
-
     class Service(View):
         methods = ['GET', 'POST']
 
@@ -177,6 +175,7 @@ def main(argv):
             session_config.gpu_options.allow_growth = True
 
             with tf.Session(config=session_config) as session:
+                saver = tf.train.Saver()
                 logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
                 saver.restore(session, restore_path)
 
