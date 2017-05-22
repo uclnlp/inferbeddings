@@ -164,7 +164,6 @@ def main(argv):
         RTEModel = DAMP
 
     assert RTEModel is not None
-    model = RTEModel(**model_kwargs)
 
     init_projection_steps = []
     learning_projection_steps = []
@@ -188,6 +187,8 @@ def main(argv):
         methods = ['GET', 'POST']
 
         def dispatch_request(self):
+            model = RTEModel(**model_kwargs)
+            
             session_config = tf.ConfigProto()
             session_config.gpu_options.allow_growth = True
 
