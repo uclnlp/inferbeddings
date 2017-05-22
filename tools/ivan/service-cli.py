@@ -185,6 +185,9 @@ def main(argv):
                 if 'sentence2' in request.form:
                     sentence2 = request.form['sentence2']
 
+                print(sentence1)
+                print(sentence2)
+
                 sentence1_seq = qs_tokenizer.texts_to_sequences(sentence1)
                 sentence2_seq = qs_tokenizer.texts_to_sequences(sentence2)
 
