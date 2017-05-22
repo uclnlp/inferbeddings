@@ -224,9 +224,9 @@ def main(argv):
                 print(predictions)
 
                 answer = {
-                    'neutral': predictions[neutral_idx],
-                    'contradiction': predictions[contradiction_idx],
-                    'entailment': predictions[entailment_idx]
+                    'neutral': str(predictions[neutral_idx]),
+                    'contradiction': str(predictions[contradiction_idx]),
+                    'entailment': str(predictions[entailment_idx])
                 }
 
                 return jsonify(answer)
