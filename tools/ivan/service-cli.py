@@ -198,6 +198,11 @@ def main(argv):
                 sentence1 = request.args.get('sentence1')
                 sentence2 = request.args.get('sentence2')
 
+                if 'sentence1' in request.form:
+                    sentence1 = request.form['sentence1']
+                if 'sentence2' in request.form:
+                    sentence2 = request.form['sentence2']
+
                 sentence1_seq = qs_tokenizer.texts_to_sequences(sentence1)
                 sentence2_seq = qs_tokenizer.texts_to_sequences(sentence2)
 
