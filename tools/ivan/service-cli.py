@@ -208,8 +208,8 @@ def main(argv):
 
                 # Compute answer
                 feed_dict = {
-                    model.sentence1: sentence1_seq,
-                    model.sentence2: sentence2_seq,
+                    model.sentence1: [item for sublist in sentence1_seq for item in sublist],
+                    model.sentence2: [item for sublist in sentence2_seq for item in sublist],
                     model.sentence1_size: len(sentence1_seq),
                     model.sentence2_size: len(sentence2_seq)
                 }

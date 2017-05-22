@@ -130,6 +130,7 @@ def pad_sequences(sequences, max_len=None, dtype='int32', padding='post', trunca
             raise ValueError('Padding type "%s" not understood' % padding)
     return x
 
+
 def to_feed_dict(model, dataset):
     return {
         model.sentence1: dataset['questions'], model.sentence2: dataset['supports'],
