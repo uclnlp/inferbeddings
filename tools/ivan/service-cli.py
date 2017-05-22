@@ -172,10 +172,7 @@ def main(argv):
             tf.reset_default_graph()
             model = RTEModel(**model_kwargs)
 
-            session_config = tf.ConfigProto()
-            session_config.gpu_options.allow_growth = True
-
-            with tf.Session(config=session_config) as session:
+            with tf.Session() as session:
                 saver = tf.train.Saver()
                 logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
                 saver.restore(session, restore_path)
