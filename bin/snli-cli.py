@@ -62,9 +62,6 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
-    argparser.add_argument('--symmetric-contradiction-regularizer', action='store',
-                           type=float, default=None)
-
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
@@ -110,10 +107,6 @@ def main(argv):
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=num_words)
 
-    neutral_idx = a_tokenizer.word_index['neutral'] - 1
-    entailment_idx = a_tokenizer.word_index['entailment'] - 1
-    contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
-
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
     max_len = None
@@ -137,10 +130,12 @@ def main(argv):
     model_kwargs = dict(optimizer=optimizer, vocab_size=vocab_size, embedding_size=embedding_size,
                         l2_lambda=None, trainable_embeddings=not is_fixed_embeddings)
 
+    dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
+
     RTEModel = None
     if model_name == 'cbilstm':
         cbilstm_kwargs = dict(hidden_size=hidden_size,
-                              dropout_keep_prob=dropout_keep_prob)
+                              dropout_keep_prob=dropout_keep_prob_ph)
         model_kwargs.update(cbilstm_kwargs)
         RTEModel = ConditionalBiLSTM
     elif model_name == 'simple-dam':
@@ -149,12 +144,12 @@ def main(argv):
         model_kwargs.update(sd_kwargs)
         RTEModel = SimpleDAM
     elif model_name == 'ff-dam':
-        ff_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
+        ff_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph,
                          use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
     elif model_name == 'damp':
-        damp_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
+        damp_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph,
                            use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(damp_kwargs)
         RTEModel = DAMP
@@ -242,7 +237,9 @@ def main(argv):
                 batch_feed_dict = {
                     model.sentence1: batch_sentences1, model.sentence2: batch_sentences2,
                     model.sentence1_size: batch_sizes1, model.sentence2_size: batch_sizes2,
-                    model.label: batch_labels}
+                    model.label: batch_labels,
+                    dropout_keep_prob_ph: dropout_keep_prob
+                }
 
                 _, loss_value = session.run([model.training_step, model.loss], feed_dict=batch_feed_dict)
                 loss_values += [loss_value]
@@ -251,8 +248,14 @@ def main(argv):
                     session.run([projection_step])
 
                 if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
-                    dev_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, dev_dataset))
-                    test_accuracy = session.run(accuracy, feed_dict=to_feed_dict(model, test_dataset))
+
+                    dev_feed_dict = to_feed_dict(model, dev_dataset)
+                    dev_feed_dict[dropout_keep_prob_ph] = 1.0
+                    dev_accuracy = session.run(accuracy, feed_dict=dev_feed_dict)
+
+                    test_feed_dict = to_feed_dict(model, test_dataset)
+                    test_feed_dict[dropout_keep_prob_ph] = 1.0
+                    test_accuracy = session.run(accuracy, feed_dict=test_feed_dict)
 
                     logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
