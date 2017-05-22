@@ -213,6 +213,9 @@ def main(argv):
                     model.sentence1_size: len(sentence1_seq),
                     model.sentence2_size: len(sentence2_seq)
                 }
+
+                print(feed_dict)
+
                 predictions = session.run(model.predictions, feed_dict=feed_dict)
 
                 answer = {
