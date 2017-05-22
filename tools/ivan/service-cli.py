@@ -221,6 +221,8 @@ def main(argv):
 
                 predictions = session.run(model.predictions, feed_dict=feed_dict)
 
+                print(predictions)
+
                 answer = {
                     'neutral': predictions[neutral_idx],
                     'contradiction': predictions[contradiction_idx],
