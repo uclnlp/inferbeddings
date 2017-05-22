@@ -188,8 +188,8 @@ def main(argv):
                 print(sentence1)
                 print(sentence2)
 
-                sentence1_seq = qs_tokenizer.texts_to_sequences(sentence1)
-                sentence2_seq = qs_tokenizer.texts_to_sequences(sentence2)
+                sentence1_seq = qs_tokenizer.texts_to_sequences([sentence1])
+                sentence2_seq = qs_tokenizer.texts_to_sequences([sentence2])
 
                 sentence1_seq = [item for sublist in sentence1_seq for item in sublist]
                 sentence2_seq = [item for sublist in sentence2_seq for item in sublist]
