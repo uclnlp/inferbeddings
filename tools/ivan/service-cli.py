@@ -165,22 +165,6 @@ def main(argv):
 
     assert RTEModel is not None
 
-    init_projection_steps = []
-    learning_projection_steps = []
-
-    if is_normalized_embeddings:
-        unit_sphere_embeddings = constraints.unit_sphere(model.embeddings, norm=1.0)
-
-        init_projection_steps += [unit_sphere_embeddings]
-        if not is_fixed_embeddings:
-            learning_projection_steps += [unit_sphere_embeddings]
-
-        if prepend_null_token:
-            unit_sphere_null_token = constraints.unit_sphere(model.null_token_embedding, norm=1.0)
-
-            init_projection_steps += [unit_sphere_null_token]
-            learning_projection_steps += [unit_sphere_null_token]
-
     saver = tf.train.Saver()
 
     class Service(View):
@@ -188,7 +172,7 @@ def main(argv):
 
         def dispatch_request(self):
             model = RTEModel(**model_kwargs)
-            
+
             session_config = tf.ConfigProto()
             session_config.gpu_options.allow_growth = True
 
