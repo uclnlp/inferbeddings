@@ -203,9 +203,6 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    # correct_predictions = tf.equal(tf.cast(predictions, tf.int32), tf.cast(label_ph, tf.int32))
-    # accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
-
     init_op = tf.global_variables_initializer()
 
     saver = tf.train.Saver()
@@ -298,32 +295,26 @@ def main(argv):
                                     .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
                         return acc
 
-                    # dev_feed_dict = to_feed_dict(dev_dataset)
-                    # dev_accuracy = session.run(accuracy, feed_dict=dev_feed_dict)
+                    if batch_idx % 10 == 0:
+                        dev_accuracy = compute_accuracy('Dev', dev_dataset)
+                        test_accuracy = compute_accuracy('Test', test_dataset)
 
-                    dev_accuracy = compute_accuracy('Dev', dev_dataset)
+                        logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
+                                     .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
 
-                    # test_feed_dict = to_feed_dict(test_dataset)
-                    # test_accuracy = session.run(accuracy, feed_dict=test_feed_dict)
+                        if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
+                            best_dev_accuracy = dev_accuracy
+                            best_test_accuracy = test_accuracy
 
-                    test_accuracy = compute_accuracy('Test', test_dataset)
+                            if save_path:
+                                ext_save_path = saver.save(session, save_path)
+                                logger.info('Model saved in file: {}'.format(ext_save_path))
 
-                    logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
-                                 .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
-                    if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
-                        best_dev_accuracy = dev_accuracy
-                        best_test_accuracy = test_accuracy
-
-                        if save_path:
-                            ext_save_path = saver.save(session, save_path)
-                            logger.info('Model saved in file: {}'.format(ext_save_path))
-
-                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
-                                 .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
+                        logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
+                                     .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
-
             logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
     logger.info('Training finished.')
