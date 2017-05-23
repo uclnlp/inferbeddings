@@ -49,8 +49,8 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence2 = self._transform_embeddings(self.sequence2, reuse=True)
 
-        sequence1 = self.sequence1
-        sequence2 = self.sequence2
+        sequence1 = self.transformed_sequence1
+        sequence2 = self.transformed_sequence2
 
         sequence1_length = self.sequence1_length
         sequence2_length = self.sequence2_length
@@ -61,7 +61,7 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
             with tf.variable_scope('null', reuse=self.reuse) as _:
                 # [1, 1, embedding_size]
                 self.null_token_embedding = tf.get_variable('null_embedding',
-                                                            shape=[1, 1, embedding1_size],
+                                                            shape=[1, embedding1_size],
                                                             initializer=tf.random_normal_initializer(0.0, 1.0))
 
             # [1, 1, representation_size]
@@ -92,10 +92,12 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
                                             use_masking=use_masking, reuse=self.reuse)
 
         logger.info('Building the Compare graph ..')
+
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v1 = self.compare(self.sequence1, self.beta, reuse=self.reuse)
+        self.v1 = self.compare(sequence1, self.beta, reuse=self.reuse)
+
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v2 = self.compare(self.sequence2, self.alpha, reuse=True)
+        self.v2 = self.compare(sequence2, self.alpha, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
