@@ -60,10 +60,11 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
-    argparser.add_argument('--symmetric-contradiction-regulariser', action='store', type=float, default=None)
+    argparser.add_argument('--symmetric-contradiction-reg-weight', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
+    # Command line arguments
     train_path, valid_path, test_path = args.train, args.valid, args.test
 
     model_name = args.model
@@ -89,6 +90,9 @@ def main(argv):
 
     glove_path = args.glove
     word2vec_path = args.word2vec
+
+    # Experimental RTE regularizers
+    symmetric_contradiction_reg_weight = args.symmetric_contradiction_reg_weight
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -196,8 +200,11 @@ def main(argv):
             init_projection_steps += [unit_sphere_null_token]
             learning_projection_steps += [unit_sphere_null_token]
 
-    correct_predictions = tf.equal(tf.cast(predictions, tf.int32), tf.cast(label_ph, tf.int32))
-    accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+    predictions_int = tf.cast(predictions, tf.int32)
+    labels_int = tf.cast(label_ph, tf.int32)
+
+    # correct_predictions = tf.equal(tf.cast(predictions, tf.int32), tf.cast(label_ph, tf.int32))
+    # accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
     init_op = tf.global_variables_initializer()
 
@@ -278,11 +285,27 @@ def main(argv):
                             dropout_keep_prob_ph: 1.0
                         }
 
-                    dev_feed_dict = to_feed_dict(dev_dataset)
-                    dev_accuracy = session.run(accuracy, feed_dict=dev_feed_dict)
+                    def compute_accuracy(name, dataset):
+                        feed_dict = to_feed_dict(dataset)
+                        p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+                        acc = np.mean(np.equal(p_val, l_val))
+                        acc_c = np.mean(np.equal(p_val, l_val)[np.where(l_val == contradiction_idx)])
+                        acc_e = np.mean(np.equal(p_val, l_val)[np.where(l_val == entailment_idx)])
+                        acc_n = np.mean(np.equal(p_val, l_val)[np.where(l_val == neutral_idx)])
 
-                    test_feed_dict = to_feed_dict(test_dataset)
-                    test_accuracy = session.run(accuracy, feed_dict=test_feed_dict)
+                        logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
+                                    .format(epoch, batch_idx, name, acc, acc_c, acc_e, acc_n))
+                        return acc
+
+                    # dev_feed_dict = to_feed_dict(dev_dataset)
+                    # dev_accuracy = session.run(accuracy, feed_dict=dev_feed_dict)
+
+                    dev_accuracy = compute_accuracy('Dev', dev_dataset)
+
+                    # test_feed_dict = to_feed_dict(test_dataset)
+                    # test_accuracy = session.run(accuracy, feed_dict=test_feed_dict)
+
+                    test_accuracy = compute_accuracy('Test', test_dataset)
 
                     logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
