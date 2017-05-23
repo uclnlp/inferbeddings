@@ -33,11 +33,15 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
     def __init__(self, use_masking=False, prepend_null_token=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        batch1_size = tf.shape(self.sequence1)[0]
-        batch2_size = tf.shape(self.sequence2)[0]
+        batch_size = tf.shape(self.sequence1)[0]
 
-        embedding1_size = tf.shape(self.sequence1)[2]
-        embedding2_size = tf.shape(self.sequence2)[2]
+        # embedding1_size = tf.shape(self.sequence1)[2]
+        # embedding2_size = tf.shape(self.sequence2)[2]
+
+        embedding1_size = self.sequence1.get_shape()[-1].value
+        embedding2_size = self.sequence2.get_shape()[-1].value
+
+        assert embedding1_size == embedding2_size
 
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence1 = self._transform_embeddings(self.sequence1, reuse=self.reuse)
@@ -65,7 +69,7 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
 
             # [batch_size, 1, representation_size]
             tiled_null_token_embedding = tf.tile(input=tf.expand_dims(transformed_null_token_embedding, axis=0),
-                                                 multiples=[batch1_size, 1, 1])
+                                                 multiples=[batch_size, 1, 1])
 
             # [batch_size, time_steps + 1, representation_size]
             sequence1 = tf.concat(values=[tiled_null_token_embedding, sequence1], axis=1)
