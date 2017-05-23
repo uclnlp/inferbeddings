@@ -216,10 +216,10 @@ def main(argv):
                 }
 
                 return jsonify(answer)
+    
+        app.add_url_rule('/v1/dam', view_func=Service.as_view('request'))
 
-    app.add_url_rule('/v1/dam', view_func=Service.as_view('request'))
-
-    app.run(host='0.0.0.0', port=8889, debug=True)
+        app.run(host='0.0.0.0', port=8889, debug=True)
 
 
 if __name__ == '__main__':
