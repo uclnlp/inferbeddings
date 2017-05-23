@@ -288,10 +288,11 @@ def main(argv):
                     def compute_accuracy(name, dataset):
                         feed_dict = to_feed_dict(dataset)
                         p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
-                        acc = np.mean(np.equal(p_val, l_val))
-                        acc_c = np.mean(np.equal(p_val, l_val)[np.where(l_val == contradiction_idx)])
-                        acc_e = np.mean(np.equal(p_val, l_val)[np.where(l_val == entailment_idx)])
-                        acc_n = np.mean(np.equal(p_val, l_val)[np.where(l_val == neutral_idx)])
+                        matches = np.equal(p_val, l_val)
+                        acc = np.mean(matches)
+                        acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
+                        acc_e = np.mean(matches[np.where(l_val == entailment_idx)])
+                        acc_n = np.mean(matches[np.where(l_val == neutral_idx)])
 
                         logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
                                     .format(epoch, batch_idx, name, acc, acc_c, acc_e, acc_n))
