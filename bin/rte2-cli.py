@@ -181,7 +181,7 @@ def main(argv):
     loss = tf.reduce_mean(losses)
 
     if symmetric_contradiction_reg_weight:
-        contradiction_probabilities = tf.nn.softmax(logits)[:, contradiction_idx]
+        contradiction_prob = tf.nn.softmax(logits)[:, contradiction_idx]
 
         inv_sequence2, inv_sequence2_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
         inv_sequence1, inv_sequence1_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
@@ -191,9 +191,9 @@ def main(argv):
 
         inv_model = RTEModel(**model_kwargs)
         inv_logits = inv_model()
-        inv_contradiction_probabilities = tf.nn.softmax(inv_logits)[:, contradiction_idx]
+        inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 
-        loss += symmetric_contradiction_reg_weight * tf.nn.l2_loss(contradiction_probabilities - inv_contradiction_probabilities)
+        loss += symmetric_contradiction_reg_weight * tf.nn.l2_loss(contradiction_prob - inv_contradiction_prob)
 
     if clip_value:
         gradients, v = zip(*optimizer.compute_gradients(loss))
