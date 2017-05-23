@@ -178,6 +178,21 @@ def main(argv):
     losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
     loss = tf.reduce_mean(losses)
 
+    if symmetric_contradiction_reg_weight:
+        contradiction_logits = logits[:, contradiction_idx]
+
+        inv_sequence2, inv_sequence2_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
+        inv_sequence1, inv_sequence1_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
+        inv_model_kwargs = model_kwargs.copy()
+        inv_model_kwargs['sequence1'], inv_model_kwargs['sequence1_length'] = inv_sequence1, inv_sequence1_length
+        inv_model_kwargs['sequence2'], inv_model_kwargs['sequence2_length'] = inv_sequence2, inv_sequence2_length
+
+        inv_model = RTEModel(**model_kwargs)
+        inv_logits = inv_model()
+        inv_contradiction_logits = inv_logits[:, contradiction_idx]
+
+        loss += symmetric_contradiction_reg_weight * tf.nn.l2_loss(contradiction_logits - inv_contradiction_logits)
+
     training_step = optimizer.minimize(loss)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
