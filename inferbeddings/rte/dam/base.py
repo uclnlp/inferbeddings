@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 import logging
 
-from inferbeddings.rte2 import util
+from inferbeddings.rte import util
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseRTEModel(metaclass=abc.ABCMeta):
-    def __init__(self, sequence1, sequence1_length, sequence2, sequence2_length,
+    def __init__(self,
+                 sequence1, sequence1_length,
+                 sequence2, sequence2_length,
                  nb_classes=3, reuse=False):
         """
         Abstract class inherited by all RTE models.
