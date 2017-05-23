@@ -270,10 +270,9 @@ def main(argv):
                 for projection_step in learning_projection_steps:
                     session.run([projection_step])
 
-                if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
-
-                    def to_feed_dict(dataset):
-                        return {
+                if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
+                    def compute_accuracy(name, dataset):
+                        feed_dict = {
                             sentence1_ph: dataset['questions'],
                             sentence2_ph: dataset['supports'],
                             sentence1_length_ph: dataset['question_lengths'],
@@ -281,40 +280,36 @@ def main(argv):
                             label_ph: dataset['answers'],
                             dropout_keep_prob_ph: 1.0
                         }
-
-                    def compute_accuracy(name, dataset):
-                        feed_dict = to_feed_dict(dataset)
                         p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
                         matches = np.equal(p_val, l_val)
                         acc = np.mean(matches)
                         acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
                         acc_e = np.mean(matches[np.where(l_val == entailment_idx)])
                         acc_n = np.mean(matches[np.where(l_val == neutral_idx)])
-
                         logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
                                     .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
                         return acc
 
-                    if batch_idx % 10 == 0:
-                        dev_accuracy = compute_accuracy('Dev', dev_dataset)
-                        test_accuracy = compute_accuracy('Test', test_dataset)
+                    dev_accuracy = compute_accuracy('Dev', dev_dataset)
+                    test_accuracy = compute_accuracy('Test', test_dataset)
 
-                        logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
-                                     .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
+                    logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
+                                 .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
 
-                        if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
-                            best_dev_accuracy = dev_accuracy
-                            best_test_accuracy = test_accuracy
+                    if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
+                        best_dev_accuracy = dev_accuracy
+                        best_test_accuracy = test_accuracy
 
-                            if save_path:
-                                ext_save_path = saver.save(session, save_path)
-                                logger.info('Model saved in file: {}'.format(ext_save_path))
+                        if save_path:
+                            ext_save_path = saver.save(session, save_path)
+                            logger.info('Model saved in file: {}'.format(ext_save_path))
 
-                        logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
-                                     .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
+                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
+                                 .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+
             logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
     logger.info('Training finished.')
