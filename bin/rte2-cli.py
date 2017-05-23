@@ -295,7 +295,7 @@ def main(argv):
                         acc_n = np.mean(matches[np.where(l_val == neutral_idx)])
 
                         logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
-                                    .format(epoch, batch_idx, name, acc, acc_c, acc_e, acc_n))
+                                    .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
                         return acc
 
                     # dev_feed_dict = to_feed_dict(dev_dataset)
