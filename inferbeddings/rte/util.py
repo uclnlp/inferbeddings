@@ -131,6 +131,16 @@ def pad_sequences(sequences, max_len=None, dtype='int32', padding='post', trunca
     return x
 
 
+def to_feed_dict(model, dataset):
+    return {
+        model.sentence1: dataset['questions'],
+        model.sentence2: dataset['supports'],
+        model.sentence1_size: dataset['question_lengths'],
+        model.sentence2_size: dataset['support_lengths'],
+        model.label: dataset['answers']
+    }
+
+
 def train_tokenizer_on_instances(instances, num_words=None):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
