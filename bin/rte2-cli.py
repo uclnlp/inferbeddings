@@ -60,6 +60,8 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
+    argparser.add_argument('--symmetric-contradiction-regulariser', action='store', type=float, default=None)
+
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
@@ -104,6 +106,10 @@ def main(argv):
     num_words = None
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=num_words)
+
+    contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
+    entailment_idx = a_tokenizer.word_index['entailment'] - 1
+    neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
