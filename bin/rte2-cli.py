@@ -264,15 +264,14 @@ def main(argv):
                             sentence2_ph: dataset['supports'],
                             sentence1_length_ph: dataset['question_lengths'],
                             sentence2_length_ph: dataset['support_lengths'],
-                            label_ph: dataset['answers']
+                            label_ph: dataset['answers'],
+                            dropout_keep_prob_ph: 1.0
                         }
 
                     dev_feed_dict = to_feed_dict(dev_dataset)
-                    dev_feed_dict[dropout_keep_prob_ph] = 1.0
                     dev_accuracy = session.run(accuracy, feed_dict=dev_feed_dict)
 
                     test_feed_dict = to_feed_dict(test_dataset)
-                    test_feed_dict[dropout_keep_prob_ph] = 1.0
                     test_accuracy = session.run(accuracy, feed_dict=test_feed_dict)
 
                     logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'

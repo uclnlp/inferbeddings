@@ -165,17 +165,18 @@ def main(argv):
 
     assert RTEModel is not None
 
-    class Service(View):
-        methods = ['GET', 'POST']
+    tf.reset_default_graph()
+    model = RTEModel(**model_kwargs)
 
-        def dispatch_request(self):
-            tf.reset_default_graph()
-            model = RTEModel(**model_kwargs)
+    with tf.Session() as session:
+        saver = tf.train.Saver()
+        logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
+        saver.restore(session, restore_path)
 
-            with tf.Session() as session:
-                saver = tf.train.Saver()
-                logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
-                saver.restore(session, restore_path)
+        class Service(View):
+            methods = ['GET', 'POST']
+
+            def dispatch_request(self):
 
                 sentence1 = request.args.get('sentence1')
                 sentence2 = request.args.get('sentence2')
