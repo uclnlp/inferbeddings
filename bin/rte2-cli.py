@@ -46,6 +46,7 @@ def main(argv):
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
+    argparser.add_argument('--clip', '-c', action='store', type=float, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--semi-sort', action='store_true')
@@ -77,6 +78,7 @@ def main(argv):
     nb_epochs = args.nb_epochs
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
+    clip_value = args.clip
     seed = args.seed
 
     is_semi_sort = args.semi_sort
@@ -193,7 +195,12 @@ def main(argv):
 
         loss += symmetric_contradiction_reg_weight * tf.nn.l2_loss(contradiction_logits - inv_contradiction_logits)
 
-    training_step = optimizer.minimize(loss)
+    if clip_value:
+        gradients, v = zip(*optimizer.compute_gradients(loss))
+        gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
+        training_step = optimizer.apply_gradients(zip(gradients, v))
+    else:
+        training_step = optimizer.minimize(loss)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
