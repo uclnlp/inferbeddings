@@ -13,7 +13,7 @@ from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.rte.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
-from inferbeddings.rte2 import ConditionalBiLSTM, FeedForwardDAM
+from inferbeddings.rte2 import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP
 
 from inferbeddings.models.training import constraints
 
@@ -35,7 +35,7 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'ff-dam'])
+                           choices=['cbilstm', 'ff-dam', 'ff-damp'])
     argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
                            choices=['adagrad', 'adam'])
 
@@ -154,6 +154,10 @@ def main(argv):
         ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
+    elif model_name == 'ff-damp':
+        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
+        model_kwargs.update(ff_kwargs)
+        RTEModel = FeedForwardDAMP
 
     assert RTEModel is not None
     model = RTEModel(**model_kwargs)
