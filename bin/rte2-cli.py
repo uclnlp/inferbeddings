@@ -189,7 +189,7 @@ def main(argv):
         inv_model_kwargs['sequence1'], inv_model_kwargs['sequence1_length'] = inv_sequence1, inv_sequence1_length
         inv_model_kwargs['sequence2'], inv_model_kwargs['sequence2_length'] = inv_sequence2, inv_sequence2_length
 
-        inv_model = RTEModel(**model_kwargs)
+        inv_model = RTEModel(reuse=True, **model_kwargs)
         inv_logits = inv_model()
         inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 

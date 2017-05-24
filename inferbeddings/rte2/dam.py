@@ -37,9 +37,6 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
 
         batch_size = tf.shape(self.sequence1)[0]
 
-        # embedding1_size = tf.shape(self.sequence1)[2]
-        # embedding2_size = tf.shape(self.sequence2)[2]
-
         embedding1_size = self.sequence1.get_shape()[-1].value
         embedding2_size = self.sequence2.get_shape()[-1].value
 
