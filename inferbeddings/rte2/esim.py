@@ -183,10 +183,10 @@ class ESIMv1(BaseESIM):
             cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
 
-            (output_fw, output_bw), output_states = tf.nn.bidirectional_dynamic_rnn(
+            outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
                 inputs=sequence, sequence_length=sequence_length, dtype=tf.float32)
-        return tf.concat([output_fw, output_bw], axis=2)
+        return tf.concat(outputs, axis=2)
 
     def _transform_attend(self, sequence, reuse=False):
         return sequence
@@ -197,10 +197,10 @@ class ESIMv1(BaseESIM):
                                               initializer=tf.contrib.layers.xavier_initializer())
             cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
-            (output_fw, output_bw), output_states = tf.nn.bidirectional_dynamic_rnn(
-                cell_fw=cell_fw, cell_bw=cell_bw,
-                inputs=sequence, dtype=tf.float32)
-        return tf.concat([output_fw, output_bw], axis=2)
+            outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
+                    cell_fw=cell_fw, cell_bw=cell_bw,
+                    inputs=sequence, dtype=tf.float32)
+        return tf.concat(outputs, axis=2)
 
     def _transform_aggregate(self, v1_v2, reuse=False):
         with tf.variable_scope('transform_aggregate', reuse=reuse) as _:

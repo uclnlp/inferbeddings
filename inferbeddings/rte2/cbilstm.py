@@ -29,12 +29,12 @@ class ConditionalBiLSTM(BaseRTEModel):
                 self.cell_bw = tf.contrib.rnn.DropoutWrapper(self.cell_bw, input_keep_prob=self.dropout_keep_prob,
                                                              output_keep_prob=self.dropout_keep_prob)
 
-            self.encoded_sequence1, output_state = \
+            self.encoded_sequence1, output_states = \
                 self._encoder(sequence=self.sequence1, sequence_length=self.sequence1_length, reuse=self.reuse)
 
             self.encoded_sequence2, _ = \
                 self._encoder(sequence=self.sequence2, sequence_length=self.sequence2_length,
-                              initial_state=output_state, reuse=True)
+                              initial_state=output_states, reuse=True)
 
         self.encoded_sequences = tf.concat(values=[self.encoded_sequence1, self.encoded_sequence2], axis=1)
 
@@ -51,13 +51,11 @@ class ConditionalBiLSTM(BaseRTEModel):
         initial_state_fw = initial_state_bw = initial_state
 
         with tf.variable_scope('encoder', reuse=reuse or self.reuse) as _:
-            outputs, (output_state_fw, output_state_bw) = tf.nn.bidirectional_dynamic_rnn(
+            outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=self.cell_fw, cell_bw=self.cell_bw,
                 initial_state_fw=initial_state_fw,
                 initial_state_bw=initial_state_bw,
                 inputs=sequence,
                 sequence_length=sequence_length,
                 dtype=tf.float32)
-
-        encoded = tf.concat(values=[output_state_fw.h, output_state_bw.h], axis=2)
-        return encoded, (output_state_fw, output_state_bw)
+        return tf.concat(outputs, axis=2), output_states
