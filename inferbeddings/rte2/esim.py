@@ -56,9 +56,8 @@ class BaseESIM(BaseRTEModel):
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = self.attend(sequence1, sequence2,
-                                            sequence1_lengths=sequence1_length,
-                                            sequence2_lengths=sequence2_length,
+        self.alpha, self.beta = self.attend(sequence1=sequence1, sequence2=sequence2,
+                                            sequence1_lengths=sequence1_length, sequence2_lengths=sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
 
         logger.info('Building the Compare graph ..')
@@ -92,13 +91,14 @@ class BaseESIM(BaseRTEModel):
         """
         with tf.variable_scope('attend') as _:
             # tensor with shape (batch_size, time_steps, num_units)
-            transformed_sequence1 = self._transform_attend(sequence1, reuse)
+            transformed_sequence1 = self._transform_attend(sequence1, reuse=reuse)
 
             # tensor with shape (batch_size, time_steps, num_units)
-            transformed_sequence2 = self._transform_attend(sequence2, True)
+            transformed_sequence2 = self._transform_attend(sequence2, reuse=True)
 
             # tensor with shape (batch_size, time_steps, time_steps)
-            self.raw_attentions = tf.matmul(transformed_sequence1, tf.transpose(transformed_sequence2, [0, 2, 1]))
+            tmp = tf.transpose(transformed_sequence2, [0, 2, 1])
+            self.raw_attentions = tf.matmul(transformed_sequence1, tmp)
 
             masked_raw_attentions = self.raw_attentions
             if use_masking:
@@ -178,30 +178,29 @@ class ESIMv1(BaseESIM):
 
     def _transform_input(self, sequence, sequence_length, reuse=False):
         with tf.variable_scope('transform_input', reuse=reuse) as _:
-            cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
+            cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
-            cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
+            cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
-            outputs, (output_state_fw, output_state_bw) = tf.nn.bidirectional_dynamic_rnn(
+
+            (output_fw, output_bw), output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
                 inputs=sequence, sequence_length=sequence_length, dtype=tf.float32)
-            encoded = tf.concat(values=[output_state_fw.h, output_state_bw.h], axis=1)
-        return encoded
+        return tf.concat([output_fw, output_bw], axis=1)
 
     def _transform_attend(self, sequence, reuse=False):
         return sequence
 
     def _transform_compare(self, sequence, reuse=False):
         with tf.variable_scope('transform_compare', reuse=reuse) as _:
-            cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
+            cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
-            cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
+            cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
-            outputs, (output_state_fw, output_state_bw) = tf.nn.bidirectional_dynamic_rnn(
+            (output_fw, output_bw), output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
                 inputs=sequence, dtype=tf.float32)
-            encoded = tf.concat(values=[output_state_fw.h, output_state_bw.h], axis=1)
-        return encoded
+        return tf.concat([output_fw, output_bw], axis=1)
 
     def _transform_aggregate(self, v1_v2, reuse=False):
         with tf.variable_scope('transform_aggregate', reuse=reuse) as _:
