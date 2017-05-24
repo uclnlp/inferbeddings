@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class BaseDecomposableAttentionModel(BaseRTEModel):
     @abstractmethod
-    def _transform_embeddings(self, embeddings, reuse=False):
+    def _transform_input(self, sequence, reuse=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -43,10 +43,10 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         assert embedding1_size == embedding2_size
 
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
-        self.transformed_sequence1 = self._transform_embeddings(self.sequence1, reuse=self.reuse)
+        self.transformed_sequence1 = self._transform_input(self.sequence1, reuse=self.reuse)
 
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
-        self.transformed_sequence2 = self._transform_embeddings(self.sequence2, reuse=True)
+        self.transformed_sequence2 = self._transform_input(self.sequence2, reuse=True)
 
         sequence1 = self.transformed_sequence1
         sequence2 = self.transformed_sequence2
@@ -64,7 +64,7 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
                                                             initializer=tf.random_normal_initializer(0.0, 1.0))
 
             # [1, 1, representation_size]
-            transformed_null_token_embedding = self._transform_embeddings(self.null_token_embedding, reuse=True)
+            transformed_null_token_embedding = self._transform_input(self.null_token_embedding, reuse=True)
 
             # [batch_size, 1, representation_size]
             tiled_null_token_embedding = tf.tile(input=tf.expand_dims(transformed_null_token_embedding, axis=0),
@@ -203,9 +203,9 @@ class FeedForwardDAM(BaseDecomposableAttentionModel):
         self.dropout_keep_prob = dropout_keep_prob
         super().__init__(*args, **kwargs)
 
-    def _transform_embeddings(self, embeddings, reuse=False):
+    def _transform_input(self, sequence, reuse=False):
         with tf.variable_scope('transform_embeddings', reuse=reuse) as _:
-            projection = tf.contrib.layers.fully_connected(inputs=embeddings, num_outputs=self.representation_size,
+            projection = tf.contrib.layers.fully_connected(inputs=sequence, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            activation_fn=None)
         return projection
@@ -259,9 +259,9 @@ class FeedForwardDAMP(BaseDecomposableAttentionModel):
         self.dropout_keep_prob = dropout_keep_prob
         super().__init__(*args, **kwargs)
 
-    def _transform_embeddings(self, embeddings, reuse=False):
+    def _transform_input(self, sequence, reuse=False):
         with tf.variable_scope('transform_embeddings', reuse=reuse) as _:
-            projection = tf.contrib.layers.fully_connected(inputs=embeddings, num_outputs=self.representation_size,
+            projection = tf.contrib.layers.fully_connected(inputs=sequence, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            activation_fn=None)
         return projection
