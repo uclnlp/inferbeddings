@@ -47,6 +47,7 @@ def main(argv):
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
     argparser.add_argument('--clip', '-c', action='store', type=float, default=None)
+    argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--semi-sort', action='store_true')
@@ -79,6 +80,7 @@ def main(argv):
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
     clip_value = args.clip
+    nb_words = args.nb_words
     seed = args.seed
 
     is_semi_sort = args.semi_sort
@@ -109,9 +111,8 @@ def main(argv):
 
     logger.debug('Parsing corpus ..')
 
-    num_words = None
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=num_words)
+    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=nb_words)
 
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
