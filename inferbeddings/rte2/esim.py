@@ -186,7 +186,7 @@ class ESIMv1(BaseESIM):
             (output_fw, output_bw), output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
                 inputs=sequence, sequence_length=sequence_length, dtype=tf.float32)
-        return tf.concat([output_fw, output_bw], axis=1)
+        return tf.concat([output_fw, output_bw], axis=2)
 
     def _transform_attend(self, sequence, reuse=False):
         return sequence
@@ -200,7 +200,7 @@ class ESIMv1(BaseESIM):
             (output_fw, output_bw), output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
                 inputs=sequence, dtype=tf.float32)
-        return tf.concat([output_fw, output_bw], axis=1)
+        return tf.concat([output_fw, output_bw], axis=2)
 
     def _transform_aggregate(self, v1_v2, reuse=False):
         with tf.variable_scope('transform_aggregate', reuse=reuse) as _:
