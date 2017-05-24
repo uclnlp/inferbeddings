@@ -59,5 +59,5 @@ class ConditionalBiLSTM(BaseRTEModel):
                 sequence_length=sequence_length,
                 dtype=tf.float32)
 
-        encoded = tf.concat(values=[output_state_fw.h, output_state_bw.h], axis=1)
+        encoded = tf.concat(values=[output_state_fw.h, output_state_bw.h], axis=2)
         return encoded, (output_state_fw, output_state_bw)
