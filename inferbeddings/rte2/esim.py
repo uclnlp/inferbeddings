@@ -159,7 +159,7 @@ class BaseESIM(BaseRTEModel):
             v1_min, v2_min = tf.reduce_min(v1, [1]), tf.reduce_min(v2, [1])
             v1_max, v2_max = tf.reduce_max(v1, [1]), tf.reduce_max(v2, [1])
 
-            v1_v2 = tf.concat(axis=1, values=[v1_mean, v1_min, v1_max, v2_mean, v2_min, v2_max])
+            v1_v2 = tf.concat(axis=1, values=[v1_mean, v1_max, v2_mean, v2_max])
             transformed_v1_v2 = self._transform_aggregate(v1_v2, reuse=reuse)
 
             logits = tf.contrib.layers.fully_connected(inputs=transformed_v1_v2,
