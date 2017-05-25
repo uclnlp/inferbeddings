@@ -27,6 +27,8 @@ def test_additive_walk_embedding():
         assert(swe.shape[0] == batch_size)
         assert(np.allclose(swe, np.sum(P, axis=1)))
 
+    tf.reset_default_graph()
+
 
 def test_additive_walk_embedding_zeros():
     batch_size = 5
@@ -46,6 +48,8 @@ def test_additive_walk_embedding_zeros():
         swe = session.run(vW)
         assert(swe.shape[0] == batch_size)
         assert(np.allclose(swe, np.sum(P, axis=1)))
+
+    tf.reset_default_graph()
 
 
 def test_bilinear_diagonal_walk_embedding():
@@ -67,6 +71,8 @@ def test_bilinear_diagonal_walk_embedding():
         assert(swe.shape[0] == batch_size)
         assert(np.allclose(swe, np.prod(P, axis=1)))
 
+    tf.reset_default_graph()
+
 
 def test_bilinear_walk_embedding():
     batch_size = 1
@@ -87,6 +93,7 @@ def test_bilinear_walk_embedding():
         assert(swe.shape[0] == batch_size)
         assert(np.allclose(swe, P.reshape(1, 5, 5)))
 
+    tf.reset_default_graph()
 
 if __name__ == '__main__':
     pytest.main([__file__])

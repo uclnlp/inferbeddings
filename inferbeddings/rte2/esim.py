@@ -19,11 +19,11 @@ class BaseESIM(BaseRTEModel):
         raise NotImplementedError
 
     @abstractmethod
-    def _transform_attend(self, sequence, reuse=False):
+    def _transform_attend(self, sequence, sequence_length, reuse=False):
         raise NotImplementedError
 
     @abstractmethod
-    def _transform_compare(self, sequence, reuse=False):
+    def _transform_compare(self, sequence, sequence_length, reuse=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -44,57 +44,58 @@ class BaseESIM(BaseRTEModel):
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence2 = self._transform_input(self.sequence2, self.sequence2_length, reuse=True)
 
-        sequence1 = self.transformed_sequence1
-        sequence2 = self.transformed_sequence2
-
-        sequence1_length = self.sequence1_length
-        sequence2_length = self.sequence2_length
-
         logger.info('Building the Attend graph ..')
 
         self.raw_attentions = None
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = self.attend(sequence1=sequence1, sequence2=sequence2,
-                                            sequence1_lengths=sequence1_length, sequence2_lengths=sequence2_length,
+        self.alpha, self.beta = self.attend(sequence1=self.transformed_sequence1,
+                                            sequence2=self.transformed_sequence2,
+                                            sequence1_length=self.sequence1_length,
+                                            sequence2_length=self.sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
 
         logger.info('Building the Compare graph ..')
 
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v1 = self.compare(sequence1, self.beta, reuse=self.reuse)
+        self.v1 = self.compare(self.transformed_sequence1, self.beta,
+                               self.sequence1_length, reuse=self.reuse)
 
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v2 = self.compare(sequence2, self.alpha, reuse=True)
+        self.v2 = self.compare(self.transformed_sequence2, self.alpha,
+                               self.sequence2_length, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
-                                     v1_lengths=sequence1_length, v2_lengths=sequence2_length,
+                                     v1_lengths=self.sequence1_length,
+                                     v2_lengths=self.sequence2_length,
                                      use_masking=use_masking, reuse=self.reuse)
 
     def __call__(self):
             return self.logits
 
     def attend(self, sequence1, sequence2,
-               sequence1_lengths=None, sequence2_lengths=None, use_masking=False, reuse=False):
+               sequence1_length=None,
+               sequence2_length=None,
+               use_masking=False, reuse=False):
         """
         Attend phase.
 
         :param sequence1: tensor with shape (batch_size, time_steps, num_units)
         :param sequence2: tensor with shape (batch_size, time_steps, num_units)
-        :param sequence1_lengths: time_steps in sequence1
-        :param sequence2_lengths: time_steps in sequence2
+        :param sequence1_length: time_steps in sequence1
+        :param sequence2_length: time_steps in sequence2
         :param use_masking: use masking
         :param reuse: reuse variables
         :return: two tensors with shape (batch_size, time_steps, num_units)
         """
         with tf.variable_scope('attend') as _:
             # tensor with shape (batch_size, time_steps, num_units)
-            transformed_sequence1 = self._transform_attend(sequence1, reuse=reuse)
+            transformed_sequence1 = self._transform_attend(sequence1, sequence1_length, reuse=reuse)
 
             # tensor with shape (batch_size, time_steps, num_units)
-            transformed_sequence2 = self._transform_attend(sequence2, reuse=True)
+            transformed_sequence2 = self._transform_attend(sequence2, sequence2_length, reuse=True)
 
             # tensor with shape (batch_size, time_steps, time_steps)
             tmp = tf.transpose(transformed_sequence2, [0, 2, 1])
@@ -103,7 +104,7 @@ class BaseESIM(BaseRTEModel):
             masked_raw_attentions = self.raw_attentions
             if use_masking:
                 masked_raw_attentions = tfutil.mask_3d(sequences=masked_raw_attentions,
-                                                       sequence_lengths=sequence2_lengths,
+                                                       sequence_lengths=sequence2_length,
                                                        mask_value=- np.inf, dimension=2)
             self.attention_sentence1 = tfutil.attention_softmax3d(masked_raw_attentions)
 
@@ -112,7 +113,7 @@ class BaseESIM(BaseRTEModel):
             masked_attention_transposed = attention_transposed
             if use_masking:
                 masked_attention_transposed = tfutil.mask_3d(sequences=masked_attention_transposed,
-                                                             sequence_lengths=sequence1_lengths,
+                                                             sequence_lengths=sequence1_length,
                                                              mask_value=- np.inf, dimension=2)
             self.attention_sentence2 = tfutil.attention_softmax3d(masked_attention_transposed)
 
@@ -121,19 +122,22 @@ class BaseESIM(BaseRTEModel):
             beta = tf.matmul(self.attention_sentence1, sequence2, name='beta')
             return alpha, beta
 
-    def compare(self, sentence, soft_alignment, reuse=False):
+    def compare(self, sentence, soft_alignment, sequence_length, reuse=False):
         """
         Compare phase.
 
         :param sentence: tensor with shape (batch_size, time_steps, num_units)
         :param soft_alignment: tensor with shape (batch_size, time_steps, num_units)
+        :param sequence_length: sequence length
         :param reuse: reuse variables
         :return: tensor with shape (batch_size, time_steps, num_units)
         """
         # tensor with shape (batch, time_steps, num_units)
         values = [sentence, soft_alignment, sentence - soft_alignment, sentence * soft_alignment]
         sentence_and_alignment = tf.concat(axis=2, values=values)
-        transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment, reuse=reuse)
+        transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment,
+                                                                     sequence_length=sequence_length,
+                                                                     reuse=reuse)
         return transformed_sentence_and_alignment
 
     def aggregate(self, v1, v2, num_classes,
@@ -182,25 +186,27 @@ class ESIMv1(BaseESIM):
                                               initializer=tf.contrib.layers.xavier_initializer())
             cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
-
             outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
-                inputs=sequence, sequence_length=sequence_length, dtype=tf.float32)
+                inputs=sequence, sequence_length=sequence_length,
+                dtype=tf.float32)
         return tf.concat(outputs, axis=2)
 
-    def _transform_attend(self, sequence, reuse=False):
+    def _transform_attend(self, sequence, sequence_length, reuse=False):
         return sequence
 
-    def _transform_compare(self, sequence, reuse=False):
+    def _transform_compare(self, sequence, sequence_length, reuse=False):
         with tf.variable_scope('transform_compare', reuse=reuse) as _:
             cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
             cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
             outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
-                    cell_fw=cell_fw, cell_bw=cell_bw,
-                    inputs=sequence, dtype=tf.float32)
-        return tf.concat(output_states, axis=2)
+                cell_fw=cell_fw, cell_bw=cell_bw,
+                inputs=sequence,
+                sequence_length=sequence_length,
+                dtype=tf.float32)
+        return tf.concat(outputs, axis=2)
 
     def _transform_aggregate(self, v1_v2, reuse=False):
         with tf.variable_scope('transform_aggregate', reuse=reuse) as _:

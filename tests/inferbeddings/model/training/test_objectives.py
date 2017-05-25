@@ -19,5 +19,7 @@ def test_additive_walk_embedding():
 
         np.testing.assert_almost_equal(100 - .9 + .1, res)
 
+    tf.reset_default_graph()
+
 if __name__ == '__main__':
     pytest.main([__file__])

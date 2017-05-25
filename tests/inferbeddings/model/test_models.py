@@ -35,6 +35,8 @@ def test_translating_embeddings_score():
         tmp = - np.sum(np.abs(E[:, 0, :] + R[:, 0, :] - E[:, 1, :]), axis=1)
         assert(np.isclose(scores_value, tmp).all())
 
+    tf.reset_default_graph()
+
 
 def test_bilinear_diagonal_score():
     batch_size = 5
@@ -61,6 +63,8 @@ def test_bilinear_diagonal_score():
 
         tmp = - np.sum(np.abs(E[:, 0, :] * R[:, 0, :] - E[:, 1, :]), axis=1)
         assert(np.isclose(scores_value, tmp).all())
+
+    tf.reset_default_graph()
 
 
 def test_bilinear_score():
@@ -97,6 +101,8 @@ def test_bilinear_score():
             ep = np.dot(np.dot(np.dot(ep1, ep2), ep3), ep4)
 
             np.testing.assert_allclose(scores_value[i], np.dot(np.dot(es, ep), eo))
+
+    tf.reset_default_graph()
 
 if __name__ == '__main__':
     pytest.main([__file__])

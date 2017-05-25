@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import sys
+
 import numpy as np
 import tensorflow as tf
 
@@ -57,9 +59,10 @@ def test_esim():
 
         nb_parameters = count_trainable_parameters()
 
-        s = list(range(100))
+        seq_length = 110
+        s = list(range(seq_length))
         sentence = [s, s]
-        sentence_length = [100, 100]
+        sentence_length = [50, 50]
 
         feed_dict = {
             sentence1_ph: sentence,
@@ -71,13 +74,18 @@ def test_esim():
         embedded1_value = session.run(sentence1_embedding, feed_dict=feed_dict)
         embedded2_value = session.run(sentence2_embedding, feed_dict=feed_dict)
 
-        assert embedded1_value.shape == embedded2_value.shape == (2, sentence_length[0], embedding_size)
+        assert embedded1_value.shape == embedded2_value.shape == (2, seq_length, embedding_size)
 
         np.testing.assert_allclose(embedded1_value, embedded2_value)
         np.testing.assert_allclose(embedded1_value[0], embedded1_value[1])
 
+        transformed_sequence1 = session.run(model.transformed_sequence1, feed_dict=feed_dict)
+        transformed_sequence2 = session.run(model.transformed_sequence2, feed_dict=feed_dict)
+
+        assert transformed_sequence1.shape == transformed_sequence2.shape == (2, seq_length, representation_size * 2)
+
         raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)
-        assert raw_attentions_value.shape == (2, sentence_length[0] * 2, sentence_length[0] * 2)
+        assert raw_attentions_value.shape == (2, seq_length, seq_length)
         np.testing.assert_allclose(raw_attentions_value[0], raw_attentions_value[1])
 
         attention_sentence1_value, attention_sentence2_value =\
@@ -86,11 +94,11 @@ def test_esim():
         np.testing.assert_allclose(attention_sentence2_value[0], attention_sentence2_value[1])
 
         alpha_value, beta_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
-        assert alpha_value.shape == beta_value.shape == (2, sentence_length[0] * 2, representation_size)
+        assert alpha_value.shape == beta_value.shape == (2, seq_length, representation_size * 2)
         np.testing.assert_allclose(alpha_value[0], alpha_value[1])
 
         v1_value, v2_value = session.run([model.v1, model.v2], feed_dict=feed_dict)
-        assert v1_value.shape == v2_value.shape == (2, sentence_length[0] * 4, representation_size)
+        assert v1_value.shape == v2_value.shape == (2, seq_length, representation_size * 2)
         np.testing.assert_allclose(v1_value[0], v1_value[1])
 
         logits_value = session.run(model.logits, feed_dict=feed_dict)

@@ -48,11 +48,8 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence2 = self._transform_input(self.sequence2, reuse=True)
 
-        sequence1 = self.transformed_sequence1
-        sequence2 = self.transformed_sequence2
-
-        sequence1_length = self.sequence1_length
-        sequence2_length = self.sequence2_length
+        self.transformed_sequence1_length = self.sequence1_length
+        self.transformed_sequence2_length = self.sequence2_length
 
         self.null_token_embedding = None
 
@@ -71,13 +68,13 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
                                                  multiples=[batch_size, 1, 1])
 
             # [batch_size, time_steps + 1, representation_size]
-            sequence1 = tf.concat(values=[tiled_null_token_embedding, sequence1], axis=1)
+            self.transformed_sequence1 = tf.concat(values=[tiled_null_token_embedding, self.transformed_sequence1], axis=1)
 
             # [batch_size, time_steps + 1, representation_size]
-            sequence2 = tf.concat(values=[tiled_null_token_embedding, sequence2], axis=1)
+            self.transformed_sequence2 = tf.concat(values=[tiled_null_token_embedding, self.transformed_sequence2], axis=1)
 
-            sequence1_length += 1
-            sequence2_length += 1
+            self.transformed_sequence1_length += 1
+            self.transformed_sequence2_length += 1
 
         logger.info('Building the Attend graph ..')
 
@@ -85,23 +82,23 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = self.attend(sequence1, sequence2,
-                                            sequence1_lengths=sequence1_length,
-                                            sequence2_lengths=sequence2_length,
+        self.alpha, self.beta = self.attend(self.transformed_sequence1, self.transformed_sequence2,
+                                            sequence1_lengths=self.transformed_sequence1_length,
+                                            sequence2_lengths=self.transformed_sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
 
         logger.info('Building the Compare graph ..')
 
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v1 = self.compare(sequence1, self.beta, reuse=self.reuse)
+        self.v1 = self.compare(self.transformed_sequence1, self.beta, reuse=self.reuse)
 
         # tensor with shape (batch_size, time_steps, num_units)
-        self.v2 = self.compare(sequence2, self.alpha, reuse=True)
+        self.v2 = self.compare(self.transformed_sequence2, self.alpha, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
-                                     v1_lengths=sequence1_length,
-                                     v2_lengths=sequence2_length,
+                                     v1_lengths=self.transformed_sequence1_length,
+                                     v2_lengths=self.transformed_sequence2_length,
                                      use_masking=use_masking, reuse=self.reuse)
 
     def __call__(self):
