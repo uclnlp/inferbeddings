@@ -150,8 +150,12 @@ def main(argv):
                                       initializer=tf.contrib.layers.xavier_initializer(),
                                       trainable=not is_fixed_embeddings)
 
-    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
-    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
+    _embedding_layer = embedding_layer
+    if dropout_keep_prob:
+        _embedding_layer = tf.nn.dropout(_embedding_layer, keep_prob=dropout_keep_prob)
+
+    sentence1_embedding = tf.nn.embedding_lookup(_embedding_layer, sentence1_ph)
+    sentence2_embedding = tf.nn.embedding_lookup(_embedding_layer, sentence2_ph)
 
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 

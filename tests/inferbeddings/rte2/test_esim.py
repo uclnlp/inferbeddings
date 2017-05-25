@@ -27,7 +27,7 @@ def count_trainable_parameters():
 
 
 def test_esim():
-    vocab_size = 1000
+    vocab_size = 200
     embedding_size = 300
     representation_size = 300
 
@@ -43,12 +43,10 @@ def test_esim():
     sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
     sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
 
-    dropout_keep_prob_ph = 1.0
-
     model_kwargs = dict(
         sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
         sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
-        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+        representation_size=representation_size, dropout_keep_prob=1.0)
 
     model = ESIMv1(**model_kwargs)
 
@@ -58,6 +56,7 @@ def test_esim():
         session.run(init_op)
 
         nb_parameters = count_trainable_parameters()
+        print('Total number of parameters: {}'.format(nb_parameters))
 
         seq_length = 110
         s = list(range(seq_length))
