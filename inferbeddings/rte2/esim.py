@@ -5,7 +5,7 @@ from abc import abstractmethod
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.rte2 import util
+from inferbeddings.rte2 import tfutil
 from inferbeddings.rte2.base import BaseRTEModel
 
 import logging
@@ -102,19 +102,19 @@ class BaseESIM(BaseRTEModel):
 
             masked_raw_attentions = self.raw_attentions
             if use_masking:
-                masked_raw_attentions = util.mask_3d(sequences=masked_raw_attentions,
-                                                     sequence_lengths=sequence2_lengths,
-                                                     mask_value=- np.inf, dimension=2)
-            self.attention_sentence1 = util.attention_softmax3d(masked_raw_attentions)
+                masked_raw_attentions = tfutil.mask_3d(sequences=masked_raw_attentions,
+                                                       sequence_lengths=sequence2_lengths,
+                                                       mask_value=- np.inf, dimension=2)
+            self.attention_sentence1 = tfutil.attention_softmax3d(masked_raw_attentions)
 
             # tensor with shape (batch_size, time_steps, time_steps)
             attention_transposed = tf.transpose(self.raw_attentions, [0, 2, 1])
             masked_attention_transposed = attention_transposed
             if use_masking:
-                masked_attention_transposed = util.mask_3d(sequences=masked_attention_transposed,
-                                                           sequence_lengths=sequence1_lengths,
-                                                           mask_value=- np.inf, dimension=2)
-            self.attention_sentence2 = util.attention_softmax3d(masked_attention_transposed)
+                masked_attention_transposed = tfutil.mask_3d(sequences=masked_attention_transposed,
+                                                             sequence_lengths=sequence1_lengths,
+                                                             mask_value=- np.inf, dimension=2)
+            self.attention_sentence2 = tfutil.attention_softmax3d(masked_attention_transposed)
 
             # tensors with shape (batch_size, time_steps, num_units)
             alpha = tf.matmul(self.attention_sentence2, sequence1, name='alpha')
@@ -152,8 +152,8 @@ class BaseESIM(BaseRTEModel):
         """
         with tf.variable_scope('aggregate', reuse=reuse) as _:
             if use_masking:
-                v1 = util.mask_3d(sequences=v1, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
-                v2 = util.mask_3d(sequences=v2, sequence_lengths=v2_lengths, mask_value=0, dimension=1)
+                v1 = tfutil.mask_3d(sequences=v1, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
+                v2 = tfutil.mask_3d(sequences=v2, sequence_lengths=v2_lengths, mask_value=0, dimension=1)
 
             v1_mean, v2_mean = tf.reduce_mean(v1, [1]), tf.reduce_mean(v2, [1])
             v1_min, v2_min = tf.reduce_min(v1, [1]), tf.reduce_min(v2, [1])
@@ -200,7 +200,6 @@ class ESIMv1(BaseESIM):
             outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
                     cell_fw=cell_fw, cell_bw=cell_bw,
                     inputs=sequence, dtype=tf.float32)
-        # return tf.concat(outputs, axis=2)
         return tf.concat(output_states, axis=2)
 
     def _transform_aggregate(self, v1_v2, reuse=False):
