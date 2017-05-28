@@ -58,10 +58,10 @@ def test_esim():
         nb_parameters = count_trainable_parameters()
         print('Total number of parameters: {}'.format(nb_parameters))
 
-        seq_length = 110
+        seq_length = 30
         s = list(range(seq_length))
         sentence = [s, s]
-        sentence_length = [50, 50]
+        sentence_length = [20, 20]
 
         feed_dict = {
             sentence1_ph: sentence,
@@ -81,9 +81,12 @@ def test_esim():
         transformed_sequence1 = session.run(model.transformed_sequence1, feed_dict=feed_dict)
         transformed_sequence2 = session.run(model.transformed_sequence2, feed_dict=feed_dict)
 
+        print('Transformed sequence shapes: {} {}'.format(transformed_sequence1.shape, transformed_sequence2.shape))
         assert transformed_sequence1.shape == transformed_sequence2.shape == (2, seq_length, representation_size * 2)
 
         raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)
+
+        print('Raw attention matrix shape: {}'.format(raw_attentions_value.shape))
         assert raw_attentions_value.shape == (2, seq_length, seq_length)
         np.testing.assert_allclose(raw_attentions_value[0], raw_attentions_value[1])
 
@@ -93,10 +96,14 @@ def test_esim():
         np.testing.assert_allclose(attention_sentence2_value[0], attention_sentence2_value[1])
 
         alpha_value, beta_value = session.run([model.alpha, model.beta], feed_dict=feed_dict)
+
+        print('Alpha shape: {}, Beta shape: {}'.format(alpha_value.shape, beta_value.shape))
         assert alpha_value.shape == beta_value.shape == (2, seq_length, representation_size * 2)
         np.testing.assert_allclose(alpha_value[0], alpha_value[1])
 
         v1_value, v2_value = session.run([model.v1, model.v2], feed_dict=feed_dict)
+
+        print('V1 shape: {}, V2 shape: {}'.format(v1_value.shape, v2_value.shape))
         assert v1_value.shape == v2_value.shape == (2, seq_length, representation_size * 2)
         np.testing.assert_allclose(v1_value[0], v1_value[1])
 
