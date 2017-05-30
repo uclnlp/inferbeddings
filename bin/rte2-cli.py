@@ -317,9 +317,9 @@ def main(argv):
                             l_vals += l_val.tolist()
                         matches = np.equal(p_vals, l_vals)
                         acc = np.mean(matches)
-                        acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
-                        acc_e = np.mean(matches[np.where(l_val == entailment_idx)])
-                        acc_n = np.mean(matches[np.where(l_val == neutral_idx)])
+                        acc_c = np.mean(matches[np.where(l_vals == contradiction_idx)])
+                        acc_e = np.mean(matches[np.where(l_vals == entailment_idx)])
+                        acc_n = np.mean(matches[np.where(l_vals == neutral_idx)])
                         logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
                                     .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
                         return acc
