@@ -300,13 +300,26 @@ def main(argv):
 
                 if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
                     def compute_accuracy(name, dataset):
-                        feed_dict = {
-                            sentence1_ph: dataset['questions'], sentence2_ph: dataset['supports'],
-                            sentence1_length_ph: dataset['question_lengths'], sentence2_length_ph: dataset['support_lengths'],
-                            label_ph: dataset['answers'], dropout_keep_prob_ph: 1.0
-                        }
-                        p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
-                        matches = np.equal(p_val, l_val)
+                        nb_eval_instances = len(dataset['questions'])
+                        eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size * 10)
+                        p_vals, l_vals = [], []
+                        for batch_start, batch_end in eval_batches:
+                            feed_dict = {
+                                sentence1_ph: dataset['questions'][batch_start:batch_end],
+                                sentence2_ph: dataset['supports'][batch_start:batch_end],
+                                sentence1_length_ph: dataset['question_lengths'][batch_start:batch_end],
+                                sentence2_length_ph: dataset['support_lengths'][batch_start:batch_end],
+                                label_ph: dataset['answers'][batch_start:batch_end],
+                                dropout_keep_prob_ph: 1.0
+                            }
+                            p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+                            p_vals += p_val.tolist()
+                            l_vals += l_val.tolist()
+
+                        print(p_vals)
+                        print(l_vals)
+
+                        matches = np.equal(p_vals, l_vals)
                         acc = np.mean(matches)
                         acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
                         acc_e = np.mean(matches[np.where(l_val == entailment_idx)])
