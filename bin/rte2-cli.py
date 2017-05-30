@@ -300,14 +300,12 @@ def main(argv):
                 if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
                     def compute_accuracy(name, dataset):
                         feed_dict = {
-                            sentence1_ph: dataset['questions'],
-                            sentence2_ph: dataset['supports'],
-                            sentence1_length_ph: dataset['question_lengths'],
-                            sentence2_length_ph: dataset['support_lengths'],
-                            label_ph: dataset['answers'],
-                            dropout_keep_prob_ph: 1.0
+                            sentence1_ph: dataset['questions'], sentence2_ph: dataset['supports'],
+                            sentence1_length_ph: dataset['question_lengths'], sentence2_length_ph: dataset['support_lengths'],
+                            label_ph: dataset['answers'], dropout_keep_prob_ph: 1.0
                         }
-                        p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+                        with tf.device("/cpu:0"):
+                            p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
                         matches = np.equal(p_val, l_val)
                         acc = np.mean(matches)
                         acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
@@ -324,9 +322,7 @@ def main(argv):
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
 
                     if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
-                        best_dev_accuracy = dev_accuracy
-                        best_test_accuracy = test_accuracy
-
+                        best_dev_accuracy, best_test_accuracy = dev_accuracy, test_accuracy
                         if save_path:
                             ext_save_path = saver.save(session, save_path)
                             logger.info('Model saved in file: {}'.format(ext_save_path))
