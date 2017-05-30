@@ -315,10 +315,6 @@ def main(argv):
                             p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
                             p_vals += p_val.tolist()
                             l_vals += l_val.tolist()
-
-                        print(p_vals)
-                        print(l_vals)
-
                         matches = np.equal(p_vals, l_vals)
                         acc = np.mean(matches)
                         acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
