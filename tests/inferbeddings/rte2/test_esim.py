@@ -111,6 +111,9 @@ def test_esim():
         assert logits_value.shape == (2, 3)
         np.testing.assert_allclose(logits_value[0], logits_value[1])
 
+        for var_name, var in model.variable_names_to_variables.items():
+            print('[{}] {}'.format(var_name, session.run(var, feed_dict=feed_dict).shape))
+
     tf.reset_default_graph()
 
 if __name__ == '__main__':

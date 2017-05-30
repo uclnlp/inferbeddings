@@ -33,8 +33,13 @@ class BaseESIM(BaseRTEModel):
     def __init__(self, use_masking=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.variable_names_to_variables = {}
+
         embedding1_size = self.sequence1.get_shape()[-1].value
         embedding2_size = self.sequence2.get_shape()[-1].value
+
+        self.variable_names_to_variables['S1'] = self.sequence1
+        self.variable_names_to_variables['S2'] = self.sequence2
 
         assert embedding1_size == embedding2_size
 
@@ -43,6 +48,9 @@ class BaseESIM(BaseRTEModel):
 
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence2 = self._transform_input(self.sequence2, self.sequence2_length, reuse=True)
+
+        self.variable_names_to_variables['TS1'] = self.transformed_sequence1
+        self.variable_names_to_variables['TS2'] = self.transformed_sequence2
 
         logger.info('Building the Attend graph ..')
 
@@ -56,6 +64,9 @@ class BaseESIM(BaseRTEModel):
                                             sequence2_length=self.sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
 
+        self.variable_names_to_variables['ALPHA'] = self.alpha
+        self.variable_names_to_variables['BETA'] = self.beta
+
         logger.info('Building the Compare graph ..')
 
         # tensor with shape (batch_size, time_steps, num_units)
@@ -66,18 +77,19 @@ class BaseESIM(BaseRTEModel):
         self.v2 = self.compare(self.transformed_sequence2, self.alpha,
                                self.sequence2_length, reuse=True)
 
+        self.variable_names_to_variables['V1'] = self.v1
+        self.variable_names_to_variables['V2'] = self.v2
+
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
-                                     v1_lengths=self.sequence1_length,
-                                     v2_lengths=self.sequence2_length,
+                                     v1_lengths=self.sequence1_length, v2_lengths=self.sequence2_length,
                                      use_masking=use_masking, reuse=self.reuse)
 
     def __call__(self):
             return self.logits
 
     def attend(self, sequence1, sequence2,
-               sequence1_length=None,
-               sequence2_length=None,
+               sequence1_length=None, sequence2_length=None,
                use_masking=False, reuse=False):
         """
         Attend phase.
@@ -135,10 +147,10 @@ class BaseESIM(BaseRTEModel):
         # tensor with shape (batch, time_steps, num_units)
         values = [sentence, soft_alignment, sentence - soft_alignment, sentence * soft_alignment]
         sentence_and_alignment = tf.concat(axis=2, values=values)
-        transformed_sentence_and_alignment = self._transform_compare(sentence_and_alignment,
-                                                                     sequence_length=sequence_length,
-                                                                     reuse=reuse)
-        return transformed_sentence_and_alignment
+        projection = self._transform_compare(sentence_and_alignment,
+                                             sequence_length=sequence_length,
+                                             reuse=reuse)
+        return projection
 
     def aggregate(self, v1, v2, num_classes,
                   v1_lengths=None, v2_lengths=None, use_masking=False, reuse=False):
@@ -160,11 +172,13 @@ class BaseESIM(BaseRTEModel):
                 v2 = tfutil.mask_3d(sequences=v2, sequence_lengths=v2_lengths, mask_value=0, dimension=1)
 
             v1_mean, v2_mean = tf.reduce_mean(v1, [1]), tf.reduce_mean(v2, [1])
-            v1_min, v2_min = tf.reduce_min(v1, [1]), tf.reduce_min(v2, [1])
             v1_max, v2_max = tf.reduce_max(v1, [1]), tf.reduce_max(v2, [1])
 
-            v1_v2 = tf.concat(axis=1, values=[v1_mean, v1_min, v1_max, v2_mean, v2_min, v2_max])
+            v1_v2 = tf.concat(axis=1, values=[v1_mean, v1_max, v2_mean, v2_max])
             transformed_v1_v2 = self._transform_aggregate(v1_v2, reuse=reuse)
+
+            self.variable_names_to_variables['V1_V2'] = v1_v2
+            self.variable_names_to_variables['A_V1_V2'] = transformed_v1_v2
 
             logits = tf.contrib.layers.fully_connected(inputs=transformed_v1_v2,
                                                        num_outputs=num_classes,
@@ -197,13 +211,18 @@ class ESIMv1(BaseESIM):
 
     def _transform_compare(self, sequence, sequence_length, reuse=False):
         with tf.variable_scope('transform_compare', reuse=reuse) as _:
+            projection = tf.contrib.layers.fully_connected(inputs=sequence,
+                                                           num_outputs=self.representation_size,
+                                                           weights_initializer=tf.random_normal_initializer(0.0, 0.01),
+                                                           biases_initializer=tf.zeros_initializer(),
+                                                           activation_fn=None)
             cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
             cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.contrib.layers.xavier_initializer())
             outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
                 cell_fw=cell_fw, cell_bw=cell_bw,
-                inputs=sequence,
+                inputs=projection,
                 sequence_length=sequence_length,
                 dtype=tf.float32)
         return tf.concat(outputs, axis=2)
