@@ -236,6 +236,7 @@ def main(argv):
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
+    session_config.gpu_options.allocator_type = 'BFC'
 
     with tf.Session(config=session_config) as session:
         logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
@@ -304,8 +305,7 @@ def main(argv):
                             sentence1_length_ph: dataset['question_lengths'], sentence2_length_ph: dataset['support_lengths'],
                             label_ph: dataset['answers'], dropout_keep_prob_ph: 1.0
                         }
-                        with tf.device("/cpu:0"):
-                            p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+                        p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
                         matches = np.equal(p_val, l_val)
                         acc = np.mean(matches)
                         acc_c = np.mean(matches[np.where(l_val == contradiction_idx)])
