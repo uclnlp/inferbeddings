@@ -303,6 +303,7 @@ def main(argv):
                         nb_eval_instances = len(dataset['questions'])
                         eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size * 10)
                         p_vals, l_vals = [], []
+
                         for batch_start, batch_end in eval_batches:
                             feed_dict = {
                                 sentence1_ph: dataset['questions'][batch_start:batch_end],
@@ -315,11 +316,14 @@ def main(argv):
                             p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
                             p_vals += p_val.tolist()
                             l_vals += l_val.tolist()
+
                         matches = np.equal(p_vals, l_vals)
                         acc = np.mean(matches)
-                        acc_c = np.mean(matches[np.where(l_vals == contradiction_idx)])
-                        acc_e = np.mean(matches[np.where(l_vals == entailment_idx)])
-                        acc_n = np.mean(matches[np.where(l_vals == neutral_idx)])
+
+                        acc_c = np.mean(matches[np.where(np.array(l_vals) == contradiction_idx)])
+                        acc_e = np.mean(matches[np.where(np.array(l_vals) == entailment_idx)])
+                        acc_n = np.mean(matches[np.where(np.array(l_vals) == neutral_idx)])
+
                         logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
                                     .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
                         return acc
