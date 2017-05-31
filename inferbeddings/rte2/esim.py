@@ -217,7 +217,7 @@ class ESIMv1(BaseESIM):
                                                            num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
                                                            biases_initializer=tf.zeros_initializer(),
-                                                           activation_fn=None)
+                                                           activation_fn=tf.nn.relu)
             cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
                                               initializer=tf.orthogonal_initializer())
             cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True, reuse=reuse,
