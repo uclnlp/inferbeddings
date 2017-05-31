@@ -293,6 +293,7 @@ def main(argv):
                 }
 
                 _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
+                logger.debug('Epoch {}/{}\tLoss: {}'.format(epoch, batch_idx, loss_value))
                 loss_values += [loss_value]
 
                 for projection_step in learning_projection_steps:
