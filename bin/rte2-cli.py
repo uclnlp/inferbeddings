@@ -235,8 +235,8 @@ def main(argv):
     saver = tf.train.Saver()
 
     session_config = tf.ConfigProto()
-    session_config.gpu_options.allow_growth = True
-    session_config.gpu_options.allocator_type = 'BFC'
+    #session_config.gpu_options.allow_growth = True
+    #session_config.gpu_options.allocator_type = 'BFC'
 
     with tf.Session(config=session_config) as session:
         logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
