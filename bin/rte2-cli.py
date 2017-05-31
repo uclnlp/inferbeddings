@@ -301,7 +301,7 @@ def main(argv):
                 if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
                     def compute_accuracy(name, dataset):
                         nb_eval_instances = len(dataset['questions'])
-                        eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size * 100)
+                        eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
                         p_vals, l_vals = [], []
 
                         for batch_start, batch_end in eval_batches:
