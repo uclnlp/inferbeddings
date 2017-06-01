@@ -12,7 +12,7 @@ import tensorflow as tf
 from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
-from inferbeddings.rte.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
+from inferbeddings.rte2.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
 from inferbeddings.rte2 import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
 
 from inferbeddings.models.training import constraints
