@@ -235,8 +235,8 @@ def main(argv):
     saver = tf.train.Saver()
 
     session_config = tf.ConfigProto()
-    #session_config.gpu_options.allow_growth = True
-    #session_config.gpu_options.allocator_type = 'BFC'
+    # session_config.gpu_options.allow_growth = True
+    # session_config.gpu_options.allocator_type = 'BFC'
 
     with tf.Session(config=session_config) as session:
         logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
@@ -244,10 +244,10 @@ def main(argv):
         if restore_path:
             saver.restore(session, restore_path)
 
-            # Initialize uninitialized variables
-            uninitialized_variables = [var for var in tf.all_variables() if not tf.is_variable_initialized(var)]
-            init_op = tf.variables_initializer(uninitialized_variables)
-            session.run(init_op)
+            # Initialize uninitialized variables - XXX NOT WORKING
+            # uninitialized_variables = [var for var in tf.all_variables() if not tf.is_variable_initialized(var)]
+            # init_op = tf.variables_initializer(uninitialized_variables)
+            # session.run(init_op)
         else:
             session.run(init_op)
 
