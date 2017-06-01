@@ -300,7 +300,7 @@ def main(argv):
                 for projection_step in learning_projection_steps:
                     session.run([projection_step])
 
-                if (batch_idx > 0 and batch_idx % 10000 == 0) or (batch_start, batch_end) in batches[-1:]:
+                if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
                     def compute_accuracy(name, dataset):
                         nb_eval_instances = len(dataset['questions'])
                         eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
