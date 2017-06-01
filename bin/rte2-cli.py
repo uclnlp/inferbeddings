@@ -243,6 +243,11 @@ def main(argv):
 
         if restore_path:
             saver.restore(session, restore_path)
+
+            # Initialize uninitialized variables
+            uninitialized_variables = [var for var in tf.all_variables() if not tf.is_variable_initialized(var)]
+            init_op = tf.variables_initializer(uninitialized_variables)
+            session.run(init_op)
         else:
             session.run(init_op)
 
