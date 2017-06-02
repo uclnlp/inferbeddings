@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucl/eisuc296/workspace/inferbeddings/'
-    command = 'python3 {}/bin/snli-cli.py --glove ~/data/glove/glove.840B.300d.txt' \
+    command = 'python3 {}/bin/rte-cli.py --glove ~/data/glove/glove.840B.300d.txt' \
               ' --train {}/data/snli/snli_1.0_train.jsonl.gz' \
               ' --valid {}/data/snli/snli_1.0_dev.jsonl.gz' \
               ' --test {}data/snli/snli_1.0_test.jsonl.gz' \
