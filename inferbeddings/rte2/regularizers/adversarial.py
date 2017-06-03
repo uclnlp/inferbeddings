@@ -43,12 +43,11 @@ class Adversarial:
         self.variable_name_to_variable['rule1_sequence2'] = sequence2
 
         a_model_kwargs = self.model_kwargs.copy()
-
-        a_model_kwargs['sequence1'] = sequence1
-        a_model_kwargs['sequence1_length'] = self.sequence_length
-
-        a_model_kwargs['sequence2'] = sequence2
-        a_model_kwargs['sequence2_length'] = self.sequence_length
+        a_model_kwargs.update({
+            'sequence1': sequence1,
+            'sequence1_length': self.sequence_length,
+            'sequence2': sequence2,
+            'sequence2_length': self.sequence_length})
 
         a_model = self.model_class(**a_model_kwargs)
         a_logits = a_model()
@@ -57,12 +56,11 @@ class Adversarial:
         p_s1_contradicts_s2 = tf.nn.softmax(a_logits)[:, self.contradiction_idx]
 
         b_model_kwargs = self.model_kwargs.copy()
-
-        b_model_kwargs['sequence1'] = sequence2
-        b_model_kwargs['sequence1_length'] = self.sequence_length
-
-        b_model_kwargs['sequence2'] = sequence1
-        b_model_kwargs['sequence2_length'] = self.sequence_length
+        b_model_kwargs.update({
+            'sequence1': sequence2,
+            'sequence1_length': self.sequence_length,
+            'sequence2': sequence1,
+            'sequence2_length': self.sequence_length})
 
         b_model = self.model_class(**b_model_kwargs)
         b_logits = b_model()
