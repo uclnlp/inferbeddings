@@ -30,11 +30,13 @@ class Adversarial:
         
         :return: tf.Tensor representing the adversarial loss.
         """
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence1 = tf.get_variable('rule1_sequence1',
                                     shape=[self.batch_size, self.sequence_length, self.embedding_size],
                                     initializer=tf.contrib.layers.xavier_initializer())
         self.variable_name_to_variable['rule1_sequence1'] = sequence1
 
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence2 = tf.get_variable('rule1_sequence2',
                                     shape=[self.batch_size, self.sequence_length, self.embedding_size],
                                     initializer=tf.contrib.layers.xavier_initializer())
@@ -51,7 +53,8 @@ class Adversarial:
         a_model = self.model_class(**a_model_kwargs)
         a_logits = a_model()
 
-        p_s1_entails_s2 = tf.nn.softmax(a_logits)[:, self.contradiction_idx]
+        # Probability that S1 contradicts S2
+        p_s1_contradicts_s2 = tf.nn.softmax(a_logits)[:, self.contradiction_idx]
 
         b_model_kwargs = self.model_kwargs.copy()
 
@@ -64,7 +67,8 @@ class Adversarial:
         b_model = self.model_class(**b_model_kwargs)
         b_logits = b_model()
 
-        p_s2_entails_s1 = tf.nn.softmax(b_logits)[:, self.contradiction_idx]
+        # Probability that S2 contradicts S1
+        p_s2_contradicts_s1 = tf.nn.softmax(b_logits)[:, self.contradiction_idx]
 
-        return tf.nn.l2_loss(p_s1_entails_s2 - p_s2_entails_s1)
+        return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1)
 
