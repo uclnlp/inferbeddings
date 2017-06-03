@@ -5,7 +5,7 @@ import tensorflow as tf
 
 class Adversarial:
     """
-    Utility class for generating adversarial sets for RTE.
+    Utility class for generating Adversarial Sets for RTE.
     """
     def __init__(self, model_class, model_kwargs,
                  embedding_size=300, batch_size=1024, sequence_length=10,
@@ -24,6 +24,12 @@ class Adversarial:
         self.variable_name_to_variable = dict()
 
     def rule1(self):
+        """
+        Adversarial loss term computing (contradicts(S1, S2) - contradicts(S2, S1))^2,
+        where the sentence embeddings S1 and S2 are selected adversarially.
+        
+        :return: tf.Tensor representing the adversarial loss.
+        """
         sequence1 = tf.get_variable('rule1_sequence1',
                                     shape=[self.batch_size, self.sequence_length, self.embedding_size],
                                     initializer=tf.contrib.layers.xavier_initializer())
