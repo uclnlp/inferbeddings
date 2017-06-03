@@ -13,8 +13,11 @@ def symmetry_contradiction_regularizer(model_class, model_kwargs, contradiction_
 
     inv_model_kwargs = model_kwargs.copy()
 
-    inv_model_kwargs['sequence1'], inv_model_kwargs['sequence1_length'] = inv_sequence1, inv_sequence1_length
-    inv_model_kwargs['sequence2'], inv_model_kwargs['sequence2_length'] = inv_sequence2, inv_sequence2_length
+    inv_model_kwargs['sequence1'] = inv_sequence1
+    inv_model_kwargs['sequence1_length'] = inv_sequence1_length
+
+    inv_model_kwargs['sequence2'] = inv_sequence2
+    inv_model_kwargs['sequence2_length'] = inv_sequence2_length
 
     inv_model = model_class(reuse=True, **model_kwargs)
     inv_logits = inv_model()
