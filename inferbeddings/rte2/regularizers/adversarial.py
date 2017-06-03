@@ -7,7 +7,6 @@ class Adversarial:
     """
     Utility class for generating adversarial sets for RTE.
     """
-
     def __init__(self, model_class, model_kwargs,
                  embedding_size=300, batch_size=1024, sequence_length=10,
                  entailment_idx=0, contradiction_idx=1, neutral_idx=2):
