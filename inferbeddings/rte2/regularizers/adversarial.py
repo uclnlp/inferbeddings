@@ -33,7 +33,7 @@ class Adversarial:
         sequence2 = tf.get_variable('rule1_sequence2',
                                     shape=[self.batch_size, self.sequence_length, self.embedding_size],
                                     initializer=tf.contrib.layers.xavier_initializer())
-        self.variable_name_to_variable['rule1_sentence2_embedding'] = sequence2
+        self.variable_name_to_variable['rule1_sequence2'] = sequence2
 
         a_model_kwargs = self.model_kwargs.copy()
 
