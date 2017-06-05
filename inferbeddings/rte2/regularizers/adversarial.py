@@ -42,28 +42,18 @@ class Adversarial:
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence2 = self._get_sequence(name='{}rule1_sequence2'.format('{}/'.format(prefix) if prefix else ''))
 
-        a_model_kwargs = self.model_kwargs.copy()
-        a_model_kwargs.update({
-            'sequence1': sequence1,
-            'sequence1_length': self.sequence_length,
-            'sequence2': sequence2,
-            'sequence2_length': self.sequence_length})
-
-        a_model = self.model_class(**a_model_kwargs)
-        a_logits = a_model()
+        a_model_kwargs = self.model_kwargs.copy().update({
+            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
+            'sequence2': sequence2, 'sequence2_length': self.sequence_length})
+        a_logits = self.model_class(**a_model_kwargs)()
 
         # Probability that S1 contradicts S2
         p_s1_contradicts_s2 = tf.nn.softmax(a_logits)[:, self.contradiction_idx]
 
-        b_model_kwargs = self.model_kwargs.copy()
-        b_model_kwargs.update({
-            'sequence1': sequence2,
-            'sequence1_length': self.sequence_length,
-            'sequence2': sequence1,
-            'sequence2_length': self.sequence_length})
-
-        b_model = self.model_class(**b_model_kwargs)
-        b_logits = b_model()
+        b_model_kwargs = self.model_kwargs.copy().update({
+            'sequence1': sequence2, 'sequence1_length': self.sequence_length,
+            'sequence2': sequence1, 'sequence2_length': self.sequence_length})
+        b_logits = self.model_class(**b_model_kwargs)()
 
         # Probability that S2 contradicts S1
         p_s2_contradicts_s1 = tf.nn.softmax(b_logits)[:, self.contradiction_idx]
@@ -71,5 +61,35 @@ class Adversarial:
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
     def rule2(self, prefix=None):
-        pass
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='{}rule2_sequence1'.format('{}/'.format(prefix) if prefix else ''))
 
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence2 = self._get_sequence(name='{}rule2_sequence2'.format('{}/'.format(prefix) if prefix else ''))
+
+        # S3 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence3 = self._get_sequence(name='{}rule2_sequence3'.format('{}/'.format(prefix) if prefix else ''))
+
+        a_model_kwargs = self.model_kwargs.copy().update({
+            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
+            'sequence2': sequence2, 'sequence2_length': self.sequence_length})
+        a_logits = self.model_class(**a_model_kwargs)()
+
+        b_model_kwargs = self.model_kwargs.copy().update({
+            'sequence1': sequence2, 'sequence1_length': self.sequence_length,
+            'sequence2': sequence3, 'sequence2_length': self.sequence_length})
+        b_logits = self.model_class(**b_model_kwargs)()
+
+        c_model_kwargs = self.model_kwargs.copy().update({
+            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
+            'sequence2': sequence3, 'sequence2_length': self.sequence_length})
+        c_logits = self.model_class(**c_model_kwargs)()
+
+        p_s1_entails_s2 = tf.nn.softmax(a_logits)[:, self.entailment_idx]
+        p_s2_entails_s3 = tf.nn.softmax(b_logits)[:, self.entailment_idx]
+        p_s1_entails_s3 = tf.nn.softmax(c_logits)[:, self.entailment_idx]
+
+        body_score = tf.minimum(p_s1_entails_s2, p_s2_entails_s3)
+        head_score = p_s1_entails_s3
+
+        return tf.nn.relu(head_score + body_score), {sequence1, sequence2, sequence3}
