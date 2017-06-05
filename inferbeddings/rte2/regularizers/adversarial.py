@@ -27,7 +27,7 @@ class Adversarial:
                                    initializer=tf.contrib.layers.xavier_initializer())
         return sequence
 
-    def rule1(self, prefix=None):
+    def rule1(self):
         """
         Adversarial loss term computing
             (P(contradicts(S1, S2)) - P(contradicts(S2, S1)))^2,
@@ -37,10 +37,10 @@ class Adversarial:
             and the adversarially trainable variables.
         """
         # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence1 = self._get_sequence(name='{}rule1_sequence1'.format('{}/'.format(prefix) if prefix else ''))
+        sequence1 = self._get_sequence(name='rule1_sequence1')
 
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence2 = self._get_sequence(name='{}rule1_sequence2'.format('{}/'.format(prefix) if prefix else ''))
+        sequence2 = self._get_sequence(name='rule1_sequence2')
 
         a_model_kwargs = self.model_kwargs.copy().update({
             'sequence1': sequence1, 'sequence1_length': self.sequence_length,
@@ -60,7 +60,7 @@ class Adversarial:
 
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
-    def rule2(self, prefix=None):
+    def rule2(self):
         """
         Adversarial loss term computing
             RELU[min(P(entails(S1, S2)) + P(entails(S2, S3))) - P(entails(S1, S3))]
@@ -70,13 +70,13 @@ class Adversarial:
             and the adversarially trainable variables.
         """
         # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence1 = self._get_sequence(name='{}rule2_sequence1'.format('{}/'.format(prefix) if prefix else ''))
+        sequence1 = self._get_sequence(name='rule2_sequence1')
 
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence2 = self._get_sequence(name='{}rule2_sequence2'.format('{}/'.format(prefix) if prefix else ''))
+        sequence2 = self._get_sequence(name='rule2_sequence2')
 
         # S3 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence3 = self._get_sequence(name='{}rule2_sequence3'.format('{}/'.format(prefix) if prefix else ''))
+        sequence3 = self._get_sequence(name='rule2_sequence3')
 
         a_model_kwargs = self.model_kwargs.copy().update({
             'sequence1': sequence1, 'sequence1_length': self.sequence_length,
