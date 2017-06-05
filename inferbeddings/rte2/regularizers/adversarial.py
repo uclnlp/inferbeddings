@@ -21,26 +21,26 @@ class Adversarial:
         self.contradiction_idx = contradiction_idx
         self.neutral_idx = neutral_idx
 
-        self.variable_name_to_variable = dict()
+    def _get_sequence(self, name):
+        sequence = tf.get_variable(name=name,
+                                   shape=[self.batch_size, self.sequence_length, self.embedding_size],
+                                   initializer=tf.contrib.layers.xavier_initializer())
+        return sequence
 
-    def rule1(self):
+    def rule1(self, prefix=None):
         """
-        Adversarial loss term computing (contradicts(S1, S2) - contradicts(S2, S1))^2,
-        where the sentence embeddings S1 and S2 are selected adversarially.
-        
-        :return: tf.Tensor representing the adversarial loss.
+        Adversarial loss term computing
+            (P(contradicts(S1, S2)) - P(contradicts(S2, S1)))^2,
+        where the sentence embeddings S1 and S2 can be selected adversarially.
+    
+        :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
+            and the adversarially trainable variables.
         """
         # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence1 = tf.get_variable('rule1_sequence1',
-                                    shape=[self.batch_size, self.sequence_length, self.embedding_size],
-                                    initializer=tf.contrib.layers.xavier_initializer())
-        self.variable_name_to_variable['rule1_sequence1'] = sequence1
+        sequence1 = self._get_sequence(name='{}rule1_sequence1'.format('{}/'.format(prefix) if prefix else ''))
 
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
-        sequence2 = tf.get_variable('rule1_sequence2',
-                                    shape=[self.batch_size, self.sequence_length, self.embedding_size],
-                                    initializer=tf.contrib.layers.xavier_initializer())
-        self.variable_name_to_variable['rule1_sequence2'] = sequence2
+        sequence2 = self._get_sequence(name='{}rule1_sequence2'.format('{}/'.format(prefix) if prefix else ''))
 
         a_model_kwargs = self.model_kwargs.copy()
         a_model_kwargs.update({
@@ -68,5 +68,8 @@ class Adversarial:
         # Probability that S2 contradicts S1
         p_s2_contradicts_s1 = tf.nn.softmax(b_logits)[:, self.contradiction_idx]
 
-        return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1)
+        return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
+
+    def rule2(self, prefix=None):
+        pass
 
