@@ -31,7 +31,7 @@ class Adversarial:
         """
         Adversarial loss term computing
             (P(contradicts(S1, S2)) - P(contradicts(S2, S1)))^2,
-        where the sentence embeddings S1 and S2 can be selected adversarially.
+        where the sentence embeddings S1 and S2 can be learned adversarially.
     
         :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
             and the adversarially trainable variables.
@@ -61,6 +61,14 @@ class Adversarial:
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
     def rule2(self, prefix=None):
+        """
+        Adversarial loss term computing
+            RELU[min(P(entails(S1, S2)) + P(entails(S2, S3))) - P(entails(S1, S3))]
+        where the sentence embeddings S1, S2 and S3 can be learned adversarially.
+
+        :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
+            and the adversarially trainable variables.
+        """
         # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence1 = self._get_sequence(name='{}rule2_sequence1'.format('{}/'.format(prefix) if prefix else ''))
 
