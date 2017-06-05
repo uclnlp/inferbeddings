@@ -85,11 +85,19 @@ class Adversarial:
             'sequence2': sequence3, 'sequence2_length': self.sequence_length})
         c_logits = self.model_class(**c_model_kwargs)()
 
+        # Probability that S1 entails S2
         p_s1_entails_s2 = tf.nn.softmax(a_logits)[:, self.entailment_idx]
+
+        # Probability that S2 entails S3
         p_s2_entails_s3 = tf.nn.softmax(b_logits)[:, self.entailment_idx]
+
+        # Probability that S1 entails S3
         p_s1_entails_s3 = tf.nn.softmax(c_logits)[:, self.entailment_idx]
 
         body_score = tf.minimum(p_s1_entails_s2, p_s2_entails_s3)
         head_score = p_s1_entails_s3
 
-        return tf.nn.relu(head_score + body_score), {sequence1, sequence2, sequence3}
+        # The loss is > 0 if min(P1->P2, P2->P3) > P1->P3, 0 otherwise
+        loss = tf.nn.relu(body_score - head_score)
+
+        return loss, {sequence1, sequence2, sequence3}
