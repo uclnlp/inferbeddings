@@ -45,14 +45,14 @@ class Adversarial:
         """
         # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence1 = self._get_sequence(name='rule1_sequence1')
-
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence2 = self._get_sequence(name='rule1_sequence2')
 
         # Probability that S1 contradicts S2
         p_s1_contradicts_s2 = self._probability(sequence1, sequence2, self.contradiction_idx)
+        # Probability that S2 contradicts S1
         p_s2_contradicts_s1 = self._probability(sequence2, sequence1, self.contradiction_idx)
-
+        
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
     def rule2(self):
@@ -66,19 +66,15 @@ class Adversarial:
         """
         # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence1 = self._get_sequence(name='rule2_sequence1')
-
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence2 = self._get_sequence(name='rule2_sequence2')
-
         # S3 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence3 = self._get_sequence(name='rule2_sequence3')
 
         # Probability that S1 entails S2
         p_s1_entails_s2 = self._probability(sequence1, sequence2, self.entailment_idx)
-
         # Probability that S2 entails S3
         p_s2_entails_s3 = self._probability(sequence2, sequence3, self.entailment_idx)
-
         # Probability that S1 entails S3
         p_s1_entails_s3 = self._probability(sequence1, sequence3, self.entailment_idx)
 
