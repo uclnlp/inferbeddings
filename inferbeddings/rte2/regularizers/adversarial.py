@@ -36,8 +36,10 @@ class Adversarial:
 
     def rule1(self):
         """
-        Adversarial loss term computing
-            (P(contradicts(S1, S2)) - P(contradicts(S2, S1)))^2,
+        Adversarial loss term enforcing the rule:
+            P(contradicts(S1, S2)) ~ P(contradicts(S2, S1))
+        by computing:
+            [P(contradicts(S1, S2)) - P(contradicts(S2, S1))]^2,
         where the sentence embeddings S1 and S2 can be learned adversarially.
     
         :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
@@ -52,13 +54,17 @@ class Adversarial:
         p_s1_contradicts_s2 = self._probability(sequence1, sequence2, self.contradiction_idx)
         # Probability that S2 contradicts S1
         p_s2_contradicts_s1 = self._probability(sequence2, sequence1, self.contradiction_idx)
-        
+
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
     def rule2(self):
         """
-        Adversarial loss term computing
-            RELU[min(P(entails(S1, S2)) + P(entails(S2, S3))) - P(entails(S1, S3))]
+        Adversarial loss term enforcing the rule:
+            entails(S1, S2), entails(S2, S3) \implies entails(S1, S3)
+        or, in other terms:
+            min(P(entails(S1, S2)) + P(entails(S2, S3))) <= P(entails(S1, S3))
+        by computing:
+            ReLU[min(P(entails(S1, S2)) + P(entails(S2, S3))) - P(entails(S1, S3))]
         where the sentence embeddings S1, S2 and S3 can be learned adversarially.
 
         :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
