@@ -22,10 +22,17 @@ class Adversarial:
         self.neutral_idx = neutral_idx
 
     def _get_sequence(self, name):
-        sequence = tf.get_variable(name=name,
-                                   shape=[self.batch_size, self.sequence_length, self.embedding_size],
-                                   initializer=tf.contrib.layers.xavier_initializer())
-        return sequence
+        return tf.get_variable(name=name,
+                               shape=[self.batch_size, self.sequence_length, self.embedding_size],
+                               initializer=tf.contrib.layers.xavier_initializer())
+
+    def _probability(self, sequence1, sequence2, predicate_idx):
+        model_kwargs = self.model_kwargs.copy().update({
+            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
+            'sequence2': sequence2, 'sequence2_length': self.sequence_length})
+        logits = self.model_class(**model_kwargs)()
+        probability = tf.nn.softmax(logits)[:, predicate_idx]
+        return probability
 
     def rule1(self):
         """
@@ -42,21 +49,9 @@ class Adversarial:
         # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence2 = self._get_sequence(name='rule1_sequence2')
 
-        a_model_kwargs = self.model_kwargs.copy().update({
-            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence2, 'sequence2_length': self.sequence_length})
-        a_logits = self.model_class(**a_model_kwargs)()
-
         # Probability that S1 contradicts S2
-        p_s1_contradicts_s2 = tf.nn.softmax(a_logits)[:, self.contradiction_idx]
-
-        b_model_kwargs = self.model_kwargs.copy().update({
-            'sequence1': sequence2, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence1, 'sequence2_length': self.sequence_length})
-        b_logits = self.model_class(**b_model_kwargs)()
-
-        # Probability that S2 contradicts S1
-        p_s2_contradicts_s1 = tf.nn.softmax(b_logits)[:, self.contradiction_idx]
+        p_s1_contradicts_s2 = self._probability(sequence1, sequence2, self.contradiction_idx)
+        p_s2_contradicts_s1 = self._probability(sequence2, sequence1, self.contradiction_idx)
 
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
@@ -78,29 +73,14 @@ class Adversarial:
         # S3 - [batch_size, time_steps, embedding_size] sentence embedding.
         sequence3 = self._get_sequence(name='rule2_sequence3')
 
-        a_model_kwargs = self.model_kwargs.copy().update({
-            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence2, 'sequence2_length': self.sequence_length})
-        a_logits = self.model_class(**a_model_kwargs)()
-
-        b_model_kwargs = self.model_kwargs.copy().update({
-            'sequence1': sequence2, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence3, 'sequence2_length': self.sequence_length})
-        b_logits = self.model_class(**b_model_kwargs)()
-
-        c_model_kwargs = self.model_kwargs.copy().update({
-            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence3, 'sequence2_length': self.sequence_length})
-        c_logits = self.model_class(**c_model_kwargs)()
-
         # Probability that S1 entails S2
-        p_s1_entails_s2 = tf.nn.softmax(a_logits)[:, self.entailment_idx]
+        p_s1_entails_s2 = self._probability(sequence1, sequence2, self.entailment_idx)
 
         # Probability that S2 entails S3
-        p_s2_entails_s3 = tf.nn.softmax(b_logits)[:, self.entailment_idx]
+        p_s2_entails_s3 = self._probability(sequence2, sequence3, self.entailment_idx)
 
         # Probability that S1 entails S3
-        p_s1_entails_s3 = tf.nn.softmax(c_logits)[:, self.entailment_idx]
+        p_s1_entails_s3 = self._probability(sequence1, sequence3, self.entailment_idx)
 
         body_score = tf.minimum(p_s1_entails_s2, p_s2_entails_s3)
         head_score = p_s1_entails_s3
