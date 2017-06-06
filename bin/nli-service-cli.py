@@ -166,13 +166,15 @@ def main(argv):
                 sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1]) for item in sublist]
                 sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2]) for item in sublist]
 
-                sentence1_seq = sentence1_seq + ([0] * (48 - len(sentence1_seq)))
-                sentence2_seq = sentence1_seq + ([0] * (50 - len(sentence2_seq)))
+                padded_sentence1_seq = sentence1_seq + ([0] * (48 - len(sentence1_seq)))
+                padded_sentence2_seq = sentence2_seq + ([0] * (50 - len(sentence2_seq)))
 
                 # Compute answer
                 feed_dict = {
-                    sentence1_ph: [sentence1_seq], sentence2_ph: [sentence2_seq],
-                    sentence1_length_ph: [len(sentence1_seq)], sentence2_length_ph: [len(sentence2_seq)],
+                    sentence1_ph: [padded_sentence1_seq],
+                    sentence2_ph: [padded_sentence2_seq],
+                    sentence1_length_ph: [len(sentence1_seq)],
+                    sentence2_length_ph: [len(sentence2_seq)],
                     dropout_keep_prob_ph: 1.0
                 }
 
