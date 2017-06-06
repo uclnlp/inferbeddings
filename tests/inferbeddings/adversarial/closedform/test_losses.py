@@ -10,7 +10,7 @@ from inferbeddings.parse import parse_clause
 from inferbeddings.models.training import constraints
 
 from inferbeddings.adversarial.ground import GroundLoss
-from inferbeddings.adversarial.closedform import ClosedFormLifted
+from inferbeddings.adversarial.closedform import ClosedForm
 
 import itertools
 import logging
@@ -95,11 +95,11 @@ def test_losses():
             model = model_class(**model_parameters)
             score = model()
 
-            closed_form_lifted = ClosedFormLifted(parser=parser,
-                                                  predicate_embedding_layer=predicate_embedding_layer,
-                                                  model_class=model_class,
-                                                  model_parameters=model_parameters,
-                                                  is_unit_cube=unit_cube)
+            closed_form_lifted = ClosedForm(parser=parser,
+                                            predicate_embedding_layer=predicate_embedding_layer,
+                                            model_class=model_class,
+                                            model_parameters=model_parameters,
+                                            is_unit_cube=unit_cube)
             opt_adversarial_loss = closed_form_lifted(clause)
 
             v_optimizer = tf.train.AdagradOptimizer(learning_rate=1e-2)

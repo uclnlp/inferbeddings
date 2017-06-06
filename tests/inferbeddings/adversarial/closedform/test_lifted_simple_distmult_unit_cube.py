@@ -10,8 +10,13 @@ from inferbeddings.parse import parse_clause
 from inferbeddings.models.training import constraints
 
 from inferbeddings.adversarial import Adversarial
+from inferbeddings.adversarial.closedform import ClosedForm
+
+import logging
 
 import pytest
+
+logger = logging.getLogger(__name__)
 
 triples = [
     ('a', 'p', 'b'),
@@ -23,9 +28,6 @@ parser = KnowledgeBaseParser(facts)
 
 nb_entities = len(parser.entity_to_index)
 nb_predicates = len(parser.predicate_to_index)
-
-entity_embedding_size = 10
-predicate_embedding_size = 10
 
 # Clauses
 clause_str = 'q(X, Y) :- p(X, Y)'
@@ -40,11 +42,14 @@ model_parameters = dict(similarity_function=similarity_function)
 
 @pytest.mark.closedform
 def test_distmult_unit_cube():
-    for seed in range(8):
+    for seed in range(256):
         tf.reset_default_graph()
 
         np.random.seed(seed)
         tf.set_random_seed(seed)
+
+        entity_embedding_size = np.random.randint(low=1, high=5)
+        predicate_embedding_size = entity_embedding_size
 
         # Instantiating entity and predicate embedding layers
         entity_embedding_layer = tf.get_variable('entities',
@@ -65,37 +70,21 @@ def test_distmult_unit_cube():
 
         adv_projection_steps = [constraints.unit_cube(adv_emb_layer) for adv_emb_layer in adversarial.parameters]
 
-        v_errors, v_loss = adversarial.errors, adversarial.loss
+        adversarial_loss = adversarial.loss
 
         v_optimizer = tf.train.AdagradOptimizer(learning_rate=1e-1)
-        v_training_step = v_optimizer.minimize(- v_loss, var_list=adversarial.parameters)
+        v_training_step = v_optimizer.minimize(- adversarial_loss, var_list=adversarial.parameters)
 
         init_op = tf.global_variables_initializer()
 
-        p_idx, q_idx = parser.predicate_to_index['p'], parser.predicate_to_index['q']
-
-        p_emb = tf.nn.embedding_lookup(predicate_embedding_layer, p_idx)
-        q_emb = tf.nn.embedding_lookup(predicate_embedding_layer, q_idx)
+        closed_form_lifted = ClosedForm(parser=parser,
+                                        predicate_embedding_layer=predicate_embedding_layer,
+                                        model_class=model_class, model_parameters=model_parameters,
+                                        is_unit_cube=True)
+        opt_adversarial_loss = closed_form_lifted(clauses[0])
 
         with tf.Session() as session:
             session.run(init_op)
-            predicate_embedding_layer_value = session.run([predicate_embedding_layer])[0]
-
-            # Analytically computing the best adversarial embeddings
-            p_emb_val, q_emb_val = session.run([p_emb, q_emb])
-            opt_emb = (p_emb_val >= q_emb_val).astype(np.float32)
-
-            assert len(adversarial.parameters) == 2
-            session.run([adversarial.parameters[0][0, :].assign(opt_emb)])
-            session.run([adversarial.parameters[1][0, :].assign(opt_emb)])
-
-            for projection_step in adv_projection_steps:
-                session.run([projection_step])
-
-            v_opt_errors_val, v_opt_loss_val = session.run([v_errors, v_loss])
-
-            session.run(init_op)
-            session.run([predicate_embedding_layer.assign(predicate_embedding_layer_value)])
 
             for finding_epoch in range(1, 100 + 1):
                 _ = session.run([v_training_step])
@@ -103,14 +92,15 @@ def test_distmult_unit_cube():
                 for projection_step in adv_projection_steps:
                     session.run([projection_step])
 
-                v_errors_val, v_loss_val = session.run([v_errors, v_loss])
+                violation_loss_val, opt_adversarial_loss_val = session.run([adversarial_loss, opt_adversarial_loss])
 
-                print('{} <= {}'.format(v_loss_val, v_opt_loss_val))
+                if violation_loss_val + 1e-1 > opt_adversarial_loss_val:
+                    print('{} <= {}'.format(violation_loss_val, opt_adversarial_loss_val))
 
-                assert v_opt_errors_val >= v_errors_val
-                assert v_opt_loss_val >= v_loss_val
+                assert violation_loss_val <= (opt_adversarial_loss_val + 1e-4)
 
         tf.reset_default_graph()
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     pytest.main([__file__])

@@ -10,7 +10,7 @@ from inferbeddings.parse import parse_clause
 from inferbeddings.models.training import constraints
 
 from inferbeddings.adversarial import Adversarial
-from inferbeddings.adversarial.closedform import ClosedFormLifted
+from inferbeddings.adversarial.closedform import ClosedForm
 
 import logging
 
@@ -77,10 +77,10 @@ def test_complex_unit_cube():
 
         init_op = tf.global_variables_initializer()
 
-        closed_form_lifted = ClosedFormLifted(parser=parser,
-                                              predicate_embedding_layer=predicate_embedding_layer,
-                                              model_class=model_class, model_parameters=model_parameters,
-                                              is_unit_cube=True)
+        closed_form_lifted = ClosedForm(parser=parser,
+                                        predicate_embedding_layer=predicate_embedding_layer,
+                                        model_class=model_class, model_parameters=model_parameters,
+                                        is_unit_cube=True)
         opt_adversarial_loss = closed_form_lifted(clauses[0])
 
         with tf.Session() as session:

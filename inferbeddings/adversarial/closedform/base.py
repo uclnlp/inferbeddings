@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-from inferbeddings.models import BilinearDiagonalModel, ComplexModel
-from inferbeddings.adversarial.closedform.util import score_complex
+import tensorflow as tf
+
+from inferbeddings.models import TranslatingModel, BilinearDiagonalModel, ComplexModel
+from inferbeddings.models import similarities
 
 import logging
 
@@ -11,125 +12,216 @@ logger = logging.getLogger(__name__)
 
 class ClosedForm:
     def __init__(self, parser,
-                 predicate_embeddings,
+                 predicate_embedding_layer,
                  model_class, model_parameters,
                  is_unit_cube):
         self.parser = parser
-        self.predicate_embeddings = predicate_embeddings
+        self.predicate_embedding_layer = predicate_embedding_layer
         self.model_class, self.model_parameters = model_class, model_parameters
         self.is_unit_cube = is_unit_cube
 
-    def _complex_unit_cube(self, clause):
+    def _to_idx(self, predicate_name):
+        return self.parser.predicate_to_index[predicate_name]
+
+    def _translating_loss(self, clause):
         head, body = clause.head, clause.body
 
-        # At the moment, only simple rules as in "q(X, Y) :- p(X, Y)" are supported
-        assert len(body) == 1
-        body_atom = body[0]
-
-        assert head.arguments[0].name != head.arguments[1].name
-        assert body_atom.arguments[0].name != body_atom.arguments[1].name
-
-        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
-        assert len(variable_names) == 2
-
-        head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
-        body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
-
-        head_predicate_emb = self.predicate_embeddings[head_predicate_idx, :]
-        body_predicate_emb = self.predicate_embeddings[body_predicate_idx, :]
-
-        n = head_predicate_emb.shape[0]
-        opt_emb_X = np.zeros(n, dtype=np.float32)
-        opt_emb_Y = np.zeros(n, dtype=np.float32)
-
-        for j in range(n // 2):
-            candidates = [
-                (1.0, 1.0, 1.0, 1.0), (1.0, 1.0, 0.0, 1.0), (1.0, 1.0, 1.0, 0.0),
-                (0.0, 1.0, 1.0, 0.0), (1.0, 0.0, 0.0, 1.0)
-            ]
-            highest_loss_value, best_candidate = None, None
-            for (sR_j, oR_j, sI_j, oI_j) in candidates:
-                _opt_emb_s, _opt_emb_o = np.copy(opt_emb_X), np.copy(opt_emb_Y)
-                _opt_emb_s[j], _opt_emb_o[j] = sR_j, oR_j
-                _opt_emb_s[(n // 2) + j], _opt_emb_o[(n // 2) + j] = sI_j, oI_j
-                loss_value = None
-                if head.arguments[0].name == body_atom.arguments[0].name and \
-                        head.arguments[1].name == body_atom.arguments[1].name:
-                    loss_value = score_complex(_opt_emb_s, body_predicate_emb, _opt_emb_o) - \
-                                 score_complex(_opt_emb_s, head_predicate_emb, _opt_emb_o)
-                elif head.arguments[0].name == body_atom.arguments[1].name and \
-                        head.arguments[1].name == body_atom.arguments[0].name:
-                    loss_value = score_complex(_opt_emb_o, body_predicate_emb, _opt_emb_s) -\
-                                 score_complex(_opt_emb_s, head_predicate_emb, _opt_emb_o)
-                assert loss_value is not None
-                if highest_loss_value is None or loss_value > highest_loss_value:
-                    highest_loss_value = loss_value
-                    best_candidate = (sR_j, oR_j, sI_j, oI_j)
-            opt_emb_X[j], opt_emb_Y[j] = best_candidate[0], best_candidate[1]
-            opt_emb_X[(n // 2) + j], opt_emb_Y[(n // 2) + j] = best_candidate[2], best_candidate[3]
-
-        variable_names_lst = list(variable_names)
-        return {variable_names_lst[0]: opt_emb_X, variable_names_lst[1]: opt_emb_Y}
-
-    def _distmult_unit_cube(self, clause):
-        head, body = clause.head, clause.body
-
-        # At the moment, only simple rules as in "q(X, Y) :- p(X, Y)" are supported
+        # At the moment, only simple rules as in "r(X, Y) :- b(X, Y)" are supported
         assert len(body) == 1
         body_atom = body[0]
 
         variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
         assert len(variable_names) == 2
 
-        head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
-        body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
+        # Check if it is an inverse rule, as in r(X, Y) :- b(Y, X), or not, as in r(X, Y) :- b(X, Y).
+        is_inverse = False
+        if head.arguments[0].name == body_atom.arguments[1].name:
+            if head.arguments[1].name == body_atom.arguments[0].name:
+                is_inverse = True
 
-        head_predicate_emb = self.predicate_embeddings[head_predicate_idx, :]
-        body_predicate_emb = self.predicate_embeddings[body_predicate_idx, :]
+        # We only support TransE in its L2 squared distance formulation
+        assert self.model_parameters['similarity_function'] == similarities.l2_sqr
 
-        optimal_emb = (head_predicate_emb >= body_predicate_emb).astype(np.float32)
+        # Indices of q and r, respectively
+        r_idx, b_idx = self._to_idx(head.predicate.name), self._to_idx(body_atom.predicate.name)
 
-        return {var_name: optimal_emb for var_name in variable_names}
+        r = tf.nn.embedding_lookup(self.predicate_embedding_layer, r_idx)
+        b = tf.nn.embedding_lookup(self.predicate_embedding_layer, b_idx)
 
-    def _distmult_unit_sphere(self, clause):
+        prefix = tf.reduce_sum(tf.square(r)) - tf.reduce_sum(tf.square(b))
+        if is_inverse:
+            if self.is_unit_cube:
+                loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r + b)))
+            else:
+                loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r + b))))
+        else:
+            if self.is_unit_cube:
+                loss = tf.nn.relu(prefix + 2 * tf.reduce_sum(tf.abs(r - b)))
+            else:
+                loss = tf.nn.relu(prefix + 4 * tf.sqrt(tf.reduce_sum(tf.square(r - b))))
+        return loss
+
+    def _bilinear_diagonal_loss_one(self, clause):
         head, body = clause.head, clause.body
 
-        # At the moment, only simple rules as in "q(X, Y) :- p(X, Y)" are supported
+        # At the moment, only simple rules as in "r(X, Y) :- b(X, Y)" are supported
         assert len(body) == 1
         body_atom = body[0]
 
         variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
         assert len(variable_names) == 2
 
-        head_predicate_idx = self.parser.predicate_to_index[head.predicate.name]
-        body_predicate_idx = self.parser.predicate_to_index[body_atom.predicate.name]
+        # Indices of q and r, respectively
+        r_idx, b_idx = self._to_idx(head.predicate.name), self._to_idx(body_atom.predicate.name)
 
-        head_predicate_emb = self.predicate_embeddings[head_predicate_idx, :]
-        body_predicate_emb = self.predicate_embeddings[body_predicate_idx, :]
+        r = tf.nn.embedding_lookup(self.predicate_embedding_layer, r_idx)
+        b = tf.nn.embedding_lookup(self.predicate_embedding_layer, b_idx)
 
-        j = np.square(body_predicate_emb - head_predicate_emb).argmax(axis=0)
+        if self.is_unit_cube:
+            loss = tf.reduce_sum(tf.nn.relu(b - r))
+        else:
+            loss = tf.reduce_max(tf.abs(b - r))
+        return loss
 
-        entity_embedding_size = self.predicate_embeddings.shape[0]
-        opt_emb_X = np.zeros(entity_embedding_size, dtype=np.float32)
-        opt_emb_Y = np.zeros(entity_embedding_size, dtype=np.float32)
-        opt_emb_X[j], opt_emb_Y[j] = 1, 1 if (opt_emb_X[j] > opt_emb_Y[j]) else -1
+    def _bilinear_diagonal_loss_two(self, clause):
+        head, body = clause.head, clause.body
 
-        variable_names_lst = list(variable_names)
-        return {variable_names_lst[0]: opt_emb_X, variable_names_lst[1]: opt_emb_Y}
+        # At the moment, only simple rules as in "r(X, Z) :- b1(X, Y), b2(Y, Z)" are supported
+        assert len(body) == 2
+        body_atom_1 = body[0]
+        body_atom_2 = body[1]
+
+        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom_1.arguments} | {arg.name for arg in body_atom_2.arguments}
+        assert len(variable_names) == 3
+
+        assert body_atom_1.arguments[0].name == head.arguments[0].name
+        assert body_atom_2.arguments[1].name == head.arguments[1].name
+
+        # Indices of b1, b2 and r, respectively
+        r_idx = self._to_idx(head.predicate.name)
+        b1_idx = self._to_idx(body_atom_1.predicate.name)
+        b2_idx = self._to_idx(body_atom_2.predicate.name)
+
+        r = tf.nn.embedding_lookup(self.predicate_embedding_layer, r_idx)
+        b1 = tf.nn.embedding_lookup(self.predicate_embedding_layer, b1_idx)
+        b2 = tf.nn.embedding_lookup(self.predicate_embedding_layer, b2_idx)
+
+        if self.is_unit_cube:
+            case_0 = tf.zeros_like(r)
+            case_1 = - r
+            case_2 = - r + tf.minimum(b1, b2)
+            case_3 = tf.minimum(tf.zeros_like(r), b1)
+            case_4 = tf.minimum(tf.zeros_like(r), b2)
+
+            # Creating a [k, 5]-dimensional tensor
+            _cases = tf.transpose(tf.stack([case_0, case_1, case_2, case_3, case_4]))
+
+            # Computing max(case_i)
+            _losses = tf.reduce_max(_cases, axis=1)
+
+            # Computing \sum_i max(case_i)
+            loss = tf.reduce_sum(_losses)
+        else:
+            case_0 = tf.zeros_like(r)
+            case_1 = tf.minimum(b1, b2) - r
+            case_2 = tf.minimum(- b1, - b2) - r
+            case_3 = tf.minimum(b1, - b2) + r
+            case_4 = tf.minimum(- b1, b2) + r
+
+            # Creating a [k, 5]-dimensional tensor
+            _cases = tf.transpose(tf.stack([case_0, case_1, case_2, case_3, case_4]))
+
+            # Computing max(case_i)
+            _losses = tf.reduce_max(_cases, axis=1)
+
+            # Computing \max_i max(case_i)
+            loss = tf.reduce_max(_losses)
+        return loss
+
+    def _complex_loss(self, clause):
+        head, body = clause.head, clause.body
+
+        # At the moment, only simple rules as in "r(X, Y) :- b(X, Y)" are supported
+        assert len(body) == 1
+        body_atom = body[0]
+
+        variable_names = {arg.name for arg in head.arguments} | {arg.name for arg in body_atom.arguments}
+        assert len(variable_names) == 2
+
+        # Check if it is an inverse rule, as in r(X, Y) :- b(Y, X), or not, as in r(X, Y) :- b(X, Y).
+        is_inverse = False
+        if head.arguments[0].name == body_atom.arguments[1].name:
+            if head.arguments[1].name == body_atom.arguments[0].name:
+                is_inverse = True
+
+        # Indices of q and r, respectively
+        r_idx, b_idx = self._to_idx(head.predicate.name), self._to_idx(body_atom.predicate.name)
+
+        r = tf.nn.embedding_lookup(self.predicate_embedding_layer, r_idx)
+        b = tf.nn.embedding_lookup(self.predicate_embedding_layer, b_idx)
+
+        n = r.get_shape()[-1].value
+        r_re, r_im = r[:n // 2], r[n // 2:]
+        b_re, b_im = b[:n // 2], b[n // 2:]
+
+        if is_inverse:
+            if self.is_unit_cube:
+                # This ha the same form as the simple implications case,
+                # but with r replaced by \compl{r} or, more specifically,
+                # r_im replaced by - r_im.
+                r_im = - r_im
+
+                delta_re, delta_im = b_re - r_re, b_im - r_im
+
+                # For each index, the loss will be the maximum across such values
+                case_1 = 2 * delta_re
+                case_2 = tf.abs(delta_im)
+                case_3 = delta_re + tf.abs(delta_im)
+
+                # The result will be a [k, 3]-dimensional tensor
+                _cases = tf.transpose(tf.stack([case_1, case_2, case_3]))
+                # Computing the maximum on dimension 1, leading to a [k]-dimensional tensor
+                _losses = tf.reduce_max(_cases, axis=1)
+
+                loss = tf.reduce_sum(_losses)
+            else:
+                loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im + r_im)))
+        else:
+            if self.is_unit_cube:
+                delta_re, delta_im = b_re - r_re, b_im - r_im
+
+                # For each index, the loss will be the maximum across such values
+                case_1 = 2 * delta_re
+                case_2 = tf.abs(delta_im)
+                case_3 = delta_re + tf.abs(delta_im)
+
+                # The result will be a [k, 3]-dimensional tensor
+                _cases = tf.transpose(tf.stack([case_1, case_2, case_3]))
+                # Computing the maximum on dimension 1, leading to a [k]-dimensional tensor
+                _losses = tf.reduce_max(_cases, axis=1)
+
+                loss = tf.reduce_sum(_losses)
+            else:
+                loss = tf.reduce_max(tf.sqrt(tf.square(b_re - r_re) + tf.square(b_im - r_im)))
+        return loss
 
     def __call__(self, clause):
-        opt_adv_emb = None
+        clause_body = clause.body
+
+        loss = None
         if self.model_class == BilinearDiagonalModel:
             # We are using DistMult
-            if self.is_unit_cube:
-                opt_adv_emb = self._distmult_unit_cube(clause)
-            else:
-                opt_adv_emb = self._distmult_unit_sphere(clause)
+            if len(clause_body) == 1:
+                loss = self._bilinear_diagonal_loss_one(clause)
+            elif len(clause_body) == 2:
+                loss = self._bilinear_diagonal_loss_two(clause)
+        elif self.model_class == TranslatingModel:
+            # We are using DistMult
+            loss = self._translating_loss(clause)
         elif self.model_class == ComplexModel:
             # We are using ComplEx
-            if self.is_unit_cube:
-                opt_adv_emb = self._complex_unit_cube(clause)
+            loss = self._complex_loss(clause)
 
-        assert opt_adv_emb is not None
-        return opt_adv_emb
+        assert loss is not None
 
+        return tf.nn.relu(loss)

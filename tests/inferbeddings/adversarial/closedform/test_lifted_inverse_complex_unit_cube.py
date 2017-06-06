@@ -10,7 +10,7 @@ from inferbeddings.parse import parse_clause
 from inferbeddings.models.training import constraints
 
 from inferbeddings.adversarial import Adversarial
-from inferbeddings.adversarial.closedform import ClosedFormLifted
+from inferbeddings.adversarial.closedform import ClosedForm
 
 import logging
 
@@ -30,25 +30,25 @@ nb_entities = len(parser.entity_to_index)
 nb_predicates = len(parser.predicate_to_index)
 
 # Clauses
-clause_str = 'q(X, Y) :- p(X, Y)'
+clause_str = 'q(X, Y) :- p(Y, X)'
 clauses = [parse_clause(clause_str)]
 
 # Instantiating the model parameters
-model_class = models.get_function('TransE')
-similarity_function = similarities.get_function('l2_sqr')
+model_class = models.get_function('ComplEx')
+similarity_function = similarities.get_function('dot')
 
 model_parameters = dict(similarity_function=similarity_function)
 
 
 @pytest.mark.closedform
-def test_transe_unit_cube():
+def test_complex_unit_cube():
     for seed in range(256):
         tf.reset_default_graph()
 
         np.random.seed(seed)
         tf.set_random_seed(seed)
 
-        entity_embedding_size = np.random.randint(low=1, high=5)
+        entity_embedding_size = np.random.randint(low=1, high=5) * 2
         predicate_embedding_size = entity_embedding_size
 
         # Instantiating entity and predicate embedding layers
@@ -77,10 +77,10 @@ def test_transe_unit_cube():
 
         init_op = tf.global_variables_initializer()
 
-        closed_form_lifted = ClosedFormLifted(parser=parser,
-                                              predicate_embedding_layer=predicate_embedding_layer,
-                                              model_class=model_class, model_parameters=model_parameters,
-                                              is_unit_cube=True)
+        closed_form_lifted = ClosedForm(parser=parser,
+                                        predicate_embedding_layer=predicate_embedding_layer,
+                                        model_class=model_class, model_parameters=model_parameters,
+                                        is_unit_cube=True)
         opt_adversarial_loss = closed_form_lifted(clauses[0])
 
         with tf.Session() as session:
