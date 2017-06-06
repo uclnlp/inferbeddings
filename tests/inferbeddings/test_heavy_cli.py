@@ -10,7 +10,7 @@ sys.setrecursionlimit(65535)
 @pytest.mark.slow
 def test_wordnet_complex_cli():
     # Checking if results are still nice
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/wn18/wordnet-mlj12-train.txt',
            '--test', 'data/wn18/wordnet-mlj12-test.txt',
            '--lr', '0.1',
@@ -29,7 +29,7 @@ def test_wordnet_complex_cli():
 @pytest.mark.veryslow
 def test_wordnet_translating_cli():
     # Checking if results are still nice
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/wn18/wordnet-mlj12-train.txt',
            '--test', 'data/wn18/wordnet-mlj12-test.txt',
            '--lr', '0.1',

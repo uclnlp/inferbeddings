@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucl/eisuc296/workspace/inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/kbp-cli.py' \
               ' --train {}/data/guo-emnlp16/wn18/wn18.triples.train' \
               ' --valid {}/data/guo-emnlp16/wn18/wn18.triples.valid' \
               ' --test {}/data/guo-emnlp16/wn18/wn18.triples.test' \

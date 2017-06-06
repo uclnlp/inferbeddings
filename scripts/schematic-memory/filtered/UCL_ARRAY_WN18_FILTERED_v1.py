@@ -27,7 +27,7 @@ def to_cmd(c, _path=None):
         loss_str = '--loss hinge'
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/kbp-cli.py' \
               ' --train {}/data/schematic-memory/wn18_no_symmetric_v1/wn18-train.tsv' \
               ' --valid {}/data/schematic-memory/wn18_no_symmetric_v1/wn18-valid.tsv' \
               ' --test {}/data/schematic-memory/wn18_no_symmetric_v1/wn18-test.tsv' \

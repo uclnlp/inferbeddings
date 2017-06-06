@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucacmin/workspace/inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/kbp-cli.py' \
               ' --train {}/data/yago3_mte10_5k/yago3_mte10-train.tsv.gz' \
               ' --valid {}/data/yago3_mte10_5k/yago3_mte10-valid.tsv.gz' \
               ' --test {}/data/yago3_mte10_5k/yago3_mte10-test.tsv.gz' \

@@ -27,7 +27,7 @@ def to_cmd(c, _path=None):
         loss_str = '--loss hinge'
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/kbp-cli.py' \
               ' --train {}/data/yago3_mte10_5k/yago3_mte10-train.tsv.gz' \
               ' --valid {}/data/yago3_mte10_5k/yago3_mte10-valid.tsv.gz' \
               ' --test {}/data/yago3_mte10_5k/yago3_mte10-test.tsv.gz' \
