@@ -22,8 +22,7 @@ class Adversarial:
         self.neutral_idx = neutral_idx
 
     def _get_sequence(self, name):
-        return tf.get_variable(name=name,
-                               shape=[self.batch_size, self.sequence_length, self.embedding_size],
+        return tf.get_variable(name=name, shape=[self.batch_size, self.sequence_length, self.embedding_size],
                                initializer=tf.contrib.layers.xavier_initializer())
 
     def _probability(self, sequence1, sequence2, predicate_idx):
