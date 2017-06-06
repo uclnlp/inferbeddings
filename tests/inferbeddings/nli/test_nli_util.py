@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import inferbeddings.rte.util as util
+import inferbeddings.nli.util as util
 import logging
 
 import pytest

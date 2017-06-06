@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-from inferbeddings.rte2 import BaseRTEModel
+from inferbeddings.nli import BaseRTEModel
 
 import logging
 

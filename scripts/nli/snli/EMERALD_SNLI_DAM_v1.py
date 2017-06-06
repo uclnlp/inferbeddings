@@ -18,32 +18,30 @@ def summary(configuration):
     kvs = sorted([(k, v) for k, v in configuration.items()], key=lambda e: e[0])
     return '_'.join([('%s=%s' % (k, v)) for (k, v) in kvs])
 
-
+# ./bin/nli-cli.py --semi-sort -f -n --glove ~/data/glove/glove.840B.300d.txt -m ff-dam --batch-size 32
+# --dropout-keep-prob 0.8 --representation-size 200 --optimizer adam --learning-rate 0.0005
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucl/eisuc296/workspace/inferbeddings/'
-    command = 'python3 {}/bin/rte-cli.py --word2vec ~/data/word2vec/GoogleNews-vectors-negative300.bin.gz' \
+    command = 'python3 {}/bin/nli-cli.py --semi-sort -f -n -m ff-dam --nb-epochs 1000' \
+              ' --embedding-size 300 --glove ~/data/glove/glove.840B.300d.txt' \
               ' --train {}/data/snli/snli_1.0_train.jsonl.gz' \
               ' --valid {}/data/snli/snli_1.0_dev.jsonl.gz' \
               ' --test {}data/snli/snli_1.0_test.jsonl.gz' \
-              ' --embedding-size {}' \
               ' --batch-size {}' \
-              ' --num-units {}' \
-              ' --nb-epochs {}' \
               ' --dropout-keep-prob {}' \
-              ' --learning-rate {}' \
+              ' --representation-size {}' \
+              ' --optimizer adam --learning-rate {}' \
               ''.format(_path, _path, _path, _path,
-                        c['embedding_size'],
                         c['batch_size'],
-                        c['num_units'],
-                        c['nb_epochs'],
-                        c['dropout_keep_prob'],
+                        c['dropout'],
+                        c['representation_size'],
                         c['learning_rate'])
     return command
 
 
 def to_logfile(c, path):
-    outfile = "%s/emerald_snli_cbilstm_v3.%s.log" % (path, summary(c))
+    outfile = "%s/emerald_snli_dam_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -58,17 +56,15 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space = dict(
-        embedding_size=[100],
-        batch_size=[32, 256, 1024],
-        num_units=[100, 200, 300],
-        nb_epochs=[100],
-        dropout_keep_prob=[0.6, 0.8, 1.0],
-        learning_rate=[0.0001, 0.0005, 0.001]
+        batch_size=[4, 8, 16, 32, 64, 128],
+        dropout=[1.0, 0.9, 0.8, 0.7],
+        representation_size=[100, 200, 300],
+        learning_rate=[0.0001, 0.0005, 0.001, 0.005, 0.01]
     )
 
     configurations_distmult_complex = cartesian_product(hyperparameters_space)
 
-    path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/rte/snli/emerald_snli_cbilstm_v3/'
+    path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/rte/snli/emerald_snli_dam_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/ucl/eisuc296/'):
@@ -99,7 +95,7 @@ def main(argv):
     header = """#BSUB -o /dev/null
 #BSUB -e /dev/null
 #BSUB -J "snli[1-""" + str(nb_jobs) + """]"
-#BSUB -W 12:00
+#BSUB -W 48:00
 #BSUB -n 1
 #BSUB -R "span[ptile=1]"
 

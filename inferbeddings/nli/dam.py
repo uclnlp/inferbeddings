@@ -7,8 +7,8 @@ import tensorflow as tf
 
 import inferbeddings.activations as activations
 
-from inferbeddings.rte2 import tfutil
-from inferbeddings.rte2 import BaseRTEModel
+from inferbeddings.nli import tfutil
+from inferbeddings.nli import BaseRTEModel
 
 import logging
 

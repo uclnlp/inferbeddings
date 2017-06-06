@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucl/eisuc296/workspace/inferbeddings/'
-    command = 'python3 {}/bin/rte-cli.py --glove ~/data/glove/glove.840B.300d.txt' \
+    command = 'python3 {}/bin/nli-cli.py' \
               ' --train {}/data/snli/snli_1.0_train.jsonl.gz' \
               ' --valid {}/data/snli/snli_1.0_dev.jsonl.gz' \
               ' --test {}data/snli/snli_1.0_test.jsonl.gz' \
@@ -43,7 +43,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/emerald_snli_cbilstm_v2.%s.log" % (path, summary(c))
+    outfile = "%s/emerald_snli_cbilstm_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -58,7 +58,7 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space = dict(
-        embedding_size=[300],
+        embedding_size=[100, 200, 300],
         batch_size=[32, 256, 1024],
         num_units=[100, 200, 300],
         nb_epochs=[100],
@@ -68,7 +68,7 @@ def main(argv):
 
     configurations_distmult_complex = cartesian_product(hyperparameters_space)
 
-    path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/rte/snli/emerald_snli_cbilstm_v2/'
+    path = '/home/ucl/eisuc296/workspace/inferbeddings/logs/rte/snli/emerald_snli_cbilstm_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/ucl/eisuc296/'):
@@ -89,7 +89,7 @@ def main(argv):
                 completed = 'Training finished' in content
 
         if not completed:
-            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_line = '{} >> {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates

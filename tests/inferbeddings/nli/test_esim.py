@@ -5,7 +5,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.rte2.esim import ESIMv1
+from inferbeddings.nli.esim import ESIMv1
 import logging
 
 import pytest

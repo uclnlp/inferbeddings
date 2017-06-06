@@ -5,8 +5,8 @@ from abc import abstractmethod
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.rte2 import tfutil
-from inferbeddings.rte2.base import BaseRTEModel
+from inferbeddings.nli import tfutil
+from inferbeddings.nli.base import BaseRTEModel
 
 import logging
 
