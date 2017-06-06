@@ -8,10 +8,11 @@ import argparse
 import requests
 import operator
 
+from tqdm import tqdm
+
 from inferbeddings.nli.util import SNLI
 import logging
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
@@ -32,12 +33,19 @@ def main(argv):
 
     session = requests.Session()
 
-    for instance in instances:
+    total, matches = 0, 0
+
+    pbar = tqdm(instances)
+    for instance in pbar:
         question, support, answer = instance['question'], instance['support'], instance['answer']
-        res = session.post('http://127.0.0.1:8889/v1/nli', data={'sentence2': question, 'sentence1': support})
+        res = session.post('http://127.0.0.1:8889/v1/nli', data={'sentence1': question, 'sentence2': support})
         prediction = sorted(res.json().items(), key=operator.itemgetter(1), reverse=True)[0][0]
-        print(answer, prediction)
+
+        total += 1
+        matches += 1 if answer == prediction else 0
+
+        pbar.set_description('Accuracy: {:.2f}'.format(matches / total))
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     main(sys.argv[1:])
