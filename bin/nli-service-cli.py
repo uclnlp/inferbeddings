@@ -12,18 +12,16 @@ import tensorflow as tf
 from flask import Flask, request, jsonify
 from flask.views import View
 
-from inferbeddings.rte import ConditionalBiLSTM
-from inferbeddings.rte.dam import SimpleDAM, FeedForwardDAM, DAMP
-from inferbeddings.rte.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances
-
-from inferbeddings.models.training import constraints
+from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
+from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
 
 import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
-app = Flask('jack-the-service')
+app = Flask('nli-service')
+
 
 class InvalidAPIUsage(Exception):
     """
@@ -56,17 +54,14 @@ def main(argv):
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation',
-                                        formatter_class=formatter)
+    argparser = argparse.ArgumentParser('NLI Service', formatter_class=formatter)
 
     argparser.add_argument('--train', '-t', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
     argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'simple-dam', 'ff-dam', 'damp'])
-    argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
-                           choices=['adagrad', 'adam'])
+                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'esim1'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
@@ -74,8 +69,6 @@ def main(argv):
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
-    argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
-    argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--semi-sort', action='store_true')
@@ -84,25 +77,20 @@ def main(argv):
     argparser.add_argument('--use-masking', action='store_true')
     argparser.add_argument('--prepend-null-token', action='store_true')
 
-    argparser.add_argument('--restore', action='store', type=str, default=None)
+    argparser.add_argument('--restore', '-r', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
 
     train_path, valid_path, test_path = args.train, args.valid, args.test
 
     model_name = args.model
-    optimizer_name = args.optimizer
 
     embedding_size = args.embedding_size
     representation_size = args.representation_size
-    hidden_size = args.hidden_size
 
-    dropout_keep_prob = args.dropout_keep_prob
-    learning_rate = args.learning_rate
     seed = args.seed
 
     is_fixed_embeddings = args.fixed_embeddings
-    is_normalized_embeddings = args.normalized_embeddings
     use_masking = args.use_masking
     prepend_null_token = args.prepend_null_token
 
@@ -129,39 +117,41 @@ def main(argv):
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
 
-    optimizer_class = None
-    if optimizer_name == 'adagrad':
-        optimizer_class = tf.train.AdagradOptimizer
-    elif optimizer_name == 'adam':
-        optimizer_class = tf.train.AdamOptimizer
-    assert optimizer_class is not None
+    sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
+    sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
 
-    optimizer = optimizer_class(learning_rate=learning_rate)
+    sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
+    sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
 
-    model_kwargs = dict(optimizer=optimizer, vocab_size=vocab_size, embedding_size=embedding_size,
-                        l2_lambda=None, trainable_embeddings=not is_fixed_embeddings)
+    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
+                                      initializer=tf.contrib.layers.xavier_initializer(),
+                                      trainable=not is_fixed_embeddings)
+
+    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
+    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
+
+    dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
+
+    model_kwargs = dict(
+        sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
+        sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
+        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
     RTEModel = None
     if model_name == 'cbilstm':
-        cbilstm_kwargs = dict(hidden_size=hidden_size,
-                              dropout_keep_prob=dropout_keep_prob)
-        model_kwargs.update(cbilstm_kwargs)
         RTEModel = ConditionalBiLSTM
-    elif model_name == 'simple-dam':
-        sd_kwargs = dict(use_masking=use_masking,
-                         prepend_null_token=prepend_null_token)
-        model_kwargs.update(sd_kwargs)
-        RTEModel = SimpleDAM
     elif model_name == 'ff-dam':
-        ff_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
-                         use_masking=use_masking, prepend_null_token=prepend_null_token)
+        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
         RTEModel = FeedForwardDAM
-    elif model_name == 'damp':
-        damp_kwargs = dict(representation_size=representation_size, dropout_keep_prob=dropout_keep_prob,
-                           use_masking=use_masking, prepend_null_token=prepend_null_token)
-        model_kwargs.update(damp_kwargs)
-        RTEModel = DAMP
+    elif model_name == 'ff-damp':
+        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
+        model_kwargs.update(ff_kwargs)
+        RTEModel = FeedForwardDAMP
+    elif model_name == 'esim1':
+        ff_kwargs = dict(use_masking=use_masking)
+        model_kwargs.update(ff_kwargs)
+        RTEModel = ESIMv1
 
     assert RTEModel is not None
 
