@@ -1,0 +1,2 @@
+model_checkpoint_path: "esim1_v1.ckpt"
+all_model_checkpoint_paths: "esim1_v1.ckpt"
