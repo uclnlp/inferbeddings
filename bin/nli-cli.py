@@ -160,24 +160,24 @@ def main(argv):
         sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
         representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
-    RTEModel = None
+    model_class = None
     if model_name == 'cbilstm':
-        RTEModel = ConditionalBiLSTM
+        model_class = ConditionalBiLSTM
     elif model_name == 'ff-dam':
         ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
-        RTEModel = FeedForwardDAM
+        model_class = FeedForwardDAM
     elif model_name == 'ff-damp':
         ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
-        RTEModel = FeedForwardDAMP
+        model_class = FeedForwardDAMP
     elif model_name == 'esim1':
         ff_kwargs = dict(use_masking=use_masking)
         model_kwargs.update(ff_kwargs)
-        RTEModel = ESIMv1
+        model_class = ESIMv1
 
-    assert RTEModel is not None
-    model = RTEModel(**model_kwargs)
+    assert model_class is not None
+    model = model_class(**model_kwargs)
 
     logits = model()
     predictions = tf.argmax(logits, axis=1, name='predictions')
@@ -194,7 +194,7 @@ def main(argv):
         inv_model_kwargs['sequence1'], inv_model_kwargs['sequence1_length'] = inv_sequence1, inv_sequence1_length
         inv_model_kwargs['sequence2'], inv_model_kwargs['sequence2_length'] = inv_sequence2, inv_sequence2_length
 
-        inv_model = RTEModel(reuse=True, **model_kwargs)
+        inv_model = model_class(reuse=True, **model_kwargs)
         inv_logits = inv_model()
         inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 
