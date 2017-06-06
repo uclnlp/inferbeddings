@@ -67,10 +67,6 @@ def main(argv):
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
     argparser.add_argument('--hidden-size', action='store', type=int, default=200)
 
-    argparser.add_argument('--batch-size', action='store', type=int, default=1024)
-    argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
-    argparser.add_argument('--seed', action='store', type=int, default=0)
-
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
@@ -88,16 +84,11 @@ def main(argv):
     embedding_size = args.embedding_size
     representation_size = args.representation_size
 
-    seed = args.seed
-
     is_fixed_embeddings = args.fixed_embeddings
     use_masking = args.use_masking
     prepend_null_token = args.prepend_null_token
 
     restore_path = args.restore
-
-    np.random.seed(seed)
-    tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
@@ -154,8 +145,6 @@ def main(argv):
         RTEModel = ESIMv1
 
     assert RTEModel is not None
-
-    tf.reset_default_graph()
     model = RTEModel(**model_kwargs)
 
     with tf.Session() as session:
@@ -168,16 +157,13 @@ def main(argv):
 
             def dispatch_request(self):
 
-                sentence1 = request.args.get('sentence1')
-                sentence2 = request.args.get('sentence2')
+                sentence1 = request.form['sentence1'] if 'sentence1' in request.form else request.args.get('sentence1')
+                sentence2 = request.form['sentence2'] if 'sentence1' in request.form else request.args.get('sentence2')
 
                 if 'sentence1' in request.form:
                     sentence1 = request.form['sentence1']
                 if 'sentence2' in request.form:
                     sentence2 = request.form['sentence2']
-
-                print(sentence1)
-                print(sentence2)
 
                 sentence1_seq = qs_tokenizer.texts_to_sequences([sentence1])
                 sentence2_seq = qs_tokenizer.texts_to_sequences([sentence2])
@@ -187,18 +173,14 @@ def main(argv):
 
                 # Compute answer
                 feed_dict = {
-                    model.sentence1: [sentence1_seq],
-                    model.sentence2: [sentence2_seq],
-                    model.sentence1_size: [len(sentence1_seq)],
-                    model.sentence2_size: [len(sentence2_seq)]
+                    sentence1_ph: [sentence1_seq],
+                    sentence2_ph: [sentence2_seq],
+                    sentence1_length_ph: [len(sentence1_seq)],
+                    sentence2_length_ph: [len(sentence2_seq)],
+                    dropout_keep_prob_ph: 1.0
                 }
-
-                print(feed_dict)
-
+                
                 predictions = session.run(model.logits, feed_dict=feed_dict)[0]
-
-                print(predictions)
-
                 answer = {
                     'neutral': str(predictions[neutral_idx]),
                     'contradiction': str(predictions[contradiction_idx]),
@@ -207,7 +189,7 @@ def main(argv):
 
                 return jsonify(answer)
 
-        app.add_url_rule('/v1/dam', view_func=Service.as_view('request'))
+        app.add_url_rule('/v1/nli', view_func=Service.as_view('request'))
 
         app.run(host='0.0.0.0', port=8889, debug=True)
 
