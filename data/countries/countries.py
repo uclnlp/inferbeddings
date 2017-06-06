@@ -14,7 +14,7 @@ this is how I understood the experimental setup in Nickel 2015
 
 Sample usage:
 
-$ ./bin/adv-cli.py --model DistMult --similarity dot --train data/countries/s2/s2_train.tsv --valid data/countries/s2/s2_valid.tsv --test data/countries/s2/s2_test.tsv --auc --embedding-size 20 --nb-epochs 1000 --nb-batches 1 --loss hinge --margin 10 2>&1 | grep PR
+$ ./bin/kbp-cli.py --model DistMult --similarity dot --train data/countries/s2/s2_train.tsv --valid data/countries/s2/s2_valid.tsv --test data/countries/s2/s2_test.tsv --auc --embedding-size 20 --nb-epochs 1000 --nb-batches 1 --loss hinge --margin 10 2>&1 | grep PR
 INFO:inferbeddings.evaluation.base:[valid]	AUC-PR: 0.6595898142264915
 INFO:inferbeddings.evaluation.base:[test]	AUC-PR: 0.8342393150325614
 """

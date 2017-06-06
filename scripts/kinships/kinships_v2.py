@@ -16,7 +16,7 @@ def to_str(configuration):
 
 
 def to_cmd(fold_no, c):
-    command = './bin/adv-cli.py --auc' \
+    command = './bin/kbp-cli.py --auc' \
               ' --train data/kinships/stratified_folds/{}/kinships_train.tsv.gz' \
               ' --valid data/kinships/stratified_folds/{}/kinships_valid.tsv.gz' \
               ' --test data/kinships/stratified_folds/{}/kinships_test.tsv.gz ' \

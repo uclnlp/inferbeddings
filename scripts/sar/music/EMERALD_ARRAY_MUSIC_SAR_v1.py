@@ -29,7 +29,7 @@ def to_cmd(c, _path=None):
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
     assert loss_str is not None
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/kbp-cli.py' \
               ' --train {}/data/music_mte10_5k/music_mte10-train.tsv' \
               ' --valid {}/data/music_mte10_5k/music_mte10-valid.tsv' \
               ' --test {}/data/music_mte10_5k/music_mte10-test.tsv' \

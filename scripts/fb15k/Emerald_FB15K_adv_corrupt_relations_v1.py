@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucl/eisuc296/workspace/inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py' \
+    command = 'python3 {}/bin/kbp-cli.py' \
               ' --train {}/data/fb15k/freebase_mtr100_mte100-train.txt' \
               ' --valid {}/data/fb15k/freebase_mtr100_mte100-valid.txt' \
               ' --test {}/data/fb15k/freebase_mtr100_mte100-test.txt' \

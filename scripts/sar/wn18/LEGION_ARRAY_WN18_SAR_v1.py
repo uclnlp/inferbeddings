@@ -29,7 +29,7 @@ def to_cmd(c, _path=None):
     elif c['loss'] == 'pairwise_hinge':
         loss_str = '--pairwise-loss hinge'
     assert loss_str is not None
-    command = '{}/bin/adv-cli.py' \
+    command = '{}/bin/kbp-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
               ' --test {}/data/wn18/wordnet-mlj12-test.txt' \

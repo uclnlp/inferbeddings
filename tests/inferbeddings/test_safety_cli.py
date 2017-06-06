@@ -9,7 +9,7 @@ sys.setrecursionlimit(65535)
 
 def test_wn18_cli():
     # Checking if results are still the same
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/wn18/wordnet-mlj12-train.txt',
            '--lr', '0.1',
            '--model', 'TransE',
@@ -47,7 +47,7 @@ def test_wn18_cli():
             assert line.split()[2] == "0.0562"
 
     # Checking if results are still the same
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/wn18/wordnet-mlj12-train.txt',
            '--lr', '0.1',
            '--model', 'TransE',

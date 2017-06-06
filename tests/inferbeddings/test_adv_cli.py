@@ -10,7 +10,7 @@ sys.setrecursionlimit(65535)
 def test_symmetric_tiny_cli():
     # Checking if results are still not nice when not using adversarial training,
     # i.e. by using the parameters --adv-weight 0
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/synth/symmetric-tiny/data.tsv',
            '--test', 'data/synth/symmetric-tiny/data-inverse-test.tsv',
            '--lr', '0.1',
@@ -31,7 +31,7 @@ def test_symmetric_tiny_cli():
     # Hits@10 should be around 0% at first
     assert float(err.split()[-1][:-1]) < 10.0
 
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/synth/symmetric-tiny/data.tsv',
            '--test', 'data/synth/symmetric-tiny/data-inverse-test.tsv',
            '--lr', '0.1',
@@ -54,7 +54,7 @@ def test_symmetric_tiny_cli():
     assert float(err.split()[-1][:-1]) > 99.0
 
     # Checking if results are still nice
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/synth/symmetric-tiny/data.tsv',
            '--test', 'data/synth/symmetric-tiny/data-inverse-test.tsv',
            '--lr', '0.1',
@@ -76,7 +76,7 @@ def test_symmetric_tiny_cli():
     assert float(err.split()[-1][:-1]) > 99.0
 
     # Checking if results are still nice
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/synth/symmetric-tiny/data.tsv',
            '--test', 'data/synth/symmetric-tiny/data-inverse-test.tsv',
            '--lr', '0.1',
@@ -98,7 +98,7 @@ def test_symmetric_tiny_cli():
     # Hits@10 should be at least 90% even after a limited number of epochs
     assert float(err.split()[-1][:-1]) > 99.0
 
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/synth/symmetric-tiny/data.tsv',
            '--test', 'data/synth/symmetric-tiny/data-inverse-test.tsv',
            '--lr', '0.1',
@@ -119,7 +119,7 @@ def test_symmetric_tiny_cli():
     # Hits@10 should be at least 90% even after a limited number of epochs
     assert float(err.split()[-1][:-1]) > 99.0
 
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/synth/symmetric-tiny/data.tsv',
            '--test', 'data/synth/symmetric-tiny/data-inverse-test.tsv',
            '--lr', '0.1',
