@@ -15,29 +15,37 @@ logger = logging.getLogger(__name__)
 
 class SNLI:
     @staticmethod
-    def to_instance(d):
+    def to_instance(d, prefix=None):
         _id, _support, _question, _answer = d['pairID'], d['sentence1'], d['sentence2'], d['gold_label']
+        if prefix is not None:
+            _support = '{} {}'.format(prefix, _support)
+            _question = '{} {}'.format(prefix, _question)
         return {'id': _id, 'support': _support, 'question': _question, 'answer': _answer}
 
     @staticmethod
-    def parse(path):
-        with gzip.open(path, 'rb') as f:
-            res = []
-            for line in f:
-                instance = SNLI.to_instance(json.loads(line.decode('utf-8')))
-                if instance['answer'] in {'entailment', 'neutral', 'contradiction'}:
-                    res += [instance]
-            return res
+    def parse(path, prefix=None):
+        res = None
+        if path is not None:
+            with gzip.open(path, 'rb') as f:
+                res = []
+                for line in f:
+                    instance = SNLI.to_instance(json.loads(line.decode('utf-8')), prefix=prefix)
+                    if instance['answer'] in {'entailment', 'neutral', 'contradiction'}:
+                        res += [instance]
+        return res
 
     @staticmethod
     def generate(train_path='data/snli/snli_1.0_train.jsonl.gz',
                  valid_path='data/snli/snli_1.0_dev.jsonl.gz',
-                 test_path='data/snli/snli_1.0_test.jsonl.gz'):
-        train_corpus, dev_corpus, test_corpus = SNLI.parse(train_path), SNLI.parse(valid_path), SNLI.parse(test_path)
-        return [train_corpus, dev_corpus, test_corpus]
+                 test_path='data/snli/snli_1.0_test.jsonl.gz',
+                 prefix=None):
+        train_corpus = SNLI.parse(train_path, prefix=prefix)
+        dev_corpus = SNLI.parse(valid_path, prefix=prefix)
+        test_corpus = SNLI.parse(test_path, prefix=prefix)
+        return train_corpus, dev_corpus, test_corpus
 
 
-def count_parameters():
+def count_trainable_parameters():
     """
     Count the number of trainable tensorflow parameters loaded in
     the current graph.
@@ -122,11 +130,15 @@ def pad_sequences(sequences, max_len=None, dtype='int32', padding='post', trunca
             raise ValueError('Padding type "%s" not understood' % padding)
     return x
 
+
 def to_feed_dict(model, dataset):
     return {
-        model.sentence1: dataset['questions'], model.sentence2: dataset['supports'],
-        model.sentence1_size: dataset['question_lengths'], model.sentence2_size: dataset['support_lengths'],
-        model.label: dataset['answers']}
+        model.sentence1: dataset['questions'],
+        model.sentence2: dataset['supports'],
+        model.sentence1_size: dataset['question_lengths'],
+        model.sentence2_size: dataset['support_lengths'],
+        model.label: dataset['answers']
+    }
 
 
 def train_tokenizer_on_instances(instances, num_words=None):

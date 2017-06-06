@@ -113,5 +113,7 @@ def test_distmult_unit_sphere():
                 assert v_opt_errors_val >= v_errors_val
                 assert v_opt_loss_val >= v_loss_val
 
+        tf.reset_default_graph()
+
 if __name__ == '__main__':
     pytest.main([__file__])

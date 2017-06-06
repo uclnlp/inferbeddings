@@ -63,5 +63,7 @@ def test_losses():
                 assert estimated_loss_value > 0
                 np.testing.assert_allclose(loss_value, estimated_loss_value, 4)
 
+    tf.reset_default_graph()
+
 if __name__ == '__main__':
     pytest.main([__file__])

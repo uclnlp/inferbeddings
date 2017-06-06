@@ -99,6 +99,8 @@ def test_distmult_unit_sphere():
 
                 assert violation_loss_val <= (opt_adversarial_loss_val + 1e-4)
 
+        tf.reset_default_graph()
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     pytest.main([__file__])

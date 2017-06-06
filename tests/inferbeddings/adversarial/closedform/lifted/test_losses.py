@@ -127,6 +127,8 @@ def test_losses():
 
                 assert continuous_loss_0 <= .0 or continuous_loss_final <= continuous_loss_0
 
+        tf.reset_default_graph()
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     pytest.main([__file__])

@@ -18,12 +18,12 @@ def summary(configuration):
     kvs = sorted([(k, v) for k, v in configuration.items()], key=lambda e: e[0])
     return '_'.join([('%s=%s' % (k, v)) for (k, v) in kvs])
 
-# ./bin/snli-cli.py --semi-sort -f -n --glove ~/data/glove/glove.840B.300d.txt -m ff-dam --batch-size 32
+# ./bin/rte-cli.py --semi-sort -f -n --glove ~/data/glove/glove.840B.300d.txt -m ff-dam --batch-size 32
 # --dropout-keep-prob 0.8 --representation-size 200 --optimizer adam --learning-rate 0.0005
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucl/eisuc296/workspace/inferbeddings/'
-    command = 'python3 {}/bin/snli-cli.py --semi-sort -f -n -m ff-dam --nb-epochs 1000' \
+    command = 'python3 {}/bin/rte-cli.py --semi-sort -f -n -m ff-dam --nb-epochs 1000' \
               ' --embedding-size 300 --glove ~/data/glove/glove.840B.300d.txt' \
               ' --train {}/data/snli/snli_1.0_train.jsonl.gz' \
               ' --valid {}/data/snli/snli_1.0_dev.jsonl.gz' \
