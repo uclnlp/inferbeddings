@@ -6,19 +6,23 @@ import argparse
 import os
 import sys
 
-import numpy as np
 import tensorflow as tf
 
 from flask import Flask, request, jsonify
 from flask.views import View
 
-from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
+from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+
+from werkzeug.serving import WSGIRequestHandler, BaseWSGIServer
 
 import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
+
+WSGIRequestHandler.protocol_version = "HTTP/1.1"
+BaseWSGIServer.protocol_version = "HTTP/1.1"
 
 app = Flask('nli-service')
 
@@ -158,25 +162,15 @@ def main(argv):
             def dispatch_request(self):
 
                 sentence1 = request.form['sentence1'] if 'sentence1' in request.form else request.args.get('sentence1')
-                sentence2 = request.form['sentence2'] if 'sentence1' in request.form else request.args.get('sentence2')
+                sentence2 = request.form['sentence2'] if 'sentence2' in request.form else request.args.get('sentence2')
 
-                if 'sentence1' in request.form:
-                    sentence1 = request.form['sentence1']
-                if 'sentence2' in request.form:
-                    sentence2 = request.form['sentence2']
-
-                sentence1_seq = qs_tokenizer.texts_to_sequences([sentence1])
-                sentence2_seq = qs_tokenizer.texts_to_sequences([sentence2])
-
-                sentence1_seq = [item for sublist in sentence1_seq for item in sublist]
-                sentence2_seq = [item for sublist in sentence2_seq for item in sublist]
+                sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1]) for item in sublist]
+                sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2]) for item in sublist]
 
                 # Compute answer
                 feed_dict = {
-                    sentence1_ph: [sentence1_seq],
-                    sentence2_ph: [sentence2_seq],
-                    sentence1_length_ph: [len(sentence1_seq)],
-                    sentence2_length_ph: [len(sentence2_seq)],
+                    sentence1_ph: [sentence1_seq], sentence2_ph: [sentence2_seq],
+                    sentence1_length_ph: [len(sentence1_seq)], sentence2_length_ph: [len(sentence2_seq)],
                     dropout_keep_prob_ph: 1.0
                 }
 
