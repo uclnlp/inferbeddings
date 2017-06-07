@@ -67,17 +67,14 @@ def main(argv):
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'esim1'])
 
-    argparser.add_argument('--embedding-size', action='store', type=int, default=300)
-    argparser.add_argument('--representation-size', action='store', type=int, default=200)
-    argparser.add_argument('--hidden-size', action='store', type=int, default=200)
+    argparser.add_argument('--embedding-size', '-e', action='store', type=int, default=300)
+    argparser.add_argument('--representation-size', '-r', action='store', type=int, default=200)
 
-    argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
-    argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
     argparser.add_argument('--use-masking', action='store_true')
     argparser.add_argument('--prepend-null-token', action='store_true')
 
-    argparser.add_argument('--restore', '-r', action='store', type=str, default=None)
+    argparser.add_argument('--restore', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -96,7 +93,8 @@ def main(argv):
 
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
-        train_path=train_path, valid_path=valid_path, test_path=test_path)
+        train_path=train_path, valid_path=valid_path, test_path=test_path,
+        bos='<BOS>', eos='<EOS>')
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_instances), len(dev_instances), len(test_instances)))
 
@@ -163,11 +161,14 @@ def main(argv):
                 sentence1 = request.form['sentence1'] if 'sentence1' in request.form else request.args.get('sentence1')
                 sentence2 = request.form['sentence2'] if 'sentence2' in request.form else request.args.get('sentence2')
 
+                sentence1 = '{} {} {}'.format('<bos>', sentence1, '<eos>')
+                sentence2 = '{} {} {}'.format('<bos>', sentence2, '<eos>')
+
                 sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1]) for item in sublist]
                 sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2]) for item in sublist]
 
-                padded_sentence1_seq = sentence1_seq + ([0] * (48 - len(sentence1_seq)))
-                padded_sentence2_seq = sentence2_seq + ([0] * (50 - len(sentence2_seq)))
+                padded_sentence1_seq = sentence1_seq  # + ([0] * (51 - len(sentence1_seq)))
+                padded_sentence2_seq = sentence2_seq  # + ([0] * (53 - len(sentence2_seq)))
 
                 # Compute answer
                 feed_dict = {
