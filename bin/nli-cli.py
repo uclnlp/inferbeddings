@@ -295,13 +295,13 @@ def main(argv):
                         eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
                         p_vals, l_vals = [], []
 
-                        for batch_start, batch_end in eval_batches:
+                        for e_batch_start, e_batch_end in eval_batches:
                             feed_dict = {
-                                sentence1_ph: dataset['questions'][batch_start:batch_end],
-                                sentence2_ph: dataset['supports'][batch_start:batch_end],
-                                sentence1_length_ph: dataset['question_lengths'][batch_start:batch_end],
-                                sentence2_length_ph: dataset['support_lengths'][batch_start:batch_end],
-                                label_ph: dataset['answers'][batch_start:batch_end],
+                                sentence1_ph: dataset['questions'][e_batch_start:e_batch_end],
+                                sentence2_ph: dataset['supports'][e_batch_start:e_batch_end],
+                                sentence1_length_ph: dataset['question_lengths'][e_batch_start:e_batch_end],
+                                sentence2_length_ph: dataset['support_lengths'][e_batch_start:e_batch_end],
+                                label_ph: dataset['answers'][e_batch_start:e_batch_end],
                                 dropout_keep_prob_ph: 1.0
                             }
                             p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
