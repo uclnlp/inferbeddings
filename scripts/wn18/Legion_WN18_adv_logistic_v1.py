@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucacmin/workspace/inferbeddings/'
-    command = '{}/bin/adv-cli.py' \
+    command = '{}/bin/kbp-cli.py' \
               ' --train {}/data/wn18/wordnet-mlj12-train.txt' \
               ' --valid {}/data/wn18/wordnet-mlj12-valid.txt' \
               ' --test {}/data/wn18/wordnet-mlj12-test.txt' \

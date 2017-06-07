@@ -14,6 +14,7 @@ from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
 
 from inferbeddings.models.training import constraints
 
@@ -62,7 +63,7 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
-    argparser.add_argument('--symmetric-contradiction-reg-weight', action='store', type=float, default=None)
+    argparser.add_argument('--rule0-weight', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -96,7 +97,7 @@ def main(argv):
     word2vec_path = args.word2vec
 
     # Experimental RTE regularizers
-    symmetric_contradiction_reg_weight = args.symmetric_contradiction_reg_weight
+    rule0_weight = args.rule0_weight
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -104,13 +105,13 @@ def main(argv):
 
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
-        train_path=train_path, valid_path=valid_path, test_path=test_path)
+        train_path=train_path, valid_path=valid_path, test_path=test_path,
+        bos='<BOS>', eos='<EOS>')
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
                 .format(len(train_instances), len(dev_instances), len(test_instances)))
 
     logger.debug('Parsing corpus ..')
-
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=nb_words)
 
@@ -160,24 +161,24 @@ def main(argv):
         sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
         representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
-    RTEModel = None
+    model_class = None
     if model_name == 'cbilstm':
-        RTEModel = ConditionalBiLSTM
+        model_class = ConditionalBiLSTM
     elif model_name == 'ff-dam':
         ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
-        RTEModel = FeedForwardDAM
+        model_class = FeedForwardDAM
     elif model_name == 'ff-damp':
         ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
         model_kwargs.update(ff_kwargs)
-        RTEModel = FeedForwardDAMP
+        model_class = FeedForwardDAMP
     elif model_name == 'esim1':
         ff_kwargs = dict(use_masking=use_masking)
         model_kwargs.update(ff_kwargs)
-        RTEModel = ESIMv1
+        model_class = ESIMv1
 
-    assert RTEModel is not None
-    model = RTEModel(**model_kwargs)
+    assert model_class is not None
+    model = model_class(**model_kwargs)
 
     logits = model()
     predictions = tf.argmax(logits, axis=1, name='predictions')
@@ -185,20 +186,9 @@ def main(argv):
     losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
     loss = tf.reduce_mean(losses)
 
-    if symmetric_contradiction_reg_weight:
-        contradiction_prob = tf.nn.softmax(logits)[:, contradiction_idx]
-
-        inv_sequence2, inv_sequence2_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
-        inv_sequence1, inv_sequence1_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
-        inv_model_kwargs = model_kwargs.copy()
-        inv_model_kwargs['sequence1'], inv_model_kwargs['sequence1_length'] = inv_sequence1, inv_sequence1_length
-        inv_model_kwargs['sequence2'], inv_model_kwargs['sequence2_length'] = inv_sequence2, inv_sequence2_length
-
-        inv_model = RTEModel(reuse=True, **model_kwargs)
-        inv_logits = inv_model()
-        inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
-
-        loss += symmetric_contradiction_reg_weight * tf.nn.l2_loss(contradiction_prob - inv_contradiction_prob)
+    if rule0_weight:
+        loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
+                                                                  contradiction_idx=contradiction_idx)
 
     if clip_value:
         gradients, v = zip(*optimizer.compute_gradients(loss))
@@ -236,18 +226,12 @@ def main(argv):
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
-    # session_config.gpu_options.allocator_type = 'BFC'
 
     with tf.Session(config=session_config) as session:
         logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
 
         if restore_path:
             saver.restore(session, restore_path)
-
-            # Initialize uninitialized variables - XXX NOT WORKING
-            # uninitialized_variables = [var for var in tf.all_variables() if not tf.is_variable_initialized(var)]
-            # init_op = tf.variables_initializer(uninitialized_variables)
-            # session.run(init_op)
         else:
             session.run(init_op)
 
@@ -291,14 +275,15 @@ def main(argv):
                 batch_labels = labels[batch_start:batch_end]
 
                 batch_feed_dict = {
-                    sentence1_ph: batch_sentences1, sentence2_ph: batch_sentences2,
-                    sentence1_length_ph: batch_sizes1, sentence2_length_ph: batch_sizes2,
+                    sentence1_ph: batch_sentences1,
+                    sentence2_ph: batch_sentences2,
+                    sentence1_length_ph: batch_sizes1,
+                    sentence2_length_ph: batch_sizes2,
                     label_ph: batch_labels,
                     dropout_keep_prob_ph: dropout_keep_prob
                 }
 
                 _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
-                # logger.debug('Epoch {}/{}\tLoss: {}'.format(epoch, batch_idx, loss_value))
 
                 loss_values += [loss_value]
 
@@ -311,13 +296,13 @@ def main(argv):
                         eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
                         p_vals, l_vals = [], []
 
-                        for batch_start, batch_end in eval_batches:
+                        for e_batch_start, e_batch_end in eval_batches:
                             feed_dict = {
-                                sentence1_ph: dataset['questions'][batch_start:batch_end],
-                                sentence2_ph: dataset['supports'][batch_start:batch_end],
-                                sentence1_length_ph: dataset['question_lengths'][batch_start:batch_end],
-                                sentence2_length_ph: dataset['support_lengths'][batch_start:batch_end],
-                                label_ph: dataset['answers'][batch_start:batch_end],
+                                sentence1_ph: dataset['questions'][e_batch_start:e_batch_end],
+                                sentence2_ph: dataset['supports'][e_batch_start:e_batch_end],
+                                sentence1_length_ph: dataset['question_lengths'][e_batch_start:e_batch_end],
+                                sentence2_length_ph: dataset['support_lengths'][e_batch_start:e_batch_end],
+                                label_ph: dataset['answers'][e_batch_start:e_batch_end],
                                 dropout_keep_prob_ph: 1.0
                             }
                             p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
@@ -352,7 +337,6 @@ def main(argv):
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
-
             logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
     logger.info('Training finished.')

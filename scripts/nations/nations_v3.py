@@ -19,7 +19,7 @@ def to_str(configuration):
 
 
 def to_cmd(fold_no, c):
-    command = './bin/adv-cli.py --auc ' \
+    command = './bin/kbp-cli.py --auc ' \
               ' --train data/nations/stratified_folds/{}/nations_train.tsv.gz' \
               ' --valid data/nations/stratified_folds/{}/nations_valid.tsv.gz' \
               ' --test data/nations/stratified_folds/{}/nations_test.tsv.gz ' \

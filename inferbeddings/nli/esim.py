@@ -33,13 +33,8 @@ class BaseESIM(BaseRTEModel):
     def __init__(self, use_masking=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.variable_names_to_variables = {}
-
         embedding1_size = self.sequence1.get_shape()[-1].value
         embedding2_size = self.sequence2.get_shape()[-1].value
-
-        self.variable_names_to_variables['S1'] = self.sequence1
-        self.variable_names_to_variables['S2'] = self.sequence2
 
         assert embedding1_size == embedding2_size
 
@@ -48,9 +43,6 @@ class BaseESIM(BaseRTEModel):
 
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence2 = self._transform_input(self.sequence2, self.sequence2_length, reuse=True)
-
-        self.variable_names_to_variables['TS1'] = self.transformed_sequence1
-        self.variable_names_to_variables['TS2'] = self.transformed_sequence2
 
         logger.info('Building the Attend graph ..')
 
@@ -64,9 +56,6 @@ class BaseESIM(BaseRTEModel):
                                             sequence2_length=self.sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
 
-        self.variable_names_to_variables['ALPHA'] = self.alpha
-        self.variable_names_to_variables['BETA'] = self.beta
-
         logger.info('Building the Compare graph ..')
 
         # tensor with shape (batch_size, time_steps, num_units)
@@ -76,9 +65,6 @@ class BaseESIM(BaseRTEModel):
         # tensor with shape (batch_size, time_steps, num_units)
         self.v2 = self.compare(self.transformed_sequence2, self.alpha,
                                self.sequence2_length, reuse=True)
-
-        self.variable_names_to_variables['V1'] = self.v1
-        self.variable_names_to_variables['V2'] = self.v2
 
         logger.info('Building the Aggregate graph ..')
         self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
@@ -176,9 +162,6 @@ class BaseESIM(BaseRTEModel):
 
             v1_v2 = tf.concat(axis=1, values=[v1_mean, v1_max, v2_mean, v2_max])
             transformed_v1_v2 = self._transform_aggregate(v1_v2, reuse=reuse)
-
-            self.variable_names_to_variables['V1_V2'] = v1_v2
-            self.variable_names_to_variables['A_V1_V2'] = transformed_v1_v2
 
             logits = tf.contrib.layers.fully_connected(inputs=transformed_v1_v2,
                                                        num_outputs=num_classes,

@@ -47,7 +47,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = USER + 'inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py --auc' \
+    command = 'python3 {}/bin/kbp-cli.py --auc' \
               ' --train {}/data/synth/synth_v1/{}_train.tsv' \
               ' --valid {}/data/synth/synth_v1/{}_valid.tsv' \
               ' --test {}/data/synth/synth_v1/{}_test.tsv' \

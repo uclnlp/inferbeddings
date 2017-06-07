@@ -36,7 +36,7 @@ def summary(configuration):
 def to_cmd_closed_form(c, _path=None):
     if _path is None:
         _path = USER + 'inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py --auc' \
+    command = 'python3 {}/bin/kbp-cli.py --auc' \
               ' --train {}/data/synth/sampled_small/{}_train.tsv' \
               ' --valid {}/data/synth/sampled_small/{}_valid.tsv' \
               ' --test {}/data/synth/sampled_small/{}_test.tsv' \
@@ -74,7 +74,7 @@ def to_cmd_closed_form(c, _path=None):
 def to_cmd_iterative(c, _path=None):
     if _path is None:
         _path = USER + 'inferbeddings/'
-    command = 'python3 {}/bin/adv-cli.py --auc' \
+    command = 'python3 {}/bin/kbp-cli.py --auc' \
               ' --train {}/data/synth/sampled_small/{}_train.tsv' \
               ' --valid {}/data/synth/sampled_small/{}_valid.tsv' \
               ' --test {}/data/synth/sampled_small/{}_test.tsv' \

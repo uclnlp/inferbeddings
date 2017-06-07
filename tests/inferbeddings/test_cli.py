@@ -9,7 +9,7 @@ sys.setrecursionlimit(65535)
 
 def test_nations_cli():
     # Checking if results are still nice
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/nations/stratified_folds/0/nations_train.tsv.gz',
            '--valid', 'data/nations/stratified_folds/0/nations_valid.tsv.gz',
            '--test', 'data/nations/stratified_folds/0/nations_test.tsv.gz',
@@ -25,7 +25,7 @@ def test_nations_cli():
     # Hits@10 should be at least 90% even after a limited number of epochs
     assert float(err.split()[-1][:-1]) > 90.0
 
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/nations/stratified_folds/0/nations_train.tsv.gz',
            '--valid', 'data/nations/stratified_folds/0/nations_valid.tsv.gz',
            '--test', 'data/nations/stratified_folds/0/nations_test.tsv.gz',
@@ -41,7 +41,7 @@ def test_nations_cli():
     # Hits@10 should be at least 90% even after a limited number of epochs
     assert float(err.split()[-1][:-1]) > 90.0
 
-    cmd = ['./bin/adv-cli.py',
+    cmd = ['./bin/kbp-cli.py',
            '--train', 'data/nations/stratified_folds/0/nations_train.tsv.gz',
            '--valid', 'data/nations/stratified_folds/0/nations_valid.tsv.gz',
            '--test', 'data/nations/stratified_folds/0/nations_test.tsv.gz',
