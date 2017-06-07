@@ -45,9 +45,7 @@ def test_nli_damp():
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
-    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                      initializer=tf.contrib.layers.xavier_initializer(),
-                                      trainable=False)
+    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size])
 
     sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
     sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
@@ -92,7 +90,7 @@ def test_nli_damp():
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        def compute_accuracy(name, dataset):
+        def compute_accuracy(dataset):
             nb_eval_instances = len(dataset['questions'])
             eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
 
@@ -113,8 +111,8 @@ def test_nli_damp():
             matches = np.equal(p_vals, l_vals)
             return np.mean(matches)
 
-        dev_accuracy = compute_accuracy('Dev', dev_dataset)
-        test_accuracy = compute_accuracy('Test', test_dataset)
+        dev_accuracy = compute_accuracy(dev_dataset)
+        test_accuracy = compute_accuracy(test_dataset)
 
         print(dev_accuracy, test_accuracy)
 
