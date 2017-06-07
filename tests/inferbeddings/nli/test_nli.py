@@ -7,7 +7,6 @@ from inferbeddings.models.training.util import make_batches
 
 import inferbeddings.nli.util as util
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
-from inferbeddings.visualization import hinton_diagram
 
 import logging
 
