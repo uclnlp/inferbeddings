@@ -35,8 +35,8 @@ def main(argv):
 
     total, matches = 0, 0
 
-    pbar = tqdm(instances)
-    for instance in pbar:
+    progress_bar = tqdm(instances)
+    for instance in progress_bar:
         question, support, answer = instance['question'], instance['support'], instance['answer']
         res = session.post('http://127.0.0.1:8889/v1/nli', data={'sentence1': question, 'sentence2': support})
         prediction = sorted(res.json().items(), key=operator.itemgetter(1), reverse=True)[0][0]
@@ -44,7 +44,7 @@ def main(argv):
         total += 1
         matches += 1 if answer == prediction else 0
 
-        pbar.set_description('Accuracy: {:.2f}'.format(matches / total))
+        progress_bar.set_description('Accuracy: {:.2f}'.format(matches / total))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)

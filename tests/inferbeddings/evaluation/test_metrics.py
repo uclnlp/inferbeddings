@@ -36,6 +36,7 @@ def scoring_function(args):
     return np.array(values)
 
 
+@pytest.mark.light
 def test_ranking_score():
     logging.basicConfig(level=logging.INFO)
     ranker = metrics.Ranker(scoring_function, 4)

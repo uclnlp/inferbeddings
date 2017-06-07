@@ -13,6 +13,7 @@ from inferbeddings.adversarial import Adversarial
 import pytest
 
 
+@pytest.mark.light
 def test_adversarial():
     for _ in range(32):
         _test_adversarial()

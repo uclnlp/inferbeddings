@@ -10,6 +10,7 @@ from inferbeddings.regularizers.util import clauses_to_equality_loss
 import pytest
 
 
+@pytest.mark.light
 def test_losses():
     triples = [
         ('e1', 'p', 'e2'),

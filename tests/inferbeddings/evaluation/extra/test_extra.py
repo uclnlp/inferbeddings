@@ -32,6 +32,7 @@ def ndcg(y, scores, norm=False):
     return metrics.NDCG(normalize_scores=norm)(y, scores)
 
 
+@pytest.mark.light
 def test_ranking_score():
     n = 8192
 
@@ -58,6 +59,7 @@ def test_ranking_score():
         np.testing.assert_allclose(value_davis, value_sklearn, rtol=1e-4)
 
 
+@pytest.mark.light
 def test_auc():
     y = np.array([1, 1, 1, 1, 1, 0, 0, 0])
     scores = np.array([1., .2, .8, .7, .6, .5, .4, .3])
@@ -75,6 +77,7 @@ def test_auc():
     np.testing.assert_allclose(metric.calculate_auc_pr(), 0.919642857143)
 
 
+@pytest.mark.light
 def test_ndcg():
     y = np.array([1, 1, 1, 1, 1, 0, 0, 0])
     scores = np.array([1., .95, .8, .7, .6, .5, .4, .3])
@@ -88,6 +91,7 @@ def test_ndcg():
     value = ndcg(y, scores)
 
 
+@pytest.mark.light
 def test_dcg():
     y = np.array([1, 1, 1, 1, 0, 0])
     scores = np.array([1., .9, .8, .7, .6, .5])
@@ -127,6 +131,7 @@ def test_dcg():
     np.testing.assert_allclose(value_lower_2, 2.062, rtol=1e-2)
 
 
+@pytest.mark.light
 def test_ap():
     y = np.array([1, 1, 0, 1, 0, 1, 0, 0, 0, 1])
     scores = np.array([1., .9, .8, .7, .6, .5, .4, .3, .2, .1])

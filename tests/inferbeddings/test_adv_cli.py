@@ -7,6 +7,7 @@ import sys
 sys.setrecursionlimit(65535)
 
 
+@pytest.mark.light
 def test_symmetric_tiny_cli():
     # Checking if results are still not nice when not using adversarial training,
     # i.e. by using the parameters --adv-weight 0

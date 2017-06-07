@@ -7,6 +7,7 @@ import sys
 sys.setrecursionlimit(65535)
 
 
+@pytest.mark.light
 def test_wn18_cli():
     # Checking if results are still the same
     cmd = ['./bin/kbp-cli.py',
