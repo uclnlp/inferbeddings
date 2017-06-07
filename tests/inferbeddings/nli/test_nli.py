@@ -27,9 +27,9 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
+    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
-    sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')su)
+    sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
 
