@@ -20,7 +20,6 @@ from inferbeddings.models.training import constraints
 
 import logging
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
