@@ -62,8 +62,16 @@ def test_nli_damp():
     logits = model()
     probabilities = tf.nn.softmax(logits)
 
-    sentence1_str = '<bos> The kid is jumping <eos>'
-    sentence2_str = '<bos> The girl is jumping happily on the table <eos>'
+    # {'entailment': '0.00833298', 'neutral': '0.00973773', 'contradiction': '0.981929'}
+    # sentence1_str = '<bos> The boy is jumping <eos>'
+    # sentence2_str = '<bos> The girl is jumping happily on the table <eos>'
+
+    # {'entailment': '0.000107546', 'contradiction': '0.995034', 'neutral': '0.00485802'}
+    # sentence1_str = '<bos> The girl is jumping happily on the table <eos>'
+    # sentence2_str = '<bos> The boy is jumping <eos>'
+
+    sentence1_str = '<bos> The boy is jumping happily on the table <eos>'
+    sentence2_str = '<bos> The boy is jumping <eos>'
 
     sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1_str]) for item in sublist]
     sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2_str]) for item in sublist]
@@ -95,3 +103,7 @@ def test_nli_damp():
         raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)[0]
 
         print(hinton_diagram(raw_attentions_value))
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    pytest.main([__file__])
