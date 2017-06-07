@@ -14,6 +14,7 @@ from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
 
 from inferbeddings.models.training import constraints
 
@@ -62,7 +63,7 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
-    argparser.add_argument('--symmetric-contradiction-reg-weight', action='store', type=float, default=None)
+    argparser.add_argument('--rule0-weight', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -96,7 +97,7 @@ def main(argv):
     word2vec_path = args.word2vec
 
     # Experimental RTE regularizers
-    symmetric_contradiction_reg_weight = args.symmetric_contradiction_reg_weight
+    rule0_weight = args.rule0_weight
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -185,22 +186,9 @@ def main(argv):
     losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
     loss = tf.reduce_mean(losses)
 
-    if symmetric_contradiction_reg_weight:
-        contradiction_prob = tf.nn.softmax(logits)[:, contradiction_idx]
-
-        inv_sequence2, inv_sequence2_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
-        inv_sequence1, inv_sequence1_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
-
-        inv_model_kwargs = model_kwargs.copy()
-
-        inv_model_kwargs['sequence1'], inv_model_kwargs['sequence1_length'] = inv_sequence1, inv_sequence1_length
-        inv_model_kwargs['sequence2'], inv_model_kwargs['sequence2_length'] = inv_sequence2, inv_sequence2_length
-
-        inv_model = model_class(reuse=True, **model_kwargs)
-        inv_logits = inv_model()
-        inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
-
-        loss += symmetric_contradiction_reg_weight * tf.nn.l2_loss(contradiction_prob - inv_contradiction_prob)
+    if rule0_weight:
+        loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
+                                                                  contradiction_idx=contradiction_idx)
 
     if clip_value:
         gradients, v = zip(*optimizer.compute_gradients(loss))
