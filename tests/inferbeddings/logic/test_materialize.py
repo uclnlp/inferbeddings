@@ -8,6 +8,7 @@ from inferbeddings.parse import parse_clause
 from inferbeddings.logic import materialize
 
 
+@pytest.mark.light
 def test_materialize():
     initial_facts = [Fact('q', ['{}'.format(idx), '{}'.format(idx + 1)]) for idx in range(64)]
     parser = KnowledgeBaseParser(initial_facts)

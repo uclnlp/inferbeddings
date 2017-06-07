@@ -5,6 +5,7 @@ import pytest
 from inferbeddings.walk import BidirectionalWalker
 
 
+@pytest.mark.light
 def test_walker():
     triples = [
         ('A', 'p', 'B'),

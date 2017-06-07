@@ -26,6 +26,7 @@ def count_trainable_parameters():
     return total_params
 
 
+@pytest.mark.light
 def test_esim():
     vocab_size = 200
     embedding_size = 300

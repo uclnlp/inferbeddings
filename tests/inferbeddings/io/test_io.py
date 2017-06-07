@@ -9,6 +9,7 @@ import numpy as np
 from inferbeddings.io import load_glove, load_word2vec
 
 
+@pytest.mark.light
 def test_load_glove_large():
     glove_path = os.path.expanduser('~/data/glove/glove.840B.300d.txt')
     if os.path.isfile(glove_path):
@@ -22,6 +23,7 @@ def test_load_glove_large():
         np.testing.assert_allclose(learning_vector[0:3], [0.047511, 0.1404, -0.11736], rtol=1e-3)
 
 
+@pytest.mark.light
 def test_load_word2vec():
     word2vec_path = os.path.expanduser('~/data/word2vec/GoogleNews-vectors-negative300.bin.gz')
     if os.path.isfile(word2vec_path):
@@ -35,6 +37,7 @@ def test_load_word2vec():
         np.testing.assert_allclose(learning_vector[0:3], [-0.08837890625, 0.1484375, -0.06298828125])
 
 
+@pytest.mark.light
 def test_load_glove():
     glove_path = 'data/glove/glove.6B.50d.txt.gz'
     if os.path.isfile(glove_path):

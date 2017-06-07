@@ -9,6 +9,7 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.light
 def test_nli_util():
     train_instances, dev_instances, test_instances = util.SNLI.generate()
     all_instances = train_instances + dev_instances + test_instances
