@@ -5,6 +5,9 @@ import tensorflow as tf
 
 import inferbeddings.nli.util as util
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+
+from inferbeddings.visualization import hinton_diagram
+
 import logging
 
 import pytest
@@ -38,6 +41,8 @@ def test_nli_damp():
     sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
     sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
 
+    dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
+
     embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
                                       initializer=tf.contrib.layers.xavier_initializer(),
                                       trainable=False)
@@ -48,7 +53,8 @@ def test_nli_damp():
     model_kwargs = dict(
         sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
         sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
-        representation_size=representation_size, dropout_keep_prob=1.0, use_masking=True)
+        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph,
+        use_masking=True)
     model_class = FeedForwardDAMP
 
     model = model_class(**model_kwargs)
@@ -56,4 +62,36 @@ def test_nli_damp():
     logits = model()
     probabilities = tf.nn.softmax(logits)
 
-    
+    sentence1_str = '<bos> The kid is jumping <eos>'
+    sentence2_str = '<bos> The girl is jumping happily on the table <eos>'
+
+    sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1_str]) for item in sublist]
+    sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2_str]) for item in sublist]
+
+    restore_path = 'models/nli/damp_v1.ckpt'
+
+    with tf.Session() as session:
+        saver = tf.train.Saver()
+        saver.restore(session, restore_path)
+
+        feed_dict = {
+            sentence1_ph: [sentence1_seq],
+            sentence2_ph: [sentence2_seq],
+            sentence1_length_ph: [len(sentence1_seq)],
+            sentence2_length_ph: [len(sentence2_seq)],
+            dropout_keep_prob_ph: 1.0
+        }
+
+        probabilities_value = session.run(probabilities, feed_dict=feed_dict)[0]
+
+        answer = {
+            'neutral': str(probabilities_value[neutral_idx]),
+            'contradiction': str(probabilities_value[contradiction_idx]),
+            'entailment': str(probabilities_value[entailment_idx])
+        }
+
+        print(answer)
+
+        raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)[0]
+
+        print(hinton_diagram(raw_attentions_value))
