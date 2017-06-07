@@ -105,7 +105,7 @@ def main(argv):
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
         train_path=train_path, valid_path=valid_path, test_path=test_path,
-        bos='<BOS>', eos='<EOS>')
+        bos='<bos>', eos='<eos>')
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
                 .format(len(train_instances), len(dev_instances), len(test_instances)))

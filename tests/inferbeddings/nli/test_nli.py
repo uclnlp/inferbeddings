@@ -3,9 +3,10 @@
 import numpy as np
 import tensorflow as tf
 
+from inferbeddings.models.training.util import make_batches
+
 import inferbeddings.nli.util as util
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
-
 from inferbeddings.visualization import hinton_diagram
 
 import logging
@@ -21,7 +22,7 @@ def test_nli_damp():
     representation_size = 200
     max_len = None
 
-    train_instances, dev_instances, test_instances = util.SNLI.generate(bos='<BOS>', eos='<EOS>')
+    train_instances, dev_instances, test_instances = util.SNLI.generate(bos='<bos>', eos='<eos>')
 
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)
@@ -42,6 +43,7 @@ def test_nli_damp():
     sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
     sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
 
+    label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
     embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
@@ -62,6 +64,10 @@ def test_nli_damp():
 
     logits = model()
     probabilities = tf.nn.softmax(logits)
+    predictions = tf.argmax(logits, axis=1, name='predictions')
+
+    predictions_int = tf.cast(predictions, tf.int32)
+    labels_int = tf.cast(label_ph, tf.int32)
 
     # {'entailment': '0.00833298', 'neutral': '0.00973773', 'contradiction': '0.981929'}
     # sentence1_str = '<bos> The boy is jumping <eos>'
@@ -76,11 +82,10 @@ def test_nli_damp():
     # sentence2_str = '<bos> The boy is jumping <eos>'
 
     # {'neutral': '0.0318933', 'entailment': '0.964676', 'contradiction': '0.0034308'}
-    sentence1_str = '<bos> The boy is jumping <eos>'
-    sentence2_str = '<bos> The boy is jumping happily on the table <eos>'
+    # sentence1_str = '<bos> The boy is jumping <eos>'
+    # sentence2_str = '<bos> The boy is jumping happily on the table <eos>'
 
-    sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1_str]) for item in sublist]
-    sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2_str]) for item in sublist]
+    batch_size = 32
 
     restore_path = 'models/nli/damp_v1.ckpt'
 
@@ -88,27 +93,31 @@ def test_nli_damp():
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        feed_dict = {
-            sentence1_ph: [sentence1_seq],
-            sentence2_ph: [sentence2_seq],
-            sentence1_length_ph: [len(sentence1_seq)],
-            sentence2_length_ph: [len(sentence2_seq)],
-            dropout_keep_prob_ph: 1.0
-        }
+        def compute_accuracy(name, dataset):
+            nb_eval_instances = len(dataset['questions'])
+            eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
 
-        probabilities_value = session.run(probabilities, feed_dict=feed_dict)[0]
+            p_vals, l_vals = [], []
+            for e_batch_start, e_batch_end in eval_batches:
+                feed_dict = {
+                    sentence1_ph: dataset['questions'][e_batch_start:e_batch_end],
+                    sentence2_ph: dataset['supports'][e_batch_start:e_batch_end],
+                    sentence1_length_ph: dataset['question_lengths'][e_batch_start:e_batch_end],
+                    sentence2_length_ph: dataset['support_lengths'][e_batch_start:e_batch_end],
+                    label_ph: dataset['answers'][e_batch_start:e_batch_end],
+                    dropout_keep_prob_ph: 1.0
+                }
+                p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+                p_vals += p_val.tolist()
+                l_vals += l_val.tolist()
 
-        answer = {
-            'neutral': str(probabilities_value[neutral_idx]),
-            'contradiction': str(probabilities_value[contradiction_idx]),
-            'entailment': str(probabilities_value[entailment_idx])
-        }
+            matches = np.equal(p_vals, l_vals)
+            return np.mean(matches)
 
-        print(answer)
+        dev_accuracy = compute_accuracy('Dev', dev_dataset)
+        test_accuracy = compute_accuracy('Test', test_dataset)
 
-        raw_attentions_value = session.run(model.raw_attentions, feed_dict=feed_dict)[0]
-
-        print(hinton_diagram(raw_attentions_value))
+        print(dev_accuracy, test_accuracy)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
