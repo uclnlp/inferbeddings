@@ -105,13 +105,13 @@ def main(argv):
 
     logger.debug('Reading corpus ..')
     train_instances, dev_instances, test_instances = SNLI.generate(
-        train_path=train_path, valid_path=valid_path, test_path=test_path)
+        train_path=train_path, valid_path=valid_path, test_path=test_path,
+        bos='<BOS>', eos='<EOS>')
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
                 .format(len(train_instances), len(dev_instances), len(test_instances)))
 
     logger.debug('Parsing corpus ..')
-
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=nb_words)
 
@@ -226,7 +226,6 @@ def main(argv):
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
-    # session_config.gpu_options.allocator_type = 'BFC'
 
     with tf.Session(config=session_config) as session:
         logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
@@ -276,8 +275,10 @@ def main(argv):
                 batch_labels = labels[batch_start:batch_end]
 
                 batch_feed_dict = {
-                    sentence1_ph: batch_sentences1, sentence2_ph: batch_sentences2,
-                    sentence1_length_ph: batch_sizes1, sentence2_length_ph: batch_sizes2,
+                    sentence1_ph: batch_sentences1,
+                    sentence2_ph: batch_sentences2,
+                    sentence1_length_ph: batch_sizes1,
+                    sentence2_length_ph: batch_sizes2,
                     label_ph: batch_labels,
                     dropout_keep_prob_ph: dropout_keep_prob
                 }
@@ -336,7 +337,6 @@ def main(argv):
 
             def stats(values):
                 return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
-
             logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
     logger.info('Training finished.')
