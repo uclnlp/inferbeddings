@@ -33,7 +33,7 @@ test-light:
     - script:
         name: Run unit tests
         code: |
-          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not slow) and (not veryslow) and (not closedform)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(light) and (not slow) and (not veryslow) and (not closedform)"
 
 test-slow:
   steps:
@@ -53,7 +53,7 @@ test-slow:
     - script:
         name: Run slow unit tests
         code: |
-          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(slow) and (not veryslow) and (not closedform)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not light) and (slow) and (not veryslow) and (not closedform)"
 
 test-veryslow:
   steps:
@@ -73,7 +73,7 @@ test-veryslow:
     - script:
         name: Run very slow unit tests
         code: |
-          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not slow) and (veryslow) and (not closedform)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not light) and (not slow) and (veryslow) and (not closedform)"
 
 test-closedform:
   steps:
@@ -93,4 +93,4 @@ test-closedform:
     - script:
         name: Run closed form solutions unit tests
         code: |
-          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not slow) and (not veryslow) and (closedform)"
+          LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1` python3 -m pytest tests -v -m "(not light) and (not slow) and (not veryslow) and (closedform)"

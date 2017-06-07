@@ -7,6 +7,7 @@ import sys
 sys.setrecursionlimit(65535)
 
 
+@pytest.mark.light
 def test_nations_cli():
     # Checking if results are still nice
     cmd = ['./bin/kbp-cli.py',

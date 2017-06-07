@@ -19,6 +19,7 @@ def complex_conjugate(x):
     return np.concatenate((x_re, - x_im), axis=-1)
 
 
+@pytest.mark.light
 def test_translations():
     rs = np.random.RandomState(0)
     pe = rs.rand(1024, 10)
@@ -50,6 +51,7 @@ def test_translations():
     tf.reset_default_graph()
 
 
+@pytest.mark.light
 def test_scaling():
     rs = np.random.RandomState(0)
     pe = rs.rand(1024, 10)
@@ -81,6 +83,7 @@ def test_scaling():
     tf.reset_default_graph()
 
 
+@pytest.mark.light
 def test_complex():
     rs = np.random.RandomState(0)
     pe = rs.rand(1024, 10)

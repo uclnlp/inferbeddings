@@ -25,6 +25,7 @@ def attention_softmax3d(values):
     return tf.reshape(softmax_reshaped_values, original_shape)
 
 
+@pytest.mark.light
 def test_soft_alignment():
     batch_size = 1
     time_steps_seq1, time_steps_seq2 = 12, 16
