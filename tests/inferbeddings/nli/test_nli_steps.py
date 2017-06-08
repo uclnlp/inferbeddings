@@ -32,8 +32,8 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
-    dev_instances = dev_instances[:1]
-    test_instances = test_instances[:1]
+    dev_instances = dev_instances[:3]
+    test_instances = test_instances[:3]
 
     train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
@@ -80,7 +80,7 @@ def test_nli_damp():
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        def compute_accuracy(dataset):
+        def compute_accuracy(dataset, debug=False):
             nb_eval_instances = len(dataset['questions'])
             batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
 
@@ -96,14 +96,24 @@ def test_nli_damp():
                     dropout_keep_prob_ph: 1.0
                 }
 
+                if debug:
+                    print(feed_dict)
+                    # print(session.run(sentence1_embedding[0], feed_dict=feed_dict))
+                    # print(session.run(sentence2_embedding[0], feed_dict=feed_dict))
+                    # print(session.run(model.transformed_sequence1[0], feed_dict=feed_dict))
+                    # print(session.run(model.alpha[0], feed_dict=feed_dict))
+                    # print(session.run(model.v1[0], feed_dict=feed_dict))
+                    # print(session.run(logits, feed_dict=feed_dict))
+
                 p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+
                 p_vals += p_val.tolist()
                 l_vals += l_val.tolist()
 
             matches = np.equal(p_vals, l_vals)
             return np.mean(matches)
 
-        dev_accuracy = compute_accuracy(dev_dataset)
+        dev_accuracy = compute_accuracy(dev_dataset, debug=True)
         test_accuracy = compute_accuracy(test_dataset)
 
         print(dev_accuracy, test_accuracy)
