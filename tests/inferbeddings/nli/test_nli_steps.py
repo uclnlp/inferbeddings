@@ -32,6 +32,9 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
+    dev_instances = dev_instances[:3]
+    test_instances = test_instances[:3]
+
     train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
@@ -66,52 +69,51 @@ def test_nli_damp():
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    # {'entailment': '0.00833298', 'neutral': '0.00973773', 'contradiction': '0.981929'}
-    # sentence1_str = '<bos> The boy is jumping <eos>'
-    # sentence2_str = '<bos> The girl is jumping happily on the table <eos>'
-
-    # {'entailment': '0.000107546', 'contradiction': '0.995034', 'neutral': '0.00485802'}
-    # sentence1_str = '<bos> The girl is jumping happily on the table <eos>'
-    # sentence2_str = '<bos> The boy is jumping <eos>'
-
-    # {'entailment': '0.0171175', 'contradiction': '0.0755575', 'neutral': '0.907325'}
-    # sentence1_str = '<bos> The boy is jumping happily on the table <eos>'
-    # sentence2_str = '<bos> The boy is jumping <eos>'
-
     # {'neutral': '0.0318933', 'entailment': '0.964676', 'contradiction': '0.0034308'}
     # sentence1_str = '<bos> The boy is jumping <eos>'
     # sentence2_str = '<bos> The boy is jumping happily on the table <eos>'
 
     batch_size = 32
-
     restore_path = 'models/nli/damp_v1.ckpt'
 
     with tf.Session() as session:
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        def compute_accuracy(dataset):
+        def compute_accuracy(dataset, debug=False):
             nb_eval_instances = len(dataset['questions'])
-            eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
+            batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
 
             p_vals, l_vals = [], []
-            for e_batch_start, e_batch_end in eval_batches:
+
+            for batch_start, batch_end in batches:
                 feed_dict = {
-                    sentence1_ph: dataset['questions'][e_batch_start:e_batch_end],
-                    sentence2_ph: dataset['supports'][e_batch_start:e_batch_end],
-                    sentence1_length_ph: dataset['question_lengths'][e_batch_start:e_batch_end],
-                    sentence2_length_ph: dataset['support_lengths'][e_batch_start:e_batch_end],
-                    label_ph: dataset['answers'][e_batch_start:e_batch_end],
+                    sentence1_ph: dataset['questions'][batch_start:batch_end],
+                    sentence2_ph: dataset['supports'][batch_start:batch_end],
+                    sentence1_length_ph: dataset['question_lengths'][batch_start:batch_end],
+                    sentence2_length_ph: dataset['support_lengths'][batch_start:batch_end],
+                    label_ph: dataset['answers'][batch_start:batch_end],
                     dropout_keep_prob_ph: 1.0
                 }
+
+                if debug:
+                    print(feed_dict)
+                    # print(session.run(sentence1_embedding[0], feed_dict=feed_dict))
+                    # print(session.run(sentence2_embedding[0], feed_dict=feed_dict))
+                    # print(session.run(model.transformed_sequence1[0], feed_dict=feed_dict))
+                    # print(session.run(model.alpha[0], feed_dict=feed_dict))
+                    # print(session.run(model.v1[0], feed_dict=feed_dict))
+                    # print(session.run(logits, feed_dict=feed_dict))
+
                 p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
+
                 p_vals += p_val.tolist()
                 l_vals += l_val.tolist()
 
             matches = np.equal(p_vals, l_vals)
             return np.mean(matches)
 
-        dev_accuracy = compute_accuracy(dev_dataset)
+        dev_accuracy = compute_accuracy(dev_dataset, debug=True)
         test_accuracy = compute_accuracy(test_dataset)
 
         print(dev_accuracy, test_accuracy)
