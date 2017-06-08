@@ -106,6 +106,8 @@ def test_nli_damp():
 
         print(dev_accuracy, test_accuracy)
 
+    tf.reset_default_graph()
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     pytest.main([__file__])
