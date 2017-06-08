@@ -32,6 +32,9 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
+    dev_instances = dev_instances[:1]
+    test_instances = test_instances[:1]
+
     train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
@@ -71,7 +74,6 @@ def test_nli_damp():
     # sentence2_str = '<bos> The boy is jumping happily on the table <eos>'
 
     batch_size = 32
-
     restore_path = 'models/nli/damp_v1.ckpt'
 
     with tf.Session() as session:
@@ -101,8 +103,8 @@ def test_nli_damp():
             matches = np.equal(p_vals, l_vals)
             return np.mean(matches)
 
-        dev_accuracy = compute_accuracy(dev_dataset[:1])
-        test_accuracy = compute_accuracy(test_dataset[:1])
+        dev_accuracy = compute_accuracy(dev_dataset)
+        test_accuracy = compute_accuracy(test_dataset)
 
         print(dev_accuracy, test_accuracy)
 
