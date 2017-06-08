@@ -20,12 +20,6 @@ test-light:
     - pip-install
 
     - script:
-        name: setup
-        code: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
-
-    - script:
         name: install
         code: |
           python3 setup.py install
@@ -33,18 +27,11 @@ test-light:
     - script:
         name: Run unit tests
         code: |
-          # LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1`
           python3 -m pytest tests -v -m "(light) and (not slow) and (not veryslow) and (not closedform)"
 
 test-slow:
   steps:
     - pip-install
-
-    - script:
-        name: setup
-        code: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
 
     - script:
         name: install
@@ -54,18 +41,11 @@ test-slow:
     - script:
         name: Run slow unit tests
         code: |
-          # LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1`
           python3 -m pytest tests -v -m "(not light) and (slow) and (not veryslow) and (not closedform)"
 
 test-veryslow:
   steps:
     - pip-install
-
-    - script:
-        name: setup
-        code: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
 
     - script:
         name: install
@@ -75,18 +55,11 @@ test-veryslow:
     - script:
         name: Run very slow unit tests
         code: |
-          # LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1`
           python3 -m pytest tests -v -m "(not light) and (not slow) and (veryslow) and (not closedform)"
 
 test-closedform:
   steps:
     - pip-install
-
-    - script:
-        name: setup
-        code: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get -y install apt-utils libtcmalloc-minimal4
 
     - script:
         name: install
@@ -96,5 +69,4 @@ test-closedform:
     - script:
         name: Run closed form solutions unit tests
         code: |
-          # LD_PRELOAD=`ls /usr/lib/libtcmalloc_minimal.so.* | head -n 1`
           python3 -m pytest tests -v -m "(not light) and (not slow) and (not veryslow) and (closedform)"
