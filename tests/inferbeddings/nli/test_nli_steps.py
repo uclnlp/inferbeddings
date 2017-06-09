@@ -32,8 +32,8 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
-    dev_instances = dev_instances[:3]
-    test_instances = test_instances[:3]
+    # dev_instances = dev_instances[:3]
+    # test_instances = test_instances[:3]
 
     train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
@@ -97,13 +97,7 @@ def test_nli_damp():
                 }
 
                 if debug:
-                    print(feed_dict)
-                    # print(session.run(sentence1_embedding[0], feed_dict=feed_dict))
-                    # print(session.run(sentence2_embedding[0], feed_dict=feed_dict))
-                    # print(session.run(model.transformed_sequence1[0], feed_dict=feed_dict))
-                    # print(session.run(model.alpha[0], feed_dict=feed_dict))
-                    # print(session.run(model.v1[0], feed_dict=feed_dict))
-                    # print(session.run(logits, feed_dict=feed_dict))
+                    pass
 
                 p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
 
