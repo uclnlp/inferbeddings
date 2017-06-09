@@ -144,14 +144,28 @@ def main(argv):
     sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
     sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
 
+    def clip_sentence(sentence, sizes):
+        """
+        Clip the input sentence placeholders to the length of the longest one in the batch.
+        This saves processing time.
+
+        :param sentence: tensor with shape (batch, time_steps)
+        :param sizes: tensor with shape (batch)
+        :return: tensor with shape (batch, time_steps)
+        """
+        return tf.slice(sentence, [0, 0], tf.stack([-1, tf.reduce_max(sizes)]))
+
+    clipped_sentence1 = clip_sentence(sentence1_ph, sentence1_length_ph)
+    clipped_sentence2 = clip_sentence(sentence2_ph, sentence2_length_ph)
+
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
     embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
                                       initializer=tf.contrib.layers.xavier_initializer(),
                                       trainable=not is_fixed_embeddings)
 
-    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
-    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
+    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
+    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
 
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
