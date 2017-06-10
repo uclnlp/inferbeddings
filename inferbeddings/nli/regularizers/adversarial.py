@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 
-class Adversarial:
+class AdversarialSets:
     """
     Utility class for generating Adversarial Sets for RTE.
     """

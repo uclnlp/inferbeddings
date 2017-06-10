@@ -14,7 +14,9 @@ from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+
 from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
+from inferbeddings.nli.regularizers.adversarial import AdversarialSets
 
 from inferbeddings.models.training import constraints
 
@@ -50,6 +52,9 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
+    argparser.add_argument('--nb-discriminator-epochs', action='store', type=int, default=1)
+    argparser.add_argument('--nb-adversary-epochs', action='store', type=int, default=100)
+
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
@@ -63,6 +68,8 @@ def main(argv):
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
     argparser.add_argument('--rule0-weight', action='store', type=float, default=None)
+    argparser.add_argument('--rule1-weight', action='store', type=float, default=None)
+    argparser.add_argument('--rule2-weight', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -97,6 +104,8 @@ def main(argv):
 
     # Experimental RTE regularizers
     rule0_weight = args.rule0_weight
+    rule1_weight = args.rule1_weight
+    rule2_weight = args.rule2_weight
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -113,14 +122,17 @@ def main(argv):
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=nb_words)
 
+    # Indices (in the final logits) corresponding to the three NLI classes
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
-    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
+    # Size of the vocabulary (number of embedding vectors)
+    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
     max_len = None
     optimizer_class = None
+
     if optimizer_name == 'adagrad':
         optimizer_class = tf.train.AdagradOptimizer
     elif optimizer_name == 'adam':
@@ -233,6 +245,13 @@ def main(argv):
     labels_int = tf.cast(label_ph, tf.int32)
 
     init_op = tf.global_variables_initializer()
+
+    adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
+                                  embedding_size=embedding_size,
+                                  batch_size=1024, sequence_length=10,
+                                  entailment_idx=entailment_idx,
+                                  contradiction_idx=contradiction_idx,
+                                  neutral_idx=neutral_idx)
 
     saver = tf.train.Saver()
 
