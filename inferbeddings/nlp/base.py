@@ -60,9 +60,9 @@ class Tokenizer(object):
         unk_seq = [self.unk_idx] if self.has_unk else []
         for text in texts:
             seq = text if self.char_level else Tokenizer.text_to_word_seq(text, self.filters, self.lower, self.split)
-            v = bos_seq
-            for w in seq:
-                idx = self.word_index.get(w)
-                v += [idx] if idx and not (num_words and idx >= num_words) else unk_seq
-            v += eos_seq
-            yield v
+            vector = bos_seq
+            for word in seq:
+                idx = self.word_index.get(word)
+                vector += [idx] if idx and not (num_words and idx >= num_words) else unk_seq
+            vector += eos_seq
+            yield vector
