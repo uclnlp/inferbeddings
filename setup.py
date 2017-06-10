@@ -7,10 +7,12 @@ with open('requirements.txt', 'r') as f:
       requirements = f.readlines()
 
 setup(name='inferbeddings',
-      version='0.1.0',
-      description='Rule Injection in Knowledge Graph Embeddings via Adversarial Training',
+      version='0.2.0',
+      description='Adversarial Set Regularizaton for '
+                  'Knowledge Base Population and '
+                  'Natural Language Inference',
       author='Pasquale Minervini',
-      author_email='p.minervini@cs.ucl.ac.uk',
+      author_email='p.minervini@ucl.ac.uk',
       url='https://github.com/uclmr/inferbeddings',
       test_suite='tests',
       license='MIT',
