@@ -20,15 +20,15 @@ class Tokenizer(object):
         if lower:
             text = text.lower()
         text = text.translate(str.maketrans(filters, split * len(filters)))
-        return [i for i in text.split(split) if i]
+        return [token for token in text.split(split) if token]
 
     def fit_on_texts(self, texts):
         for text in texts:
             seq = text if self.char_level else Tokenizer.text_to_word_seq(text, self.filters, self.lower, self.split)
-            for w in seq:
-                if w not in self.word_counts:
-                    self.word_counts[w] = 0
-                self.word_counts[w] += 1
+            for word in seq:
+                if word not in self.word_counts:
+                    self.word_counts[word] = 0
+                self.word_counts[word] += 1
 
         sorted_voc = [word[0] for word in sorted(self.word_counts.items(), key=lambda kv: (- kv[1], kv[0]))]
 
