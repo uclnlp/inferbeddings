@@ -6,7 +6,7 @@ import json
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.nlp import Tokenizer
+from inferbeddings.nlp import SimpleTokenizer
 
 import logging
 
@@ -146,8 +146,8 @@ def train_tokenizer_on_instances(instances, num_words=None):
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
 
-    qs_tokenizer = Tokenizer(num_words=num_words)
-    a_tokenizer = Tokenizer()
+    qs_tokenizer = SimpleTokenizer(num_words=num_words)
+    a_tokenizer = SimpleTokenizer()
 
     qs_tokenizer.fit_on_texts(question_texts + support_texts)
     a_tokenizer.fit_on_texts(answer_texts)
