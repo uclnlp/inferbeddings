@@ -6,7 +6,7 @@ import json
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.nlp import SimpleTokenizer
+from inferbeddings.nlp import Tokenizer
 
 import logging
 
@@ -15,21 +15,18 @@ logger = logging.getLogger(__name__)
 
 class SNLI:
     @staticmethod
-    def to_instance(d, bos=None, eos=None):
+    def to_instance(d):
         id, support, question, answer = d['pairID'], d['sentence1'], d['sentence2'], d['gold_label']
-        if bos or eos:
-            support = '{} {} {}'.format(bos if bos else '', support, eos if eos else '')
-            question = '{} {} {}'.format(bos if bos else '', question, eos if eos else '')
         return {'id': id, 'support': support, 'question': question, 'answer': answer}
 
     @staticmethod
-    def parse(path, bos=None, eos=None):
+    def parse(path):
         res = None
         if path is not None:
             with gzip.open(path, 'rb') as f:
                 res = []
                 for line in f:
-                    instance = SNLI.to_instance(json.loads(line.decode('utf-8')), bos=bos, eos=eos)
+                    instance = SNLI.to_instance(json.loads(line.decode('utf-8')))
                     if instance['answer'] in {'entailment', 'neutral', 'contradiction'}:
                         res += [instance]
         return res
@@ -37,11 +34,10 @@ class SNLI:
     @staticmethod
     def generate(train_path='data/snli/snli_1.0_train.jsonl.gz',
                  valid_path='data/snli/snli_1.0_dev.jsonl.gz',
-                 test_path='data/snli/snli_1.0_test.jsonl.gz',
-                 bos=None, eos=None):
-        train_corpus = SNLI.parse(train_path, bos=bos, eos=eos)
-        dev_corpus = SNLI.parse(valid_path, bos=bos, eos=eos)
-        test_corpus = SNLI.parse(test_path, bos=bos, eos=eos)
+                 test_path='data/snli/snli_1.0_test.jsonl.gz'):
+        train_corpus = SNLI.parse(train_path)
+        dev_corpus = SNLI.parse(valid_path)
+        test_corpus = SNLI.parse(test_path)
         return train_corpus, dev_corpus, test_corpus
 
 
@@ -146,8 +142,8 @@ def train_tokenizer_on_instances(instances, num_words=None):
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
 
-    qs_tokenizer = SimpleTokenizer(num_words=num_words)
-    a_tokenizer = SimpleTokenizer()
+    qs_tokenizer = Tokenizer(num_words=num_words, has_bos=True, has_eos=True, has_unk=True)
+    a_tokenizer = Tokenizer()
 
     qs_tokenizer.fit_on_texts(question_texts + support_texts)
     a_tokenizer.fit_on_texts(answer_texts)
