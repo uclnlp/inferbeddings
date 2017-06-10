@@ -51,18 +51,18 @@ class Tokenizer(object):
         self.word_index = dict(list(zip(sorted_voc, indices)))
 
     def texts_to_sequences(self, texts):
-        return [v for v in self.texts_to_sequences_generator(texts)]
+        return [vector for vector in self.texts_to_sequences_generator(texts)]
 
     def texts_to_sequences_generator(self, texts):
         num_words = self.num_words
-        bos_seq = [self.bos_idx] if self.has_bos else []
-        eos_seq = [self.eos_idx] if self.has_eos else []
-        unk_seq = [self.unk_idx] if self.has_unk else []
         for text in texts:
             seq = text if self.char_level else Tokenizer.text_to_word_seq(text, self.filters, self.lower, self.split)
-            vector = bos_seq
+            vector = [self.bos_idx] if self.has_bos else []
             for word in seq:
                 idx = self.word_index.get(word)
-                vector += [idx] if idx and not (num_words and idx >= num_words) else unk_seq
-            vector += eos_seq
+                if idx and not (num_words and idx >= num_words):
+                    vector += [idx]
+                else:
+                    vector += [self.unk_idx] if self.has_unk else []
+            vector += [self.unk_idx] if self.has_unk else []
             yield vector

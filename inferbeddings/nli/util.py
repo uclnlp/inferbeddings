@@ -159,7 +159,7 @@ def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None, semi_sort=Fal
 
     questions = qs_tokenizer.texts_to_sequences(question_texts)
     supports = [s for s in qs_tokenizer.texts_to_sequences(support_texts)]
-    answers = [answers - 1 for [answers] in a_tokenizer.texts_to_sequences(answer_texts)]
+    answers = [answer - 1 for [answer] in a_tokenizer.texts_to_sequences(answer_texts)]
 
     """
     <<For efficient batching in TensorFlow, we semi-sorted the training data to first contain examples
