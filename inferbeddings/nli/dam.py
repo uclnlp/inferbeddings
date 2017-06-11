@@ -32,10 +32,8 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
     def _transform_aggregate(self, v1_v2, reuse=False):
         raise NotImplementedError
 
-    def __init__(self, use_masking=False, prepend_null_token=False, *args, **kwargs):
+    def __init__(self, use_masking=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        batch_size = tf.shape(self.sequence1)[0]
 
         embedding1_size = self.sequence1.get_shape()[-1].value
         embedding2_size = self.sequence2.get_shape()[-1].value
@@ -50,31 +48,6 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
 
         self.transformed_sequence1_length = self.sequence1_length
         self.transformed_sequence2_length = self.sequence2_length
-
-        self.null_token_embedding = None
-
-        if prepend_null_token:
-            with tf.variable_scope('null', reuse=self.reuse) as _:
-                # [1, 1, embedding_size]
-                self.null_token_embedding = tf.get_variable('null_embedding',
-                                                            shape=[1, embedding1_size],
-                                                            initializer=tf.random_normal_initializer(0.0, 1.0))
-
-            # [1, 1, representation_size]
-            transformed_null_token_embedding = self._transform_input(self.null_token_embedding, reuse=True)
-
-            # [batch_size, 1, representation_size]
-            tiled_null_token_embedding = tf.tile(input=tf.expand_dims(transformed_null_token_embedding, axis=0),
-                                                 multiples=[batch_size, 1, 1])
-
-            # [batch_size, time_steps + 1, representation_size]
-            self.transformed_sequence1 = tf.concat(values=[tiled_null_token_embedding, self.transformed_sequence1], axis=1)
-
-            # [batch_size, time_steps + 1, representation_size]
-            self.transformed_sequence2 = tf.concat(values=[tiled_null_token_embedding, self.transformed_sequence2], axis=1)
-
-            self.transformed_sequence1_length += 1
-            self.transformed_sequence2_length += 1
 
         logger.info('Building the Attend graph ..')
 

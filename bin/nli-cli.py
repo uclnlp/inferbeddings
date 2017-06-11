@@ -59,7 +59,6 @@ def main(argv):
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
     argparser.add_argument('--use-masking', action='store_true')
-    argparser.add_argument('--prepend-null-token', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
@@ -94,7 +93,6 @@ def main(argv):
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
     use_masking = args.use_masking
-    prepend_null_token = args.prepend_null_token
 
     save_path = args.save
     restore_path = args.restore
@@ -189,11 +187,11 @@ def main(argv):
     if model_name == 'cbilstm':
         model_class = ConditionalBiLSTM
     elif model_name == 'ff-dam':
-        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
+        ff_kwargs = dict(use_masking=use_masking)
         model_kwargs.update(ff_kwargs)
         model_class = FeedForwardDAM
     elif model_name == 'ff-damp':
-        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
+        ff_kwargs = dict(use_masking=use_masking)
         model_kwargs.update(ff_kwargs)
         model_class = FeedForwardDAMP
     elif model_name == 'esim1':
@@ -235,12 +233,6 @@ def main(argv):
         if not is_fixed_embeddings:
             learning_projection_steps += [unit_sphere_embeddings]
 
-        if prepend_null_token:
-            unit_sphere_null_token = constraints.unit_sphere(model.null_token_embedding, norm=1.0)
-
-            init_projection_steps += [unit_sphere_null_token]
-            learning_projection_steps += [unit_sphere_null_token]
-
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
@@ -252,6 +244,18 @@ def main(argv):
                                   entailment_idx=entailment_idx,
                                   contradiction_idx=contradiction_idx,
                                   neutral_idx=neutral_idx)
+
+    adversarial_loss = tf.constant(0.0, dtype=tf.float32)
+    adversarial_vars = set()
+
+    if rule1_weight:
+        rule1_loss, rule1_vars = adversarial.rule1()
+        adversarial_loss += rule1_weight * rule1_loss
+        adversarial_vars |= rule1_vars
+    if rule2_weight:
+        rule2_loss, rule2_vars = adversarial.rule2()
+        adversarial_loss += rule2_weight * rule2_loss
+        adversarial_vars |= rule2_vars
 
     saver = tf.train.Saver()
 
