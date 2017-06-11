@@ -66,22 +66,6 @@ def test_nli_damp():
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    # {'entailment': '0.00833298', 'neutral': '0.00973773', 'contradiction': '0.981929'}
-    # sentence1_str = '<bos> The boy is jumping <eos>'
-    # sentence2_str = '<bos> The girl is jumping happily on the table <eos>'
-
-    # {'entailment': '0.000107546', 'contradiction': '0.995034', 'neutral': '0.00485802'}
-    # sentence1_str = '<bos> The girl is jumping happily on the table <eos>'
-    # sentence2_str = '<bos> The boy is jumping <eos>'
-
-    # {'entailment': '0.0171175', 'contradiction': '0.0755575', 'neutral': '0.907325'}
-    # sentence1_str = '<bos> The boy is jumping happily on the table <eos>'
-    # sentence2_str = '<bos> The boy is jumping <eos>'
-
-    # {'neutral': '0.0318933', 'entailment': '0.964676', 'contradiction': '0.0034308'}
-    # sentence1_str = '<bos> The boy is jumping <eos>'
-    # sentence2_str = '<bos> The boy is jumping happily on the table <eos>'
-
     batch_size = 32
 
     restore_path = 'models/nli/damp_v1.ckpt'
