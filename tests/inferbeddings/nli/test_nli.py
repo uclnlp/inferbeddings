@@ -21,12 +21,12 @@ def test_nli_damp():
     representation_size = 200
     max_len = None
 
-    train_instances, dev_instances, test_instances = util.SNLI.generate(bos='<bos>', eos='<eos>')
+    train_instances, dev_instances, test_instances = util.SNLI.generate()
 
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)
 
-    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
+    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
