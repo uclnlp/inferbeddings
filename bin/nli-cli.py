@@ -20,6 +20,8 @@ from inferbeddings.nli.regularizers.adversarial import AdversarialSets
 
 from inferbeddings.models.training import constraints
 
+from inferbeddings.nli.evaluation import accuracy
+
 import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
@@ -328,37 +330,17 @@ def main(argv):
                     session.run([projection_step])
 
                 if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
-                    def compute_accuracy(name, dataset):
-                        nb_eval_instances = len(dataset['questions'])
-                        eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
-                        p_vals, l_vals = [], []
+                    dev_accuracy, _, _, _ = accuracy(session, dev_dataset, 'dev',
+                                                     sentence1_ph, sentence1_length_ph, sentence2_ph,
+                                                     sentence2_length_ph,
+                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                                     contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-                        for e_batch_start, e_batch_end in eval_batches:
-                            feed_dict = {
-                                sentence1_ph: dataset['questions'][e_batch_start:e_batch_end],
-                                sentence2_ph: dataset['supports'][e_batch_start:e_batch_end],
-                                sentence1_length_ph: dataset['question_lengths'][e_batch_start:e_batch_end],
-                                sentence2_length_ph: dataset['support_lengths'][e_batch_start:e_batch_end],
-                                label_ph: dataset['answers'][e_batch_start:e_batch_end],
-                                dropout_keep_prob_ph: 1.0
-                            }
-                            p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
-                            p_vals += p_val.tolist()
-                            l_vals += l_val.tolist()
-
-                        matches = np.equal(p_vals, l_vals)
-                        acc = np.mean(matches)
-
-                        acc_c = np.mean(matches[np.where(np.array(l_vals) == contradiction_idx)])
-                        acc_e = np.mean(matches[np.where(np.array(l_vals) == entailment_idx)])
-                        acc_n = np.mean(matches[np.where(np.array(l_vals) == neutral_idx)])
-
-                        logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
-                                    .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
-                        return acc
-
-                    dev_accuracy = compute_accuracy('Dev', dev_dataset)
-                    test_accuracy = compute_accuracy('Test', test_dataset)
+                    test_accuracy, _, _, _ = accuracy(session, test_dataset, 'test',
+                                                      sentence1_ph, sentence1_length_ph, sentence2_ph,
+                                                      sentence2_length_ph,
+                                                      label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                                      contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
                     logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
                                  .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
