@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 import tensorflow as tf
-
-from inferbeddings.models.training.util import make_batches
 
 import inferbeddings.nli.util as util
 from inferbeddings.nli import FeedForwardDAMP
@@ -37,7 +34,7 @@ def test_nli_damp():
     # dev_instances = dev_instances[:3]
     # test_instances = test_instances[:3]
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    _ = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
@@ -65,7 +62,6 @@ def test_nli_damp():
     model = model_class(**model_kwargs)
 
     logits = model()
-    probabilities = tf.nn.softmax(logits)
     predictions = tf.argmax(logits, axis=1, name='predictions')
 
     predictions_int = tf.cast(predictions, tf.int32)
@@ -82,21 +78,15 @@ def test_nli_damp():
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        dev_accuracy, _, _, _ = accuracy(session, dev_dataset,
-                                         sentence1_ph, sentence1_length_ph,
-                                         sentence2_ph, sentence2_length_ph,
-                                         label_ph, dropout_keep_prob_ph,
-                                         predictions_int, labels_int,
-                                         contradiction_idx, entailment_idx, neutral_idx,
-                                         batch_size)
+        dev_accuracy, _, _, _ = accuracy(session, dev_dataset, 'dev',
+                                         sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                         label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                         contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-        test_accuracy, _, _, _ = accuracy(session, test_dataset,
-                                          sentence1_ph, sentence1_length_ph,
-                                          sentence2_ph, sentence2_length_ph,
-                                          label_ph, dropout_keep_prob_ph,
-                                          predictions_int, labels_int,
-                                          contradiction_idx, entailment_idx, neutral_idx,
-                                          batch_size)
+        test_accuracy, _, _, _ = accuracy(session, test_dataset, 'test',
+                                          sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                          label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                          contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
         assert 0.86 < dev_accuracy < 0.87
         assert 0.86 < test_accuracy < 0.87
