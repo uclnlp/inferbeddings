@@ -17,7 +17,7 @@ def test_nli_util():
 
     train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer)
 
-    train_instances, dev_instances, test_instances = util.SNLI.generate(bos='<START>')
+    train_instances, dev_instances, test_instances = util.SNLI.generate()
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)
 
