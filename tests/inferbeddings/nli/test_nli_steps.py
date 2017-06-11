@@ -6,7 +6,7 @@ import tensorflow as tf
 from inferbeddings.models.training.util import make_batches
 
 import inferbeddings.nli.util as util
-from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli import FeedForwardDAMP
 
 import logging
 
@@ -24,8 +24,7 @@ def test_nli_damp():
     train_instances, dev_instances, test_instances = util.SNLI.generate()
 
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None,
-                                                                  has_bos=True, has_eos=True, has_unk=False)
+    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
