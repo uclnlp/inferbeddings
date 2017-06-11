@@ -21,12 +21,12 @@ def test_nli_damp():
     representation_size = 200
     max_len = None
 
-    train_instances, dev_instances, test_instances = util.SNLI.generate(bos='<bos>', eos='<eos>')
+    train_instances, dev_instances, test_instances = util.SNLI.generate()
 
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)
 
-    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
+    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
@@ -65,22 +65,6 @@ def test_nli_damp():
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
-
-    # {'entailment': '0.00833298', 'neutral': '0.00973773', 'contradiction': '0.981929'}
-    # sentence1_str = '<bos> The boy is jumping <eos>'
-    # sentence2_str = '<bos> The girl is jumping happily on the table <eos>'
-
-    # {'entailment': '0.000107546', 'contradiction': '0.995034', 'neutral': '0.00485802'}
-    # sentence1_str = '<bos> The girl is jumping happily on the table <eos>'
-    # sentence2_str = '<bos> The boy is jumping <eos>'
-
-    # {'entailment': '0.0171175', 'contradiction': '0.0755575', 'neutral': '0.907325'}
-    # sentence1_str = '<bos> The boy is jumping happily on the table <eos>'
-    # sentence2_str = '<bos> The boy is jumping <eos>'
-
-    # {'neutral': '0.0318933', 'entailment': '0.964676', 'contradiction': '0.0034308'}
-    # sentence1_str = '<bos> The boy is jumping <eos>'
-    # sentence2_str = '<bos> The boy is jumping happily on the table <eos>'
 
     batch_size = 32
 
