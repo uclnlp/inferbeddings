@@ -23,8 +23,8 @@ def test_nli_util():
 
     p_train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer)
 
-    np.testing.assert_allclose(np.array(train_dataset['question_lengths']) + 2, p_train_dataset['question_lengths'])
-    np.testing.assert_allclose(np.array(train_dataset['support_lengths']) + 2, p_train_dataset['support_lengths'])
+    np.testing.assert_allclose(np.array(train_dataset['question_lengths']), p_train_dataset['question_lengths'])
+    np.testing.assert_allclose(np.array(train_dataset['support_lengths']), p_train_dataset['support_lengths'])
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
