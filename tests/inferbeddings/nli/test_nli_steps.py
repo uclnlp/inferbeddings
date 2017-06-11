@@ -8,6 +8,8 @@ from inferbeddings.models.training.util import make_batches
 import inferbeddings.nli.util as util
 from inferbeddings.nli import FeedForwardDAMP
 
+from inferbeddings.nli.evaluation import accuracy
+
 import logging
 
 import pytest
@@ -80,37 +82,24 @@ def test_nli_damp():
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        def compute_accuracy(dataset, debug=False):
-            nb_eval_instances = len(dataset['questions'])
-            batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
+        dev_accuracy, _, _, _ = accuracy(session, dev_dataset,
+                                         sentence1_ph, sentence1_length_ph,
+                                         sentence2_ph, sentence2_length_ph,
+                                         label_ph, dropout_keep_prob_ph,
+                                         predictions_int, labels_int,
+                                         contradiction_idx, entailment_idx, neutral_idx,
+                                         batch_size)
 
-            p_vals, l_vals = [], []
+        test_accuracy, _, _, _ = accuracy(session, test_dataset,
+                                          sentence1_ph, sentence1_length_ph,
+                                          sentence2_ph, sentence2_length_ph,
+                                          label_ph, dropout_keep_prob_ph,
+                                          predictions_int, labels_int,
+                                          contradiction_idx, entailment_idx, neutral_idx,
+                                          batch_size)
 
-            for batch_start, batch_end in batches:
-                feed_dict = {
-                    sentence1_ph: dataset['questions'][batch_start:batch_end],
-                    sentence2_ph: dataset['supports'][batch_start:batch_end],
-                    sentence1_length_ph: dataset['question_lengths'][batch_start:batch_end],
-                    sentence2_length_ph: dataset['support_lengths'][batch_start:batch_end],
-                    label_ph: dataset['answers'][batch_start:batch_end],
-                    dropout_keep_prob_ph: 1.0
-                }
-
-                if debug:
-                    pass
-
-                p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
-
-                p_vals += p_val.tolist()
-                l_vals += l_val.tolist()
-
-            matches = np.equal(p_vals, l_vals)
-            return np.mean(matches)
-
-        dev_accuracy = compute_accuracy(dev_dataset, debug=True)
-        test_accuracy = compute_accuracy(test_dataset)
-
-        print(dev_accuracy, test_accuracy)
+        assert 0.86 < dev_accuracy < 0.87
+        assert 0.86 < test_accuracy < 0.87
 
     tf.reset_default_graph()
 
