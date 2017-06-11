@@ -21,7 +21,7 @@ def test_nli_damp():
     representation_size = 200
     max_len = None
 
-    train_instances, dev_instances, test_instances = util.SNLI.generate(bos='<bos>', eos='<eos>')
+    train_instances, dev_instances, test_instances = util.SNLI.generate()
 
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)

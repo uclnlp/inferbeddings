@@ -137,12 +137,13 @@ def to_feed_dict(model, dataset):
     }
 
 
-def train_tokenizer_on_instances(instances, num_words=None):
+def train_tokenizer_on_instances(instances, num_words=None,
+                                 has_bos=True, has_eos=True, has_unk=True):
     question_texts = [instance['question'] for instance in instances]
     support_texts = [instance['support'] for instance in instances]
     answer_texts = [instance['answer'] for instance in instances]
 
-    qs_tokenizer = Tokenizer(num_words=num_words, has_bos=True, has_eos=True, has_unk=True)
+    qs_tokenizer = Tokenizer(num_words=num_words, has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
     a_tokenizer = Tokenizer()
 
     qs_tokenizer.fit_on_texts(question_texts + support_texts)
