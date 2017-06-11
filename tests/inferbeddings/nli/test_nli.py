@@ -98,7 +98,8 @@ def test_nli_damp():
         dev_accuracy = compute_accuracy(dev_dataset)
         test_accuracy = compute_accuracy(test_dataset)
 
-        print(dev_accuracy, test_accuracy)
+        assert dev_accuracy > 0.86
+        assert test_accuracy > 0.86
 
     tf.reset_default_graph()
 
