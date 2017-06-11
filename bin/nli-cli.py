@@ -246,16 +246,18 @@ def main(argv):
                                   neutral_idx=neutral_idx)
 
     adversarial_loss = tf.constant(0.0, dtype=tf.float32)
-    adversarial_vars = set()
+    adversarial_vars = []
 
     if rule1_weight:
         rule1_loss, rule1_vars = adversarial.rule1()
         adversarial_loss += rule1_weight * rule1_loss
-        adversarial_vars |= rule1_vars
+        adversarial_vars += rule1_vars
     if rule2_weight:
         rule2_loss, rule2_vars = adversarial.rule2()
         adversarial_loss += rule2_weight * rule2_loss
-        adversarial_vars |= rule2_vars
+        adversarial_vars += rule2_vars
+
+    adversarial_init_op = tf.variables_initializer(adversarial_vars)
 
     saver = tf.train.Saver()
 
