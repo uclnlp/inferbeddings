@@ -82,8 +82,8 @@ def test_nli_damp():
                                           label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
                                           contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-        assert dev_accuracy > 0.86
-        assert test_accuracy > 0.86
+        assert 0.86 < dev_accuracy < 0.89
+        assert 0.86 < test_accuracy < 0.89
 
     tf.reset_default_graph()
 

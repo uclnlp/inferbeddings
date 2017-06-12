@@ -47,7 +47,11 @@ def main(argv):
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
+
     argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
+    argparser.add_argument('--nb-discriminator-epochs', action='store', type=int, default=1)
+    argparser.add_argument('--nb-adversary-epochs', action='store', type=int, default=1000)
+
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
     argparser.add_argument('--clip', '-c', action='store', type=float, default=None)
@@ -84,7 +88,11 @@ def main(argv):
     representation_size = args.representation_size
 
     batch_size = args.batch_size
+
     nb_epochs = args.nb_epochs
+    nb_discriminator_epochs = args.nb_discriminator_epochs
+    nb_adversary_epochs = args.nb_adversary_epochs
+
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
     clip_value = args.clip
@@ -131,13 +139,13 @@ def main(argv):
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
     max_len = None
-    optimizer_class = None
 
-    if optimizer_name == 'adagrad':
-        optimizer_class = tf.train.AdagradOptimizer
-    elif optimizer_name == 'adam':
-        optimizer_class = tf.train.AdamOptimizer
-    assert optimizer_class is not None
+    optimizer_name_to_class = {
+        'adagrad': tf.train.AdagradOptimizer,
+        'adam': tf.train.AdamOptimizer
+    }
+    optimizer_class = optimizer_name_to_class[optimizer_name]
+    assert optimizer_class
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
@@ -189,16 +197,13 @@ def main(argv):
     if model_name == 'cbilstm':
         model_class = ConditionalBiLSTM
     elif model_name == 'ff-dam':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
+        model_kwargs.update(dict(use_masking=use_masking))
         model_class = FeedForwardDAM
     elif model_name == 'ff-damp':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
+        model_kwargs.update(dict(use_masking=use_masking))
         model_class = FeedForwardDAMP
     elif model_name == 'esim1':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
+        model_kwargs.update(dict(use_masking=use_masking))
         model_class = ESIMv1
 
     assert model_class is not None
@@ -252,14 +257,22 @@ def main(argv):
 
     if rule1_weight:
         rule1_loss, rule1_vars = adversarial.rule1()
-        adversarial_loss += rule1_weight * rule1_loss
+        adversarial_loss += rule1_weight * tf.reduce_max(rule1_loss)
         adversarial_vars += rule1_vars
     if rule2_weight:
         rule2_loss, rule2_vars = adversarial.rule2()
-        adversarial_loss += rule2_weight * rule2_loss
+        adversarial_loss += rule2_weight * tf.reduce_max(rule2_loss)
         adversarial_vars += rule2_vars
 
     adversarial_init_op = tf.variables_initializer(adversarial_vars)
+
+    adv_opt_scope_name = 'adversarial/optimizer'
+    with tf.variable_scope(adv_opt_scope_name):
+        adversarial_optimizer = optimizer_class(learning_rate=learning_rate)
+        adversarial_training_step = adversarial_optimizer.minimize(- adversarial_loss, var_list=adversarial_vars)
+
+    adversarial_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
+    adversarial_optimizer_vars_init_op = tf.variables_initializer(adversarial_optimizer_vars)
 
     saver = tf.train.Saver()
 
@@ -301,62 +314,62 @@ def main(argv):
         best_dev_accuracy, best_test_accuracy = None, None
 
         for epoch in range(1, nb_epochs + 1):
-            order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
+            for d_epoch in range(1, nb_discriminator_epochs + 1):
+                order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
-            sentences1, sentences2 = questions[order], supports[order]
-            sizes1, sizes2 = question_lengths[order], support_lengths[order]
-            labels = answers[order]
+                sentences1, sentences2 = questions[order], supports[order]
+                sizes1, sizes2 = question_lengths[order], support_lengths[order]
+                labels = answers[order]
 
-            loss_values = []
-            for batch_idx, (batch_start, batch_end) in enumerate(batches):
-                batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
-                batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
-                batch_labels = labels[batch_start:batch_end]
+                loss_values = []
+                for batch_idx, (batch_start, batch_end) in enumerate(batches):
+                    batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
+                    batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
+                    batch_labels = labels[batch_start:batch_end]
 
-                batch_feed_dict = {
-                    sentence1_ph: batch_sentences1,
-                    sentence2_ph: batch_sentences2,
-                    sentence1_length_ph: batch_sizes1,
-                    sentence2_length_ph: batch_sizes2,
-                    label_ph: batch_labels,
-                    dropout_keep_prob_ph: dropout_keep_prob
-                }
+                    batch_feed_dict = {
+                        sentence1_ph: batch_sentences1, sentence2_ph: batch_sentences2,
+                        sentence1_length_ph: batch_sizes1, sentence2_length_ph: batch_sizes2,
+                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob
+                    }
 
-                _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
+                    _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
 
-                loss_values += [loss_value]
+                    loss_values += [loss_value]
 
-                for projection_step in learning_projection_steps:
-                    session.run([projection_step])
+                    for projection_step in learning_projection_steps:
+                        session.run([projection_step])
 
-                if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
-                    dev_accuracy, _, _, _ = accuracy(session, dev_dataset, 'dev',
-                                                     sentence1_ph, sentence1_length_ph, sentence2_ph,
-                                                     sentence2_length_ph,
-                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
-                                                     contradiction_idx, entailment_idx, neutral_idx, batch_size)
+                    if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
+                        dev_accuracy, _, _, _ = accuracy(session, dev_dataset, 'dev',
+                                                         sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                                         label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                                         contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-                    test_accuracy, _, _, _ = accuracy(session, test_dataset, 'test',
-                                                      sentence1_ph, sentence1_length_ph, sentence2_ph,
-                                                      sentence2_length_ph,
-                                                      label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
-                                                      contradiction_idx, entailment_idx, neutral_idx, batch_size)
+                        test_accuracy, _, _, _ = accuracy(session, test_dataset, 'test',
+                                                          sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                                          label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                                          contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-                    logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
-                                 .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
+                        logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
+                                     .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
 
-                    if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
-                        best_dev_accuracy, best_test_accuracy = dev_accuracy, test_accuracy
-                        if save_path:
-                            ext_save_path = saver.save(session, save_path)
-                            logger.info('Model saved in file: {}'.format(ext_save_path))
+                        if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
+                            best_dev_accuracy, best_test_accuracy = dev_accuracy, test_accuracy
+                            if save_path:
+                                logger.info('Model saved in file: {}'.format(saver.save(session, save_path)))
 
-                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
-                                 .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
+                        logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
+                                     .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
 
-            def stats(values):
-                return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
-            logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
+                def stats(values):
+                    return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+                logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
+
+            for a_epoch in range(1, nb_adversary_epochs + 1):
+                session.run([adversarial_init_op, adversarial_optimizer_vars_init_op])
+
+                
 
     logger.info('Training finished.')
 
