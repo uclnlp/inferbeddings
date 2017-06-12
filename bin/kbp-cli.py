@@ -432,7 +432,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                         round(violation_loss_value, 4)))
 
                 for projection_step in adversarial_projection_steps:
-                    session.run([projection_step])
+                    session.run(projection_step)
 
                 adversarial_training_t1 = time.time()
                 adversarial_training_time += adversarial_training_t1 - adversarial_training_t0
