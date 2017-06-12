@@ -215,16 +215,18 @@ def main(argv):
     losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
     loss = tf.reduce_mean(losses)
 
+    trainable_vars = tf.trainable_variables()
+
     if rule0_weight:
         loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
                                                                   contradiction_idx=contradiction_idx)
 
     if clip_value:
-        gradients, v = zip(*optimizer.compute_gradients(loss))
+        gradients, v = zip(*optimizer.compute_gradients(loss, var_list=trainable_vars))
         gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
         training_step = optimizer.apply_gradients(zip(gradients, v))
     else:
-        training_step = optimizer.minimize(loss)
+        training_step = optimizer.minimize(loss, var_list=trainable_vars)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
@@ -245,7 +247,9 @@ def main(argv):
 
     init_op = tf.global_variables_initializer()
 
+    use_adversarial_training = False
     if rule1_weight or rule2_weight:
+        use_adversarial_training = True
         adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
                                       embedding_size=embedding_size,
                                       batch_size=1024, sequence_length=10,
@@ -385,13 +389,14 @@ def main(argv):
                     return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
                 logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
-            for a_epoch in range(1, nb_adversary_epochs + 1):
-                session.run([adversarial_init_op, adversarial_optimizer_vars_init_op])
+            if use_adversarial_training:
+                for a_epoch in range(1, nb_adversary_epochs + 1):
+                    session.run([adversarial_init_op, adversarial_optimizer_vars_init_op])
 
-                for projection_step in adversarial_projection_steps:
-                    session.run(projection_step)
+                    for projection_step in adversarial_projection_steps:
+                        session.run(projection_step)
 
-                _, adversarial_loss_value = session.run([adversarial_training_step, adversarial_loss])
+                    _, adversarial_loss_value = session.run([adversarial_training_step, adversarial_loss])
 
     logger.info('Training finished.')
 

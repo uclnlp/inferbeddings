@@ -423,8 +423,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
                 adversarial_training_t0 = time.time()
 
-                _, violation_errors_value, violation_loss_value = session.run(
-                    [violation_training_step, violation_errors, violation_loss])
+                _, violation_errors_value, violation_loss_value =\
+                    session.run([violation_training_step, violation_errors, violation_loss])
 
                 if finding_epoch == 1 or finding_epoch % 10 == 0:
                     logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'
