@@ -58,9 +58,6 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
-    argparser.add_argument('--nb-discriminator-epochs', action='store', type=int, default=1)
-    argparser.add_argument('--nb-adversary-epochs', action='store', type=int, default=100)
-
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
