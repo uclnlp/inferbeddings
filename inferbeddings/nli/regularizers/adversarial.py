@@ -12,6 +12,8 @@ class AdversarialSets:
                  entailment_idx=0, contradiction_idx=1, neutral_idx=2):
         self.model_class = model_class
         self.model_kwargs = model_kwargs
+        
+        print(self.model_kwargs)
 
         self.embedding_size = embedding_size
         self.batch_size = batch_size
@@ -29,7 +31,8 @@ class AdversarialSets:
     def _probability(self, sequence1, sequence2, predicate_idx):
         model_kwargs = self.model_kwargs.copy().update({
             'sequence1': sequence1, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence2, 'sequence2_length': self.sequence_length})
+            'sequence2': sequence2, 'sequence2_length': self.sequence_length
+        })
         logits = self.model_class(**model_kwargs)()
         probability = tf.nn.softmax(logits)[:, predicate_idx]
         return probability
