@@ -72,9 +72,9 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
-    argparser.add_argument('--rule0-weight', action='store', type=float, default=None)
-    argparser.add_argument('--rule1-weight', action='store', type=float, default=None)
-    argparser.add_argument('--rule2-weight', action='store', type=float, default=None)
+    argparser.add_argument('--rule0-weight', '-0', action='store', type=float, default=None)
+    argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
+    argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -245,34 +245,53 @@ def main(argv):
 
     init_op = tf.global_variables_initializer()
 
-    adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
-                                  embedding_size=embedding_size,
-                                  batch_size=1024, sequence_length=10,
-                                  entailment_idx=entailment_idx,
-                                  contradiction_idx=contradiction_idx,
-                                  neutral_idx=neutral_idx)
+    if rule1_weight or rule2_weight:
+        adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
+                                      embedding_size=embedding_size,
+                                      batch_size=1024, sequence_length=10,
+                                      entailment_idx=entailment_idx,
+                                      contradiction_idx=contradiction_idx,
+                                      neutral_idx=neutral_idx)
 
-    adversarial_loss = tf.constant(0.0, dtype=tf.float32)
-    adversarial_vars = []
+        adversarial_loss = tf.constant(0.0, dtype=tf.float32)
+        adversarial_vars = []
 
-    if rule1_weight:
-        rule1_loss, rule1_vars = adversarial.rule1()
-        adversarial_loss += rule1_weight * tf.reduce_max(rule1_loss)
-        adversarial_vars += rule1_vars
-    if rule2_weight:
-        rule2_loss, rule2_vars = adversarial.rule2()
-        adversarial_loss += rule2_weight * tf.reduce_max(rule2_loss)
-        adversarial_vars += rule2_vars
+        if rule1_weight:
+            rule1_loss, rule1_vars = adversarial.rule1()
+            adversarial_loss += rule1_weight * tf.reduce_max(rule1_loss)
+            adversarial_vars += rule1_vars
+        if rule2_weight:
+            rule2_loss, rule2_vars = adversarial.rule2()
+            adversarial_loss += rule2_weight * tf.reduce_max(rule2_loss)
+            adversarial_vars += rule2_vars
 
-    adversarial_init_op = tf.variables_initializer(adversarial_vars)
+        adversarial_init_op = tf.variables_initializer(adversarial_vars)
 
-    adv_opt_scope_name = 'adversarial/optimizer'
-    with tf.variable_scope(adv_opt_scope_name):
-        adversarial_optimizer = optimizer_class(learning_rate=learning_rate)
-        adversarial_training_step = adversarial_optimizer.minimize(- adversarial_loss, var_list=adversarial_vars)
+        adversarial_projection_steps = []
+        for var in adversarial_vars:
+            if is_normalized_embeddings:
+                unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
+                adversarial_projection_steps += [unit_sphere_adversarial_embeddings]
 
-    adversarial_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
-    adversarial_optimizer_vars_init_op = tf.variables_initializer(adversarial_optimizer_vars)
+            def bos_eos_init_op(_var):
+                bos_idx, eos_idx = qs_tokenizer.bos_idx, qs_tokenizer.eos_idx
+
+                bos_emb = tf.nn.embedding_lookup(embedding_layer, bos_idx)
+                eos_emb = tf.nn.embedding_lookup(embedding_layer, eos_idx)
+
+                sentence_len = _var.get_shape()[1].value
+                init_bos_op, init_eos_op = _var[:, 0, :].assign(bos_emb), var[:, sentence_len, :].assign(eos_emb)
+                return [init_bos_op, init_eos_op]
+
+            adversarial_projection_steps += bos_eos_init_op(var)
+
+        adv_opt_scope_name = 'adversarial/optimizer'
+        with tf.variable_scope(adv_opt_scope_name):
+            adversarial_optimizer = optimizer_class(learning_rate=learning_rate)
+            adversarial_training_step = adversarial_optimizer.minimize(- adversarial_loss, var_list=adversarial_vars)
+
+        adversarial_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
+        adversarial_optimizer_vars_init_op = tf.variables_initializer(adversarial_optimizer_vars)
 
     saver = tf.train.Saver()
 
@@ -369,7 +388,10 @@ def main(argv):
             for a_epoch in range(1, nb_adversary_epochs + 1):
                 session.run([adversarial_init_op, adversarial_optimizer_vars_init_op])
 
-                
+                for projection_step in adversarial_projection_steps:
+                    session.run(projection_step)
+
+                _, adversarial_loss_value = session.run([adversarial_training_step, adversarial_loss])
 
     logger.info('Training finished.')
 
