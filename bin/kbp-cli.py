@@ -364,7 +364,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
                 # Project parameters
                 for projection_step in projection_steps:
-                    session.run([projection_step])
+                    session.run(projection_step)
 
             discriminator_training_t1 = time.time()
             discriminator_training_time += discriminator_training_t1 - discriminator_training_t0
@@ -417,7 +417,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 session.run(assignment_ops)
 
             for projection_step in adversarial_projection_steps:
-                session.run([projection_step])
+                session.run(projection_step)
 
             for finding_epoch in range(1, adversary_epochs + 1):
 
