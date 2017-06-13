@@ -191,8 +191,7 @@ def main(argv):
         model_kwargs = dict(
             sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
             sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
-            representation_size=representation_size,
-            dropout_keep_prob=dropout_keep_prob_ph)
+            representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
         mode_name_to_class = {
             'cbilstm': ConditionalBiLSTM,
