@@ -8,13 +8,12 @@ class AdversarialSets:
     Utility class for generating Adversarial Sets for RTE.
     """
     def __init__(self, model_class, model_kwargs,
-                 embedding_size=300, batch_size=1024, sequence_length=10,
+                 scope_name='adversary', embedding_size=300, batch_size=1024, sequence_length=10,
                  entailment_idx=0, contradiction_idx=1, neutral_idx=2):
         self.model_class = model_class
         self.model_kwargs = model_kwargs
-        
-        print(self.model_kwargs)
 
+        self.scope_name = scope_name
         self.embedding_size = embedding_size
         self.batch_size = batch_size
         self.sequence_length = sequence_length
@@ -24,17 +23,25 @@ class AdversarialSets:
         self.neutral_idx = neutral_idx
 
     def _get_sequence(self, name):
-        return tf.get_variable(name=name,
-                               shape=[self.batch_size, self.sequence_length, self.embedding_size],
-                               initializer=tf.contrib.layers.xavier_initializer())
+        with tf.variable_scope(self.scope_name):
+            res = tf.get_variable(name=name,
+                                  shape=[self.batch_size, self.sequence_length, self.embedding_size],
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        return res
 
-    def _probability(self, sequence1, sequence2, predicate_idx):
-        model_kwargs = self.model_kwargs.copy().update({
-            'sequence1': sequence1, 'sequence1_length': self.sequence_length,
-            'sequence2': sequence2, 'sequence2_length': self.sequence_length
+    def _logit(self, sequence1, sequence2, predicate_idx):
+        model_kwargs = self.model_kwargs.copy()
+
+        batch_size = sequence1.get_shape()[0].value
+        sequence_length = tf.fill(dims=(batch_size,), value=self.sequence_length)
+
+        model_kwargs.update({
+            'sequence1': sequence1, 'sequence1_length': sequence_length,
+            'sequence2': sequence2, 'sequence2_length': sequence_length
         })
-        logits = self.model_class(**model_kwargs)()
-        probability = tf.nn.softmax(logits)[:, predicate_idx]
+
+        logits = self.model_class(**model_kwargs, reuse=True)()
+        probability = logits[:, predicate_idx]
         return probability
 
     def rule1(self):
@@ -54,9 +61,9 @@ class AdversarialSets:
         sequence2 = self._get_sequence(name='rule1_sequence2')
 
         # Probability that S1 contradicts S2
-        p_s1_contradicts_s2 = self._probability(sequence1, sequence2, self.contradiction_idx)
+        p_s1_contradicts_s2 = self._logit(sequence1, sequence2, self.contradiction_idx)
         # Probability that S2 contradicts S1
-        p_s2_contradicts_s1 = self._probability(sequence2, sequence1, self.contradiction_idx)
+        p_s2_contradicts_s1 = self._logit(sequence2, sequence1, self.contradiction_idx)
 
         return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
 
@@ -81,11 +88,11 @@ class AdversarialSets:
         sequence3 = self._get_sequence(name='rule2_sequence3')
 
         # Probability that S1 entails S2
-        p_s1_entails_s2 = self._probability(sequence1, sequence2, self.entailment_idx)
+        p_s1_entails_s2 = self._logit(sequence1, sequence2, self.entailment_idx)
         # Probability that S2 entails S3
-        p_s2_entails_s3 = self._probability(sequence2, sequence3, self.entailment_idx)
+        p_s2_entails_s3 = self._logit(sequence2, sequence3, self.entailment_idx)
         # Probability that S1 entails S3
-        p_s1_entails_s3 = self._probability(sequence1, sequence3, self.entailment_idx)
+        p_s1_entails_s3 = self._logit(sequence1, sequence3, self.entailment_idx)
 
         body_score = tf.minimum(p_s1_entails_s2, p_s2_entails_s3)
         head_score = p_s1_entails_s3

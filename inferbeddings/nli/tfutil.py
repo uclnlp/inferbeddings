@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 import tensorflow as tf
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def attention_softmax3d(values):
@@ -93,3 +98,20 @@ def intra_attention(sequence, reuse=False):
         attentions = attention_softmax3d(raw_attentions)
         attended = tf.matmul(attentions, sequence)
     return tf.concat(axis=2, values=[sequence, attended])
+
+
+def count_trainable_parameters():
+    """
+    Count the number of trainable tensorflow parameters loaded in
+    the current graph.
+    """
+    total_params = 0
+    for variable in tf.trainable_variables():
+        variable_params = np.prod([1] + [dim.value for dim in variable.get_shape()])
+        logging.debug('{0} ({1}): {2} params'.format(variable.name, str(variable.get_shape()), variable_params))
+        total_params += variable_params
+    return total_params
+
+
+def get_variables_in_scope(scope_name):
+    return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope_name)
