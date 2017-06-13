@@ -171,7 +171,6 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         adversarial_optimizer_variables_initializer = tf.variables_initializer(adversarial_optimizer_variables)
 
         loss_function += adv_weight * violation_loss
-        # loss_function += violation_loss
 
         adv_entity_projections = [constraints.unit_sphere(adv_embedding_layer, norm=1.0) for adv_embedding_layer in adversarial.parameters]
         if unit_cube:
@@ -364,7 +363,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
 
                 # Project parameters
                 for projection_step in projection_steps:
-                    session.run([projection_step])
+                    session.run(projection_step)
 
             discriminator_training_t1 = time.time()
             discriminator_training_time += discriminator_training_t1 - discriminator_training_t0
@@ -417,14 +416,14 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                 session.run(assignment_ops)
 
             for projection_step in adversarial_projection_steps:
-                session.run([projection_step])
+                session.run(projection_step)
 
             for finding_epoch in range(1, adversary_epochs + 1):
 
                 adversarial_training_t0 = time.time()
 
-                _, violation_errors_value, violation_loss_value = session.run(
-                    [violation_training_step, violation_errors, violation_loss])
+                _, violation_errors_value, violation_loss_value =\
+                    session.run([violation_training_step, violation_errors, violation_loss])
 
                 if finding_epoch == 1 or finding_epoch % 10 == 0:
                     logger.info('Epoch: {}, Finding Epoch: {}, Violated Clauses: {}, Violation loss: {}'
@@ -432,7 +431,7 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
                                         round(violation_loss_value, 4)))
 
                 for projection_step in adversarial_projection_steps:
-                    session.run([projection_step])
+                    session.run(projection_step)
 
                 adversarial_training_t1 = time.time()
                 adversarial_training_time += adversarial_training_t1 - adversarial_training_t0

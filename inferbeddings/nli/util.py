@@ -4,7 +4,6 @@ import gzip
 import json
 
 import numpy as np
-import tensorflow as tf
 
 from inferbeddings.nlp import Tokenizer
 
@@ -39,19 +38,6 @@ class SNLI:
         dev_corpus = SNLI.parse(valid_path)
         test_corpus = SNLI.parse(test_path)
         return train_corpus, dev_corpus, test_corpus
-
-
-def count_trainable_parameters():
-    """
-    Count the number of trainable tensorflow parameters loaded in
-    the current graph.
-    """
-    total_params = 0
-    for variable in tf.trainable_variables():
-        variable_params = np.prod([1] + [dim.value for dim in variable.get_shape()])
-        logging.debug('{0} ({1}): {2} params'.format(variable.name, str(variable.get_shape()), variable_params))
-        total_params += variable_params
-    return total_params
 
 
 def pad_sequences(sequences, max_len=None, dtype='int32', padding='post', truncating='post', value=0.):

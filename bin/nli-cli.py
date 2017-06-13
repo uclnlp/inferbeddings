@@ -12,13 +12,15 @@ import tensorflow as tf
 from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
-from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances, to_dataset
+from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
 
 from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
 from inferbeddings.nli.regularizers.adversarial import AdversarialSets
 
 from inferbeddings.models.training import constraints
+
+from inferbeddings.nli.evaluation import accuracy
 
 import logging
 
@@ -45,15 +47,16 @@ def main(argv):
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
-    argparser.add_argument('--nb-epochs', action='store', type=int, default=1000)
+
+    argparser.add_argument('--nb-epochs', '-e', action='store', type=int, default=1000)
+    argparser.add_argument('--nb-discriminator-epochs', '-D', action='store', type=int, default=1)
+    argparser.add_argument('--nb-adversary-epochs', '-A', action='store', type=int, default=1000)
+
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
     argparser.add_argument('--clip', '-c', action='store', type=float, default=None)
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
-
-    argparser.add_argument('--nb-discriminator-epochs', action='store', type=int, default=1)
-    argparser.add_argument('--nb-adversary-epochs', action='store', type=int, default=100)
 
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
@@ -66,9 +69,9 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
 
-    argparser.add_argument('--rule0-weight', action='store', type=float, default=None)
-    argparser.add_argument('--rule1-weight', action='store', type=float, default=None)
-    argparser.add_argument('--rule2-weight', action='store', type=float, default=None)
+    argparser.add_argument('--rule0-weight', '-0', action='store', type=float, default=None)
+    argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
+    argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -82,7 +85,11 @@ def main(argv):
     representation_size = args.representation_size
 
     batch_size = args.batch_size
+
     nb_epochs = args.nb_epochs
+    nb_discriminator_epochs = args.nb_discriminator_epochs
+    nb_adversary_epochs = args.nb_adversary_epochs
+
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
     clip_value = args.clip
@@ -110,7 +117,7 @@ def main(argv):
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
-    train_instances, dev_instances, test_instances = SNLI.generate(
+    train_instances, dev_instances, test_instances = util.SNLI.generate(
         train_path=train_path, valid_path=valid_path, test_path=test_path)
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
@@ -118,7 +125,7 @@ def main(argv):
 
     logger.debug('Parsing corpus ..')
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=nb_words)
+    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words)
 
     # Indices (in the final logits) corresponding to the three NLI classes
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
@@ -129,19 +136,19 @@ def main(argv):
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
     max_len = None
-    optimizer_class = None
-
-    if optimizer_name == 'adagrad':
-        optimizer_class = tf.train.AdagradOptimizer
-    elif optimizer_name == 'adam':
-        optimizer_class = tf.train.AdamOptimizer
-    assert optimizer_class is not None
+    optimizer_name_to_class = {
+        'adagrad': tf.train.AdagradOptimizer,
+        'adam': tf.train.AdamOptimizer
+    }
+    optimizer_class = optimizer_name_to_class[optimizer_name]
+    assert optimizer_class
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    train_dataset = to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
-    dev_dataset = to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
-    test_dataset = to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len,
+                                    semi_sort=is_semi_sort)
+    dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
     questions, supports = train_dataset['questions'], train_dataset['supports']
     question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
@@ -150,8 +157,8 @@ def main(argv):
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
     sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
 
-    sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
-    sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
+    sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
+    sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
 
     def clip_sentence(sentence, sizes):
         """
@@ -164,60 +171,67 @@ def main(argv):
         """
         return tf.slice(sentence, [0, 0], tf.stack([-1, tf.reduce_max(sizes)]))
 
-    clipped_sentence1 = clip_sentence(sentence1_ph, sentence1_length_ph)
-    clipped_sentence2 = clip_sentence(sentence2_ph, sentence2_length_ph)
+    clipped_sentence1 = clip_sentence(sentence1_ph, sentence1_len_ph)
+    clipped_sentence2 = clip_sentence(sentence2_ph, sentence2_len_ph)
 
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
-    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                      initializer=tf.contrib.layers.xavier_initializer(),
-                                      trainable=not is_fixed_embeddings)
+    discriminator_scope_name = 'discriminator'
+    with tf.variable_scope(discriminator_scope_name):
+        embedding_layer = tf.get_variable('embeddings',
+                                          shape=[vocab_size, embedding_size],
+                                          initializer=tf.contrib.layers.xavier_initializer(),
+                                          trainable=not is_fixed_embeddings)
 
-    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
-    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
+        sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
+        sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
 
-    dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
+        dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
-    model_kwargs = dict(
-        sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
-        sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
-        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+        model_kwargs = dict(
+            sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
+            sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
+            representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
-    model_class = None
-    if model_name == 'cbilstm':
-        model_class = ConditionalBiLSTM
-    elif model_name == 'ff-dam':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
-        model_class = FeedForwardDAM
-    elif model_name == 'ff-damp':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
-        model_class = FeedForwardDAMP
-    elif model_name == 'esim1':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
-        model_class = ESIMv1
+        mode_name_to_class = {
+            'cbilstm': ConditionalBiLSTM,
+            'ff-dam': FeedForwardDAM,
+            'ff-damp': FeedForwardDAMP,
+            'esim1': ESIMv1
+        }
 
-    assert model_class is not None
-    model = model_class(**model_kwargs)
+        if model_name in {'ff-dam', 'ff-damp', 'esim1'}:
+            model_kwargs.update(dict(use_masking=use_masking))
 
-    logits = model()
-    predictions = tf.argmax(logits, axis=1, name='predictions')
+        model_class = mode_name_to_class[model_name]
 
-    losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
-    loss = tf.reduce_mean(losses)
+        assert model_class is not None
+        model = model_class(**model_kwargs)
 
-    if rule0_weight:
-        loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
-                                                                  contradiction_idx=contradiction_idx)
+        logits = model()
+        predictions = tf.argmax(logits, axis=1, name='predictions')
 
-    if clip_value:
-        gradients, v = zip(*optimizer.compute_gradients(loss))
-        gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
-        training_step = optimizer.apply_gradients(zip(gradients, v))
-    else:
-        training_step = optimizer.minimize(loss)
+        losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
+        loss = tf.reduce_mean(losses)
+
+        if rule0_weight:
+            loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
+                                                                      contradiction_idx=contradiction_idx)
+
+    discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
+    discriminator_init_op = tf.variables_initializer(discriminator_vars)
+
+    discriminator_optimizer_scope_name = 'discriminator_optimizer'
+    with tf.variable_scope(discriminator_optimizer_scope_name):
+        if clip_value:
+            gradients, v = zip(*optimizer.compute_gradients(loss, var_list=discriminator_vars))
+            gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
+            training_step = optimizer.apply_gradients(zip(gradients, v))
+        else:
+            training_step = optimizer.minimize(loss, var_list=discriminator_vars)
+
+    discriminator_optimizer_vars = tfutil.get_variables_in_scope(discriminator_optimizer_scope_name)
+    discriminator_optimizer_init_op = tf.variables_initializer(discriminator_optimizer_vars)
 
     word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
@@ -236,39 +250,69 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    init_op = tf.global_variables_initializer()
+    use_adversarial_training = rule1_weight or rule2_weight
 
-    adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
-                                  embedding_size=embedding_size,
-                                  batch_size=1024, sequence_length=10,
-                                  entailment_idx=entailment_idx,
-                                  contradiction_idx=contradiction_idx,
-                                  neutral_idx=neutral_idx)
+    if use_adversarial_training:
+        adversary_scope_name = discriminator_scope_name
+        with tf.variable_scope(adversary_scope_name):
+            adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs, embedding_size=embedding_size,
+                                          scope_name='adversary', batch_size=32, sequence_length=10,
+                                          entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx)
 
-    adversarial_loss = tf.constant(0.0, dtype=tf.float32)
-    adversarial_vars = set()
+            adversary_loss = tf.constant(0.0, dtype=tf.float32)
+            adversary_vars = []
 
-    if rule1_weight:
-        rule1_loss, rule1_vars = adversarial.rule1()
-        adversarial_loss += rule1_weight * rule1_loss
-        adversarial_vars |= rule1_vars
-    if rule2_weight:
-        rule2_loss, rule2_vars = adversarial.rule2()
-        adversarial_loss += rule2_weight * rule2_loss
-        adversarial_vars |= rule2_vars
+            if rule1_weight:
+                rule1_loss, rule1_vars = adversarial.rule1()
+                adversary_loss += rule1_weight * tf.reduce_max(rule1_loss)
+                adversary_vars += rule1_vars
+            if rule2_weight:
+                rule2_loss, rule2_vars = adversarial.rule2()
+                adversary_loss += rule2_weight * tf.reduce_max(rule2_loss)
+                adversary_vars += rule2_vars
 
-    saver = tf.train.Saver()
+        adversary_init_op = tf.variables_initializer(adversary_vars)
+
+        adv_opt_scope_name = 'adversary_optimizer'
+        with tf.variable_scope(adv_opt_scope_name):
+            adversary_optimizer = optimizer_class(learning_rate=learning_rate)
+            adversary_training_step = adversary_optimizer.minimize(- adversary_loss, var_list=adversary_vars)
+
+            adversary_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
+            adversary_optimizer_init_op = tf.variables_initializer(adversary_optimizer_vars)
+
+        adversary_projection_steps = []
+        for var in adversary_vars:
+            if is_normalized_embeddings:
+                unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
+                adversary_projection_steps += [unit_sphere_adversarial_embeddings]
+
+            def bos_eos_init_op(_var):
+                bos_idx, eos_idx = qs_tokenizer.bos_idx, qs_tokenizer.eos_idx
+                bos_emb = tf.nn.embedding_lookup(embedding_layer, bos_idx)
+                eos_emb = tf.nn.embedding_lookup(embedding_layer, eos_idx)
+                sentence_len = _var.get_shape()[1].value
+                # init_bos_op = _var[:, 0, :].assign(bos_emb),
+                # init_eos_op = _var[:, sentence_len, :].assign(eos_emb)
+                return []  # [init_bos_op, init_eos_op]
+
+            adversary_projection_steps += bos_eos_init_op(var)
+
+    saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
+        logger.debug('Total parameters: {}'.format(tfutil.count_trainable_parameters()))
+
+        if use_adversarial_training:
+            session.run([adversary_init_op, adversary_optimizer_init_op])
 
         if restore_path:
             saver.restore(session, restore_path)
         else:
-            session.run(init_op)
+            session.run([discriminator_init_op, discriminator_optimizer_init_op])
 
             # Initialising pre-trained embeddings
             word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
@@ -294,85 +338,76 @@ def main(argv):
         nb_instances = questions.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
-        best_dev_accuracy, best_test_accuracy = None, None
+        best_dev_acc, best_test_acc = None, None
 
         for epoch in range(1, nb_epochs + 1):
-            order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
+            for d_epoch in range(1, nb_discriminator_epochs + 1):
+                order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
-            sentences1, sentences2 = questions[order], supports[order]
-            sizes1, sizes2 = question_lengths[order], support_lengths[order]
-            labels = answers[order]
+                sentences1, sentences2 = questions[order], supports[order]
+                sizes1, sizes2 = question_lengths[order], support_lengths[order]
+                labels = answers[order]
 
-            loss_values = []
-            for batch_idx, (batch_start, batch_end) in enumerate(batches):
-                batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
-                batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
-                batch_labels = labels[batch_start:batch_end]
+                loss_values = []
+                for batch_idx, (batch_start, batch_end) in enumerate(batches):
+                    batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
+                    batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
+                    batch_labels = labels[batch_start:batch_end]
 
-                batch_feed_dict = {
-                    sentence1_ph: batch_sentences1,
-                    sentence2_ph: batch_sentences2,
-                    sentence1_length_ph: batch_sizes1,
-                    sentence2_length_ph: batch_sizes2,
-                    label_ph: batch_labels,
-                    dropout_keep_prob_ph: dropout_keep_prob
-                }
+                    batch_feed_dict = {
+                        sentence1_ph: batch_sentences1, sentence2_ph: batch_sentences2,
+                        sentence1_len_ph: batch_sizes1, sentence2_len_ph: batch_sizes2,
+                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob
+                    }
 
-                _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
+                    _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
 
-                loss_values += [loss_value]
+                    loss_values += [loss_value]
 
-                for projection_step in learning_projection_steps:
-                    session.run([projection_step])
+                    for projection_step in learning_projection_steps:
+                        session.run([projection_step])
 
-                if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
-                    def compute_accuracy(name, dataset):
-                        nb_eval_instances = len(dataset['questions'])
-                        eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
-                        p_vals, l_vals = [], []
+                    if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
+                        dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev',
+                                                    sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
+                                                    label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                                    contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-                        for e_batch_start, e_batch_end in eval_batches:
-                            feed_dict = {
-                                sentence1_ph: dataset['questions'][e_batch_start:e_batch_end],
-                                sentence2_ph: dataset['supports'][e_batch_start:e_batch_end],
-                                sentence1_length_ph: dataset['question_lengths'][e_batch_start:e_batch_end],
-                                sentence2_length_ph: dataset['support_lengths'][e_batch_start:e_batch_end],
-                                label_ph: dataset['answers'][e_batch_start:e_batch_end],
-                                dropout_keep_prob_ph: 1.0
-                            }
-                            p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
-                            p_vals += p_val.tolist()
-                            l_vals += l_val.tolist()
+                        test_acc, _, _, _ = accuracy(session, test_dataset, 'Test',
+                                                     sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
+                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                                     contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-                        matches = np.equal(p_vals, l_vals)
-                        acc = np.mean(matches)
+                        logger.debug('Epoch {0}/{1}/{2}\tAvg Loss: {3:.4f}\tDev Acc: {4:.2f}\tTest Acc: {5:.2f}'
+                                     .format(epoch, d_epoch, batch_idx, np.mean(loss_values),
+                                             dev_acc * 100, test_acc * 100))
 
-                        acc_c = np.mean(matches[np.where(np.array(l_vals) == contradiction_idx)])
-                        acc_e = np.mean(matches[np.where(np.array(l_vals) == entailment_idx)])
-                        acc_n = np.mean(matches[np.where(np.array(l_vals) == neutral_idx)])
+                        if best_dev_acc is None or dev_acc > best_dev_acc:
+                            best_dev_acc, best_test_acc = dev_acc, test_acc
+                            if save_path:
+                                logger.info('Model saved in file: {}'.format(saver.save(session, save_path)))
 
-                        logger.info('Epoch {0}/Batch {1}\t {2} Accuracy: {3:.4f} - C: {4:.4f}, E: {5:.4f}, N: {6:.4f}'
-                                    .format(epoch, batch_idx, name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
-                        return acc
+                        logger.debug('Epoch {0}/{1}/{2}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
+                                     .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
 
-                    dev_accuracy = compute_accuracy('Dev', dev_dataset)
-                    test_accuracy = compute_accuracy('Test', test_dataset)
+                def stats(values):
+                    return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
+                logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
 
-                    logger.debug('Epoch {0}/Batch {1}\tAvg loss: {2:.4f}\tDev Accuracy: {3:.2f}\tTest Accuracy: {4:.2f}'
-                                 .format(epoch, batch_idx, np.mean(loss_values), dev_accuracy * 100, test_accuracy * 100))
+            if use_adversarial_training:
+                session.run([adversary_init_op, adversary_optimizer_init_op])
 
-                    if best_dev_accuracy is None or dev_accuracy > best_dev_accuracy:
-                        best_dev_accuracy, best_test_accuracy = dev_accuracy, test_accuracy
-                        if save_path:
-                            ext_save_path = saver.save(session, save_path)
-                            logger.info('Model saved in file: {}'.format(ext_save_path))
+                for a_epoch in range(1, nb_adversary_epochs + 1):
+                    adversary_feed_dict = {
+                        dropout_keep_prob_ph: 1.0
+                    }
+                    _, adversarial_loss_value = session.run([adversary_training_step, adversary_loss],
+                                                            feed_dict=adversary_feed_dict)
 
-                    logger.debug('Epoch {0}/Batch {1}\tBest Dev Accuracy: {2:.2f}\tBest Test Accuracy: {3:.2f}'
-                                 .format(epoch, batch_idx, best_dev_accuracy * 100, best_test_accuracy * 100))
+                    logger.debug('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversarial_loss_value))
 
-            def stats(values):
-                return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
-            logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
+                    for projection_step in adversary_projection_steps:
+                        session.run(projection_step)
 
     logger.info('Training finished.')
 

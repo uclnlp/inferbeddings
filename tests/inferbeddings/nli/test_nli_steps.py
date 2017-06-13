@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
 import tensorflow as tf
 
-from inferbeddings.models.training.util import make_batches
-
 import inferbeddings.nli.util as util
-from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli import FeedForwardDAMP
+
+from inferbeddings.nli.evaluation import accuracy
 
 import logging
 
@@ -24,8 +23,7 @@ def test_nli_damp():
     train_instances, dev_instances, test_instances = util.SNLI.generate()
 
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None,
-                                                                  has_bos=True, has_eos=True, has_unk=False)
+    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=None)
 
     vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
 
@@ -36,7 +34,7 @@ def test_nli_damp():
     # dev_instances = dev_instances[:3]
     # test_instances = test_instances[:3]
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    _ = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
@@ -64,7 +62,6 @@ def test_nli_damp():
     model = model_class(**model_kwargs)
 
     logits = model()
-    probabilities = tf.nn.softmax(logits)
     predictions = tf.argmax(logits, axis=1, name='predictions')
 
     predictions_int = tf.cast(predictions, tf.int32)
@@ -81,37 +78,18 @@ def test_nli_damp():
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
-        def compute_accuracy(dataset, debug=False):
-            nb_eval_instances = len(dataset['questions'])
-            batches = make_batches(size=nb_eval_instances, batch_size=batch_size)
+        dev_accuracy, _, _, _ = accuracy(session, dev_dataset, 'dev',
+                                         sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                         label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                         contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-            p_vals, l_vals = [], []
+        test_accuracy, _, _, _ = accuracy(session, test_dataset, 'test',
+                                          sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                          label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                          contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-            for batch_start, batch_end in batches:
-                feed_dict = {
-                    sentence1_ph: dataset['questions'][batch_start:batch_end],
-                    sentence2_ph: dataset['supports'][batch_start:batch_end],
-                    sentence1_length_ph: dataset['question_lengths'][batch_start:batch_end],
-                    sentence2_length_ph: dataset['support_lengths'][batch_start:batch_end],
-                    label_ph: dataset['answers'][batch_start:batch_end],
-                    dropout_keep_prob_ph: 1.0
-                }
-
-                if debug:
-                    pass
-
-                p_val, l_val = session.run([predictions_int, labels_int], feed_dict=feed_dict)
-
-                p_vals += p_val.tolist()
-                l_vals += l_val.tolist()
-
-            matches = np.equal(p_vals, l_vals)
-            return np.mean(matches)
-
-        dev_accuracy = compute_accuracy(dev_dataset, debug=True)
-        test_accuracy = compute_accuracy(test_dataset)
-
-        print(dev_accuracy, test_accuracy)
+        assert 0.86 < dev_accuracy < 0.87
+        assert 0.86 < test_accuracy < 0.87
 
     tf.reset_default_graph()
 
