@@ -289,12 +289,20 @@ def main(argv):
 
             def bos_eos_init_op(_var):
                 bos_idx, eos_idx = qs_tokenizer.bos_idx, qs_tokenizer.eos_idx
+
                 bos_emb = tf.nn.embedding_lookup(embedding_layer, bos_idx)
                 eos_emb = tf.nn.embedding_lookup(embedding_layer, eos_idx)
+
+                batch_size = _var.get_shape()[0].value
                 sentence_len = _var.get_shape()[1].value
-                # init_bos_op = _var[:, 0, :].assign(bos_emb),
-                # init_eos_op = _var[:, sentence_len, :].assign(eos_emb)
-                return []  # [init_bos_op, init_eos_op]
+
+                tiled_bos_emb = tf.tile(tf.expand_dims(bos_emb, 0), (batch_size, 1))
+                tiled_eos_emb = tf.tile(tf.expand_dims(eos_emb, 0), (batch_size, 1))
+
+                init_bos_op = _var[:, 0, :].assign(tiled_bos_emb),
+                init_eos_op = _var[:, sentence_len - 1, :].assign(tiled_eos_emb)
+
+                return [init_bos_op, init_eos_op]
 
             adversary_projection_steps += bos_eos_init_op(var)
 
