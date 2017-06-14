@@ -287,24 +287,17 @@ def main(argv):
                 unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
-            def bos_eos_init_op(_var):
-                bos_idx, eos_idx = qs_tokenizer.bos_idx, qs_tokenizer.eos_idx
+            adversarial_batch_size, sentence_len = var.get_shape()[0].value, var.get_shape()[1].value
 
-                bos_emb = tf.nn.embedding_lookup(embedding_layer, bos_idx)
-                eos_emb = tf.nn.embedding_lookup(embedding_layer, eos_idx)
+            def token_init_op(_var, token_idx, target_idx):
+                token_emb = tf.nn.embedding_lookup(embedding_layer, token_idx)
+                tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (adversarial_batch_size, 1))
+                init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
+                return init_token_op
 
-                batch_size = _var.get_shape()[0].value
-                sentence_len = _var.get_shape()[1].value
-
-                tiled_bos_emb = tf.tile(tf.expand_dims(bos_emb, 0), (batch_size, 1))
-                tiled_eos_emb = tf.tile(tf.expand_dims(eos_emb, 0), (batch_size, 1))
-
-                init_bos_op = _var[:, 0, :].assign(tiled_bos_emb),
-                init_eos_op = _var[:, sentence_len - 1, :].assign(tiled_eos_emb)
-
-                return [init_bos_op, init_eos_op]
-
-            adversary_projection_steps += bos_eos_init_op(var)
+            adversary_projection_steps += [
+                token_init_op(var, qs_tokenizer.bos_idx, 0),
+                token_init_op(var, qs_tokenizer.eos_idx, sentence_len - 1)]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
