@@ -58,6 +58,10 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
+    argparser.add_argument('--no-bos', action='store_false', help='No <Beginning of Sentence> token')
+    argparser.add_argument('--no-eos', action='store_false', help='No <End of Sentence> token')
+    argparser.add_argument('--no-unk', action='store_false', help='No <Unknown Word> token')
+
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
@@ -96,6 +100,8 @@ def main(argv):
     nb_words = args.nb_words
     seed = args.seed
 
+    has_bos, has_eos, has_unk = not args.no_bos, not args.no_eos, not args.no_unk
+
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
@@ -125,7 +131,8 @@ def main(argv):
 
     logger.debug('Parsing corpus ..')
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words)
+    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words,
+                                                                  has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
 
     # Indices (in the final logits) corresponding to the three NLI classes
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
