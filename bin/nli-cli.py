@@ -295,9 +295,11 @@ def main(argv):
                 init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
                 return init_token_op
 
-            adversary_projection_steps += [
-                token_init_op(var, qs_tokenizer.bos_idx, 0),
-                token_init_op(var, qs_tokenizer.eos_idx, sentence_len - 1)]
+            if qs_tokenizer.has_bos:
+                adversary_projection_steps += [token_init_op(var, qs_tokenizer.bos_idx, 0)]
+
+            if qs_tokenizer.has_eos:
+                adversary_projection_steps += [token_init_op(var, qs_tokenizer.eos_idx, sentence_len - 1)]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
@@ -399,9 +401,7 @@ def main(argv):
                 session.run([adversary_init_op, adversary_optimizer_init_op])
 
                 for a_epoch in range(1, nb_adversary_epochs + 1):
-                    adversary_feed_dict = {
-                        dropout_keep_prob_ph: 1.0
-                    }
+                    adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
                     _, adversarial_loss_value = session.run([adversary_training_step, adversary_loss],
                                                             feed_dict=adversary_feed_dict)
 
