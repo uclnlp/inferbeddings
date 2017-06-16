@@ -13,7 +13,7 @@ from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli import util, tfutil
-from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
 from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
 from inferbeddings.nli.regularizers.adversarial import AdversarialSets
@@ -39,7 +39,7 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'esim1'])
+                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
     argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
                            choices=['adagrad', 'adam'])
 
@@ -76,6 +76,7 @@ def main(argv):
     argparser.add_argument('--rule0-weight', '-0', action='store', type=float, default=None)
     argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
     argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
+    argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -117,6 +118,7 @@ def main(argv):
     rule0_weight = args.rule0_weight
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
+    rule3_weight = args.rule3_weight
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -257,7 +259,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight
+    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight
 
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
@@ -277,6 +279,10 @@ def main(argv):
                 rule2_loss, rule2_vars = adversarial.rule2_loss()
                 adversary_loss += rule2_weight * tf.reduce_max(rule2_loss)
                 adversary_vars += rule2_vars
+            if rule3_weight:
+                rule3_loss, rule3_vars = adversarial.rule3_loss()
+                adversary_loss += rule3_weight * tf.reduce_max(rule3_loss)
+                adversary_vars += rule3_vars
 
         adversary_init_op = tf.variables_initializer(adversary_vars)
 
