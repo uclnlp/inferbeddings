@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 def accuracy(session, dataset, name,
              sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph, label_ph, dropout_keep_prob_ph,
-             predictions_int, labels_int,
-             contradiction_idx, entailment_idx, neutral_idx,
-             batch_size):
+             predictions_int, labels_int, contradiction_idx, entailment_idx, neutral_idx, batch_size):
 
     nb_eval_instances = len(dataset['questions'])
     eval_batches = make_batches(size=nb_eval_instances, batch_size=batch_size)

@@ -270,11 +270,11 @@ def main(argv):
             adversary_vars = []
 
             if rule1_weight:
-                rule1_loss, rule1_vars = adversarial.rule1()
+                rule1_loss, rule1_vars = adversarial.rule1_loss()
                 adversary_loss += rule1_weight * tf.reduce_max(rule1_loss)
                 adversary_vars += rule1_vars
             if rule2_weight:
-                rule2_loss, rule2_vars = adversarial.rule2()
+                rule2_loss, rule2_vars = adversarial.rule2_loss()
                 adversary_loss += rule2_weight * tf.reduce_max(rule2_loss)
                 adversary_vars += rule2_vars
 
