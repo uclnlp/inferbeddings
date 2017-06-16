@@ -29,7 +29,7 @@ class AdversarialSets:
                                   initializer=tf.contrib.layers.xavier_initializer())
         return res
 
-    def _logit(self, sequence1, sequence2, predicate_idx):
+    def _score(self, sequence1, sequence2, predicate_idx):
         model_kwargs = self.model_kwargs.copy()
 
         batch_size = sequence1.get_shape()[0].value
@@ -40,16 +40,15 @@ class AdversarialSets:
             'sequence2': sequence2, 'sequence2_length': sequence_length
         })
 
-        logits = self.model_class(**model_kwargs, reuse=True)()
-        probability = logits[:, predicate_idx]
-        return probability
+        logits = self.model_class(reuse=True, **model_kwargs)()
+        return logits[:, predicate_idx]
 
-    def rule1(self):
+    def rule1_loss(self):
         """
         Adversarial loss term enforcing the rule:
-            P(contradicts(S1, S2)) ~ P(contradicts(S2, S1))
+            s(contradicts(S1, S2)) ~ s(contradicts(S2, S1))
         by computing:
-            [P(contradicts(S1, S2)) - P(contradicts(S2, S1))]^2,
+            abs[s(contradicts(S1, S2)) - s(contradicts(S2, S1))],
         where the sentence embeddings S1 and S2 can be learned adversarially.
     
         :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
@@ -61,20 +60,19 @@ class AdversarialSets:
         sequence2 = self._get_sequence(name='rule1_sequence2')
 
         # Probability that S1 contradicts S2
-        p_s1_contradicts_s2 = self._logit(sequence1, sequence2, self.contradiction_idx)
+        score_s1_contradicts_s2 = self._score(sequence1, sequence2, self.contradiction_idx)
         # Probability that S2 contradicts S1
-        p_s2_contradicts_s1 = self._logit(sequence2, sequence1, self.contradiction_idx)
+        score_s2_contradicts_s1 = self._score(sequence2, sequence1, self.contradiction_idx)
+        return tf.abs(score_s1_contradicts_s2 - score_s2_contradicts_s1), {sequence1, sequence2}
 
-        return tf.nn.l2_loss(p_s1_contradicts_s2 - p_s2_contradicts_s1), {sequence1, sequence2}
-
-    def rule2(self):
+    def rule2_loss(self):
         """
         Adversarial loss term enforcing the rule:
             entails(S1, S2), entails(S2, S3) \implies entails(S1, S3)
         or, in other terms:
-            min(P(entails(S1, S2)) + P(entails(S2, S3))) <= P(entails(S1, S3))
+            min(s(entails(S1, S2)) + s(entails(S2, S3))) <= s(entails(S1, S3))
         by computing:
-            ReLU[min(P(entails(S1, S2)) + P(entails(S2, S3))) - P(entails(S1, S3))]
+            ReLU[min(s(entails(S1, S2)) + s(entails(S2, S3))) - s(entails(S1, S3))]
         where the sentence embeddings S1, S2 and S3 can be learned adversarially.
 
         :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
@@ -88,16 +86,39 @@ class AdversarialSets:
         sequence3 = self._get_sequence(name='rule2_sequence3')
 
         # Probability that S1 entails S2
-        p_s1_entails_s2 = self._logit(sequence1, sequence2, self.entailment_idx)
+        score_s1_entails_s2 = self._score(sequence1, sequence2, self.entailment_idx)
         # Probability that S2 entails S3
-        p_s2_entails_s3 = self._logit(sequence2, sequence3, self.entailment_idx)
+        score_s2_entails_s3 = self._score(sequence2, sequence3, self.entailment_idx)
         # Probability that S1 entails S3
-        p_s1_entails_s3 = self._logit(sequence1, sequence3, self.entailment_idx)
+        score_s1_entails_s3 = self._score(sequence1, sequence3, self.entailment_idx)
 
-        body_score = tf.minimum(p_s1_entails_s2, p_s2_entails_s3)
-        head_score = p_s1_entails_s3
+        body_score = tf.minimum(score_s1_entails_s2, score_s2_entails_s3)
+        head_score = score_s1_entails_s3
 
         # The loss is > 0 if min(P1->P2, P2->P3) > P1->P3, 0 otherwise
         loss = tf.nn.relu(body_score - head_score)
-
         return loss, {sequence1, sequence2, sequence3}
+
+    def rule3_loss(self):
+        """
+        Adversarial loss term enforcing the rule:
+            s(entails(S1, S1)) > s(contradicts(S1, S1))
+            s(entails(S1, S1)) > s(neutral(S1, S1))
+        by computing:
+            ReLU[s(contradicts(S1, S1)) - s(entails(S1, S1))]
+            + ReLU[s(neutral(S1, S1)) - s(entails(S1, S1))],
+        where the sentence embeddings S1 and S2 can be learned adversarially.
+
+        :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
+            and the adversarially trainable variables.
+        """
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='rule3_sequence1')
+
+        score_s1_entails_s1 = self._score(sequence1, sequence1, self.entailment_idx)
+        score_s1_contradicts_s1 = self._score(sequence1, sequence1, self.contradiction_idx)
+        score_s1_neutral_s1 = self._score(sequence1, sequence1, self.neutral_idx)
+
+        loss = tf.nn.relu(score_s1_contradicts_s1 - score_s1_entails_s1) +\
+            tf.nn.relu(score_s1_neutral_s1 - score_s1_entails_s1)
+        return loss

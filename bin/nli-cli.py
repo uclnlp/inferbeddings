@@ -13,7 +13,7 @@ from inferbeddings.io import load_glove, load_word2vec
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli import util, tfutil
-from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
 from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
 from inferbeddings.nli.regularizers.adversarial import AdversarialSets
@@ -39,7 +39,7 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'esim1'])
+                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
     argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
                            choices=['adagrad', 'adam'])
 
@@ -58,6 +58,10 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
+    argparser.add_argument('--no-bos', action='store_false', help='No <Beginning of Sentence> token')
+    argparser.add_argument('--no-eos', action='store_false', help='No <End of Sentence> token')
+    argparser.add_argument('--no-unk', action='store_false', help='No <Unknown Word> token')
+
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
@@ -72,6 +76,7 @@ def main(argv):
     argparser.add_argument('--rule0-weight', '-0', action='store', type=float, default=None)
     argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
     argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
+    argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
@@ -96,6 +101,8 @@ def main(argv):
     nb_words = args.nb_words
     seed = args.seed
 
+    has_bos, has_eos, has_unk = not args.no_bos, not args.no_eos, not args.no_unk
+
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
@@ -111,6 +118,7 @@ def main(argv):
     rule0_weight = args.rule0_weight
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
+    rule3_weight = args.rule3_weight
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -125,7 +133,8 @@ def main(argv):
 
     logger.debug('Parsing corpus ..')
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words)
+    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words,
+                                                                  has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
 
     # Indices (in the final logits) corresponding to the three NLI classes
     contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
@@ -250,7 +259,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight
+    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight
 
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
@@ -263,13 +272,17 @@ def main(argv):
             adversary_vars = []
 
             if rule1_weight:
-                rule1_loss, rule1_vars = adversarial.rule1()
+                rule1_loss, rule1_vars = adversarial.rule1_loss()
                 adversary_loss += rule1_weight * tf.reduce_max(rule1_loss)
                 adversary_vars += rule1_vars
             if rule2_weight:
-                rule2_loss, rule2_vars = adversarial.rule2()
+                rule2_loss, rule2_vars = adversarial.rule2_loss()
                 adversary_loss += rule2_weight * tf.reduce_max(rule2_loss)
                 adversary_vars += rule2_vars
+            if rule3_weight:
+                rule3_loss, rule3_vars = adversarial.rule3_loss()
+                adversary_loss += rule3_weight * tf.reduce_max(rule3_loss)
+                adversary_vars += rule3_vars
 
         adversary_init_op = tf.variables_initializer(adversary_vars)
 
@@ -287,16 +300,19 @@ def main(argv):
                 unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
-            def bos_eos_init_op(_var):
-                bos_idx, eos_idx = qs_tokenizer.bos_idx, qs_tokenizer.eos_idx
-                bos_emb = tf.nn.embedding_lookup(embedding_layer, bos_idx)
-                eos_emb = tf.nn.embedding_lookup(embedding_layer, eos_idx)
-                sentence_len = _var.get_shape()[1].value
-                # init_bos_op = _var[:, 0, :].assign(bos_emb),
-                # init_eos_op = _var[:, sentence_len, :].assign(eos_emb)
-                return []  # [init_bos_op, init_eos_op]
+            adversarial_batch_size, sentence_len = var.get_shape()[0].value, var.get_shape()[1].value
 
-            adversary_projection_steps += bos_eos_init_op(var)
+            def token_init_op(_var, token_idx, target_idx):
+                token_emb = tf.nn.embedding_lookup(embedding_layer, token_idx)
+                tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (adversarial_batch_size, 1))
+                init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
+                return init_token_op
+
+            if qs_tokenizer.has_bos:
+                adversary_projection_steps += [token_init_op(var, qs_tokenizer.bos_idx, 0)]
+
+            if qs_tokenizer.has_eos:
+                adversary_projection_steps += [token_init_op(var, qs_tokenizer.eos_idx, sentence_len - 1)]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
@@ -398,9 +414,7 @@ def main(argv):
                 session.run([adversary_init_op, adversary_optimizer_init_op])
 
                 for a_epoch in range(1, nb_adversary_epochs + 1):
-                    adversary_feed_dict = {
-                        dropout_keep_prob_ph: 1.0
-                    }
+                    adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
                     _, adversarial_loss_value = session.run([adversary_training_step, adversary_loss],
                                                             feed_dict=adversary_feed_dict)
 
