@@ -206,6 +206,7 @@ def main(argv):
             'cbilstm': ConditionalBiLSTM,
             'ff-dam': FeedForwardDAM,
             'ff-damp': FeedForwardDAMP,
+            'ff-dams': FeedForwardDAMS,
             'esim1': ESIMv1
         }
 
