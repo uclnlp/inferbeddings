@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 import inferbeddings.nli.util as util
-from inferbeddings.nli import FeedForwardDAMP
+from inferbeddings.nli import ESIMv1
 
 from inferbeddings.nli.evaluation import accuracy
 
@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.light
-def test_nli_damp():
+@pytest.mark.skip(reason='still training the model')
+def test_nli_esim():
     embedding_size = 300
     representation_size = 200
     max_len = None
@@ -31,7 +32,7 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    _ = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
@@ -54,7 +55,7 @@ def test_nli_damp():
         sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
         representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph,
         use_masking=True)
-    model_class = FeedForwardDAMP
+    model_class = ESIMv1
 
     model = model_class(**model_kwargs)
 
@@ -66,7 +67,7 @@ def test_nli_damp():
 
     batch_size = 32
 
-    restore_path = 'models/nli/damp_v1.ckpt'
+    restore_path = 'models/nli/esim1_v2.ckpt'
 
     with tf.Session() as session:
         saver = tf.train.Saver()
@@ -82,8 +83,10 @@ def test_nli_damp():
                                           label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
                                           contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-        assert 0.86 < dev_accuracy < 0.89
-        assert 0.86 < test_accuracy < 0.89
+        print(dev_accuracy, test_accuracy)
+
+        assert 0.86 < dev_accuracy < 0.88
+        assert 0.86 < test_accuracy < 0.88
 
     tf.reset_default_graph()
 

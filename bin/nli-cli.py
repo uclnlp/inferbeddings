@@ -28,6 +28,8 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def main(argv):
+    logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
+
     def formatter(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
@@ -206,6 +208,7 @@ def main(argv):
             'cbilstm': ConditionalBiLSTM,
             'ff-dam': FeedForwardDAM,
             'ff-damp': FeedForwardDAMP,
+            'ff-dams': FeedForwardDAMS,
             'esim1': ESIMv1
         }
 

@@ -78,7 +78,8 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
             return self.logits
 
     def attend(self, sequence1, sequence2,
-               sequence1_lengths=None, sequence2_lengths=None, use_masking=False, reuse=False):
+               sequence1_lengths=None, sequence2_lengths=None,
+               use_masking=False, reuse=False):
         """
         Attend phase.
 
@@ -92,13 +93,14 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         """
         with tf.variable_scope('attend') as _:
             # tensor with shape (batch_size, time_steps, num_units)
-            transformed_sequence1 = self._transform_attend(sequence1, reuse)
+            self.attend_transformed_sequence1 = self._transform_attend(sequence1, reuse)
 
             # tensor with shape (batch_size, time_steps, num_units)
-            transformed_sequence2 = self._transform_attend(sequence2, True)
+            self.attend_transformed_sequence2 = self._transform_attend(sequence2, True)
 
             # tensor with shape (batch_size, time_steps, time_steps)
-            self.raw_attentions = tf.matmul(transformed_sequence1, tf.transpose(transformed_sequence2, [0, 2, 1]))
+            self.raw_attentions = tf.matmul(self.attend_transformed_sequence1,
+                                            tf.transpose(self.attend_transformed_sequence2, [0, 2, 1]))
 
             masked_raw_attentions = self.raw_attentions
             if use_masking:
