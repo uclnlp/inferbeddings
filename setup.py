@@ -7,7 +7,7 @@ with open('requirements.txt', 'r') as f:
       requirements = f.readlines()
 
 setup(name='inferbeddings',
-      version='0.2.0',
+      version='0.3.0',
       description='Adversarial Set Regularizaton for '
                   'Knowledge Base Population and '
                   'Natural Language Inference',
