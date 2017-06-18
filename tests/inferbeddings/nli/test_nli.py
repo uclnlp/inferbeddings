@@ -31,7 +31,7 @@ def test_nli_damp():
     entailment_idx = a_tokenizer.word_index['entailment'] - 1
     neutral_idx = a_tokenizer.word_index['neutral'] - 1
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    _ = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 
@@ -82,8 +82,8 @@ def test_nli_damp():
                                           label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
                                           contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
-        assert 0.86 < dev_accuracy < 0.89
-        assert 0.86 < test_accuracy < 0.89
+        assert 0.86 < dev_accuracy < 0.87
+        assert 0.86 < test_accuracy < 0.87
 
     tf.reset_default_graph()
 
