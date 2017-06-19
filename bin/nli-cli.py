@@ -386,7 +386,7 @@ def main(argv):
                     for projection_step in learning_projection_steps:
                         session.run([projection_step])
 
-                    if (batch_idx > 0 and batch_idx % 1000 == 0) or (batch_start, batch_end) in batches[-1:]:
+                    if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
                         dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev',
                                                     sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
