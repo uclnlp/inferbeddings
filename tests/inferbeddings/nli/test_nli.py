@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.light
-# @pytest.mark.skip(reason='still training the model')
 def test_nli_esim():
     embedding_size = 300
     representation_size = 200
@@ -67,7 +66,11 @@ def test_nli_esim():
 
     batch_size = 32
 
+<<<<<<< HEAD
     restore_path = 'models/nli/esim1_v1.ckpt'
+=======
+    restore_path = 'models/nli/esim1_v2.ckpt'
+>>>>>>> 253abb43d3bb74fac7cdbc7add7cab194cb27a20
 
     with tf.Session() as session:
         saver = tf.train.Saver()
