@@ -65,7 +65,7 @@ def test_nli_esim():
     labels_int = tf.cast(label_ph, tf.int32)
 
     batch_size = 32
-    
+
     restore_path = 'models/nli/esim1_v1.ckpt'
 
     with tf.Session() as session:
