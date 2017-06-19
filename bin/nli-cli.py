@@ -60,9 +60,9 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
-    argparser.add_argument('--no-bos', action='store_false', help='No <Beginning of Sentence> token')
-    argparser.add_argument('--no-eos', action='store_false', help='No <End of Sentence> token')
-    argparser.add_argument('--no-unk', action='store_false', help='No <Unknown Word> token')
+    argparser.add_argument('--no-bos', action='store_true', default=False, help='No <Beginning of Sentence> token')
+    argparser.add_argument('--no-eos', action='store_true', default=False, help='No <End of Sentence> token')
+    argparser.add_argument('--no-unk', action='store_true', default=False, help='No <Unknown Word> token')
 
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
@@ -133,7 +133,7 @@ def main(argv):
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
                 .format(len(train_instances), len(dev_instances), len(test_instances)))
 
-    logger.debug('Parsing corpus ..')
+    logger.debug('Parsing corpus (has bos: {}, has eos: {}, has unk: {})..'.format(has_bos, has_eos, has_unk))
     all_instances = train_instances + dev_instances + test_instances
     qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words,
                                                                   has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
@@ -156,8 +156,7 @@ def main(argv):
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len,
-                                    semi_sort=is_semi_sort)
+    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
     dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
     test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
 

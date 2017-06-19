@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 import inferbeddings.nli.util as util
-from inferbeddings.nli import ESIMv1
+from inferbeddings.nli import FeedForwardDAMP
 
 from inferbeddings.nli.evaluation import accuracy
 
@@ -14,8 +14,9 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.light
-def test_nli_esim():
+# @pytest.mark.light
+@pytest.mark.skip(reason="no way of currently testing this")
+def test_nli_damp():
     embedding_size = 300
     representation_size = 200
     max_len = None
@@ -38,25 +39,34 @@ def test_nli_esim():
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
     sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
 
-    sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
-    sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
+    sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
+    sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
+
+    def clip_sentence(sentence, sizes):
+        return tf.slice(sentence, [0, 0], tf.stack([-1, tf.reduce_max(sizes)]))
+
+    clipped_sentence1 = clip_sentence(sentence1_ph, sentence1_len_ph)
+    clipped_sentence2 = clip_sentence(sentence2_ph, sentence2_len_ph)
 
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
+
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
-    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size])
+    discriminator_scope_name = 'discriminator'
+    with tf.variable_scope(discriminator_scope_name):
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size])
 
-    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
-    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
+        sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
+        sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
 
-    model_kwargs = dict(
-        sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
-        sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
-        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph,
-        use_masking=True)
-    model_class = ESIMv1
+        model_kwargs = dict(
+            sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
+            sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
+            representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph,
+            use_masking=True)
+        model_class = FeedForwardDAMP
 
-    model = model_class(**model_kwargs)
+        model = model_class(**model_kwargs)
 
     logits = model()
     predictions = tf.argmax(logits, axis=1, name='predictions')
@@ -66,26 +76,26 @@ def test_nli_esim():
 
     batch_size = 32
 
-    restore_path = 'models/nli/esim1_v1.ckpt'
+    restore_path = 'models/nli/damp_v1.ckpt'
 
     with tf.Session() as session:
         saver = tf.train.Saver()
         saver.restore(session, restore_path)
 
         dev_accuracy, _, _, _ = accuracy(session, dev_dataset, 'dev',
-                                         sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                         sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
                                          label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
                                          contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
         test_accuracy, _, _, _ = accuracy(session, test_dataset, 'test',
-                                          sentence1_ph, sentence1_length_ph, sentence2_ph, sentence2_length_ph,
+                                          sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
                                           label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
                                           contradiction_idx, entailment_idx, neutral_idx, batch_size)
 
         print(dev_accuracy, test_accuracy)
 
-        assert 0.86 < dev_accuracy < 0.88
-        assert 0.86 < test_accuracy < 0.88
+        assert 0.84 < dev_accuracy < 0.88
+        assert 0.84 < test_accuracy < 0.88
 
     tf.reset_default_graph()
 
