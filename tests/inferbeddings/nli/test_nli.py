@@ -14,7 +14,8 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.light
+# @pytest.mark.light
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_nli_damp():
     embedding_size = 300
     representation_size = 200
