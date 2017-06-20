@@ -6,9 +6,6 @@ import argparse
 import os
 import sys
 
-import numpy as np
-import tensorflow as tf
-
 from tensorflow.python.tools.inspect_checkpoint import print_tensors_in_checkpoint_file
 
 import logging
