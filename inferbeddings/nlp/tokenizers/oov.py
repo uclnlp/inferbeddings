@@ -40,12 +40,11 @@ class OOVTokenizer(object):
                     self.word_counts[word] = 0
                 self.word_counts[word] += 1
 
-        word_iv_counts_lst = [(word, word in self.vocabulary, count)
-                              for word, count in self.word_counts.items()]
+        word_iv_counts_lst = [(word, word in self.vocabulary, count) for word, count in self.word_counts.items()]
 
         print(word_iv_counts_lst)
 
-        sorted_voc = [word[0] for word in sorted(word_iv_counts_lst, key=lambda wic: (not wic[1], - wic[2], wic[0]))]
+        sorted_voc = [word[0] for word in sorted(word_iv_counts_lst, key=lambda wic: (wic[1], - wic[2], wic[0]))]
 
         print(sorted_voc)
 
