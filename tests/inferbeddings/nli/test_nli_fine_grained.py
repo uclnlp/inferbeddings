@@ -3,7 +3,6 @@
 import numpy as np
 import tensorflow as tf
 
-import inferbeddings.nli.util as util
 from inferbeddings.nli import FeedForwardDAMP
 
 import logging
@@ -28,7 +27,7 @@ def test_nli_dam_fine_grained():
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
     embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                      initializer=tf.random_normal_initializer(0.0, 100000.0))
+                                      initializer=tf.contrib.layers.xavier_initializer())
 
     sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
     sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
