@@ -4,7 +4,9 @@ from setuptools import setup
 from setuptools import find_packages
 
 with open('requirements.txt', 'r') as f:
-      requirements = f.readlines()
+      setup_requires = f.readlines()
+
+tests_require = ['pytest', 'pytest-pep8', 'pytest-xdist', 'pytest-cov']
 
 setup(name='inferbeddings',
       version='0.3.0',
@@ -16,7 +18,7 @@ setup(name='inferbeddings',
       url='https://github.com/uclmr/inferbeddings',
       test_suite='tests',
       license='MIT',
-      install_requires=requirements,
-      setup_requires=['pytest-runner'] + requirements,
-      tests_require=['pytest', 'pytest-pep8', 'pytest-xdist', 'pytest-cov'] + requirements,
+      install_requires=setup_requires,
+      setup_requires=['pytest-runner'] + setup_requires + tests_require,
+      tests_require=setup_requires + tests_require,
       packages=find_packages())
