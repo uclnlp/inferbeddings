@@ -78,8 +78,8 @@ def test_oov_tokenizer_5():
     assert tokenizer.texts_to_sequences(['Hello world sup?']) == [[1, 2]]
     assert tokenizer.word_index == {'hello': 1, 'world': 2}
 
-    assert tokenizer.nb_iv_words == 2  # 'hello'
-    assert tokenizer.nb_oov_words == 1  # 0 (PAD), 'world'
+    assert tokenizer.nb_iv_words == 2  # 'hello', 'world'
+    assert tokenizer.nb_oov_words == 1  # 0 (PAD)
 
 
 if __name__ == '__main__':

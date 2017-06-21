@@ -66,6 +66,7 @@ def main(argv):
 
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
+    argparser.add_argument('--train-oov', action='store_true', default=False)
 
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
