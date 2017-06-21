@@ -84,9 +84,7 @@ def test_nli_dam_fine_grained():
 
         print(_c.shape)
 
-        # print(_c.shape)
-
-        np.testing.assert_allclose(_c, raw_attentions_value[0, :, :])
+        np.testing.assert_allclose(_c, raw_attentions_value[0, :, :], rtol=1e-3)
 
         attention_sentence1_value = session.run(model.attention_sentence1, feed_dict=feed_dict)
         attention_sentence2_value = session.run(model.attention_sentence2, feed_dict=feed_dict)

@@ -1,6 +1,6 @@
 # Wercker configuration file
 
-box: python:3.6.1
+box: python:3
 
 no-response-timeout: 60
 command-timeout: 60
@@ -8,65 +8,68 @@ command-timeout: 60
 build:
   steps:
     - script:
-      name: echo system information
+      name: setup
       code: |
         uname -a
         echo "python3 version $(python3 --version) running"
         echo "pip3 version $(pip3 --version) running"
-        ls
 
 test-light:
   steps:
     - pip-install
 
     - script:
-        name: install
-        code: |
-          python3 setup.py install
+      name: install
+      code: |
+        python -m pip install --upgrade -r requirements.txt
+        python setup.py install
 
     - script:
         name: Run unit tests
         code: |
-          python3 -m pytest tests -v -m "(light) and (not slow) and (not veryslow) and (not closedform)"
+          python -m pytest tests -v -m "(light) and (not slow) and (not veryslow) and (not closedform)"
 
 test-slow:
   steps:
     - pip-install
 
     - script:
-        name: install
-        code: |
-          python3 setup.py install
+      name: install
+      code: |
+        python -m pip install --upgrade -r requirements.txt
+        python setup.py install
 
     - script:
         name: Run slow unit tests
         code: |
-          python3 -m pytest tests -v -m "(not light) and (slow) and (not veryslow) and (not closedform)"
+          python -m pytest tests -v -m "(not light) and (slow) and (not veryslow) and (not closedform)"
 
 test-veryslow:
   steps:
     - pip-install
 
     - script:
-        name: install
-        code: |
-          python3 setup.py install
+      name: install
+      code: |
+        python -m pip install --upgrade -r requirements.txt
+        python setup.py install
 
     - script:
         name: Run very slow unit tests
         code: |
-          python3 -m pytest tests -v -m "(not light) and (not slow) and (veryslow) and (not closedform)"
+          python -m pytest tests -v -m "(not light) and (not slow) and (veryslow) and (not closedform)"
 
 test-closedform:
   steps:
     - pip-install
 
     - script:
-        name: install
-        code: |
-          python3 setup.py install
+      name: install
+      code: |
+        python -m pip install --upgrade -r requirements.txt
+        python setup.py install
 
     - script:
         name: Run closed form solutions unit tests
         code: |
-          python3 -m pytest tests -v -m "(not light) and (not slow) and (not veryslow) and (closedform)"
+          python -m pytest tests -v -m "(not light) and (not slow) and (not veryslow) and (closedform)"

@@ -26,6 +26,8 @@ def test_oov_tokenizer():
     assert tokenizer.texts_to_sequences(['Hello world sup?']) == [[1, 5, 4, 3, 2]]
     assert tokenizer.word_index == {'hello': 5, 'world': 4}
 
+    assert tokenizer.nb_iv_words == 1  # 'hello'
+    assert tokenizer.nb_oov_words == 5  # 0 (PAD), BOS, EOS, UNK, 'world'
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
