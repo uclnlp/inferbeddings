@@ -6,7 +6,7 @@ from setuptools import find_packages
 with open('requirements.txt', 'r') as f:
       setup_requires = f.readlines()
 
-tests_require = ['pytest', 'pytest-pep8', 'pytest-xdist', 'pytest-cov']
+tests_require = ['pytest', 'pytest-runner', 'pytest-pep8', 'pytest-xdist', 'pytest-cov']
 
 setup(name='inferbeddings',
       version='0.3.0',
@@ -19,6 +19,6 @@ setup(name='inferbeddings',
       test_suite='tests',
       license='MIT',
       install_requires=setup_requires,
-      setup_requires=['pytest-runner'] + setup_requires + tests_require,
+      setup_requires=setup_requires + tests_require,
       tests_require=setup_requires + tests_require,
       packages=find_packages())
