@@ -17,15 +17,13 @@ build:
 
 test-light:
   steps:
-    - pip-install
-
     - script:
       name: install
       code: |
         sudo apt-get update
         sudo apt-get -y install python3-numpy python3-sklearn
-        python3 -m pytest install --upgrade -r requirements.txt
-        python3 setup.py install
+
+    - pip-install
 
 
     - script:
@@ -40,15 +38,13 @@ test-light:
 
 test-slow:
   steps:
-    - pip-install
-
     - script:
       name: install
       code: |
         sudo apt-get update
         sudo apt-get -y install python3-numpy python3-sklearn
-        python3 -m pytest install --upgrade -r requirements.txt
-        python3 setup.py install
+
+    - pip-install
 
     - script:
         name: install
@@ -62,15 +58,13 @@ test-slow:
 
 test-veryslow:
   steps:
-    - pip-install
-
     - script:
       name: install
       code: |
         sudo apt-get update
         sudo apt-get -y install python3-numpy python3-sklearn
-        python3 -m pytest install --upgrade -r requirements.txt
-        python3 setup.py install
+
+    - pip-install
 
     - script:
         name: install
@@ -84,15 +78,13 @@ test-veryslow:
 
 test-closedform:
   steps:
-    - pip-install
-
     - script:
       name: install
       code: |
         sudo apt-get update
         sudo apt-get -y install python3-numpy python3-sklearn
-        python3 -m pytest install --upgrade -r requirements.txt
-        python3 setup.py install
+
+    - pip-install
 
     - script:
         name: install
