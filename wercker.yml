@@ -14,23 +14,14 @@ build:
         echo "python3 version $(python3 --version) running"
         echo "pip3 version $(pip3 --version) running"
 
-        sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-scipy
-
-        python3 -m pip install --upgrade -r requirements.txt
-        python3 setup.py install
-
 test-light:
   steps:
+    - pip-install
+
     - script:
       name: install
       code: |
-        sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-scipy
-        python3 -m pip install --upgrade -r requirements.txt
         python3 setup.py install
-
-    - pip-install
 
     - script:
         name: Run unit tests
@@ -39,15 +30,12 @@ test-light:
 
 test-slow:
   steps:
+    - pip-install
+
     - script:
       name: install
       code: |
-        sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-scipy
-        python3 -m pip install --upgrade -r requirements.txt
         python3 setup.py install
-
-    - pip-install
 
     - script:
         name: Run slow unit tests
@@ -56,15 +44,12 @@ test-slow:
 
 test-veryslow:
   steps:
+    - pip-install
+
     - script:
       name: install
       code: |
-        sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-scipy
-        python3 -m pip install --upgrade -r requirements.txt
         python3 setup.py install
-
-    - pip-install
 
     - script:
         name: Run very slow unit tests
@@ -73,15 +58,12 @@ test-veryslow:
 
 test-closedform:
   steps:
+    - pip-install
+
     - script:
       name: install
       code: |
-        sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-scipy
-        python3 -m pip install --upgrade -r requirements.txt
         python3 setup.py install
-
-    - pip-install
 
     - script:
         name: Run closed form solutions unit tests
