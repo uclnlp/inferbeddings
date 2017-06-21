@@ -6,4 +6,4 @@ parsimonious>=0.7
 terminaltables>=2.0
 colorclass>=2.0
 pyDatalog
-sklearn
+scikit-learn
