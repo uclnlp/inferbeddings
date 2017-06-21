@@ -18,7 +18,7 @@ def test_tokenizer():
 
 
 def test_oov_tokenizer():
-    vocabulary = {'world'}
+    vocabulary = {'hello'}
 
     tokenizer = OOVTokenizer(has_bos=True, has_eos=True, has_unk=True, vocabulary=vocabulary)
     tokenizer.fit_on_texts(['Hello world!'])
