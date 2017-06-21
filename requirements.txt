@@ -7,3 +7,9 @@ terminaltables>=2.0
 colorclass>=2.0
 pyDatalog
 scikit-learn
+
+pytest
+pytest-runner
+pytest-pep8
+pytest-xdist
+pytest-cov
