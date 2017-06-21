@@ -1,3 +1,4 @@
+pytest
 numpy
 tensorflow>=1.1
 scipy
