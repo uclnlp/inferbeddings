@@ -110,6 +110,7 @@ def main(argv):
     has_bos, has_eos, has_unk = not args.no_bos, not args.no_eos, not args.no_unk
 
     initialize_embeddings = args.initialize_embeddings
+    train_oov = args.train_oov
 
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
@@ -188,8 +189,11 @@ def main(argv):
         if initialize_embeddings == 'normal':
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
 
-        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                          initializer=embedding_initializer, trainable=not is_fixed_embeddings)
+        if train_oov:
+            embedding_layer = None
+        else:
+            embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
+                                              initializer=embedding_initializer, trainable=not is_fixed_embeddings)
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
