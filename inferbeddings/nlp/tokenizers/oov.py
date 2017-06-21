@@ -24,6 +24,7 @@ class OOVTokenizer(object):
         self.vocabulary = vocabulary or set()
 
         self.bos_idx = self.eos_idx = self.unk_idx = None
+        self.nb_iv_words, self.nb_oov_words = 0, 0
 
     @staticmethod
     def text_to_word_seq(text, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
@@ -41,12 +42,7 @@ class OOVTokenizer(object):
                 self.word_counts[word] += 1
 
         word_iv_counts_lst = [(word, word in self.vocabulary, count) for word, count in self.word_counts.items()]
-
-        print(word_iv_counts_lst)
-
         sorted_voc = [word[0] for word in sorted(word_iv_counts_lst, key=lambda wic: (wic[1], - wic[2], wic[0]))]
-
-        print(sorted_voc)
 
         # note that index 0 is reserved, never assigned to an existing word
         start_idx = 1
@@ -62,6 +58,9 @@ class OOVTokenizer(object):
         if self.has_unk:
             self.unk_idx = start_idx
             start_idx += 1
+
+        self.nb_iv_words = len([(_, iv, _) for (_, iv, _) in word_iv_counts_lst if iv])
+        self.nb_oov_words = start_idx + len([(_, iv, _) for (_, iv, _) in word_iv_counts_lst if not iv])
 
         # note that index 0 is reserved, never assigned to an existing word
         indices = list(range(start_idx, len(sorted_voc) + start_idx))
