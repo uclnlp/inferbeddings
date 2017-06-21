@@ -18,5 +18,5 @@ setup(name='inferbeddings',
       license='MIT',
       install_requires=requirements,
       setup_requires=['pytest-runner'] + requirements,
-      tests_require=requirements,
+      tests_require=['pytest', 'pytest-pep8', 'pytest-xdist', 'pytest-cov'] + requirements,
       packages=find_packages())
