@@ -21,7 +21,7 @@ test-light:
       name: install
       code: |
         sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-sklearn
+        sudo apt-get -y install python3-numpy
 
     - pip-install
 
@@ -42,7 +42,7 @@ test-slow:
       name: install
       code: |
         sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-sklearn
+        sudo apt-get -y install python3-numpy
 
     - pip-install
 
@@ -62,7 +62,7 @@ test-veryslow:
       name: install
       code: |
         sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-sklearn
+        sudo apt-get -y install python3-numpy
 
     - pip-install
 
@@ -82,7 +82,7 @@ test-closedform:
       name: install
       code: |
         sudo apt-get update
-        sudo apt-get -y install python3-numpy python3-sklearn
+        sudo apt-get -y install python3-numpy
 
     - pip-install
 
