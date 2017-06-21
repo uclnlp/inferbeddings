@@ -1,6 +1,6 @@
 # Wercker configuration file
 
-box: python:3.6.1
+box: python:3
 
 no-response-timeout: 60
 command-timeout: 60
