@@ -185,7 +185,7 @@ def main(argv):
     word_set = {word for word, idx in qs_tokenizer.word_index.items() if idx < vocab_size}
     index_to_word = {idx: word for word, idx in qs_tokenizer.word_index.items()}
 
-    word_to_embedding = None
+    word_to_embedding = dict()
     if glove_path:
         assert os.path.isfile(glove_path)
         word_to_embedding = load_glove(glove_path, word_set)
@@ -201,8 +201,6 @@ def main(argv):
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
 
         if train_oov:
-            assert word_to_embedding
-
             embedding_layer, word_embedding_layers = None, []
             for word_idx in range(vocab_size):
                 word = index_to_word.get(word_idx, None)
@@ -271,18 +269,23 @@ def main(argv):
     discriminator_optimizer_vars = tfutil.get_variables_in_scope(discriminator_optimizer_scope_name)
     discriminator_optimizer_init_op = tf.variables_initializer(discriminator_optimizer_vars)
 
-    word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
-    word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
-    assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
+    if not train_oov:
+        word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
+        word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
+        assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
 
     init_projection_steps = []
     learning_projection_steps = []
 
     if is_normalized_embeddings:
-        unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
-        init_projection_steps += [unit_sphere_embeddings]
-        if not is_fixed_embeddings:
-            learning_projection_steps += [unit_sphere_embeddings]
+        if not train_oov:
+            unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
+            init_projection_steps += [unit_sphere_embeddings]
+            if not is_fixed_embeddings:
+                learning_projection_steps += [unit_sphere_embeddings]
+        else:
+            # TODO
+            pass
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
@@ -362,7 +365,7 @@ def main(argv):
             session.run([discriminator_init_op, discriminator_optimizer_init_op])
 
             # Initialising pre-trained embeddings
-            if word_to_embedding and not train_oov:
+            if not train_oov:
                 logger.info('Initialising the embeddings pre-trained vectors ..')
                 for word in word_to_embedding:
                     word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
