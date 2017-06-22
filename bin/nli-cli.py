@@ -209,7 +209,8 @@ def main(argv):
                 word_embedding = word_to_embedding.get(word, None) if word else None
 
                 word_initializer = tf.constant_initializer(word_embedding) if word_embedding else embedding_initializer
-                word_embedding_layer = tf.get_variable('embeddings_{}'.format(word_idx), shape=[1, embedding_size],
+                word_embedding_layer = tf.get_variable('embeddings_{}'.format(word_idx),
+                                                       shape=[1, embedding_size],
                                                        initializer=word_initializer,
                                                        trainable=False if word_embedding else True)
                 word_embedding_layers += [word_embedding_layer]
