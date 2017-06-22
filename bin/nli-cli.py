@@ -201,9 +201,9 @@ def main(argv):
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
 
         if train_oov:
-            embedding_layer = None
+            assert word_to_embedding
 
-            word_embedding_layers = []
+            embedding_layer, word_embedding_layers = None, []
             for word_idx in range(vocab_size):
                 word = index_to_word.get(word_idx, None)
                 word_embedding = word_to_embedding.get(word, None) if word else None
@@ -360,7 +360,7 @@ def main(argv):
             session.run([discriminator_init_op, discriminator_optimizer_init_op])
 
             # Initialising pre-trained embeddings
-            if word_to_embedding:
+            if word_to_embedding and not train_oov:
                 logger.info('Initialising the embeddings pre-trained vectors ..')
                 for word in word_to_embedding:
                     word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
