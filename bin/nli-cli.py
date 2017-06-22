@@ -280,7 +280,6 @@ def main(argv):
 
     if is_normalized_embeddings:
         unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
-
         init_projection_steps += [unit_sphere_embeddings]
         if not is_fixed_embeddings:
             learning_projection_steps += [unit_sphere_embeddings]
@@ -293,9 +292,12 @@ def main(argv):
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
         with tf.variable_scope(adversary_scope_name):
-            adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs, embedding_size=embedding_size,
+            adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
+                                          embedding_size=embedding_size,
                                           scope_name='adversary', batch_size=32, sequence_length=10,
-                                          entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx)
+                                          entailment_idx=entailment_idx,
+                                          contradiction_idx=contradiction_idx,
+                                          neutral_idx=neutral_idx)
 
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
             adversary_vars = []
