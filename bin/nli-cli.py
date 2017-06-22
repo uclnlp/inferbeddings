@@ -182,7 +182,9 @@ def main(argv):
 
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
-    word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
+    word_set = {word for word, idx in qs_tokenizer.word_index.items() if idx < vocab_size}
+    index_to_word = {idx: word for word, idx in qs_tokenizer.word_index.items()}
+
     word_to_embedding = None
     if glove_path:
         assert os.path.isfile(glove_path)
@@ -200,6 +202,19 @@ def main(argv):
 
         if train_oov:
             embedding_layer = None
+
+            word_embedding_layers = []
+            for word_idx in range(vocab_size):
+                word = index_to_word.get(word_idx, None)
+                word_embedding = word_to_embedding.get(word, None) if word else None
+
+                word_initializer = tf.constant_initializer(word_embedding) if word_embedding else embedding_initializer
+                word_embedding_layer = tf.get_variable('embeddings_{}'.format(word_idx), shape=[1, embedding_size],
+                                                       initializer=word_initializer,
+                                                       trainable=False if word_embedding else True)
+                word_embedding_layers += [word_embedding_layer]
+
+            embedding_layer = tf.concat(values=word_embedding_layers, axis=0)
         else:
             embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
                                               initializer=embedding_initializer, trainable=not is_fixed_embeddings)
