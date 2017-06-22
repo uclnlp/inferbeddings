@@ -182,6 +182,15 @@ def main(argv):
 
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
+    word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
+    word_to_embedding = None
+    if glove_path:
+        assert os.path.isfile(glove_path)
+        word_to_embedding = load_glove(glove_path, word_set)
+    elif word2vec_path:
+        assert os.path.isfile(word2vec_path)
+        word_to_embedding = load_word2vec(word2vec_path, word_set)
+
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
 
@@ -335,15 +344,6 @@ def main(argv):
             session.run([discriminator_init_op, discriminator_optimizer_init_op])
 
             # Initialising pre-trained embeddings
-            word_set = {w for w, w_idx in qs_tokenizer.word_index.items() if w_idx < vocab_size}
-            word_to_embedding = None
-            if glove_path:
-                assert os.path.isfile(glove_path)
-                word_to_embedding = load_glove(glove_path, word_set)
-            elif word2vec_path:
-                assert os.path.isfile(word2vec_path)
-                word_to_embedding = load_word2vec(word2vec_path, word_set)
-
             if word_to_embedding:
                 logger.info('Initialising the embeddings pre-trained vectors ..')
                 for word in word_to_embedding:
