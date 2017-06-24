@@ -200,6 +200,8 @@ def main(argv):
         if initialize_embeddings == 'normal':
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
 
+        trainable_word_embeddings, fixed_word_embeddings = [], []
+
         if train_oov:
             embedding_layer, word_embedding_layers = None, []
             for word_idx in range(vocab_size):
@@ -211,6 +213,12 @@ def main(argv):
                                                        shape=[1, embedding_size],
                                                        initializer=word_initializer,
                                                        trainable=False if word_embedding else True)
+
+                if word_embedding:
+                    fixed_word_embeddings += [word_embedding_layer]
+                else:
+                    trainable_word_embeddings += [word_embedding_layer]
+
                 word_embedding_layers += [word_embedding_layer]
 
             embedding_layer = tf.concat(values=word_embedding_layers, axis=0)
@@ -278,14 +286,23 @@ def main(argv):
     learning_projection_steps = []
 
     if is_normalized_embeddings:
-        if not train_oov:
+        if train_oov:
+            init_projection_steps, learning_projection_steps = [], []
+
+            for layer in fixed_word_embeddings:
+                unit_sphere_embeddings = constraints.unit_sphere(layer, norm=1.0)
+                init_projection_steps += [unit_sphere_embeddings]
+
+            for layer in trainable_word_embeddings:
+                unit_sphere_embeddings = constraints.unit_sphere(layer, norm=1.0)
+                init_projection_steps += [unit_sphere_embeddings]
+                if not is_fixed_embeddings:
+                    learning_projection_steps += [unit_sphere_embeddings]
+        else:
             unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
             init_projection_steps += [unit_sphere_embeddings]
             if not is_fixed_embeddings:
                 learning_projection_steps += [unit_sphere_embeddings]
-        else:
-            # TODO
-            pass
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
