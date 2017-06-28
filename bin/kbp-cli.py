@@ -779,7 +779,8 @@ def main(argv):
     sess_config.gpu_options.allow_growth = True
 
     if not is_materialize:
-        assert len(train_sequences) == len(pos_train_triples)
+        if not subsample_size:
+            assert len(train_sequences) == len(pos_train_triples)
 
         if valid_sequences:
             assert len(valid_sequences) == len(pos_valid_triples)
