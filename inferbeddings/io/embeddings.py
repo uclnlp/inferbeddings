@@ -27,6 +27,22 @@ def load_glove(path, words=None):
     return word_to_embedding
 
 
+def load_glove_words(path, words=None):
+    res = set()
+
+    with iopen(path, 'r') as stream:
+        for n, line in enumerate(stream):
+            if not isinstance(line, str):
+                line = line.decode('utf-8')
+            split_line = line.split(' ')
+            word = split_line[0]
+
+            if words is None or word in words:
+                res.add(word)
+
+    return res
+
+
 def load_word2vec(path, words=None, binary=True):
     word_to_embedding = {}
 

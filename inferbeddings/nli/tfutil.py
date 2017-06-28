@@ -8,6 +8,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def clip_sentence(sentence, sizes):
+    """
+    Clip the input sentence placeholders to the length of the longest one in the batch.
+    This saves processing time.
+
+    :param sentence: tensor with shape (batch, time_steps)
+    :param sizes: tensor with shape (batch)
+    :return: tensor with shape (batch, time_steps)
+    """
+    return tf.slice(sentence, [0, 0], tf.stack([-1, tf.reduce_max(sizes)]))
+
+
 def attention_softmax3d(values):
     """
     Performs a softmax over the attention values.
