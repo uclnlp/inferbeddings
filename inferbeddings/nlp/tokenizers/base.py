@@ -14,6 +14,7 @@ class Tokenizer(object):
         self.char_level = char_level
         self.has_bos, self.has_eos, self.has_unk = has_bos, has_eos, has_unk
         self.bos_idx = self.eos_idx = self.unk_idx = None
+        self.start_idx = None
 
     @staticmethod
     def text_to_word_seq(text, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
@@ -33,21 +34,21 @@ class Tokenizer(object):
         sorted_voc = [word[0] for word in sorted(self.word_counts.items(), key=lambda kv: (- kv[1], kv[0]))]
 
         # note that index 0 is reserved, never assigned to an existing word
-        start_idx = 1
+        self.start_idx = 1
 
         if self.has_bos:
-            self.bos_idx = start_idx
-            start_idx += 1
+            self.bos_idx = self.start_idx
+            self.start_idx += 1
 
         if self.has_eos:
-            self.eos_idx = start_idx
-            start_idx += 1
+            self.eos_idx = self.start_idx
+            self.start_idx += 1
 
         if self.has_unk:
-            self.unk_idx = start_idx
-            start_idx += 1
+            self.unk_idx = self.start_idx
+            self.start_idx += 1
 
-        indices = list(range(start_idx, len(sorted_voc) + start_idx))
+        indices = list(range(self.start_idx, len(sorted_voc) + self.start_idx))
         self.word_index = dict(list(zip(sorted_voc, indices)))
 
     def texts_to_sequences(self, texts):

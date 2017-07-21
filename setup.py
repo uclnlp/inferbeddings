@@ -7,10 +7,8 @@ with open('requirements.txt', 'r') as f:
       setup_requires = f.readlines()
 
 setup(name='inferbeddings',
-      version='0.3.0',
-      description='Adversarial Set Regularizaton for '
-                  'Knowledge Base Population and '
-                  'Natural Language Inference',
+      version='0.4.0',
+      description='Injecting Background Knowledge in Neural Models via Adversarial Set Regularisation',
       author='Pasquale Minervini',
       author_email='p.minervini@ucl.ac.uk',
       url='https://github.com/uclmr/inferbeddings',

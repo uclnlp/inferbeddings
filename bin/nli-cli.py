@@ -113,6 +113,7 @@ def main(argv):
 
     initialize_embeddings = args.initialize_embeddings
     train_oov = args.train_oov
+    train_special_tokens = args.train_special_tokens
 
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
@@ -204,6 +205,9 @@ def main(argv):
 
         trainable_word_embeddings, fixed_word_embeddings = [], []
 
+        assert not (train_oov and train_special_tokens)
+        nb_special_tokens = 0
+
         if train_oov:
             embedding_layer, word_embedding_layers = None, []
             for word_idx in range(vocab_size):
@@ -224,6 +228,14 @@ def main(argv):
                 word_embedding_layers += [word_embedding_layer]
 
             embedding_layer = tf.concat(values=word_embedding_layers, axis=0)
+        elif train_special_tokens:
+            nb_special_tokens = qs_tokenizer.start_idx
+
+            token_embedding_layer = tf.get_variable('token_embeddings', shape=[nb_special_tokens, embedding_size],
+                                                    initializer=embedding_initializer, trainable=True)
+            word_embedding_layer = tf.get_variable('embeddings', shape=[vocab_size - nb_special_tokens, embedding_size],
+                                                   initializer=embedding_initializer, trainable=False)
+            embedding_layer = tf.concat(values=[token_embedding_layer, word_embedding_layer], axis=0)
         else:
             embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
                                               initializer=embedding_initializer, trainable=not is_fixed_embeddings)
