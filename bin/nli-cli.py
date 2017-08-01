@@ -67,9 +67,6 @@ def main(argv):
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
 
-    argparser.add_argument('--train-oov', action='store_true', default=False)
-    argparser.add_argument('--train-special-tokens', action='store_true', default=False)
-
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
@@ -112,8 +109,6 @@ def main(argv):
     has_bos, has_eos, has_unk = not args.no_bos, not args.no_eos, not args.no_unk
 
     initialize_embeddings = args.initialize_embeddings
-    train_oov = args.train_oov
-    train_special_tokens = args.train_special_tokens
 
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
@@ -161,6 +156,7 @@ def main(argv):
         'adagrad': tf.train.AdagradOptimizer,
         'adam': tf.train.AdamOptimizer
     }
+
     optimizer_class = optimizer_name_to_class[optimizer_name]
     assert optimizer_class
 
@@ -186,7 +182,6 @@ def main(argv):
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
     word_set = {word for word, idx in qs_tokenizer.word_index.items() if idx < vocab_size}
-    index_to_word = {idx: word for word, idx in qs_tokenizer.word_index.items()}
 
     word_to_embedding = dict()
     if glove_path:
@@ -203,42 +198,8 @@ def main(argv):
         if initialize_embeddings == 'normal':
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
 
-        trainable_word_embeddings, fixed_word_embeddings = [], []
-
-        assert not (train_oov and train_special_tokens)
-        nb_special_tokens = 0
-
-        if train_oov:
-            embedding_layer, word_embedding_layers = None, []
-            for word_idx in range(vocab_size):
-                word = index_to_word.get(word_idx, None)
-                word_embedding = word_to_embedding.get(word, None) if word else None
-
-                word_initializer = tf.constant_initializer(word_embedding) if word_embedding else embedding_initializer
-                word_embedding_layer = tf.get_variable('embeddings_{}'.format(word_idx),
-                                                       shape=[1, embedding_size],
-                                                       initializer=word_initializer,
-                                                       trainable=False if word_embedding else True)
-
-                if word_embedding:
-                    fixed_word_embeddings += [word_embedding_layer]
-                else:
-                    trainable_word_embeddings += [word_embedding_layer]
-
-                word_embedding_layers += [word_embedding_layer]
-
-            embedding_layer = tf.concat(values=word_embedding_layers, axis=0)
-        elif train_special_tokens:
-            nb_special_tokens = qs_tokenizer.start_idx
-
-            token_embedding_layer = tf.get_variable('token_embeddings', shape=[nb_special_tokens, embedding_size],
-                                                    initializer=embedding_initializer, trainable=True)
-            word_embedding_layer = tf.get_variable('embeddings', shape=[vocab_size - nb_special_tokens, embedding_size],
-                                                   initializer=embedding_initializer, trainable=False)
-            embedding_layer = tf.concat(values=[token_embedding_layer, word_embedding_layer], axis=0)
-        else:
-            embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                              initializer=embedding_initializer, trainable=not is_fixed_embeddings)
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
+                                          initializer=embedding_initializer, trainable=not is_fixed_embeddings)
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
@@ -291,32 +252,19 @@ def main(argv):
     discriminator_optimizer_vars = tfutil.get_variables_in_scope(discriminator_optimizer_scope_name)
     discriminator_optimizer_init_op = tf.variables_initializer(discriminator_optimizer_vars)
 
-    if not train_oov:
-        word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
-        word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
-        assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
+    word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
+    word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
+    assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
 
     init_projection_steps = []
     learning_projection_steps = []
 
     if is_normalized_embeddings:
-        if train_oov:
-            init_projection_steps, learning_projection_steps = [], []
+        unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
+        init_projection_steps += [unit_sphere_embeddings]
 
-            for layer in fixed_word_embeddings:
-                unit_sphere_embeddings = constraints.unit_sphere(layer, norm=1.0)
-                init_projection_steps += [unit_sphere_embeddings]
-
-            for layer in trainable_word_embeddings:
-                unit_sphere_embeddings = constraints.unit_sphere(layer, norm=1.0)
-                init_projection_steps += [unit_sphere_embeddings]
-                if not is_fixed_embeddings:
-                    learning_projection_steps += [unit_sphere_embeddings]
-        else:
-            unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
-            init_projection_steps += [unit_sphere_embeddings]
-            if not is_fixed_embeddings:
-                learning_projection_steps += [unit_sphere_embeddings]
+        if not is_fixed_embeddings:
+            learning_projection_steps += [unit_sphere_embeddings]
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
@@ -329,8 +277,7 @@ def main(argv):
             adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
                                           embedding_size=embedding_size,
                                           scope_name='adversary', batch_size=32, sequence_length=10,
-                                          entailment_idx=entailment_idx,
-                                          contradiction_idx=contradiction_idx,
+                                          entailment_idx=entailment_idx, contradiction_idx=contradiction_idx,
                                           neutral_idx=neutral_idx)
 
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
@@ -396,13 +343,12 @@ def main(argv):
             session.run([discriminator_init_op, discriminator_optimizer_init_op])
 
             # Initialising pre-trained embeddings
-            if not train_oov:
-                logger.info('Initialising the embeddings pre-trained vectors ..')
-                for word in word_to_embedding:
-                    word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
-                    assert embedding_size == len(word_embedding)
-                    session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
-                logger.info('Done!')
+            logger.info('Initialising the embeddings pre-trained vectors ..')
+            for word in word_to_embedding:
+                word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
+                assert embedding_size == len(word_embedding)
+                session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
+            logger.info('Done!')
 
             for projection_step in init_projection_steps:
                 session.run([projection_step])
