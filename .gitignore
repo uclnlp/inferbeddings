@@ -106,5 +106,9 @@ data/yago*/yagoFacts.tsv.7z
 data/yago*/yago3.tsv.gz
 data/yago*/tmp/
 data/music_mte10_5k/download/mappingbased_objects_en.ttl.bz
-
 data/word2vec/GoogleNews-vectors-negative300.bin.gz
+
+# Models
+models/nli/checkpoint*
+models/nli/*.ckpt*
+models/nli/*.log
