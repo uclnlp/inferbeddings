@@ -30,11 +30,10 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
 
-    def formatter(prog):
+    def fmt(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation',
-                                        formatter_class=formatter)
+    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=fmt)
 
     argparser.add_argument('--train', '-t', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
     argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
@@ -421,7 +420,6 @@ def main(argv):
                                                             feed_dict=adversary_feed_dict)
 
                     logger.debug('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversarial_loss_value))
-
                     for projection_step in adversary_projection_steps:
                         session.run(projection_step)
 
