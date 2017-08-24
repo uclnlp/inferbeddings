@@ -160,21 +160,35 @@ def to_feed_dict(model, dataset):
     }
 
 
-def instances_to_dataset(instances, token_to_index, label_to_index, max_len=None):
-    assert token_to_index is not None
-    assert label_to_index is not None
+def instances_to_dataset(instances, token_to_index, label_to_index,
+                         has_bos=False, has_eos=False, has_unk=False,
+                         bos_idx=1, eos_idx=2, unk_idx=3,
+                         max_len=None):
+    assert (token_to_index is not None) and (label_to_index is not None)
 
     sentence1_idx, sentence2_idx, label_idx = [], [], []
     for instance in instances:
         _sentence1_idx, _sentence2_idx = [], []
 
+        if has_bos:
+            _sentence1_idx += [bos_idx]
+            _sentence2_idx += [bos_idx]
+
         for token in instance['sentence1_parse_tokens']:
             if token in token_to_index:
                 _sentence1_idx += [token_to_index[token]]
+            elif has_unk:
+                _sentence1_idx += [unk_idx]
 
         for token in instance['sentence2_parse_tokens']:
             if token in token_to_index:
                 _sentence2_idx += [token_to_index[token]]
+            elif has_unk:
+                _sentence2_idx += [unk_idx]
+
+        if has_eos:
+            _sentence1_idx += [eos_idx]
+            _sentence2_idx += [eos_idx]
 
         gold_label = instance['gold_label']
         assert gold_label in label_to_index

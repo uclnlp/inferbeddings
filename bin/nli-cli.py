@@ -59,6 +59,10 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
+    argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
+    argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
+    argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
+
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
 
@@ -99,6 +103,10 @@ def main(argv):
     learning_rate = args.learning_rate
     clip_value = args.clip
     seed = args.seed
+
+    has_bos = args.has_bos
+    has_eos = args.has_eos
+    has_unk = args.has_unk
 
     initialize_embeddings = args.initialize_embeddings
 
@@ -148,8 +156,11 @@ def main(argv):
     sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
 
     # Enumeration of tokens start at index=3:
-    # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE
-    index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=3)}
+    # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
+    bos_idx, eos_idx, unk_idx = 1, 2, 3
+    start_idx = 1 + (1 if has_bos else 0) + (1 if has_eos else 0) + (1 if has_unk else 0)
+
+    index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
     token_to_index = {token: index for index, token in index_to_token.items()}
 
     entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
@@ -170,9 +181,18 @@ def main(argv):
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index, max_len=max_len)
-    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index, max_len=max_len)
-    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index, max_len=max_len)
+    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index,
+                                              has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
+                                              bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
+                                              max_len=max_len)
+    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index,
+                                            has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
+                                            bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
+                                            max_len=max_len)
+    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index,
+                                             has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
+                                             bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
+                                             max_len=max_len)
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
@@ -196,13 +216,13 @@ def main(argv):
     token_set = set(token_to_index.keys())
     vocab_size = max(token_to_index.values()) + 1
 
-    word_to_embedding = dict()
+    token_to_embedding = dict()
     if glove_path:
         assert os.path.isfile(glove_path)
-        word_to_embedding = load_glove(glove_path, token_set)
+        token_to_embedding = load_glove(glove_path, token_set)
     elif word2vec_path:
         assert os.path.isfile(word2vec_path)
-        word_to_embedding = load_word2vec(word2vec_path, token_set)
+        token_to_embedding = load_word2vec(word2vec_path, token_set)
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
@@ -333,6 +353,12 @@ def main(argv):
                 init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
                 return init_token_op
 
+        if has_bos:
+            adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
+
+        if has_eos:
+            adversary_projection_steps += [token_init_op(var, eos_idx, sentence_len - 1)]
+
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
     session_config = tf.ConfigProto()
@@ -351,8 +377,8 @@ def main(argv):
 
             # Initialising pre-trained embeddings
             logger.info('Initialising the embeddings pre-trained vectors ..')
-            for word in word_to_embedding:
-                word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
+            for token in token_to_embedding:
+                word_idx, word_embedding = token_to_index[token], token_to_embedding[token]
                 assert embedding_size == len(word_embedding)
                 session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
             logger.info('Done!')
