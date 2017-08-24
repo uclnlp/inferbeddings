@@ -96,6 +96,7 @@ tmp/
 snippet/
 logs/
 logs*.tar.gz
+bak/
 
 # Debugging log files
 safety.txt

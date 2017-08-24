@@ -59,10 +59,6 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
-    argparser.add_argument('--no-bos', action='store_true', default=False, help='No <Beginning of Sentence> token')
-    argparser.add_argument('--no-eos', action='store_true', default=False, help='No <End of Sentence> token')
-    argparser.add_argument('--no-unk', action='store_true', default=False, help='No <Unknown Word> token')
-
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
 
@@ -102,10 +98,7 @@ def main(argv):
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
     clip_value = args.clip
-    nb_words = args.nb_words
     seed = args.seed
-
-    has_bos, has_eos, has_unk = not args.no_bos, not args.no_eos, not args.no_unk
 
     initialize_embeddings = args.initialize_embeddings
 
@@ -137,18 +130,34 @@ def main(argv):
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
                 .format(len(train_instances), len(dev_instances), len(test_instances)))
 
-    logger.debug('Parsing corpus (has bos: {}, has eos: {}, has unk: {})..'.format(has_bos, has_eos, has_unk))
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words,
-                                                                  has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
 
-    # Indices (in the final logits) corresponding to the three NLI classes
-    contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
-    entailment_idx = a_tokenizer.word_index['entailment'] - 1
-    neutral_idx = a_tokenizer.word_index['neutral'] - 1
+    # Create a sequence of tokens containing all sentences in the dataset
+    token_seq = []
+    for instance in all_instances:
+        token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
 
-    # Size of the vocabulary (number of embedding vectors)
-    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
+    # Count the number of occurrences of each token
+    token_counts = dict()
+    for token in token_seq:
+        if token not in token_counts:
+            token_counts[token] = 0
+        token_counts[token] += 1
+
+    # Sort the tokens according to their frequency and lexicographic ordering
+    sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
+
+    # Enumeration of tokens start at index=3:
+    # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE
+    index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=3)}
+    token_to_index = {token: index for index, token in index_to_token.items()}
+
+    entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+    label_to_index = {
+        'entailment': entailment_idx,
+        'neutral': neutral_idx,
+        'contradiction': contradiction_idx
+    }
 
     max_len = None
     optimizer_name_to_class = {
@@ -161,13 +170,17 @@ def main(argv):
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
-    dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
-    test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index, max_len=max_len)
+    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index, max_len=max_len)
+    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index, max_len=max_len)
 
-    questions, supports = train_dataset['questions'], train_dataset['supports']
-    question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
-    answers = train_dataset['answers']
+    sentence1 = train_dataset['sentence1']
+    sentence1_length = train_dataset['sentence1_length']
+
+    sentence2 = train_dataset['sentence2']
+    sentence2_length = train_dataset['sentence2_length']
+
+    label = train_dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
     sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
@@ -180,15 +193,16 @@ def main(argv):
 
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
-    word_set = {word for word, idx in qs_tokenizer.word_index.items() if idx < vocab_size}
+    token_set = set(token_to_index.keys())
+    vocab_size = max(token_to_index.values()) + 1
 
     word_to_embedding = dict()
     if glove_path:
         assert os.path.isfile(glove_path)
-        word_to_embedding = load_glove(glove_path, word_set)
+        word_to_embedding = load_glove(glove_path, token_set)
     elif word2vec_path:
         assert os.path.isfile(word2vec_path)
-        word_to_embedding = load_word2vec(word2vec_path, word_set)
+        word_to_embedding = load_word2vec(word2vec_path, token_set)
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
@@ -319,12 +333,6 @@ def main(argv):
                 init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
                 return init_token_op
 
-            if qs_tokenizer.has_bos:
-                adversary_projection_steps += [token_init_op(var, qs_tokenizer.bos_idx, 0)]
-
-            if qs_tokenizer.has_eos:
-                adversary_projection_steps += [token_init_op(var, qs_tokenizer.eos_idx, sentence_len - 1)]
-
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
     session_config = tf.ConfigProto()
@@ -352,7 +360,7 @@ def main(argv):
             for projection_step in init_projection_steps:
                 session.run([projection_step])
 
-        nb_instances = questions.shape[0]
+        nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
         best_dev_acc, best_test_acc = None, None
@@ -361,9 +369,9 @@ def main(argv):
             for d_epoch in range(1, nb_discriminator_epochs + 1):
                 order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
-                sentences1, sentences2 = questions[order], supports[order]
-                sizes1, sizes2 = question_lengths[order], support_lengths[order]
-                labels = answers[order]
+                sentences1, sentences2 = sentence1[order], sentence2[order]
+                sizes1, sizes2 = sentence1_length[order], sentence2_length[order]
+                labels = label[order]
 
                 loss_values = []
                 for batch_idx, (batch_start, batch_end) in enumerate(batches):
