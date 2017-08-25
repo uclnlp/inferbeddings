@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_train(has_bos, has_eos, has_unk):
-    path = 'data/snli/tiny/tiny.jsonl.gz'
-    train_instances, dev_instances, test_instances =\
-        util.SNLI.generate(train_path=path, valid_path=path, test_path=path)
+    train_instances, dev_instances, test_instances = util.SNLI.generate()
     all_instances = train_instances + dev_instances + test_instances
 
     # Create a sequence of tokens containing all sentences in the dataset
