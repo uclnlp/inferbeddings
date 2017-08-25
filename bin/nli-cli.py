@@ -181,18 +181,15 @@ def main(argv):
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index,
-                                              has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
-                                              bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
-                                              max_len=max_len)
-    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index,
-                                            has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
-                                            bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
-                                            max_len=max_len)
-    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index,
-                                             has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
-                                             bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
-                                             max_len=max_len)
+    args = dict(
+        has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
+        bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
+        max_len=max_len
+    )
+
+    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index, **args)
+    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index, **args)
+    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index, **args)
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
