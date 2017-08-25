@@ -82,6 +82,9 @@ def main(argv):
     argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
     argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
 
+    argparser.add_argument('--report', '-r', default=100, type=int,
+                           help='Number of batches between performance reports')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -126,6 +129,8 @@ def main(argv):
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
     rule3_weight = args.rule3_weight
+
+    report_interval = args.report
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -387,6 +392,7 @@ def main(argv):
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
         best_dev_acc, best_test_acc = None, None
+        discriminator_batch_counter = 0
 
         for epoch in range(1, nb_epochs + 1):
             for d_epoch in range(1, nb_discriminator_epochs + 1):
@@ -398,6 +404,8 @@ def main(argv):
 
                 loss_values = []
                 for batch_idx, (batch_start, batch_end) in enumerate(batches):
+                    discriminator_batch_counter += 1
+
                     batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
                     batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
                     batch_labels = labels[batch_start:batch_end]
@@ -415,7 +423,7 @@ def main(argv):
                     for projection_step in learning_projection_steps:
                         session.run([projection_step])
 
-                    if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
+                    if discriminator_batch_counter % report_interval == 0:
                         dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev',
                                                     sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,

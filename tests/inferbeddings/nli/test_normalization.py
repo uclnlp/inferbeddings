@@ -6,13 +6,13 @@ import tensorflow as tf
 from inferbeddings.models.training import constraints
 
 import logging
-
 import pytest
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.light
 def test_normalization():
-
     embedding_initializer = tf.contrib.layers.xavier_initializer()
 
     embedding_layer = tf.get_variable('embeddings', shape=[1024, 100], initializer=embedding_initializer)
