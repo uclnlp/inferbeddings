@@ -4,8 +4,7 @@ import gzip
 import json
 
 import numpy as np
-
-from inferbeddings.nlp import Tokenizer
+import nltk
 
 import logging
 
@@ -14,19 +13,50 @@ logger = logging.getLogger(__name__)
 
 class SNLI:
     @staticmethod
-    def to_instance(d):
-        id, support, question, answer = d['pairID'], d['sentence1'], d['sentence2'], d['gold_label']
-        return {'id': id, 'support': support, 'question': question, 'answer': answer}
+    def to_instance(d, tokenize=None):
+        sentence1 = d['sentence1']
+        sentence1_parse = d['sentence1_parse']
+        sentence1_tree = nltk.Tree.fromstring(sentence1_parse)
+        sentence1_parse_tokens = sentence1_tree.leaves()
+        sentence1_tokens = tokenize(sentence1) if tokenize else None
+
+        sentence2 = d['sentence2']
+        sentence2_parse = d['sentence2_parse']
+        sentence2_tree = nltk.Tree.fromstring(sentence2_parse)
+        sentence2_parse_tokens = sentence2_tree.leaves()
+        sentence2_tokens = tokenize(sentence2) if tokenize else None
+
+        gold_label = d['gold_label']
+
+        instance = {
+            'sentence1': sentence1,
+            'sentence1_parse': sentence1_parse,
+            'sentence1_parse_tokens': sentence1_parse_tokens,
+            'sentence1_tokens': sentence1_tokens,
+
+            'sentence2': sentence2,
+            'sentence2_parse': sentence2_parse,
+            'sentence2_parse_tokens': sentence2_parse_tokens,
+            'sentence2_tokens': sentence2_tokens,
+
+            'gold_label': gold_label
+        }
+
+        return instance
 
     @staticmethod
-    def parse(path):
+    def parse(path, tokenize=None, is_lower=True):
         res = None
         if path is not None:
             with gzip.open(path, 'rb') as f:
                 res = []
                 for line in f:
-                    instance = SNLI.to_instance(json.loads(line.decode('utf-8')))
-                    if instance['answer'] in {'entailment', 'neutral', 'contradiction'}:
+                    decoded_line = line.decode('utf-8')
+                    if is_lower:
+                        decoded_line = decoded_line.lower()
+                    obj = json.loads(decoded_line)
+                    instance = SNLI.to_instance(obj, tokenize=tokenize)
+                    if instance['gold_label'] in {'entailment', 'neutral', 'contradiction'}:
                         res += [instance]
         return res
 
@@ -34,9 +64,16 @@ class SNLI:
     def generate(train_path='data/snli/snli_1.0_train.jsonl.gz',
                  valid_path='data/snli/snli_1.0_dev.jsonl.gz',
                  test_path='data/snli/snli_1.0_test.jsonl.gz'):
-        train_corpus = SNLI.parse(train_path)
-        dev_corpus = SNLI.parse(valid_path)
-        test_corpus = SNLI.parse(test_path)
+
+        tokenizer = nltk.tokenize.TreebankWordTokenizer()
+
+        def tokenize(text):
+            return tokenizer.tokenize(text)
+
+        train_corpus = SNLI.parse(train_path, tokenize=tokenize)
+        dev_corpus = SNLI.parse(valid_path, tokenize=tokenize)
+        test_corpus = SNLI.parse(test_path, tokenize=tokenize)
+
         return train_corpus, dev_corpus, test_corpus
 
 
@@ -123,62 +160,56 @@ def to_feed_dict(model, dataset):
     }
 
 
-def train_tokenizer_on_instances(instances, num_words=None,
-                                 has_bos=True, has_eos=True, has_unk=True):
-    question_texts = [instance['question'] for instance in instances]
-    support_texts = [instance['support'] for instance in instances]
-    answer_texts = [instance['answer'] for instance in instances]
+def instances_to_dataset(instances, token_to_index, label_to_index,
+                         has_bos=False, has_eos=False, has_unk=False,
+                         bos_idx=1, eos_idx=2, unk_idx=3,
+                         max_len=None):
+    assert (token_to_index is not None) and (label_to_index is not None)
 
-    qs_tokenizer = Tokenizer(num_words=num_words, has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
-    a_tokenizer = Tokenizer()
+    sentence1_idx, sentence2_idx, label_idx = [], [], []
+    for instance in instances:
+        _sentence1_idx, _sentence2_idx = [], []
 
-    qs_tokenizer.fit_on_texts(question_texts + support_texts)
-    a_tokenizer.fit_on_texts(answer_texts)
-    return qs_tokenizer, a_tokenizer
+        if has_bos:
+            _sentence1_idx += [bos_idx]
+            _sentence2_idx += [bos_idx]
 
+        for token in instance['sentence1_parse_tokens']:
+            if token in token_to_index:
+                _sentence1_idx += [token_to_index[token]]
+            elif has_unk:
+                _sentence1_idx += [unk_idx]
 
-def to_dataset(instances, qs_tokenizer, a_tokenizer, max_len=None, semi_sort=False):
-    question_texts = [instance['question'] for instance in instances]
-    support_texts = [instance['support'] for instance in instances]
-    answer_texts = [instance['answer'] for instance in instances]
+        for token in instance['sentence2_parse_tokens']:
+            if token in token_to_index:
+                _sentence2_idx += [token_to_index[token]]
+            elif has_unk:
+                _sentence2_idx += [unk_idx]
 
-    assert qs_tokenizer is not None and a_tokenizer is not None
+        if has_eos:
+            _sentence1_idx += [eos_idx]
+            _sentence2_idx += [eos_idx]
 
-    questions = qs_tokenizer.texts_to_sequences(question_texts)
-    supports = [s for s in qs_tokenizer.texts_to_sequences(support_texts)]
-    answers = [answer - 1 for [answer] in a_tokenizer.texts_to_sequences(answer_texts)]
+        gold_label = instance['gold_label']
+        assert gold_label in label_to_index
 
-    """
-    <<For efficient batching in TensorFlow, we semi-sorted the training data to first contain examples
-    where both sentences had length less than 20, followed by those with length less than 50, and
-    then the rest. This ensured that most training batches contained examples of similar length.>>
+        sentence1_idx += [_sentence1_idx]
+        sentence2_idx += [_sentence2_idx]
+        label_idx += [label_to_index[gold_label]]
 
-    -- https://arxiv.org/pdf/1606.01933.pdf
-    """
-    if semi_sort:
-        triples_under_20, triples_under_50, triples_under_nfty = [], [], []
-        for q, s, a in zip(questions, supports, answers):
-            if len(q) < 20 and len(s) < 20:
-                triples_under_20 += [(q, s, a)]
-            elif len(q) < 50 and len(s) < 50:
-                triples_under_50 += [(q, s, a)]
-            else:
-                triples_under_nfty += [(q, s, a)]
-        questions, supports, answers = [], [], []
-        for q, s, a in triples_under_20 + triples_under_50 + triples_under_nfty:
-            questions += [q]
-            supports += [s]
-            answers += [a]
+    assert len(sentence1_idx) == len(sentence2_idx) == len(label_idx)
+    assert set(label_idx) == {0, 1, 2}
 
-    question_lenths = [len(q) for q in questions]
-    support_lenghs = [len(s) for s in supports]
+    sentence1_length = [len(s) for s in sentence1_idx]
+    sentence2_length = [len(s) for s in sentence2_idx]
 
-    assert set(answers) == {0, 1, 2}
+    ds = {
+        'sentence1': pad_sequences(sentence1_idx, max_len=max_len),
+        'sentence1_length': np.clip(a=np.array(sentence1_length), a_min=0, a_max=max_len),
 
-    return {
-        'questions': pad_sequences(questions, max_len=max_len),
-        'supports': pad_sequences(supports, max_len=max_len),
-        'question_lengths': np.clip(a=np.array(question_lenths), a_min=0, a_max=max_len),
-        'support_lengths': np.clip(a=np.array(support_lenghs), a_min=0, a_max=max_len),
-        'answers': np.array(answers)
+        'sentence2': pad_sequences(sentence2_idx, max_len=max_len),
+        'sentence2_length': np.clip(a=np.array(sentence2_length), a_min=0, a_max=max_len),
+
+        'label': np.array(label_idx)
     }
+    return ds

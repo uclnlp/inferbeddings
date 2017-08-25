@@ -30,11 +30,10 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
 
-    def formatter(prog):
+    def fmt(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
-    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation',
-                                        formatter_class=formatter)
+    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=fmt)
 
     argparser.add_argument('--train', '-t', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
     argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
@@ -60,15 +59,12 @@ def main(argv):
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
-    argparser.add_argument('--no-bos', action='store_true', default=False, help='No <Beginning of Sentence> token')
-    argparser.add_argument('--no-eos', action='store_true', default=False, help='No <End of Sentence> token')
-    argparser.add_argument('--no-unk', action='store_true', default=False, help='No <Unknown Word> token')
+    argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
+    argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
+    argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
 
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
-
-    argparser.add_argument('--train-oov', action='store_true', default=False)
-    argparser.add_argument('--train-special-tokens', action='store_true', default=False)
 
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
@@ -85,6 +81,9 @@ def main(argv):
     argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
     argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
     argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
+
+    argparser.add_argument('--report', '-r', default=100, type=int,
+                           help='Number of batches between performance reports')
 
     args = argparser.parse_args(argv)
 
@@ -106,13 +105,13 @@ def main(argv):
     dropout_keep_prob = args.dropout_keep_prob
     learning_rate = args.learning_rate
     clip_value = args.clip
-    nb_words = args.nb_words
     seed = args.seed
 
-    has_bos, has_eos, has_unk = not args.no_bos, not args.no_eos, not args.no_unk
+    has_bos = args.has_bos
+    has_eos = args.has_eos
+    has_unk = args.has_unk
 
     initialize_embeddings = args.initialize_embeddings
-    train_oov = args.train_oov
 
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
@@ -131,47 +130,79 @@ def main(argv):
     rule2_weight = args.rule2_weight
     rule3_weight = args.rule3_weight
 
+    report_interval = args.report
+
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
-    train_instances, dev_instances, test_instances = util.SNLI.generate(
-        train_path=train_path, valid_path=valid_path, test_path=test_path)
+    train_instances, dev_instances, test_instances =\
+        util.SNLI.generate(train_path=train_path, valid_path=valid_path, test_path=test_path)
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'
                 .format(len(train_instances), len(dev_instances), len(test_instances)))
 
-    logger.debug('Parsing corpus (has bos: {}, has eos: {}, has unk: {})..'.format(has_bos, has_eos, has_unk))
     all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = util.train_tokenizer_on_instances(all_instances, num_words=nb_words,
-                                                                  has_bos=has_bos, has_eos=has_eos, has_unk=has_unk)
 
-    # Indices (in the final logits) corresponding to the three NLI classes
-    contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
-    entailment_idx = a_tokenizer.word_index['entailment'] - 1
-    neutral_idx = a_tokenizer.word_index['neutral'] - 1
+    # Create a sequence of tokens containing all sentences in the dataset
+    token_seq = []
+    for instance in all_instances:
+        token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
 
-    # Size of the vocabulary (number of embedding vectors)
-    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else max(qs_tokenizer.word_index.values()) + 1
+    # Count the number of occurrences of each token
+    token_counts = dict()
+    for token in token_seq:
+        if token not in token_counts:
+            token_counts[token] = 0
+        token_counts[token] += 1
+
+    # Sort the tokens according to their frequency and lexicographic ordering
+    sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
+
+    # Enumeration of tokens start at index=3:
+    # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
+    bos_idx, eos_idx, unk_idx = 1, 2, 3
+    start_idx = 1 + (1 if has_bos else 0) + (1 if has_eos else 0) + (1 if has_unk else 0)
+
+    index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
+    token_to_index = {token: index for index, token in index_to_token.items()}
+
+    entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+    label_to_index = {
+        'entailment': entailment_idx,
+        'neutral': neutral_idx,
+        'contradiction': contradiction_idx
+    }
 
     max_len = None
     optimizer_name_to_class = {
         'adagrad': tf.train.AdagradOptimizer,
         'adam': tf.train.AdamOptimizer
     }
+
     optimizer_class = optimizer_name_to_class[optimizer_name]
     assert optimizer_class
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    train_dataset = util.to_dataset(train_instances, qs_tokenizer, a_tokenizer, max_len=max_len, semi_sort=is_semi_sort)
-    dev_dataset = util.to_dataset(dev_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
-    test_dataset = util.to_dataset(test_instances, qs_tokenizer, a_tokenizer, max_len=max_len)
+    args = dict(
+        has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
+        bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
+        max_len=max_len
+    )
 
-    questions, supports = train_dataset['questions'], train_dataset['supports']
-    question_lengths, support_lengths = train_dataset['question_lengths'], train_dataset['support_lengths']
-    answers = train_dataset['answers']
+    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index, **args)
+    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index, **args)
+    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index, **args)
+
+    sentence1 = train_dataset['sentence1']
+    sentence1_length = train_dataset['sentence1_length']
+
+    sentence2 = train_dataset['sentence2']
+    sentence2_length = train_dataset['sentence2_length']
+
+    label = train_dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
     sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
@@ -184,16 +215,16 @@ def main(argv):
 
     label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
 
-    word_set = {word for word, idx in qs_tokenizer.word_index.items() if idx < vocab_size}
-    index_to_word = {idx: word for word, idx in qs_tokenizer.word_index.items()}
+    token_set = set(token_to_index.keys())
+    vocab_size = max(token_to_index.values()) + 1
 
-    word_to_embedding = dict()
+    token_to_embedding = dict()
     if glove_path:
         assert os.path.isfile(glove_path)
-        word_to_embedding = load_glove(glove_path, word_set)
+        token_to_embedding = load_glove(glove_path, token_set)
     elif word2vec_path:
         assert os.path.isfile(word2vec_path)
-        word_to_embedding = load_word2vec(word2vec_path, word_set)
+        token_to_embedding = load_word2vec(word2vec_path, token_set)
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
@@ -202,31 +233,8 @@ def main(argv):
         if initialize_embeddings == 'normal':
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
 
-        trainable_word_embeddings, fixed_word_embeddings = [], []
-
-        if train_oov:
-            embedding_layer, word_embedding_layers = None, []
-            for word_idx in range(vocab_size):
-                word = index_to_word.get(word_idx, None)
-                word_embedding = word_to_embedding.get(word, None) if word else None
-
-                word_initializer = tf.constant_initializer(word_embedding) if word_embedding else embedding_initializer
-                word_embedding_layer = tf.get_variable('embeddings_{}'.format(word_idx),
-                                                       shape=[1, embedding_size],
-                                                       initializer=word_initializer,
-                                                       trainable=False if word_embedding else True)
-
-                if word_embedding:
-                    fixed_word_embeddings += [word_embedding_layer]
-                else:
-                    trainable_word_embeddings += [word_embedding_layer]
-
-                word_embedding_layers += [word_embedding_layer]
-
-            embedding_layer = tf.concat(values=word_embedding_layers, axis=0)
-        else:
-            embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                              initializer=embedding_initializer, trainable=not is_fixed_embeddings)
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
+                                          initializer=embedding_initializer, trainable=not is_fixed_embeddings)
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
@@ -279,32 +287,19 @@ def main(argv):
     discriminator_optimizer_vars = tfutil.get_variables_in_scope(discriminator_optimizer_scope_name)
     discriminator_optimizer_init_op = tf.variables_initializer(discriminator_optimizer_vars)
 
-    if not train_oov:
-        word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
-        word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
-        assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
+    word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
+    word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
+    assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
 
     init_projection_steps = []
     learning_projection_steps = []
 
     if is_normalized_embeddings:
-        if train_oov:
-            init_projection_steps, learning_projection_steps = [], []
+        unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
+        init_projection_steps += [unit_sphere_embeddings]
 
-            for layer in fixed_word_embeddings:
-                unit_sphere_embeddings = constraints.unit_sphere(layer, norm=1.0)
-                init_projection_steps += [unit_sphere_embeddings]
-
-            for layer in trainable_word_embeddings:
-                unit_sphere_embeddings = constraints.unit_sphere(layer, norm=1.0)
-                init_projection_steps += [unit_sphere_embeddings]
-                if not is_fixed_embeddings:
-                    learning_projection_steps += [unit_sphere_embeddings]
-        else:
-            unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
-            init_projection_steps += [unit_sphere_embeddings]
-            if not is_fixed_embeddings:
-                learning_projection_steps += [unit_sphere_embeddings]
+        if not is_fixed_embeddings:
+            learning_projection_steps += [unit_sphere_embeddings]
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
@@ -317,8 +312,7 @@ def main(argv):
             adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
                                           embedding_size=embedding_size,
                                           scope_name='adversary', batch_size=32, sequence_length=10,
-                                          entailment_idx=entailment_idx,
-                                          contradiction_idx=contradiction_idx,
+                                          entailment_idx=entailment_idx, contradiction_idx=contradiction_idx,
                                           neutral_idx=neutral_idx)
 
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
@@ -361,11 +355,11 @@ def main(argv):
                 init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
                 return init_token_op
 
-            if qs_tokenizer.has_bos:
-                adversary_projection_steps += [token_init_op(var, qs_tokenizer.bos_idx, 0)]
+        if has_bos:
+            adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
 
-            if qs_tokenizer.has_eos:
-                adversary_projection_steps += [token_init_op(var, qs_tokenizer.eos_idx, sentence_len - 1)]
+        if has_eos:
+            adversary_projection_steps += [token_init_op(var, eos_idx, sentence_len - 1)]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
 
@@ -384,32 +378,34 @@ def main(argv):
             session.run([discriminator_init_op, discriminator_optimizer_init_op])
 
             # Initialising pre-trained embeddings
-            if not train_oov:
-                logger.info('Initialising the embeddings pre-trained vectors ..')
-                for word in word_to_embedding:
-                    word_idx, word_embedding = qs_tokenizer.word_index[word], word_to_embedding[word]
-                    assert embedding_size == len(word_embedding)
-                    session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
-                logger.info('Done!')
+            logger.info('Initialising the embeddings pre-trained vectors ..')
+            for token in token_to_embedding:
+                word_idx, word_embedding = token_to_index[token], token_to_embedding[token]
+                assert embedding_size == len(word_embedding)
+                session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
+            logger.info('Done!')
 
             for projection_step in init_projection_steps:
                 session.run([projection_step])
 
-        nb_instances = questions.shape[0]
+        nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
         best_dev_acc, best_test_acc = None, None
+        discriminator_batch_counter = 0
 
         for epoch in range(1, nb_epochs + 1):
             for d_epoch in range(1, nb_discriminator_epochs + 1):
                 order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
-                sentences1, sentences2 = questions[order], supports[order]
-                sizes1, sizes2 = question_lengths[order], support_lengths[order]
-                labels = answers[order]
+                sentences1, sentences2 = sentence1[order], sentence2[order]
+                sizes1, sizes2 = sentence1_length[order], sentence2_length[order]
+                labels = label[order]
 
                 loss_values = []
                 for batch_idx, (batch_start, batch_end) in enumerate(batches):
+                    discriminator_batch_counter += 1
+
                     batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
                     batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
                     batch_labels = labels[batch_start:batch_end]
@@ -427,7 +423,7 @@ def main(argv):
                     for projection_step in learning_projection_steps:
                         session.run([projection_step])
 
-                    if (batch_idx > 0 and batch_idx % 100 == 0) or (batch_start, batch_end) in batches[-1:]:
+                    if discriminator_batch_counter % report_interval == 0:
                         dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev',
                                                     sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
@@ -463,7 +459,6 @@ def main(argv):
                                                             feed_dict=adversary_feed_dict)
 
                     logger.debug('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversarial_loss_value))
-
                     for projection_step in adversary_projection_steps:
                         session.run(projection_step)
 

@@ -3,7 +3,7 @@
 [![wercker status](https://app.wercker.com/status/47cfd21ce8315fb361ac5b4247ce280a/s/master "wercker status")](https://app.wercker.com/project/byKey/47cfd21ce8315fb361ac5b4247ce280a)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/uclmr/inferbeddings/blob/master/LICENSE)
 
-Rule Injection in Knowledge Graph Embeddings via Adversarial Training.
+Injecting Background Knowledge in Neural Models via Adversarial Set Regularisation.
 
 
 Usage:

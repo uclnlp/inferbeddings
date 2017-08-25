@@ -53,26 +53,21 @@ def test_nli_cli():
         if 'Epoch 4	Loss:' in line:
             assert 'Loss: 1.0986' in line
         if 'Epoch 5	Loss:' in line:
-            assert 'Loss: 1.0984' in line
+            assert 'Loss: 1.0983' in line
         if 'Epoch 6	Loss:' in line:
-            assert 'Loss: 1.0985' in line
+            assert 'Loss: 1.0984' in line
         if 'Epoch 7 Loss:' in line:
-            assert 'Loss: 1.0968' in line
+            assert 'Loss: 1.0941' in line
         if 'Epoch 8 Loss:' in line:
-            assert 'Loss: 1.0765' in line
+            assert 'Loss: 1.0876' in line
         if 'Epoch 9 Loss:' in line:
-            assert 'Loss: 1.0765' in line
+            assert 'Loss: 1.0632' in line
         if 'Epoch 10    Loss:' in line:
-            assert 'Loss: 1.0451' in line
-
+            assert 'Loss: 1.0202' in line
         if 'Epoch 30    Loss:' in line:
-            assert 'Loss: 0.2969' in line
-
+            assert 'Loss: 0.1977' in line
         if 'Epoch 40    Loss:' in line:
-            assert 'Loss: 0.0658' in line
-
-        if 'Epoch 50    Loss:' in line:
-            assert 'Loss: 0.0079' in line
+            assert 'Loss: 0.0087' in line
 
 if __name__ == '__main__':
     pytest.main([__file__])
