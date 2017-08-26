@@ -32,7 +32,7 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
     def _transform_aggregate(self, v1_v2, reuse=False):
         raise NotImplementedError
 
-    def __init__(self, use_masking=False, *args, **kwargs):
+    def __init__(self, use_masking=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         embedding1_size = self.sequence1.get_shape()[-1].value

@@ -29,7 +29,7 @@ def test_nli_cli():
     # print(err.split()[-1][:-1])
 
     cmd_str = './bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
-              '--representation-size 200 --optimizer adam --learning-rate 0.001 -c 10 --use-masking ' \
+              '--representation-size 200 --optimizer adam --learning-rate 0.001 -c 100 ' \
               '-i normal --nb-epochs 50 -t data/snli/tiny/tiny.jsonl.gz -v data/snli/tiny/tiny.jsonl.gz ' \
               '-T data/snli/tiny/tiny.jsonl.gz'
     cmd = cmd_str.split()

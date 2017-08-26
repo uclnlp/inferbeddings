@@ -20,7 +20,7 @@ from inferbeddings.nli.regularizers.adversarial import AdversarialSets
 
 from inferbeddings.models.training import constraints
 
-from inferbeddings.nli.evaluation import accuracy
+from inferbeddings.nli.evaluation import accuracy, stats
 
 import logging
 
@@ -69,7 +69,6 @@ def main(argv):
     argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
-    argparser.add_argument('--use-masking', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
@@ -84,6 +83,8 @@ def main(argv):
 
     argparser.add_argument('--report', '-r', default=100, type=int,
                            help='Number of batches between performance reports')
+    argparser.add_argument('--report-loss', default=100, type=int,
+                           help='Number of batches between loss reports')
 
     args = argparser.parse_args(argv)
 
@@ -116,7 +117,6 @@ def main(argv):
     is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
-    use_masking = args.use_masking
 
     save_path = args.save
     restore_path = args.restore
@@ -131,23 +131,21 @@ def main(argv):
     rule3_weight = args.rule3_weight
 
     report_interval = args.report
+    report_loss_interval = args.report_loss
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
-    train_instances, dev_instances, test_instances =\
-        util.SNLI.generate(train_path=train_path, valid_path=valid_path, test_path=test_path)
+    train_is, dev_is, test_is = util.SNLI.generate(train_path=train_path, valid_path=valid_path, test_path=test_path)
 
-    logger.info('Train size: {}\tDev size: {}\tTest size: {}'
-                .format(len(train_instances), len(dev_instances), len(test_instances)))
-
-    all_instances = train_instances + dev_instances + test_instances
+    logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_is), len(dev_is), len(test_is)))
+    all_is = train_is + dev_is + test_is
 
     # Create a sequence of tokens containing all sentences in the dataset
     token_seq = []
-    for instance in all_instances:
+    for instance in all_is:
         token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
 
     # Count the number of occurrences of each token
@@ -172,14 +170,12 @@ def main(argv):
     label_to_index = {
         'entailment': entailment_idx,
         'neutral': neutral_idx,
-        'contradiction': contradiction_idx
-    }
+        'contradiction': contradiction_idx}
 
     max_len = None
     optimizer_name_to_class = {
         'adagrad': tf.train.AdagradOptimizer,
-        'adam': tf.train.AdamOptimizer
-    }
+        'adam': tf.train.AdamOptimizer}
 
     optimizer_class = optimizer_name_to_class[optimizer_name]
     assert optimizer_class
@@ -189,12 +185,11 @@ def main(argv):
     args = dict(
         has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
         bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
-        max_len=max_len
-    )
+        max_len=max_len)
 
-    train_dataset = util.instances_to_dataset(train_instances, token_to_index, label_to_index, **args)
-    dev_dataset = util.instances_to_dataset(dev_instances, token_to_index, label_to_index, **args)
-    test_dataset = util.instances_to_dataset(test_instances, token_to_index, label_to_index, **args)
+    train_dataset = util.instances_to_dataset(train_is, token_to_index, label_to_index, **args)
+    dev_dataset = util.instances_to_dataset(dev_is, token_to_index, label_to_index, **args)
+    test_dataset = util.instances_to_dataset(test_is, token_to_index, label_to_index, **args)
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
@@ -251,11 +246,7 @@ def main(argv):
             'ff-dam': FeedForwardDAM,
             'ff-damp': FeedForwardDAMP,
             'ff-dams': FeedForwardDAMS,
-            'esim1': ESIMv1
-        }
-
-        if model_name in {'ff-dam', 'ff-damp', 'esim1'}:
-            model_kwargs.update(dict(use_masking=use_masking))
+            'esim1': ESIMv1}
 
         model_class = mode_name_to_class[model_name]
 
@@ -361,7 +352,7 @@ def main(argv):
         if has_eos:
             adversary_projection_steps += [token_init_op(var, eos_idx, sentence_len - 1)]
 
-    saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars)
+    saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars, max_to_keep=1)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
@@ -395,6 +386,7 @@ def main(argv):
         discriminator_batch_counter = 0
 
         for epoch in range(1, nb_epochs + 1):
+
             for d_epoch in range(1, nb_discriminator_epochs + 1):
                 order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
 
@@ -402,7 +394,7 @@ def main(argv):
                 sizes1, sizes2 = sentence1_length[order], sentence2_length[order]
                 labels = label[order]
 
-                loss_values = []
+                loss_values, epoch_loss_values = [], []
                 for batch_idx, (batch_start, batch_end) in enumerate(batches):
                     discriminator_batch_counter += 1
 
@@ -411,44 +403,44 @@ def main(argv):
                     batch_labels = labels[batch_start:batch_end]
 
                     batch_feed_dict = {
-                        sentence1_ph: batch_sentences1, sentence2_ph: batch_sentences2,
-                        sentence1_len_ph: batch_sizes1, sentence2_len_ph: batch_sizes2,
-                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob
-                    }
-
+                        sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
+                        sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
+                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob}
                     _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
 
-                    loss_values += [loss_value]
+                    logger.debug('Epoch {0}/{1}/{2}\tLoss: {3}'.format(epoch, d_epoch, batch_idx, loss_value))
+
+                    cur_batch_size = batch_sentences1.shape[0]
+                    loss_values += [loss_value / cur_batch_size]
+                    epoch_loss_values += [loss_value / cur_batch_size]
 
                     for projection_step in learning_projection_steps:
                         session.run([projection_step])
 
+                    if discriminator_batch_counter % report_loss_interval == 0:
+                        logger.info('Epoch {0}/{1}/{2}\tLoss Stats: {3}'.format(epoch, d_epoch, batch_idx, stats(loss_values)))
+                        loss_values = []
+
                     if discriminator_batch_counter % report_interval == 0:
-                        dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev',
-                                                    sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
-                                                    label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
-                                                    contradiction_idx, entailment_idx, neutral_idx, batch_size)
+                        accuracy_args = [sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
+                                         label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
+                                         contradiction_idx, entailment_idx, neutral_idx, batch_size]
+                        dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev', *accuracy_args)
+                        test_acc, _, _, _ = accuracy(session, test_dataset, 'Test', *accuracy_args)
 
-                        test_acc, _, _, _ = accuracy(session, test_dataset, 'Test',
-                                                     sentence1_ph, sentence1_len_ph, sentence2_ph, sentence2_len_ph,
-                                                     label_ph, dropout_keep_prob_ph, predictions_int, labels_int,
-                                                     contradiction_idx, entailment_idx, neutral_idx, batch_size)
-
-                        logger.debug('Epoch {0}/{1}/{2}\tAvg Loss: {3:.4f}\tDev Acc: {4:.2f}\tTest Acc: {5:.2f}'
-                                     .format(epoch, d_epoch, batch_idx, np.mean(loss_values),
-                                             dev_acc * 100, test_acc * 100))
+                        logger.debug('Epoch {0}/{1}/{2}\tDev Acc: {3:.2f}\tTest Acc: {4:.2f}'
+                                     .format(epoch, d_epoch, batch_idx, dev_acc * 100, test_acc * 100))
 
                         if best_dev_acc is None or dev_acc > best_dev_acc:
                             best_dev_acc, best_test_acc = dev_acc, test_acc
+
                             if save_path:
                                 logger.info('Model saved in file: {}'.format(saver.save(session, save_path)))
 
                         logger.debug('Epoch {0}/{1}/{2}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
                                      .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
 
-                def stats(values):
-                    return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))
-                logger.info('Epoch {}\tLoss: {}'.format(epoch, stats(loss_values)))
+                logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
             if use_adversarial_training:
                 session.run([adversary_init_op, adversary_optimizer_init_op])
