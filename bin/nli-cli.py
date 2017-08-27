@@ -71,7 +71,7 @@ def main(argv):
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
-    argparser.add_argument('--restore', action='store', type=str, default=None)
+    argparser.add_argument('--restore',action='store', type=str, default=None)
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
@@ -428,17 +428,18 @@ def main(argv):
                         dev_acc, _, _, _ = accuracy(session, dev_dataset, 'Dev', *accuracy_args)
                         test_acc, _, _, _ = accuracy(session, test_dataset, 'Test', *accuracy_args)
 
-                        logger.debug('Epoch {0}/{1}/{2}\tDev Acc: {3:.2f}\tTest Acc: {4:.2f}'
-                                     .format(epoch, d_epoch, batch_idx, dev_acc * 100, test_acc * 100))
+                        logger.info('Epoch {0}/{1}/{2}\tDev Acc: {3:.2f}\tTest Acc: {4:.2f}'
+                                    .format(epoch, d_epoch, batch_idx, dev_acc * 100, test_acc * 100))
 
                         if best_dev_acc is None or dev_acc > best_dev_acc:
                             best_dev_acc, best_test_acc = dev_acc, test_acc
 
                             if save_path:
-                                logger.info('Model saved in file: {}'.format(saver.save(session, save_path)))
+                                saved_path = saver.save(session, save_path)
+                                logger.info('Model saved in file: {}'.format(saved_path))
 
-                        logger.debug('Epoch {0}/{1}/{2}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
-                                     .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
+                        logger.info('Epoch {0}/{1}/{2}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
+                                    .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
 
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
