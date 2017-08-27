@@ -11,7 +11,7 @@ sys.setrecursionlimit(65535)
 def test_nli_cli():
     cmd_str = './bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 --representation-size 200 ' \
               '--optimizer adam --learning-rate 0.001 -c 100 -i normal --nb-epochs 50 --has-bos -t ' \
-              'data/snli/tiny/tiny.jsonl.gz -v data/snli/tiny/tiny.jsonl.gz -T data/snli/tiny/tiny.jsonl.gz'
+              'data/snli/tiny/tiny.jsonl.gz -v data/snli/tiny/tiny.jsonl.gz -T data/snli/tiny/tiny.jsonl.gz -r 999999'
     cmd = cmd_str.split()
 
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
