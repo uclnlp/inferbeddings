@@ -10,7 +10,7 @@ sys.setrecursionlimit(65535)
 @pytest.mark.light
 def test_nli_cli():
     cmd_str = './bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 --representation-size 200 ' \
-              '--optimizer adam --learning-rate 0.001 -c 100 -i normal --nb-epochs 50 --has-bos -t ' \
+              '--optimizer adam --learning-rate 0.001 -c 100 -i normal --nb-epochs 100 --has-bos -t ' \
               'data/snli/tiny/tiny.jsonl.gz -v data/snli/tiny/tiny.jsonl.gz -T data/snli/tiny/tiny.jsonl.gz -r 999999'
     cmd = cmd_str.split()
 
@@ -31,11 +31,15 @@ def test_nli_cli():
         if 'Epoch 20/1' in line:
             assert '0.0145' in line
         if 'Epoch 30/1' in line:
-            assert '0.0105' in line
+            assert '0.0159' in line
         if 'Epoch 40/1' in line:
-            assert '0.0179' in line
-        if 'Epoch 50/1' in line:
-            assert '0.0008' in line
+            assert '0.0016' in line
+        if 'Epoch 70/1' in line:
+            assert '0.0009' in line
+        if 'Epoch 80/1' in line:
+            assert '0.0005' in line
+        if 'Epoch 90/1' in line:
+            assert '0.0003' in line
 
 if __name__ == '__main__':
     pytest.main([__file__])
