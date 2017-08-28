@@ -358,7 +358,7 @@ def main(argv):
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        logger.debug('Total parameters: {}'.format(tfutil.count_trainable_parameters()))
+        logger.info('Total parameters: {}'.format(tfutil.count_trainable_parameters()))
 
         if use_adversarial_training:
             session.run([adversary_init_op, adversary_optimizer_init_op])
