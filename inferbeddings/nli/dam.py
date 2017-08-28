@@ -235,7 +235,7 @@ class FeedForwardDAMP(BaseDecomposableAttentionModel):
         with tf.variable_scope('transform_embeddings', reuse=reuse) as _:
             projection = tf.contrib.layers.fully_connected(inputs=sequence, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
-                                                           activation_fn=None)
+                                                           biases_initializer=None, activation_fn=None)
         return projection
 
     def _transform_attend(self, sequence, reuse=False):
@@ -291,7 +291,7 @@ class FeedForwardDAMS(BaseDecomposableAttentionModel):
         with tf.variable_scope('transform_embeddings', reuse=reuse) as _:
             projection = tf.contrib.layers.fully_connected(inputs=sequence, num_outputs=self.representation_size,
                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.01),
-                                                           activation_fn=None)
+                                                           biases_initializer=None, activation_fn=None)
         return projection
 
     def _transform_attend(self, sequence, reuse=False):
