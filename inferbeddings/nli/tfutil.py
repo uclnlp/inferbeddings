@@ -120,7 +120,7 @@ def count_trainable_parameters():
     total_params = 0
     for variable in tf.trainable_variables():
         variable_params = np.prod([1] + [dim.value for dim in variable.get_shape()])
-        logging.debug('{0} ({1}): {2} params'.format(variable.name, str(variable.get_shape()), variable_params))
+        logging.info('{0} ({1}): {2} params'.format(variable.name, str(variable.get_shape()), variable_params))
         total_params += variable_params
     return total_params
 
