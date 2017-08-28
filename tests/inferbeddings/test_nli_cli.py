@@ -27,19 +27,19 @@ def test_nli_cli():
         if 'Epoch 1/1' in line:
             assert '0.0343' in line
         if 'Epoch 10/1' in line:
-            assert '0.0316' in line
+            assert '0.0321' in line
         if 'Epoch 20/1' in line:
-            assert '0.0145' in line
+            assert '0.0162' in line
         if 'Epoch 30/1' in line:
-            assert '0.0159' in line
+            assert '0.0138' in line
         if 'Epoch 40/1' in line:
-            assert '0.0016' in line
+            assert '0.0068' in line
         if 'Epoch 70/1' in line:
-            assert '0.0009' in line
-        if 'Epoch 80/1' in line:
             assert '0.0005' in line
+        if 'Epoch 80/1' in line:
+            assert '0.0002' in line
         if 'Epoch 90/1' in line:
-            assert '0.0003' in line
+            assert '0.0008' in line
 
 if __name__ == '__main__':
     pytest.main([__file__])

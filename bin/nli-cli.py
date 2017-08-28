@@ -224,9 +224,10 @@ def main(argv):
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
 
-        embedding_initializer = tf.contrib.layers.xavier_initializer()
         if initialize_embeddings == 'normal':
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
+        else:
+            embedding_initializer = tf.contrib.layers.xavier_initializer()
 
         embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
                                           initializer=embedding_initializer, trainable=not is_fixed_embeddings)
