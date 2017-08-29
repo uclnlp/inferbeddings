@@ -9,8 +9,8 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
-def test_snli():
-    train, dev, test = util.SNLI.generate()
+def test_snli_lower():
+    train, dev, test = util.SNLI.generate(is_lower=True)
     all_instances = train + dev + test
 
     token_set = set()
@@ -22,9 +22,9 @@ def test_snli():
     assert len(token_set) == 36988
 
 
-def test_snli_tiny():
+def test_snli_tiny_lower():
     path = 'data/snli/tiny/tiny.jsonl.gz'
-    train, dev, test = util.SNLI.generate(train_path=path, valid_path=path, test_path=path)
+    train, dev, test = util.SNLI.generate(train_path=path, valid_path=path, test_path=path, is_lower=True)
     all_instances = train + dev + test
 
     token_set = set()
