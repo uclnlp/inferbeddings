@@ -22,6 +22,20 @@ def test_snli_lower():
     assert len(token_set) == 36988
 
 
+def test_snli_tiny():
+    path = 'data/snli/tiny/tiny.jsonl.gz'
+    train, dev, test = util.SNLI.generate(train_path=path, valid_path=path, test_path=path, is_lower=False)
+    all_instances = train + dev + test
+
+    token_set = set()
+    for instance in all_instances:
+        token_set |= set(instance['sentence1_parse_tokens'])
+        token_set |= set(instance['sentence2_parse_tokens'])
+
+    print(len(token_set))
+    assert len(token_set) == 206
+
+
 def test_snli_tiny_lower():
     path = 'data/snli/tiny/tiny.jsonl.gz'
     train, dev, test = util.SNLI.generate(train_path=path, valid_path=path, test_path=path, is_lower=True)
