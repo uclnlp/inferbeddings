@@ -9,6 +9,19 @@ import pytest
 logger = logging.getLogger(__name__)
 
 
+def test_snli():
+    train, dev, test = util.SNLI.generate(is_lower=False)
+    all_instances = train + dev + test
+
+    token_set = set()
+    for instance in all_instances:
+        token_set |= set(instance['sentence1_parse_tokens'])
+        token_set |= set(instance['sentence2_parse_tokens'])
+
+    print(len(token_set))
+    assert len(token_set) == 43152
+
+
 def test_snli_lower():
     train, dev, test = util.SNLI.generate(is_lower=True)
     all_instances = train + dev + test
@@ -33,7 +46,7 @@ def test_snli_tiny():
         token_set |= set(instance['sentence2_parse_tokens'])
 
     print(len(token_set))
-    assert len(token_set) == 206
+    assert len(token_set) == 407
 
 
 def test_snli_tiny_lower():
