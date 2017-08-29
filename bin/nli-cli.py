@@ -62,6 +62,7 @@ def main(argv):
     argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
     argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
     argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
+    argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
 
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
@@ -111,6 +112,9 @@ def main(argv):
     has_bos = args.has_bos
     has_eos = args.has_eos
     has_unk = args.has_unk
+    is_lower = args.lower
+
+    logger.info('has_bos: {}, has_eos: {}, has_unk: {}, is_lower: {}'.format(has_bos, has_eos, has_unk, is_lower))
 
     initialize_embeddings = args.initialize_embeddings
 
@@ -138,7 +142,10 @@ def main(argv):
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
-    train_is, dev_is, test_is = util.SNLI.generate(train_path=train_path, valid_path=valid_path, test_path=test_path)
+    train_is, dev_is, test_is = util.SNLI.generate(train_path=train_path,
+                                                   valid_path=valid_path,
+                                                   test_path=test_path,
+                                                   is_lower=is_lower)
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_is), len(dev_is), len(test_is)))
     all_is = train_is + dev_is + test_is

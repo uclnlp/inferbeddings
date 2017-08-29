@@ -45,7 +45,7 @@ class SNLI:
         return instance
 
     @staticmethod
-    def parse(path, tokenize=None, is_lower=True):
+    def parse(path, tokenize=None, is_lower=False):
         res = None
         if path is not None:
             with gzip.open(path, 'rb') as f:
@@ -63,16 +63,17 @@ class SNLI:
     @staticmethod
     def generate(train_path='data/snli/snli_1.0_train.jsonl.gz',
                  valid_path='data/snli/snli_1.0_dev.jsonl.gz',
-                 test_path='data/snli/snli_1.0_test.jsonl.gz'):
+                 test_path='data/snli/snli_1.0_test.jsonl.gz',
+                 is_lower=False):
 
         tokenizer = nltk.tokenize.TreebankWordTokenizer()
 
         def tokenize(text):
             return tokenizer.tokenize(text)
 
-        train_corpus = SNLI.parse(train_path, tokenize=tokenize)
-        dev_corpus = SNLI.parse(valid_path, tokenize=tokenize)
-        test_corpus = SNLI.parse(test_path, tokenize=tokenize)
+        train_corpus = SNLI.parse(train_path, tokenize=tokenize, is_lower=is_lower)
+        dev_corpus = SNLI.parse(valid_path, tokenize=tokenize, is_lower=is_lower)
+        test_corpus = SNLI.parse(test_path, tokenize=tokenize, is_lower=is_lower)
 
         return train_corpus, dev_corpus, test_corpus
 
