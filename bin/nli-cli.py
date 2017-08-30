@@ -416,9 +416,6 @@ def main(argv):
                     batch_sentences1 = batch_sentences1[:, :batch_max_size1]
                     batch_sentences2 = batch_sentences2[:, :batch_max_size2]
 
-                    np.set_printoptions(threshold=np.nan, linewidth=256)
-                    print(batch_sentences1)
-
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
                         sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
