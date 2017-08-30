@@ -72,7 +72,7 @@ def main(argv):
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
-    argparser.add_argument('--restore',action='store', type=str, default=None)
+    argparser.add_argument('--restore', action='store', type=str, default=None)
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
     argparser.add_argument('--word2vec', action='store', type=str, default=None)
