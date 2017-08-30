@@ -157,9 +157,11 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
                 v1 = tfutil.mask_3d(sequences=v1, sequence_lengths=v1_lengths, mask_value=0, dimension=1)
                 v2 = tfutil.mask_3d(sequences=v2, sequence_lengths=v2_lengths, mask_value=0, dimension=1)
 
-            v1_sum, v2_sum = tf.reduce_sum(v1, [1]), tf.reduce_sum(v2, [1])
+            v1_sum = tf.reduce_sum(v1, [1])
+            v2_sum = tf.reduce_sum(v2, [1])
 
             v1_v2 = tf.concat(axis=1, values=[v1_sum, v2_sum])
+
             transformed_v1_v2 = self._transform_aggregate(v1_v2, reuse=reuse)
 
             logits = tf.contrib.layers.fully_connected(inputs=transformed_v1_v2,
