@@ -221,9 +221,11 @@ def main(argv):
 
     token_to_embedding = dict()
     if glove_path:
+        logger.info('Loading GloVe word embeddings from {}'.format(glove_path))
         assert os.path.isfile(glove_path)
         token_to_embedding = load_glove(glove_path, token_set)
     elif word2vec_path:
+        logger.info('Loading word2vec word embeddings from {}'.format(word2vec_path))
         assert os.path.isfile(word2vec_path)
         token_to_embedding = load_word2vec(word2vec_path, token_set)
 
@@ -231,8 +233,10 @@ def main(argv):
     with tf.variable_scope(discriminator_scope_name):
 
         if initialize_embeddings == 'normal':
+            logger.info('Initializing the embeddings with 𝓝(0, 1)')
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
         else:
+            logger.info('Initializing the embeddings with Xavier initialization')
             embedding_initializer = tf.contrib.layers.xavier_initializer()
 
         embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
@@ -288,9 +292,9 @@ def main(argv):
     discriminator_optimizer_vars = tfutil.get_variables_in_scope(discriminator_optimizer_scope_name)
     discriminator_optimizer_init_op = tf.variables_initializer(discriminator_optimizer_vars)
 
-    word_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
-    word_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
-    assign_word_embedding = embedding_layer[word_idx_ph, :].assign(word_embedding_ph)
+    token_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
+    token_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
+    assign_token_embedding = embedding_layer[token_idx_ph, :].assign(token_embedding_ph)
 
     init_projection_steps = []
     learning_projection_steps = []
@@ -313,7 +317,8 @@ def main(argv):
             adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
                                           embedding_size=embedding_size,
                                           scope_name='adversary', batch_size=32, sequence_length=10,
-                                          entailment_idx=entailment_idx, contradiction_idx=contradiction_idx,
+                                          entailment_idx=entailment_idx,
+                                          contradiction_idx=contradiction_idx,
                                           neutral_idx=neutral_idx)
 
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
@@ -342,25 +347,22 @@ def main(argv):
             adversary_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
             adversary_optimizer_init_op = tf.variables_initializer(adversary_optimizer_vars)
 
+        def token_init_op(_var, _token_idx, target_idx):
+            token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)
+            tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (adversarial_batch_size, 1))
+            return _var[:, target_idx, :].assign(tiled_token_emb)
+
         adversary_projection_steps = []
         for var in adversary_vars:
             if is_normalized_embeddings:
                 unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
-            adversarial_batch_size, sentence_len = var.get_shape()[0].value, var.get_shape()[1].value
+            adversarial_batch_size = var.get_shape()[0].value
+            sentence_len = var.get_shape()[1].value
 
-            def token_init_op(_var, token_idx, target_idx):
-                token_emb = tf.nn.embedding_lookup(embedding_layer, token_idx)
-                tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (adversarial_batch_size, 1))
-                init_token_op = _var[:, target_idx, :].assign(tiled_token_emb),
-                return init_token_op
-
-        if has_bos:
-            adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
-
-        if has_eos:
-            adversary_projection_steps += [token_init_op(var, eos_idx, sentence_len - 1)]
+            if has_bos:
+                adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars, max_to_keep=1)
 
@@ -381,9 +383,10 @@ def main(argv):
             # Initialising pre-trained embeddings
             logger.info('Initialising the embeddings pre-trained vectors ..')
             for token in token_to_embedding:
-                word_idx, word_embedding = token_to_index[token], token_to_embedding[token]
-                assert embedding_size == len(word_embedding)
-                session.run(assign_word_embedding, feed_dict={word_idx_ph: word_idx, word_embedding_ph: word_embedding})
+                token_idx, token_embedding = token_to_index[token], token_to_embedding[token]
+                assert embedding_size == len(token_embedding)
+                session.run(assign_token_embedding,
+                            feed_dict={token_idx_ph: token_idx, token_embedding_ph: token_embedding})
             logger.info('Done!')
 
             for projection_step in init_projection_steps:
