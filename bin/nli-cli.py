@@ -68,7 +68,6 @@ def main(argv):
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
                            choices=['normal'])
 
-    argparser.add_argument('--semi-sort', action='store_true')
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
 
@@ -120,7 +119,6 @@ def main(argv):
 
     initialize_embeddings = args.initialize_embeddings
 
-    is_semi_sort = args.semi_sort
     is_fixed_embeddings = args.fixed_embeddings
     is_normalized_embeddings = args.normalized_embeddings
 
@@ -359,7 +357,7 @@ def main(argv):
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
             adversarial_batch_size = var.get_shape()[0].value
-            sentence_len = var.get_shape()[1].value
+            # sentence_len = var.get_shape()[1].value
 
             if has_bos:
                 adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
@@ -389,8 +387,8 @@ def main(argv):
                             feed_dict={token_idx_ph: token_idx, token_embedding_ph: token_embedding})
             logger.info('Done!')
 
-            for projection_step in init_projection_steps:
-                session.run([projection_step])
+            for adversary_projection_step in init_projection_steps:
+                session.run([adversary_projection_step])
 
         nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
@@ -401,7 +399,7 @@ def main(argv):
         for epoch in range(1, nb_epochs + 1):
 
             for d_epoch in range(1, nb_discriminator_epochs + 1):
-                order = np.arange(nb_instances) if is_semi_sort else random_state.permutation(nb_instances)
+                order = random_state.permutation(nb_instances)
 
                 sentences1, sentences2 = sentence1[order], sentence2[order]
                 sizes1, sizes2 = sentence1_length[order], sentence2_length[order]
@@ -425,6 +423,7 @@ def main(argv):
                         sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
                         sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
                         label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob}
+
                     _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
 
                     logger.debug('Epoch {0}/{1}/{2}\tLoss: {3}'.format(epoch, d_epoch, batch_idx, loss_value))
@@ -433,8 +432,8 @@ def main(argv):
                     loss_values += [loss_value / cur_batch_size]
                     epoch_loss_values += [loss_value / cur_batch_size]
 
-                    for projection_step in learning_projection_steps:
-                        session.run([projection_step])
+                    for adversary_projection_step in learning_projection_steps:
+                        session.run([adversary_projection_step])
 
                     if discriminator_batch_counter % report_loss_interval == 0:
                         logger.info('Epoch {0}/{1}/{2}\tLoss Stats: {3}'.format(epoch, d_epoch, batch_idx, stats(loss_values)))
@@ -467,12 +466,13 @@ def main(argv):
 
                 for a_epoch in range(1, nb_adversary_epochs + 1):
                     adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
-                    _, adversarial_loss_value = session.run([adversary_training_step, adversary_loss],
+                    _, adversary_loss_value = session.run([adversary_training_step, adversary_loss],
                                                             feed_dict=adversary_feed_dict)
 
-                    logger.debug('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversarial_loss_value))
-                    for projection_step in adversary_projection_steps:
-                        session.run(projection_step)
+                    logger.info('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversary_loss_value))
+
+                    for adversary_projection_step in adversary_projection_steps:
+                        session.run(adversary_projection_step)
 
     logger.info('Training finished.')
 
