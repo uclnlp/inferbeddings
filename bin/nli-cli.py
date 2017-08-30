@@ -58,6 +58,7 @@ def main(argv):
     argparser.add_argument('--clip', '-c', action='store', type=float, default=None)
     argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
+    argparser.add_argument('--std-dev', action='store', type=float, default=0.01)
 
     argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
     argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
@@ -108,6 +109,7 @@ def main(argv):
     learning_rate = args.learning_rate
     clip_value = args.clip
     seed = args.seed
+    std_dev = args.std_dev
 
     has_bos = args.has_bos
     has_eos = args.has_eos
@@ -142,10 +144,7 @@ def main(argv):
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
-    train_is, dev_is, test_is = util.SNLI.generate(train_path=train_path,
-                                                   valid_path=valid_path,
-                                                   test_path=test_path,
-                                                   is_lower=is_lower)
+    train_is, dev_is, test_is = util.SNLI.generate(train_path=train_path, valid_path=valid_path, test_path=test_path, is_lower=is_lower)
 
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_is), len(dev_is), len(test_is)))
     all_is = train_is + dev_is + test_is
@@ -248,6 +247,9 @@ def main(argv):
             sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
             sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
             representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+
+        if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
+            model_kwargs['init_std_dev'] = std_dev
 
         mode_name_to_class = {
             'cbilstm': ConditionalBiLSTM,
