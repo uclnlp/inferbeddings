@@ -69,7 +69,7 @@ def main(argv):
                            choices=['normal'])
 
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
-    argparser.add_argument('--normalized-embeddings', '-n', action='store_true')
+    argparser.add_argument('--normalize-embeddings', '-n', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
@@ -120,7 +120,7 @@ def main(argv):
     initialize_embeddings = args.initialize_embeddings
 
     is_fixed_embeddings = args.fixed_embeddings
-    is_normalized_embeddings = args.normalized_embeddings
+    is_normalize_embeddings = args.normalize_embeddings
 
     save_path = args.save
     restore_path = args.restore
@@ -297,7 +297,7 @@ def main(argv):
     init_projection_steps = []
     learning_projection_steps = []
 
-    if is_normalized_embeddings:
+    if is_normalize_embeddings:
         unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
         init_projection_steps += [unit_sphere_embeddings]
 
@@ -352,7 +352,7 @@ def main(argv):
 
         adversary_projection_steps = []
         for var in adversary_vars:
-            if is_normalized_embeddings:
+            if is_normalize_embeddings:
                 unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
