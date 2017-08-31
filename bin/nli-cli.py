@@ -167,6 +167,7 @@ def main(argv):
             logger.info('Loading word2vec words from {}'.format(word2vec_path))
             assert os.path.isfile(word2vec_path)
             allowed_words = load_word2vec_words(path=word2vec_path, words=token_set)
+        logger.info('Number of allowed words: {}'.format(len(allowed_words)))
 
     # Count the number of occurrences of each token
     token_counts = dict()
