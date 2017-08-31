@@ -52,3 +52,7 @@ def load_word2vec(path, words=None, binary=True):
             word_to_embedding[word] = model[word].tolist()
 
     return word_to_embedding
+
+
+def load_word2vec_words(path, words=None):
+    raise NotImplementedError('Operation not yet implemented')

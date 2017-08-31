@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.io import load_glove, load_word2vec
+from inferbeddings.io import load_glove, load_word2vec, load_glove_words, load_word2vec_words
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli import util, tfutil
@@ -70,6 +70,8 @@ def main(argv):
 
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalize-embeddings', '-n', action='store_true')
+    argparser.add_argument('--only-use-pretrained', '-p', action='store_true',
+                           help='Only use pre-trained word embeddings')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
@@ -186,10 +188,8 @@ def main(argv):
 
     optimizer = optimizer_class(learning_rate=learning_rate)
 
-    args = dict(
-        has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
-        bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
-        max_len=max_len)
+    args = dict(has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
+                bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx, max_len=max_len)
 
     train_dataset = util.instances_to_dataset(train_is, token_to_index, label_to_index, **args)
     dev_dataset = util.instances_to_dataset(dev_is, token_to_index, label_to_index, **args)
