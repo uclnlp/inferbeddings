@@ -123,6 +123,7 @@ def main(argv):
 
     is_fixed_embeddings = args.fixed_embeddings
     is_normalize_embeddings = args.normalize_embeddings
+    is_only_use_pretrained = args.only_use_pretrained
 
     save_path = args.save
     restore_path = args.restore
@@ -154,12 +155,26 @@ def main(argv):
     for instance in all_is:
         token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
 
+    token_set = set(token_seq)
+    allowed_words = None
+    if is_only_use_pretrained:
+        assert (glove_path is not None) or (word2vec_path is not None)
+        if glove_path:
+            logger.info('Loading GloVe words from {}'.format(glove_path))
+            assert os.path.isfile(glove_path)
+            allowed_words = load_glove_words(path=glove_path, words=token_set)
+        elif word2vec_path:
+            logger.info('Loading word2vec words from {}'.format(word2vec_path))
+            assert os.path.isfile(word2vec_path)
+            allowed_words = load_word2vec_words(path=word2vec_path, words=token_set)
+
     # Count the number of occurrences of each token
     token_counts = dict()
     for token in token_seq:
-        if token not in token_counts:
-            token_counts[token] = 0
-        token_counts[token] += 1
+        if (allowed_words is None) or (token in allowed_words):
+            if token not in token_counts:
+                token_counts[token] = 0
+            token_counts[token] += 1
 
     # Sort the tokens according to their frequency and lexicographic ordering
     sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
