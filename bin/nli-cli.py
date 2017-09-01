@@ -333,11 +333,22 @@ def main(argv):
     learning_projection_steps = []
 
     if is_normalize_embeddings:
-        unit_sphere_embeddings = constraints.unit_sphere(embedding_layer, norm=1.0)
-        init_projection_steps += [unit_sphere_embeddings]
+        if is_train_special_token_embeddings:
+            special_embeddings_projection = constraints.unit_sphere(embedding_layer_special, norm=1.0)
+            word_embeddings_projection = constraints.unit_sphere(embedding_layer_words, norm=1.0)
 
-        if not is_fixed_embeddings:
-            learning_projection_steps += [unit_sphere_embeddings]
+            init_projection_steps += [special_embeddings_projection]
+            init_projection_steps += [word_embeddings_projection]
+
+            learning_projection_steps += [special_embeddings_projection]
+            if not is_fixed_embeddings:
+                learning_projection_steps += [word_embeddings_projection]
+        else:
+            embeddings_projection = constraints.unit_sphere(embedding_layer, norm=1.0)
+            init_projection_steps += [embeddings_projection]
+
+            if not is_fixed_embeddings:
+                learning_projection_steps += [embeddings_projection]
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
