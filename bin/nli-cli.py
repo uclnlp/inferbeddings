@@ -70,8 +70,9 @@ def main(argv):
 
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalize-embeddings', '-n', action='store_true')
-    argparser.add_argument('--only-use-pretrained', '-p', action='store_true',
+    argparser.add_argument('--only-use-pretrained-embeddings', '-p', action='store_true',
                            help='Only use pre-trained word embeddings')
+    argparser.add_argument('--train-special-token-embeddings', '-s', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
@@ -124,6 +125,7 @@ def main(argv):
     is_fixed_embeddings = args.fixed_embeddings
     is_normalize_embeddings = args.normalize_embeddings
     is_only_use_pretrained = args.only_use_pretrained
+    is_train_special_token_embeddings = args.train_special_token_embeddings
 
     save_path = args.save
     restore_path = args.restore
@@ -233,6 +235,9 @@ def main(argv):
     token_set = set(token_to_index.keys())
     vocab_size = max(token_to_index.values()) + 1
 
+    nb_words = len(token_to_index)
+    nb_special_tokens = vocab_size - nb_words
+
     token_to_embedding = dict()
     if glove_path:
         logger.info('Loading GloVe word embeddings from {}'.format(glove_path))
@@ -245,7 +250,6 @@ def main(argv):
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
-
         if initialize_embeddings == 'normal':
             logger.info('Initializing the embeddings with 𝓝(0, 1)')
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
@@ -253,8 +257,18 @@ def main(argv):
             logger.info('Initializing the embeddings with Xavier initialization')
             embedding_initializer = tf.contrib.layers.xavier_initializer()
 
-        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                          initializer=embedding_initializer, trainable=not is_fixed_embeddings)
+        if is_train_special_token_embeddings:
+            embedding_layer_special = tf.get_variable('embeddings', shape=[nb_words, embedding_size],
+                                                      initializer=embedding_initializer,
+                                                      trainable=True)
+            embedding_layer_words = tf.get_variable('embeddings', shape=[nb_special_tokens, embedding_size],
+                                                    initializer=embedding_initializer,
+                                                    trainable=not is_fixed_embeddings)
+            embedding_layer = tf.concat(values=[embedding_layer_special, embedding_layer_words], axis=0)
+        else:
+            embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
+                                              initializer=embedding_initializer,
+                                              trainable=not is_fixed_embeddings)
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
@@ -274,7 +288,8 @@ def main(argv):
             'ff-dam': FeedForwardDAM,
             'ff-damp': FeedForwardDAMP,
             'ff-dams': FeedForwardDAMS,
-            'esim1': ESIMv1}
+            'esim1': ESIMv1
+        }
 
         model_class = mode_name_to_class[model_name]
 
@@ -483,8 +498,7 @@ def main(argv):
                 for a_epoch in range(1, nb_adversary_epochs + 1):
                     adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
                     _, adversary_loss_value = session.run([adversary_training_step, adversary_loss],
-                                                            feed_dict=adversary_feed_dict)
-
+                                                          feed_dict=adversary_feed_dict)
                     logger.info('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversary_loss_value))
 
                     for adversary_projection_step in adversary_projection_steps:
