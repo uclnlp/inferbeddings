@@ -119,8 +119,6 @@ def main(argv):
     has_unk = args.has_unk
     is_lower = args.lower
 
-    logger.info('has_bos: {}, has_eos: {}, has_unk: {}, is_lower: {}'.format(has_bos, has_eos, has_unk, is_lower))
-
     initialize_embeddings = args.initialize_embeddings
 
     is_fixed_embeddings = args.fixed_embeddings
@@ -128,6 +126,12 @@ def main(argv):
     is_only_use_pretrained_embeddings = args.only_use_pretrained_embeddings
     is_train_special_token_embeddings = args.train_special_token_embeddings
     is_semi_sort = args.semi_sort
+
+    logger.info('has_bos: {}, has_eos: {}, has_unk: {}'.format(has_bos, has_eos, has_unk))
+    logger.info('is_lower: {}, is_fixed_embeddings: {}, is_normalize_embeddings: {}'
+                .format(is_lower, is_fixed_embeddings, is_normalize_embeddings))
+    logger.info('is_only_use_pretrained_embeddings: {}, is_train_special_token_embeddings: {}, is_semi_sort: {}'
+                .format(is_only_use_pretrained_embeddings, is_train_special_token_embeddings, is_semi_sort))
 
     save_path = args.save
     restore_path = args.restore
