@@ -73,6 +73,7 @@ def main(argv):
     argparser.add_argument('--only-use-pretrained-embeddings', '-p', action='store_true',
                            help='Only use pre-trained word embeddings')
     argparser.add_argument('--train-special-token-embeddings', '-s', action='store_true')
+    argparser.add_argument('--semi-sort', '-S', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
@@ -126,6 +127,7 @@ def main(argv):
     is_normalize_embeddings = args.normalize_embeddings
     is_only_use_pretrained_embeddings = args.only_use_pretrained_embeddings
     is_train_special_token_embeddings = args.train_special_token_embeddings
+    is_semi_sort = args.semi_sort
 
     save_path = args.save
     restore_path = args.restore
@@ -450,6 +452,12 @@ def main(argv):
                 sentences1, sentences2 = sentence1[order], sentence2[order]
                 sizes1, sizes2 = sentence1_length[order], sentence2_length[order]
                 labels = label[order]
+
+                if is_semi_sort:
+                    order = util.semi_sort(sizes1, sizes2)
+                    sentences1, sentences2 = sentence1[order], sentence2[order]
+                    sizes1, sizes2 = sentence1_length[order], sentence2_length[order]
+                    labels = label[order]
 
                 loss_values, epoch_loss_values = [], []
                 for batch_idx, (batch_start, batch_end) in enumerate(batches):
