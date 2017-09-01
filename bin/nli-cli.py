@@ -258,10 +258,10 @@ def main(argv):
             embedding_initializer = tf.contrib.layers.xavier_initializer()
 
         if is_train_special_token_embeddings:
-            embedding_layer_special = tf.get_variable('special_embeddings', shape=[nb_words, embedding_size],
+            embedding_layer_special = tf.get_variable('special_embeddings', shape=[nb_special_tokens, embedding_size],
                                                       initializer=embedding_initializer,
                                                       trainable=True)
-            embedding_layer_words = tf.get_variable('word_embeddings', shape=[nb_special_tokens, embedding_size],
+            embedding_layer_words = tf.get_variable('word_embeddings', shape=[nb_words, embedding_size],
                                                     initializer=embedding_initializer,
                                                     trainable=not is_fixed_embeddings)
             embedding_layer = tf.concat(values=[embedding_layer_special, embedding_layer_words], axis=0)
