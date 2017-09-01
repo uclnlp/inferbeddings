@@ -66,7 +66,7 @@ def main(argv):
     argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
 
     argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
-                           choices=['normal'])
+                           choices=['normal', 'uniform'])
 
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalize-embeddings', '-n', action='store_true')
@@ -259,6 +259,9 @@ def main(argv):
         if initialize_embeddings == 'normal':
             logger.info('Initializing the embeddings with 𝓝(0, 1)')
             embedding_initializer = tf.random_normal_initializer(0.0, 1.0)
+        elif initialize_embeddings == 'uniform':
+            logger.info('Initializing the embeddings with 𝒰(-1, 1)')
+            embedding_initializer = tf.random_uniform_initializer(minval=-1.0, maxval=1.0)
         else:
             logger.info('Initializing the embeddings with Xavier initialization')
             embedding_initializer = tf.contrib.layers.xavier_initializer()
