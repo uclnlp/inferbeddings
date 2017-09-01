@@ -214,3 +214,16 @@ def instances_to_dataset(instances, token_to_index, label_to_index,
         'label': np.array(label_idx)
     }
     return ds
+
+
+def semi_sort(sizes1, sizes2):
+    batch_1 = np.logical_and(sizes1 < 20, sizes2 < 20)
+    batch_2 = np.logical_and(
+        np.logical_and(20 < sizes1, sizes1 < 50),
+        np.logical_and(20 < sizes2, sizes2 < 50))
+    batch_3 = np.logical_not(
+        np.logical_or(batch_1, batch_2))
+    batch_1_idx, = np.where(batch_1)
+    batch_2_idx, = np.where(batch_2)
+    batch_3_idx, = np.where(batch_3)
+    return np.concatenate((batch_1_idx, batch_2_idx, batch_3_idx))
