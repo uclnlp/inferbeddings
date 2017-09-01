@@ -13,6 +13,9 @@ def test_snli():
     train, dev, test = util.SNLI.generate(is_lower=False)
     all_instances = train + dev + test
 
+    assert len(train) == 549367
+    assert len(dev) == len(test) == 9842
+
     token_set = set()
     for instance in all_instances:
         token_set |= set(instance['sentence1_parse_tokens'])
@@ -25,6 +28,9 @@ def test_snli():
 def test_snli_lower():
     train, dev, test = util.SNLI.generate(is_lower=True)
     all_instances = train + dev + test
+
+    assert len(train) == 549367
+    assert len(dev) == len(test) == 9842
 
     token_set = set()
     for instance in all_instances:
