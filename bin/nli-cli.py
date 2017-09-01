@@ -323,7 +323,11 @@ def main(argv):
 
     token_idx_ph = tf.placeholder(dtype=tf.int32, name='word_idx')
     token_embedding_ph = tf.placeholder(dtype=tf.float32, shape=[None], name='word_embedding')
-    assign_token_embedding = embedding_layer[token_idx_ph, :].assign(token_embedding_ph)
+
+    if is_train_special_token_embeddings:
+        assign_token_embedding = embedding_layer_words[token_idx_ph - nb_special_tokens, :].assign(token_embedding_ph)
+    else:
+        assign_token_embedding = embedding_layer[token_idx_ph, :].assign(token_embedding_ph)
 
     init_projection_steps = []
     learning_projection_steps = []
