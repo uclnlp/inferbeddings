@@ -124,7 +124,7 @@ def main(argv):
 
     is_fixed_embeddings = args.fixed_embeddings
     is_normalize_embeddings = args.normalize_embeddings
-    is_only_use_pretrained = args.only_use_pretrained
+    is_only_use_pretrained_embeddings = args.only_use_pretrained_embeddings
     is_train_special_token_embeddings = args.train_special_token_embeddings
 
     save_path = args.save
@@ -159,7 +159,7 @@ def main(argv):
 
     token_set = set(token_seq)
     allowed_words = None
-    if is_only_use_pretrained:
+    if is_only_use_pretrained_embeddings:
         assert (glove_path is not None) or (word2vec_path is not None)
         if glove_path:
             logger.info('Loading GloVe words from {}'.format(glove_path))
