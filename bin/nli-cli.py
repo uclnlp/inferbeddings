@@ -85,6 +85,7 @@ def main(argv):
     argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
     argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
     argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
+    argparser.add_argument('--rule4-weight', '-4', action='store', type=float, default=None)
 
     argparser.add_argument('--report', '-r', default=100, type=int,
                            help='Number of batches between performance reports')
@@ -144,6 +145,7 @@ def main(argv):
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
     rule3_weight = args.rule3_weight
+    rule4_weight = args.rule4_weight
 
     report_interval = args.report
     report_loss_interval = args.report_loss
@@ -369,7 +371,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight
+    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight
 
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
@@ -396,6 +398,10 @@ def main(argv):
                 rule3_loss, rule3_vars = adversarial.rule3_loss()
                 adversary_loss += rule3_weight * tf.reduce_max(rule3_loss)
                 adversary_vars += rule3_vars
+            if rule4_weight:
+                rule4_loss, rule4_vars = adversarial.rule4_loss()
+                adversary_loss += rule4_weight * tf.reduce_max(rule4_loss)
+                adversary_vars += rule4_vars
 
         adversary_init_op = tf.variables_initializer(adversary_vars)
 

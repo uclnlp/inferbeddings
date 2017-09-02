@@ -122,3 +122,36 @@ class AdversarialSets:
         loss = tf.nn.relu(score_s1_contradicts_s1 - score_s1_entails_s1) +\
             tf.nn.relu(score_s1_neutral_s1 - score_s1_entails_s1)
         return loss
+
+    def rule4_loss(self):
+        """
+        Adversarial loss term enforcing the rule:
+            entails(S1, S2), contradicts(S2, S3) => contradicts(S1, S3)
+        by making sure that the following constraint:
+            min(s(entails(S1, S2)), s(contradicts(S2, S3))) < s(contradicts(S1, S3))
+        Always holds. This constraint can be encoded by the following loss:
+            ReLU[min(s(entails(S1, S2)), s(contradicts(S2, S3))) - s(contradicts(S1, S3))]
+
+        :return: (tf.Tensor, Set[tf.Variable]) pair containing the adversarial loss
+            and the adversarially trainable variables.
+        """
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='rule4_sequence1')
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence2 = self._get_sequence(name='rule4_sequence2')
+        # S3 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence3 = self._get_sequence(name='rule4_sequence3')
+
+        # Probability that S1 entails S2
+        score_s1_entails_s2 = self._score(sequence1, sequence2, self.entailment_idx)
+        # Probability that S2 contradicts S3
+        score_s2_contradicts_s3 = self._score(sequence2, sequence3, self.contradiction_idx)
+        # Probability that S1 contradicts S3
+        score_s1_contradicts_s3 = self._score(sequence1, sequence3, self.contradiction_idx)
+
+        body_score = tf.minimum(score_s1_entails_s2, score_s2_contradicts_s3)
+        head_score = score_s1_contradicts_s3
+
+        # The loss is > 0 if min(P1 => P2, P2 X> P3) > P1 X> P3, 0 otherwise
+        loss = tf.nn.relu(body_score - head_score)
+        return loss, {sequence1, sequence2, sequence3}

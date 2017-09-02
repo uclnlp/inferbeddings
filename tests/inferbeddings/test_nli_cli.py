@@ -42,5 +42,6 @@ def test_nli_cli():
             assert '0.0027' in line
         if 'Epoch 100/1' in line:
             assert '0.0008' in line
+
 if __name__ == '__main__':
     pytest.main([__file__])
