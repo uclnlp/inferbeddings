@@ -63,7 +63,8 @@ def test_nli_cli_restore():
         print(line)
 
         if 'Dev Acc' in line:
-            assert 'Dev Acc: 100.00	Test Acc: 100.00' in line
+            assert 'Dev Acc: 100.00' in line
+            assert 'Test Acc: 100.00' in line
 
 if __name__ == '__main__':
     pytest.main([__file__])
