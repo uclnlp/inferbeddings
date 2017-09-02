@@ -318,14 +318,21 @@ def main(argv):
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
 
+    trainable_discriminator_vars = discriminator_vars
+    if is_fixed_embeddings:
+        if is_train_special_token_embeddings:
+            trainable_discriminator_vars.remove(embedding_layer_words)
+        else:
+            trainable_discriminator_vars.remove(embedding_layer)
+
     discriminator_optimizer_scope_name = 'discriminator_optimizer'
     with tf.variable_scope(discriminator_optimizer_scope_name):
         if clip_value:
-            gradients, v = zip(*optimizer.compute_gradients(loss, var_list=discriminator_vars))
+            gradients, v = zip(*optimizer.compute_gradients(loss, var_list=trainable_discriminator_vars))
             gradients, _ = tf.clip_by_global_norm(gradients, clip_value)
             training_step = optimizer.apply_gradients(zip(gradients, v))
         else:
-            training_step = optimizer.minimize(loss, var_list=discriminator_vars)
+            training_step = optimizer.minimize(loss, var_list=trainable_discriminator_vars)
 
     discriminator_optimizer_vars = tfutil.get_variables_in_scope(discriminator_optimizer_scope_name)
     discriminator_optimizer_init_op = tf.variables_initializer(discriminator_optimizer_vars)
@@ -423,7 +430,9 @@ def main(argv):
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        logger.info('Total parameters: {}'.format(tfutil.count_trainable_parameters()))
+        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
+        logger.info('Total TrainableDiscriminator Parameters: {}'.format(
+            tfutil.count_trainable_parameters(var_list=trainable_discriminator_vars)))
 
         if use_adversarial_training:
             session.run([adversary_init_op, adversary_optimizer_init_op])
@@ -439,7 +448,10 @@ def main(argv):
                 token_idx, token_embedding = token_to_index[token], token_to_embedding[token]
                 assert embedding_size == len(token_embedding)
                 session.run(assign_token_embedding,
-                            feed_dict={token_idx_ph: token_idx, token_embedding_ph: token_embedding})
+                            feed_dict={
+                                token_idx_ph: token_idx,
+                                token_embedding_ph: token_embedding
+                            })
             logger.info('Done!')
 
             for adversary_projection_step in init_projection_steps:
