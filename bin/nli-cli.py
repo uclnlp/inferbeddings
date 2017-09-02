@@ -320,7 +320,7 @@ def main(argv):
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
 
-    trainable_discriminator_vars = discriminator_vars
+    trainable_discriminator_vars = list(discriminator_vars)
     if is_fixed_embeddings:
         if is_train_special_token_embeddings:
             trainable_discriminator_vars.remove(embedding_layer_words)
@@ -437,7 +437,9 @@ def main(argv):
 
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
-        logger.info('Total TrainableDiscriminator Parameters: {}'.format(
+        logger.info('Total Discriminator Parameters: {}'.format(
+            tfutil.count_trainable_parameters(var_list=discriminator_vars)))
+        logger.info('Total Trainable Discriminator Parameters: {}'.format(
             tfutil.count_trainable_parameters(var_list=trainable_discriminator_vars)))
 
         if use_adversarial_training:
