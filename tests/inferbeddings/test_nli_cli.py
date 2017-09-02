@@ -62,7 +62,7 @@ def test_nli_cli_restore():
     for line in lines:
         print(line)
 
-        if 'Dev Acc' in line:
+        if 'Dev Acc:' in line:
             assert 'Dev Acc: 100.00' in line
             assert 'Test Acc: 100.00' in line
 
