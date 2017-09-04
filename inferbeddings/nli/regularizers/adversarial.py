@@ -63,7 +63,9 @@ class AdversarialSets:
         score_s1_contradicts_s2 = self._score(sequence1, sequence2, self.contradiction_idx)
         # Probability that S2 contradicts S1
         score_s2_contradicts_s1 = self._score(sequence2, sequence1, self.contradiction_idx)
-        return tf.abs(score_s1_contradicts_s2 - score_s2_contradicts_s1), {sequence1, sequence2}
+
+        loss = tf.abs(score_s1_contradicts_s2 - score_s2_contradicts_s1)
+        return loss, {sequence1, sequence2}
 
     def rule2_loss(self):
         """
@@ -121,7 +123,7 @@ class AdversarialSets:
 
         loss = tf.nn.relu(score_s1_contradicts_s1 - score_s1_entails_s1) +\
             tf.nn.relu(score_s1_neutral_s1 - score_s1_entails_s1)
-        return loss
+        return loss, {sequence1}
 
     def rule4_loss(self):
         """
