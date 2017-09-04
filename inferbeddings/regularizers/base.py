@@ -60,3 +60,16 @@ class ComplExEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
         similarity = similarities.get_function(self.similarity_name)
         loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
         return loss
+
+
+class BilinearEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def inverse(self, x):
+        return x
+
+    def __call__(self):
+        similarity = similarities.get_function(self.similarity_name)
+        loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
+        return loss

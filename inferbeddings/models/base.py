@@ -88,8 +88,9 @@ class BilinearModel(BaseModel):
         :return: (batch_size) Tensor containing the scores associated by the models to the walks.
         """
         subject_embedding, object_embedding = self.entity_embeddings[:, 0, :], self.entity_embeddings[:, 1, :]
-        walk_embedding = embeddings.bilinear_walk_embedding(self.predicate_embeddings,
-                                                            subject_embedding.get_shape()[-1].value)
+        entity_embedding_size = subject_embedding.get_shape()[-1].value
+
+        walk_embedding = embeddings.bilinear_walk_embedding(self.predicate_embeddings, entity_embedding_size)
 
         es = tf.expand_dims(subject_embedding, 1)
         sW = tf.matmul(es, walk_embedding)[:, 0, :]
