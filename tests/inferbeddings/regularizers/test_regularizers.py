@@ -3,9 +3,9 @@
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer,\
-    DistMultEquivalentPredicateRegularizer,\
-    ComplExEquivalentPredicateRegularizer
+from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer
+from inferbeddings.regularizers import DistMultEquivalentPredicateRegularizer
+from inferbeddings.regularizers import ComplExEquivalentPredicateRegularizer
 
 import pytest
 
@@ -113,6 +113,23 @@ def test_complex():
         np.testing.assert_almost_equal(session.run(loss), l2sqr(pe[0:4, :] - complex_conjugate(pe[1:5, :])))
 
     tf.reset_default_graph()
+
+
+@pytest.mark.light
+def test_complex():
+    rs = np.random.RandomState(0)
+    pe = rs.rand(1024, 10)
+
+    var = tf.Variable(pe, name='pe')
+
+    init_op = tf.global_variables_initializer()
+    with tf.Session() as session:
+        session.run(init_op)
+
+    tf.reset_default_graph()
+
+
+
 
 if __name__ == '__main__':
     pytest.main([__file__])
