@@ -6,6 +6,7 @@ import tensorflow as tf
 from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer
 from inferbeddings.regularizers import DistMultEquivalentPredicateRegularizer
 from inferbeddings.regularizers import ComplExEquivalentPredicateRegularizer
+from inferbeddings.regularizers import BilinearEquivalentPredicateRegularizer
 
 import pytest
 
@@ -24,7 +25,7 @@ def test_translations():
     rs = np.random.RandomState(0)
     pe = rs.rand(1024, 10)
 
-    var = tf.Variable(pe, name='pe')
+    var = tf.Variable(pe, name='predicate_embedding')
 
     init_op = tf.global_variables_initializer()
     with tf.Session() as session:
@@ -56,7 +57,7 @@ def test_scaling():
     rs = np.random.RandomState(0)
     pe = rs.rand(1024, 10)
 
-    var = tf.Variable(pe, name='pe')
+    var = tf.Variable(pe, name='predicate_embedding')
 
     init_op = tf.global_variables_initializer()
     with tf.Session() as session:
@@ -88,7 +89,7 @@ def test_complex():
     rs = np.random.RandomState(0)
     pe = rs.rand(1024, 10)
 
-    var = tf.Variable(pe, name='pe')
+    var = tf.Variable(pe, name='predicate_embedding')
 
     init_op = tf.global_variables_initializer()
     with tf.Session() as session:
@@ -116,19 +117,28 @@ def test_complex():
 
 
 @pytest.mark.light
-def test_complex():
+def test_bilinear():
     rs = np.random.RandomState(0)
-    pe = rs.rand(1024, 10)
+    pe = rs.rand(1024, 16)
 
-    var = tf.Variable(pe, name='pe')
+    var = tf.Variable(pe, name='predicate_embedding')
+
+    kwargs = {'entity_embedding_size': 4}
 
     init_op = tf.global_variables_initializer()
     with tf.Session() as session:
         session.run(init_op)
 
+        loss = BilinearEquivalentPredicateRegularizer(x1=var[0, :], x2=var[0, :], **kwargs)()
+        np.testing.assert_almost_equal(session.run(loss), 0.0)
+
+        var3 = tf.reshape(var, [-1, 4, 4])
+        s_var = tf.reshape(var3 + tf.transpose(var3, [0, 2, 1]), [-1, 16])
+
+        loss = BilinearEquivalentPredicateRegularizer(x1=s_var[0, :], x2=s_var[0, :], is_inverse=True, **kwargs)()
+        np.testing.assert_almost_equal(session.run(loss), 0.0)
+
     tf.reset_default_graph()
-
-
 
 
 if __name__ == '__main__':
