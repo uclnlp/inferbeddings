@@ -51,7 +51,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_wn18_SAR_v2.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_wn18_sar_smalldata_v1.%s.log" % (path, summary(c))
     return outfile
 
 
