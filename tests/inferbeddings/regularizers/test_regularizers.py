@@ -146,12 +146,17 @@ def test_bilinear():
             return predicate_inverse
 
         for i in range(32):
+            loss = BilinearEquivalentPredicateRegularizer(x1=var[i, :], x2=var[i, :], is_inverse=False, **kwargs)()
+            np.testing.assert_almost_equal(session.run(loss), 0.0)
+
             loss = BilinearEquivalentPredicateRegularizer(x1=var[i, :], x2=invert(var[i, :]), is_inverse=True, **kwargs)()
             np.testing.assert_almost_equal(session.run(loss), 0.0)
 
-            loss = BilinearEquivalentPredicateRegularizer(x1=var[0:32, :], x2=invert(var[0:32, :]), is_inverse=True, **kwargs)()
-            np.testing.assert_almost_equal(session.run(loss), 0.0)
+        loss = BilinearEquivalentPredicateRegularizer(x1=var[0:32, :], x2=var[0:32, :], is_inverse=False, **kwargs)()
+        np.testing.assert_almost_equal(session.run(loss), 0.0)
 
+        loss = BilinearEquivalentPredicateRegularizer(x1=var[0:32, :], x2=invert(var[0:32, :]), is_inverse=True, **kwargs)()
+        np.testing.assert_almost_equal(session.run(loss), 0.0)
 
     tf.reset_default_graph()
 
