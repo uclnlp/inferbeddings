@@ -88,6 +88,9 @@ def main(argv):
     argparser.add_argument('--rule4-weight', '-4', action='store', type=float, default=None)
     argparser.add_argument('--rule5-weight', '-5', action='store', type=float, default=None)
 
+    argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
+    argparser.add_argument('--adversarial-sentence-length', '-L', action='store', type=int, default=10)
+
     argparser.add_argument('--report', '-r', default=100, type=int,
                            help='Number of batches between performance reports')
     argparser.add_argument('--report-loss', default=100, type=int,
@@ -148,6 +151,9 @@ def main(argv):
     rule3_weight = args.rule3_weight
     rule4_weight = args.rule4_weight
     rule5_weight = args.rule5_weight
+
+    adversarial_batch_size = args.adversarial_batch_size
+    adversarial_sentence_length = args.adversarial_sentence_length
 
     report_interval = args.report
     report_loss_interval = args.report_loss
@@ -380,7 +386,9 @@ def main(argv):
         with tf.variable_scope(adversary_scope_name):
             adversarial = AdversarialSets(model_class=model_class, model_kwargs=model_kwargs,
                                           embedding_size=embedding_size,
-                                          scope_name='adversary', batch_size=32, sequence_length=10,
+                                          scope_name='adversary',
+                                          batch_size=adversarial_batch_size,
+                                          sequence_length=adversarial_sentence_length,
                                           entailment_idx=entailment_idx,
                                           contradiction_idx=contradiction_idx,
                                           neutral_idx=neutral_idx)
@@ -419,19 +427,21 @@ def main(argv):
             adversary_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
             adversary_optimizer_init_op = tf.variables_initializer(adversary_optimizer_vars)
 
-        def token_init_op(_var, _token_idx, target_idx):
-            token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)
-            tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (adversarial_batch_size, 1))
-            return _var[:, target_idx, :].assign(tiled_token_emb)
-
         adversary_projection_steps = []
         for var in adversary_vars:
             if is_normalize_embeddings:
                 unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
-            adversarial_batch_size = var.get_shape()[0].value
+            assert adversarial_batch_size == var.get_shape()[0].value
             # sentence_len = var.get_shape()[1].value
+
+            logger.info('Adversarial Batch Size: {}'.format(adversarial_batch_size))
+
+            def token_init_op(_var, _token_idx, target_idx):
+                token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)
+                tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (adversarial_batch_size, 1))
+                return _var[:, target_idx, :].assign(tiled_token_emb)
 
             if has_bos:
                 adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
