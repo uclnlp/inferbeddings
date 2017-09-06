@@ -91,7 +91,7 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-# #$ -l h_vmem=16G,tmem=16G
+#$ -l h_vmem=16G,tmem=16G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
@@ -102,9 +102,22 @@ def main(argv):
 sleep $SGE_TASK_ID
 sleep $SGE_TASK_ID
 sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
 
 cd /home/pminervi/workspace/inferbeddings/
 /home/pminervi/anaconda3/bin/python setup.py install
+/home/pminervi/anaconda3/bin/pip install -r requirements.txt --upgrade
+/home/pminervi/anaconda3/bin/pip install tensorflow-gpu --upgrade
 
 """.format(nb_jobs)
 

@@ -452,6 +452,7 @@ def main(argv):
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
+    session_config.log_device_placement = True
 
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
