@@ -175,7 +175,7 @@ def main(argv):
 
     token_set = set(token_seq)
     allowed_words = None
-    if is_only_use_pretrained_embeddings and not restore_path:
+    if is_only_use_pretrained_embeddings:
         assert (glove_path is not None) or (word2vec_path is not None)
         if glove_path:
             logger.info('Loading GloVe words from {}'.format(glove_path))
@@ -430,7 +430,6 @@ def main(argv):
             adversary_optimizer_init_op = tf.variables_initializer(adversary_optimizer_vars)
 
         logger.info('Adversarial Batch Size: {}'.format(adversarial_batch_size))
-
 
         adversary_projection_steps = []
         for var in adversary_vars:
