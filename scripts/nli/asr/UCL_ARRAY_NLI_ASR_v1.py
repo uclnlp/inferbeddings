@@ -91,13 +91,13 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=16G,tmem=16G
+# #$ -l h_vmem=16G,tmem=16G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
 
-# export CUDA_DEVICE_ORDER=PCI_BUS_ID
-# export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
 
 sleep $SGE_TASK_ID
 sleep $SGE_TASK_ID
