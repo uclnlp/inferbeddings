@@ -97,12 +97,15 @@ def main(argv):
 export CUDA_​DEVICE_​ORDER=PCI_BUS_ID
 export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
 
+cd /home/pminervi/workspace/inferbeddings/
+/home/pminervi/anaconda3/bin/python setup.py install
+
 """.format(nb_jobs)
 
     print(header)
 
     for job_id, command_line in enumerate(sorted_command_lines, 1):
-        print('test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
+        print('sleep 1 10 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
 
 
 if __name__ == '__main__':
