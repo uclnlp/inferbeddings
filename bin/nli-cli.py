@@ -429,6 +429,9 @@ def main(argv):
             adversary_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
             adversary_optimizer_init_op = tf.variables_initializer(adversary_optimizer_vars)
 
+        logger.info('Adversarial Batch Size: {}'.format(adversarial_batch_size))
+
+
         adversary_projection_steps = []
         for var in adversary_vars:
             if is_normalize_embeddings:
@@ -437,8 +440,6 @@ def main(argv):
 
             assert adversarial_batch_size == var.get_shape()[0].value
             # sentence_len = var.get_shape()[1].value
-
-            logger.info('Adversarial Batch Size: {}'.format(adversarial_batch_size))
 
             def token_init_op(_var, _token_idx, target_idx):
                 token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)

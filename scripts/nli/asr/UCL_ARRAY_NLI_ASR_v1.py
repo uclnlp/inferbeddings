@@ -91,13 +91,17 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=8G,tmem=8G
+#$ -l h_vmem=16G,tmem=16G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
 
-export CUDA_​DEVICE_​ORDER=PCI_BUS_ID
-export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
+# export CUDA_DEVICE_ORDER=PCI_BUS_ID
+# export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
+
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
+sleep $SGE_TASK_ID
 
 cd /home/pminervi/workspace/inferbeddings/
 /home/pminervi/anaconda3/bin/python setup.py install
@@ -107,7 +111,7 @@ cd /home/pminervi/workspace/inferbeddings/
     print(header)
 
     for job_id, command_line in enumerate(sorted_command_lines, 1):
-        print('sleep 10 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
+        print('sleep 5 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
 
 
 if __name__ == '__main__':
