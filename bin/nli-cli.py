@@ -175,7 +175,7 @@ def main(argv):
 
     token_set = set(token_seq)
     allowed_words = None
-    if is_only_use_pretrained_embeddings:
+    if is_only_use_pretrained_embeddings and not restore_path:
         assert (glove_path is not None) or (word2vec_path is not None)
         if glove_path:
             logger.info('Loading GloVe words from {}'.format(glove_path))
@@ -223,7 +223,8 @@ def main(argv):
     optimizer = optimizer_class(learning_rate=learning_rate)
 
     args = dict(has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
-                bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx, max_len=max_len)
+                bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
+                max_len=max_len)
 
     train_dataset = util.instances_to_dataset(train_is, token_to_index, label_to_index, **args)
     dev_dataset = util.instances_to_dataset(dev_is, token_to_index, label_to_index, **args)
@@ -255,14 +256,15 @@ def main(argv):
     nb_special_tokens = vocab_size - nb_words
 
     token_to_embedding = dict()
-    if glove_path:
-        logger.info('Loading GloVe word embeddings from {}'.format(glove_path))
-        assert os.path.isfile(glove_path)
-        token_to_embedding = load_glove(glove_path, token_set)
-    elif word2vec_path:
-        logger.info('Loading word2vec word embeddings from {}'.format(word2vec_path))
-        assert os.path.isfile(word2vec_path)
-        token_to_embedding = load_word2vec(word2vec_path, token_set)
+    if not restore_path:
+        if glove_path:
+            logger.info('Loading GloVe word embeddings from {}'.format(glove_path))
+            assert os.path.isfile(glove_path)
+            token_to_embedding = load_glove(glove_path, token_set)
+        elif word2vec_path:
+            logger.info('Loading word2vec word embeddings from {}'.format(word2vec_path))
+            assert os.path.isfile(word2vec_path)
+            token_to_embedding = load_word2vec(word2vec_path, token_set)
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
