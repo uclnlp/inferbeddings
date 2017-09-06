@@ -96,8 +96,8 @@ def main(argv):
 #$ -P gpu
 #$ -l gpu=1
 
-export CUDA_DEVICE_ORDER=PCI_BUS_ID
-export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
+# export CUDA_DEVICE_ORDER=PCI_BUS_ID
+# export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
 
 sleep $SGE_TASK_ID
 sleep $SGE_TASK_ID
