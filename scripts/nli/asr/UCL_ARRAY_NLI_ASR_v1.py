@@ -96,6 +96,10 @@ def main(argv):
 #$ -P gpu
 #$ -l gpu=1
 
+export LANG="en_US.utf8"
+export LANGUAGE="en_US:en"
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
 # export CUDA_DEVICE_ORDER=PCI_BUS_ID
 # export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
 

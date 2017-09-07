@@ -39,13 +39,14 @@ def to_cmd(c, _path=None):
               ' --model {}' \
               ' --similarity {}' \
               ' --margin {}' \
-              ' --embedding-size {}' \
+              ' --entity-embedding-size {}' \
+              ' --predicate-embedding-size {}' \
               ' --subsample-size {}' \
               ' {} {} --sar-weight {} --sar-similarity {}' \
               ''.format(_path, _path, _path, _path, _path,
                         c['clauses'], c['epochs'],
                         c['model'], c['similarity'],
-                        c['margin'], c['embedding_size'], c['subsample_size'],
+                        c['margin'], c['embedding_size'], c['embedding_size'] ** 2, c['subsample_size'],
                         loss_str, unit_cube_str, c['sar_weight'], c['sar_similarity'])
     return command
 
