@@ -22,9 +22,9 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '/home/pminervi/bin/apy {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+    command = '/home/pminervi/bin/xpy {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i normal ' \
-              '--nb-epochs 1000 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
+              '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
               '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {}' \
               ''.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'])
@@ -91,37 +91,15 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=16G,tmem=16G
+#$ -l h_vmem=32G,tmem=32G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
 
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
-export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-
-# export CUDA_DEVICE_ORDER=PCI_BUS_ID
-# export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
-
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
-sleep $SGE_TASK_ID
 
 cd /home/pminervi/workspace/inferbeddings/
-/home/pminervi/anaconda3/bin/python setup.py install
-/home/pminervi/anaconda3/bin/pip install -r requirements.txt --upgrade
-/home/pminervi/anaconda3/bin/pip install tensorflow-gpu --upgrade
 
 """.format(nb_jobs)
 
