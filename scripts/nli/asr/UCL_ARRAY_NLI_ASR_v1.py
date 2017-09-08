@@ -22,8 +22,8 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '/home/pminervi/bin/xpy {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
-              '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i normal ' \
+    command = '/home/pminervi/bin/xpy -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+              '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
               '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {}' \
               ''.format(_path, c['rule_id'], c['weight'],
@@ -91,7 +91,7 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=32G,tmem=32G
+#$ -l h_vmem=64G,tmem=64G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
