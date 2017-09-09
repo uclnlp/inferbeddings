@@ -53,7 +53,7 @@ def main(argv):
         adversarial_batch_size=[100],
         adversarial_sentence_length=[10],
         nb_adversary_epochs=[10],
-        memory_limit=[16]
+        memory_limit=[0]
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
