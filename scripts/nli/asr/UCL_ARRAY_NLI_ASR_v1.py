@@ -26,7 +26,7 @@ def to_cmd(c, idx, _path=None):
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
               '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} ' \
-              '--hard-save models/snli/dam_1/regularized/dam_{}'.format(_path, c['rule_id'], c['weight'],
+              '--hard-save models/snli/dam_1/regularized/dam_1_{}'.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
                         c['memory_limit'] * 1024 * 1024 * 1024, idx)
     return command
