@@ -76,6 +76,7 @@ def main(argv):
     argparser.add_argument('--semi-sort', '-S', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
+    argparser.add_argument('--hard-save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
@@ -142,6 +143,7 @@ def main(argv):
                 .format(is_only_use_pretrained_embeddings, is_train_special_token_embeddings, is_semi_sort))
 
     save_path = args.save
+    hard_save_path = args.hard_save
     restore_path = args.restore
 
     glove_path = args.glove
@@ -576,6 +578,10 @@ def main(argv):
                                     .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
 
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
+
+                if hard_save_path:
+                    hard_saved_path = saver.save(session, hard_save_path)
+                    logger.info('Model saved in file: {}'.format(hard_saved_path))
 
             if use_adversarial_training:
                 session.run([adversary_init_op, adversary_optimizer_init_op])

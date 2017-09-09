@@ -19,16 +19,16 @@ def summary(configuration):
     return '_'.join([('%s=%s' % (k, v)) for (k, v) in kvs])
 
 
-def to_cmd(c, _path=None):
+def to_cmd(c, idx, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
     command = '/home/pminervi/bin/xpy -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
-              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {}' \
-              ''.format(_path, c['rule_id'], c['weight'],
+              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} ' \
+              '--hard-save models/snli/dam_1/regularized/dam_{}'.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
-                        c['memory_limit'] * 1024 * 1024 * 1024)
+                        c['memory_limit'] * 1024 * 1024 * 1024, idx)
     return command
 
 
@@ -69,7 +69,7 @@ def main(argv):
     configurations = list(configurations)
 
     command_lines = set()
-    for cfg in configurations:
+    for idx, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
         completed = False
@@ -79,7 +79,7 @@ def main(argv):
                 completed = '### MICRO (test filtered)' in content
 
         if not completed:
-            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx, _path=args.path), logfile)
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
