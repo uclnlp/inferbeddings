@@ -96,6 +96,9 @@ def main(argv):
     argparser.add_argument('--report-loss', default=100, type=int,
                            help='Number of batches between loss reports')
 
+    argparser.add_argument('--memory-limit', default=None, type=int,
+                           help='The maximum area (in bytes) of address space which may be taken by the process.')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -157,6 +160,19 @@ def main(argv):
 
     report_interval = args.report
     report_loss_interval = args.report_loss
+
+    memory_limit = args.memory_limit
+
+    if memory_limit:
+        import resource
+
+        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+        logging.info('Current memory limit: {}, {}'.format(soft, hard))
+
+        resource.setrlimit(resource.RLIMIT_AS, (memory_limit, hard))
+
+        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+        logging.info('New memory limit: {}, {}'.format(soft, hard))
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
