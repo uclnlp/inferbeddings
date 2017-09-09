@@ -25,9 +25,10 @@ def to_cmd(c, _path=None):
     command = '/home/pminervi/bin/xpy -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
-              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {}' \
+              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {}' \
               ''.format(_path, c['rule_id'], c['weight'],
-                        c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'])
+                        c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
+                        c['memory_limit'] * 1024 * 1024 * 1024)
     return command
 
 
@@ -51,7 +52,8 @@ def main(argv):
         weight=[0.0, 0.001, 0.01,  0.1,  1.0, 10.0, 100.0, 1000.0],
         adversarial_batch_size=[100],
         adversarial_sentence_length=[10],
-        nb_adversary_epochs=[10]
+        nb_adversary_epochs=[10],
+        memory_limit=[16]
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
