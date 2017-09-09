@@ -169,7 +169,7 @@ def main(argv):
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         logging.info('Current memory limit: {}, {}'.format(soft, hard))
 
-        resource.setrlimit(resource.RLIMIT_AS, (memory_limit, hard))
+        resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
 
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         logging.info('New memory limit: {}, {}'.format(soft, hard))
