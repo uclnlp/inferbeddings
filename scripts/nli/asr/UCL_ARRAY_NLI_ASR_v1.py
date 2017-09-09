@@ -101,6 +101,8 @@ def main(argv):
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
+export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
+
 cd /home/pminervi/workspace/inferbeddings/
 
 """.format(nb_jobs)
