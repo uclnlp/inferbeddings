@@ -437,6 +437,10 @@ def main(argv):
                 adversary_loss += rule5_weight * tf.reduce_max(rule5_loss)
                 adversary_vars += rule5_vars
 
+            assert len(adversary_vars) > 0
+            for adversary_var in adversary_vars:
+                assert adversary_var.name.startswith('discriminator/adversary/rule')
+
         adversary_init_op = tf.variables_initializer(adversary_vars)
 
         adv_opt_scope_name = 'adversary_optimizer'
