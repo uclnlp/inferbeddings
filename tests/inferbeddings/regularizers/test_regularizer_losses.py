@@ -33,8 +33,8 @@ def test_losses():
 
     clauses = [parse_clause('p(X, Y) :- q(Y, X)'), parse_clause('r(X, Y) :- s(X, Y)')]
     loss = clauses_to_equality_loss('TransE', clauses, 'l2_sqr',
-                                    predicate_embedding_layer,
-                                    parser.predicate_to_index)
+                                    predicate_embedding_layer, parser.predicate_to_index,
+                                    entity_embedding_size=predicate_embedding_size)
 
     for i in range(32):
         optimizer = tf.train.AdagradOptimizer(0.1)

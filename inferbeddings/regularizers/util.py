@@ -2,9 +2,10 @@
 
 import tensorflow as tf
 
-from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer,\
-    DistMultEquivalentPredicateRegularizer,\
-    ComplExEquivalentPredicateRegularizer
+from inferbeddings.regularizers import TransEEquivalentPredicateRegularizer
+from inferbeddings.regularizers import DistMultEquivalentPredicateRegularizer
+from inferbeddings.regularizers import ComplExEquivalentPredicateRegularizer
+from inferbeddings.regularizers import BilinearEquivalentPredicateRegularizer
 
 import logging
 
@@ -19,12 +20,17 @@ def _model_name_to_regularizer_class(model_name):
         regularizer_class = DistMultEquivalentPredicateRegularizer
     elif model_name == 'ComplEx':
         regularizer_class = ComplExEquivalentPredicateRegularizer
+    elif model_name in {'RESCAL', 'Bilinear'}:
+        regularizer_class = BilinearEquivalentPredicateRegularizer
     return regularizer_class
 
 
-def clauses_to_equality_loss(model_name, clauses, similarity_name,
+def clauses_to_equality_loss(model_name,
+                             clauses,
+                             similarity_name,
                              predicate_embedding_layer,
-                             predicate_to_index):
+                             predicate_to_index,
+                             entity_embedding_size):
     loss = 0.0
 
     regularizer_class = _model_name_to_regularizer_class(model_name)
@@ -63,6 +69,7 @@ def clauses_to_equality_loss(model_name, clauses, similarity_name,
             body_predicate_embedding = tf.nn.embedding_lookup(predicate_embedding_layer, body_predicate_idx)
 
             regularizer = regularizer_class(x1=head_predicate_embedding, x2=body_predicate_embedding,
-                                            is_inverse=is_inverse, similarity_name=similarity_name)
+                                            is_inverse=is_inverse, similarity_name=similarity_name,
+                                            entity_embedding_size=entity_embedding_size)
             loss += regularizer()
     return loss

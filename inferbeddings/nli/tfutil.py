@@ -112,15 +112,17 @@ def intra_attention(sequence, reuse=False):
     return tf.concat(axis=2, values=[sequence, attended])
 
 
-def count_trainable_parameters():
+def count_trainable_parameters(var_list=None):
     """
     Count the number of trainable tensorflow parameters loaded in
     the current graph.
     """
     total_params = 0
-    for variable in tf.trainable_variables():
+    if var_list is None:
+        var_list = tf.trainable_variables()
+    for variable in var_list:
         variable_params = np.prod([1] + [dim.value for dim in variable.get_shape()])
-        logging.debug('{0} ({1}): {2} params'.format(variable.name, str(variable.get_shape()), variable_params))
+        logging.info('{0} ({1}): {2} params'.format(variable.name, str(variable.get_shape()), variable_params))
         total_params += variable_params
     return total_params
 

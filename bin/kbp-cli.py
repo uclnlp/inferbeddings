@@ -131,7 +131,8 @@ def train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed
         sar_loss = clauses_to_equality_loss(model_name=model_name, clauses=clauses,
                                             similarity_name=sar_similarity,
                                             predicate_embedding_layer=predicate_embedding_layer,
-                                            predicate_to_index=parser.predicate_to_index)
+                                            predicate_to_index=parser.predicate_to_index,
+                                            entity_embedding_size=entity_embedding_size)
         loss_function += sar_weight * sar_loss
 
     adversarial, ground_loss, clause_to_feed_dicts = None, None, None

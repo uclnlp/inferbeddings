@@ -18,16 +18,12 @@ def accuracy(session, dataset, name,
     p_vals, l_vals = [], []
 
     for e_batch_start, e_batch_end in eval_batches:
-
         feed_dict = {
             sentence1_ph: dataset['sentence1'][e_batch_start:e_batch_end],
             sentence1_length_ph: dataset['sentence1_length'][e_batch_start:e_batch_end],
-
             sentence2_ph: dataset['sentence2'][e_batch_start:e_batch_end],
             sentence2_length_ph: dataset['sentence2_length'][e_batch_start:e_batch_end],
-
             label_ph: dataset['label'][e_batch_start:e_batch_end],
-
             dropout_keep_prob_ph: 1.0
         }
 
@@ -48,3 +44,7 @@ def accuracy(session, dataset, name,
             name, acc * 100, acc_c * 100, acc_e * 100, acc_n * 100))
 
     return acc, acc_c, acc_e, acc_n
+
+
+def stats(values):
+    return '{0:.4f} ± {1:.4f}'.format(round(np.mean(values), 4), round(np.std(values), 4))

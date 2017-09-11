@@ -60,3 +60,19 @@ class ComplExEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
         similarity = similarities.get_function(self.similarity_name)
         loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
         return loss
+
+
+class BilinearEquivalentPredicateRegularizer(EquivalentPredicateRegularizer):
+    def __init__(self, entity_embedding_size, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entity_embedding_size = entity_embedding_size
+
+    def inverse(self, x):
+        embedding_matrix = tf.reshape(x, (-1, self.entity_embedding_size, self.entity_embedding_size))
+        transposed_embedding_matrix = tf.transpose(embedding_matrix, perm=[0, 2, 1])
+        return tf.reshape(transposed_embedding_matrix, (-1, self.entity_embedding_size ** 2))
+
+    def __call__(self):
+        similarity = similarities.get_function(self.similarity_name)
+        loss = - similarity(self.x1, self.inverse(self.x2) if self.is_inverse else self.x2, axis=-1)
+        return loss
