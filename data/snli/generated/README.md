@@ -1,4 +1,4 @@
-# Generating a new dataset
+# Generating new datasets
 
 ```bash
 $ ./tools/contradictions.py ../snli_1.0_dev.jsonl.gz > snli_1.0_contradictions_dev.json
