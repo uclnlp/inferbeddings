@@ -405,7 +405,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight
+    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight or rule6_weight or rule7_weight or rule8_weight
 
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
