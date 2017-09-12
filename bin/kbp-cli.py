@@ -790,11 +790,11 @@ def main(argv):
 
         if valid_sequences:
             assert len(valid_sequences) == len(pos_valid_triples)
-            assert set([(s, p, o) for (p, [s, o]) in valid_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
+            # assert set([(s, p, o) for (p, [s, o]) in valid_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
 
         if test_sequences:
             assert len(test_sequences) == len(pos_test_triples)
-            assert set([(s, p, o) for (p, [s, o]) in test_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
+            # assert set([(s, p, o) for (p, [s, o]) in test_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
 
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed,
