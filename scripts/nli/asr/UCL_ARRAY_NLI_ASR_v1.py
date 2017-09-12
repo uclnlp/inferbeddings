@@ -19,15 +19,16 @@ def summary(configuration):
     return '_'.join([('%s=%s' % (k, v)) for (k, v) in kvs])
 
 
-def to_cmd(c, _path=None):
+def to_cmd(c, idx, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '/home/pminervi/bin/xpy {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
-              '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i normal ' \
+    command = '/home/pminervi/bin/xpy -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+              '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
-              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {}' \
-              ''.format(_path, c['rule_id'], c['weight'],
-                        c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'])
+              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} ' \
+              '--hard-save models/snli/dam_1/regularized/dam_1_{}'.format(_path, c['rule_id'], c['weight'],
+                        c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
+                        c['memory_limit'] * 1024 * 1024 * 1024, idx)
     return command
 
 
@@ -47,11 +48,12 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        rule_id=[0, 1, 2, 3, 4, 5],
+        rule_id=[0, 1, 2, 3, 4, 5, 6, 7, 8],
         weight=[0.0, 0.001, 0.01,  0.1,  1.0, 10.0, 100.0, 1000.0],
         adversarial_batch_size=[100],
         adversarial_sentence_length=[10],
-        nb_adversary_epochs=[10]
+        nb_adversary_epochs=[10],
+        memory_limit=[0]
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
@@ -67,7 +69,7 @@ def main(argv):
     configurations = list(configurations)
 
     command_lines = set()
-    for cfg in configurations:
+    for idx, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
         completed = False
@@ -77,7 +79,7 @@ def main(argv):
                 completed = '### MICRO (test filtered)' in content
 
         if not completed:
-            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, _path=args.path), logfile)
+            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx, _path=args.path), logfile)
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
@@ -91,13 +93,15 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=32G,tmem=32G
+#$ -l h_vmem=62G,tmem=62G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
 
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
+
+export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
 
 cd /home/pminervi/workspace/inferbeddings/
 

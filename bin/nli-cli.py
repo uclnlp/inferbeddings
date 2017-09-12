@@ -76,6 +76,7 @@ def main(argv):
     argparser.add_argument('--semi-sort', '-S', action='store_true')
 
     argparser.add_argument('--save', action='store', type=str, default=None)
+    argparser.add_argument('--hard-save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
@@ -87,6 +88,9 @@ def main(argv):
     argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
     argparser.add_argument('--rule4-weight', '-4', action='store', type=float, default=None)
     argparser.add_argument('--rule5-weight', '-5', action='store', type=float, default=None)
+    argparser.add_argument('--rule6-weight', '-6', action='store', type=float, default=None)
+    argparser.add_argument('--rule7-weight', '-7', action='store', type=float, default=None)
+    argparser.add_argument('--rule8-weight', '-8', action='store', type=float, default=None)
 
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-sentence-length', '-L', action='store', type=int, default=10)
@@ -95,6 +99,9 @@ def main(argv):
                            help='Number of batches between performance reports')
     argparser.add_argument('--report-loss', default=100, type=int,
                            help='Number of batches between loss reports')
+
+    argparser.add_argument('--memory-limit', default=None, type=int,
+                           help='The maximum area (in bytes) of address space which may be taken by the process.')
 
     args = argparser.parse_args(argv)
 
@@ -139,6 +146,7 @@ def main(argv):
                 .format(is_only_use_pretrained_embeddings, is_train_special_token_embeddings, is_semi_sort))
 
     save_path = args.save
+    hard_save_path = args.hard_save
     restore_path = args.restore
 
     glove_path = args.glove
@@ -151,12 +159,28 @@ def main(argv):
     rule3_weight = args.rule3_weight
     rule4_weight = args.rule4_weight
     rule5_weight = args.rule5_weight
+    rule6_weight = args.rule6_weight
+    rule7_weight = args.rule7_weight
+    rule8_weight = args.rule8_weight
 
     adversarial_batch_size = args.adversarial_batch_size
     adversarial_sentence_length = args.adversarial_sentence_length
 
     report_interval = args.report
     report_loss_interval = args.report_loss
+
+    memory_limit = args.memory_limit
+
+    if memory_limit:
+        import resource
+
+        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+        logging.info('Current memory limit: {}, {}'.format(soft, hard))
+
+        resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+
+        soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+        logging.info('New memory limit: {}, {}'.format(soft, hard))
 
     np.random.seed(seed)
     random_state = np.random.RandomState(seed)
@@ -381,7 +405,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight
+    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight or rule6_weight or rule7_weight or rule8_weight
 
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
@@ -418,6 +442,22 @@ def main(argv):
                 rule5_loss, rule5_vars = adversarial.rule5_loss()
                 adversary_loss += rule5_weight * tf.reduce_max(rule5_loss)
                 adversary_vars += rule5_vars
+            if rule6_weight:
+                rule6_loss, rule6_vars = adversarial.rule6_loss()
+                adversary_loss += rule6_weight * tf.reduce_max(rule6_loss)
+                adversary_vars += rule6_vars
+            if rule7_weight:
+                rule7_loss, rule7_vars = adversarial.rule7_loss()
+                adversary_loss += rule7_weight * tf.reduce_max(rule7_loss)
+                adversary_vars += rule7_vars
+            if rule8_weight:
+                rule8_loss, rule8_vars = adversarial.rule8_loss()
+                adversary_loss += rule8_weight * tf.reduce_max(rule8_loss)
+                adversary_vars += rule8_vars
+
+            assert len(adversary_vars) > 0
+            for adversary_var in adversary_vars:
+                assert adversary_var.name.startswith('discriminator/adversary/rule')
 
         adversary_init_op = tf.variables_initializer(adversary_vars)
 
@@ -560,6 +600,10 @@ def main(argv):
                                     .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
 
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
+
+                if hard_save_path:
+                    hard_saved_path = saver.save(session, hard_save_path)
+                    logger.info('Model saved in file: {}'.format(hard_saved_path))
 
             if use_adversarial_training:
                 session.run([adversary_init_op, adversary_optimizer_init_op])
