@@ -77,7 +77,7 @@ def main(argv):
         sar_similarity=['dot', 'l2_sqr'],
         subsample_size=[0.1, 0.3, 0.5, 0.7, 0.9, 1],
         loss=['hinge', 'pairwise_hinge'],
-        clauses=['clauses_equivalencies.pl', 'clauses_B=100_C=0.8.pl']
+        clauses=['clauses_equivalencies.pl']
     )
 
     configurations = cartesian_product(hyperparameters_space_1)
