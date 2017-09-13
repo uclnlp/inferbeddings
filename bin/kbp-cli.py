@@ -641,10 +641,15 @@ def main(argv):
     pos_test_triples, neg_test_triples = read_triples(test_path) if test_path else (None, None)
 
     if pos_valid_triples is not None:
-        assert set(pos_train_triples) & set(pos_valid_triples) == set()
+        # print(len(set(pos_train_triples) & set(pos_valid_triples)))
+        # assert set(pos_train_triples) & set(pos_valid_triples) == set()
+        if len(set(pos_train_triples) & set(pos_valid_triples)) > 0:
+            logger.info('WARNING - potential overlap (t/v)')
 
     if pos_test_triples is not None:
-        assert set(pos_train_triples) & set(pos_test_triples) == set()
+        # assert set(pos_train_triples) & set(pos_test_triples) == set()
+        if len(set(pos_train_triples) & set(pos_test_triples)) > 0:
+            logger.info('WARNING - potential overlap (t/T)')
 
     if valid_neg_path:
         neg_valid_triples, _ = read_triples(valid_neg_path)
@@ -785,11 +790,11 @@ def main(argv):
 
         if valid_sequences:
             assert len(valid_sequences) == len(pos_valid_triples)
-            assert set([(s, p, o) for (p, [s, o]) in valid_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
+            # assert set([(s, p, o) for (p, [s, o]) in valid_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
 
         if test_sequences:
             assert len(test_sequences) == len(pos_test_triples)
-            assert set([(s, p, o) for (p, [s, o]) in test_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
+            # assert set([(s, p, o) for (p, [s, o]) in test_sequences]) & set([(s, p, o) for (p, [s, o]) in train_sequences]) == set()
 
     with tf.Session(config=sess_config) as session:
         scoring_function, objects = train(session, train_sequences, nb_entities, nb_predicates, nb_batches, seed,

@@ -88,6 +88,9 @@ def main(argv):
     argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
     argparser.add_argument('--rule4-weight', '-4', action='store', type=float, default=None)
     argparser.add_argument('--rule5-weight', '-5', action='store', type=float, default=None)
+    argparser.add_argument('--rule6-weight', '-6', action='store', type=float, default=None)
+    argparser.add_argument('--rule7-weight', '-7', action='store', type=float, default=None)
+    argparser.add_argument('--rule8-weight', '-8', action='store', type=float, default=None)
 
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-sentence-length', '-L', action='store', type=int, default=10)
@@ -156,6 +159,9 @@ def main(argv):
     rule3_weight = args.rule3_weight
     rule4_weight = args.rule4_weight
     rule5_weight = args.rule5_weight
+    rule6_weight = args.rule6_weight
+    rule7_weight = args.rule7_weight
+    rule8_weight = args.rule8_weight
 
     adversarial_batch_size = args.adversarial_batch_size
     adversarial_sentence_length = args.adversarial_sentence_length
@@ -399,7 +405,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight
+    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight or rule6_weight or rule7_weight or rule8_weight
 
     if use_adversarial_training:
         adversary_scope_name = discriminator_scope_name
@@ -436,6 +442,18 @@ def main(argv):
                 rule5_loss, rule5_vars = adversarial.rule5_loss()
                 adversary_loss += rule5_weight * tf.reduce_max(rule5_loss)
                 adversary_vars += rule5_vars
+            if rule6_weight:
+                rule6_loss, rule6_vars = adversarial.rule6_loss()
+                adversary_loss += rule6_weight * tf.reduce_max(rule6_loss)
+                adversary_vars += rule6_vars
+            if rule7_weight:
+                rule7_loss, rule7_vars = adversarial.rule7_loss()
+                adversary_loss += rule7_weight * tf.reduce_max(rule7_loss)
+                adversary_vars += rule7_vars
+            if rule8_weight:
+                rule8_loss, rule8_vars = adversarial.rule8_loss()
+                adversary_loss += rule8_weight * tf.reduce_max(rule8_loss)
+                adversary_vars += rule8_vars
 
             assert len(adversary_vars) > 0
             for adversary_var in adversary_vars:
