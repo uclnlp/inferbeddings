@@ -101,8 +101,6 @@ def main(argv):
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
-export CUDA_VISIBLE_DEVICES=`/home/pminervi/workspace/inferbeddings/tools/least_used_gpu`
-
 cd /home/pminervi/workspace/inferbeddings/
 
 """.format(nb_jobs)
@@ -110,7 +108,7 @@ cd /home/pminervi/workspace/inferbeddings/
     print(header)
 
     for job_id, command_line in enumerate(sorted_command_lines, 1):
-        print('sleep 300 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
+        print('sleep 10 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
 
 
 if __name__ == '__main__':
