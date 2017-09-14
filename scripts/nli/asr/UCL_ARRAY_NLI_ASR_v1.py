@@ -110,7 +110,7 @@ cd /home/pminervi/workspace/inferbeddings/
     print(header)
 
     for job_id, command_line in enumerate(sorted_command_lines, 1):
-        print('sleep 5 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
+        print('sleep 300 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
 
 
 if __name__ == '__main__':
