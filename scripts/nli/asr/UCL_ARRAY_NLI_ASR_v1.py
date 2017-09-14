@@ -22,11 +22,11 @@ def summary(configuration):
 def to_cmd(c, idx, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '/home/pminervi/bin/xpy -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+    command = 'ssh $HOSTNAME /home/pminervi/bin/xpy-gpu -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
-              '-S --restore models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} ' \
-              '--hard-save models/snli/dam_1/regularized/dam_1_{}'.format(_path, c['rule_id'], c['weight'],
+              '-S --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} ' \
+              '--hard-save /home/pminervi/workspace/inferbeddings/models/snli/dam_1/regularized/dam_1_{}'.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
                         c['memory_limit'] * 1024 * 1024 * 1024, idx)
     return command
@@ -93,8 +93,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=62G,tmem=62G
-#$ -l h_rt=24:00:00
+#$ -l h_vmem=8G,tmem=8G
+#$ -l h_rt=12:00:00
 #$ -P gpu
 #$ -l gpu=1
 
