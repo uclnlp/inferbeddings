@@ -230,11 +230,13 @@ def main(argv):
     index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
     token_to_index = {token: index for index, token in index_to_token.items()}
 
-    entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+    entailment_idx, neutral_idx, contradiction_idx, none_idx = 0, 1, 2, 3
     label_to_index = {
         'entailment': entailment_idx,
         'neutral': neutral_idx,
-        'contradiction': contradiction_idx}
+        'contradiction': contradiction_idx,
+        'none': none_idx
+    }
 
     max_len = None
     optimizer_name_to_class = {
