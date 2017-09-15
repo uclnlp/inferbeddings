@@ -102,6 +102,7 @@ def main(argv):
 
     argparser.add_argument('--memory-limit', default=None, type=int,
                            help='The maximum area (in bytes) of address space which may be taken by the process.')
+    argparser.add_argument('--universum', '-U', action='store_true')
 
     args = argparser.parse_args(argv)
 
@@ -170,6 +171,7 @@ def main(argv):
     report_loss_interval = args.report_loss
 
     memory_limit = args.memory_limit
+    is_universum = args.universum
 
     if memory_limit:
         import resource
@@ -241,7 +243,8 @@ def main(argv):
     max_len = None
     optimizer_name_to_class = {
         'adagrad': tf.train.AdagradOptimizer,
-        'adam': tf.train.AdamOptimizer}
+        'adam': tf.train.AdamOptimizer
+    }
 
     optimizer_class = optimizer_name_to_class[optimizer_name]
     assert optimizer_class
@@ -326,6 +329,9 @@ def main(argv):
             sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
             sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
             representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+
+        if is_universum:
+            model_kwargs['nb_classes'] = 4
 
         if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
             model_kwargs['init_std_dev'] = std_dev
