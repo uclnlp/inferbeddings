@@ -73,7 +73,7 @@ def main(argv):
         embedding_size=[10, 20, 50, 100],
         unit_cube=[True, False],
         sar_weight=[0, .0001, .01, 1, 100], #, 10000, 1000000],
-        sar_similarity=['dot', 'l2_sqr'],
+        sar_similarity=['l2_sqr'],  # ['dot', 'l2_sqr'],
         subsample_size=[0.1, 0.3, 0.5, 0.7, 0.9, 1],
         loss=['hinge', 'pairwise_hinge'],
         clauses=['clauses_equivalencies.pl', 'clauses_equivalencies_notsame.pl']
