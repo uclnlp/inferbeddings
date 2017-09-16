@@ -66,13 +66,13 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        epochs=[1000],
+        epochs=[100, 1000],
         model=['DistMult', 'ComplEx'],
         similarity=['dot'],
         margin=[1],  # margin=[1, 2, 5, 10],
-        embedding_size=[10, 20, 30, 40, 50, 100],
+        embedding_size=[10, 20, 50, 100],
         unit_cube=[True, False],
-        sar_weight=[0, .0001, .01, 1, 100, 10000, 1000000],
+        sar_weight=[0, .0001, .01, 1, 100], #, 10000, 1000000],
         sar_similarity=['dot', 'l2_sqr'],
         subsample_size=[0.1, 0.3, 0.5, 0.7, 0.9, 1],
         loss=['hinge', 'pairwise_hinge'],
