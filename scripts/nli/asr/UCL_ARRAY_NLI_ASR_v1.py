@@ -76,7 +76,7 @@ def main(argv):
         if os.path.isfile(logfile):
             with open(logfile, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-                completed = '### MICRO (test filtered)' in content
+                completed = 'Epoch 20/1' in content
 
         if not completed:
             command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx, _path=args.path), logfile)
