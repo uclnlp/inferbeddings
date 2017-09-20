@@ -95,6 +95,9 @@ def main(argv):
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-sentence-length', '-L', action='store', type=int, default=10)
 
+    argparser.add_argument('--adversarial-pooling', '-P', default='max',
+                           choices=['sum', 'max', 'mean', 'logsumexp'])
+
     argparser.add_argument('--report', '-r', default=100, type=int,
                            help='Number of batches between performance reports')
     argparser.add_argument('--report-loss', default=100, type=int,
@@ -166,6 +169,14 @@ def main(argv):
 
     adversarial_batch_size = args.adversarial_batch_size
     adversarial_sentence_length = args.adversarial_sentence_length
+    adversarial_pooling_name = args.adversarial_pooling
+
+    name_to_adversarial_pooling = {
+        'sum': tf.reduce_sum,
+        'max': tf.reduce_max,
+        'mean': tf.reduce_mean,
+        'logsumexp': tf.reduce_logsumexp
+    }
 
     report_interval = args.report
     report_loss_interval = args.report_loss
@@ -430,37 +441,39 @@ def main(argv):
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
             adversary_vars = []
 
+            adversarial_pooling = name_to_adversarial_pooling[adversarial_pooling_name]
+
             if rule1_weight:
                 rule1_loss, rule1_vars = adversarial.rule1_loss()
-                adversary_loss += rule1_weight * tf.reduce_max(rule1_loss)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
                 adversary_vars += rule1_vars
             if rule2_weight:
                 rule2_loss, rule2_vars = adversarial.rule2_loss()
-                adversary_loss += rule2_weight * tf.reduce_max(rule2_loss)
+                adversary_loss += rule2_weight * adversarial_pooling(rule2_loss)
                 adversary_vars += rule2_vars
             if rule3_weight:
                 rule3_loss, rule3_vars = adversarial.rule3_loss()
-                adversary_loss += rule3_weight * tf.reduce_max(rule3_loss)
+                adversary_loss += rule3_weight * adversarial_pooling(rule3_loss)
                 adversary_vars += rule3_vars
             if rule4_weight:
                 rule4_loss, rule4_vars = adversarial.rule4_loss()
-                adversary_loss += rule4_weight * tf.reduce_max(rule4_loss)
+                adversary_loss += rule4_weight * adversarial_pooling(rule4_loss)
                 adversary_vars += rule4_vars
             if rule5_weight:
                 rule5_loss, rule5_vars = adversarial.rule5_loss()
-                adversary_loss += rule5_weight * tf.reduce_max(rule5_loss)
+                adversary_loss += rule5_weight * adversarial_pooling(rule5_loss)
                 adversary_vars += rule5_vars
             if rule6_weight:
                 rule6_loss, rule6_vars = adversarial.rule6_loss()
-                adversary_loss += rule6_weight * tf.reduce_max(rule6_loss)
+                adversary_loss += rule6_weight * adversarial_pooling(rule6_loss)
                 adversary_vars += rule6_vars
             if rule7_weight:
                 rule7_loss, rule7_vars = adversarial.rule7_loss()
-                adversary_loss += rule7_weight * tf.reduce_max(rule7_loss)
+                adversary_loss += rule7_weight * adversarial_pooling(rule7_loss)
                 adversary_vars += rule7_vars
             if rule8_weight:
                 rule8_loss, rule8_vars = adversarial.rule8_loss()
-                adversary_loss += rule8_weight * tf.reduce_max(rule8_loss)
+                adversary_loss += rule8_weight * adversarial_pooling(rule8_loss)
                 adversary_vars += rule8_vars
 
             assert len(adversary_vars) > 0
