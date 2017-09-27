@@ -274,3 +274,46 @@ class AdversarialSets:
 
         loss = tf.nn.relu(body_score - head_score)
         return loss, {sequence1, sequence2}
+
+    def rule9_loss(self):
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='rule9_sequence1')
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence2 = self._get_sequence(name='rule9_sequence2')
+
+        # S12 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence12 = tf.concat(values=[sequence1, sequence2], axis=1)
+
+        probability_s12_entails_s1 = self._probability(sequence12, sequence1, self.entailment_idx)
+        probability_s12_entails_s2 = self._probability(sequence12, sequence2, self.entailment_idx)
+
+        loss = tf.nn.relu(0.5 - probability_s12_entails_s1) + tf.nn.relu(0.5 - probability_s12_entails_s2)
+        return loss, {sequence1, sequence2}
+
+    def rule10_loss(self):
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='rule10_sequence1')
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence2 = self._get_sequence(name='rule10_sequence2')
+
+        # S12 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence12 = tf.concat(values=[sequence1, sequence2], axis=1)
+
+        probability_s12_entails_s1 = self._probability(sequence12, sequence1, self.entailment_idx)
+        probability_s12_entails_s2 = self._probability(sequence12, sequence2, self.entailment_idx)
+
+        probability_s12_neutral_s1 = self._probability(sequence12, sequence1, self.neutral_idx)
+        probability_s12_neutral_s2 = self._probability(sequence12, sequence2, self.neutral_idx)
+
+        probability_s12_contradicts_s1 = self._probability(sequence12, sequence1, self.contradiction_idx)
+        probability_s12_contradicts_s2 = self._probability(sequence12, sequence2, self.contradiction_idx)
+
+        loss = tf.nn.relu(probability_s12_neutral_s1 - probability_s12_entails_s1) +\
+            tf.nn.relu(probability_s12_neutral_s2 - probability_s12_entails_s2) +\
+            tf.nn.relu(probability_s12_contradicts_s1 - probability_s12_entails_s1) +\
+            tf.nn.relu(probability_s12_contradicts_s2 - probability_s12_entails_s2)
+
+        return loss, {sequence1, sequence2}
+
+
+
