@@ -97,6 +97,8 @@ def main(argv):
 
     argparser.add_argument('--adversarial-pooling', '-P', default='max',
                            choices=['sum', 'max', 'mean', 'logsumexp'])
+    argparser.add_argument('--adversarial-smart-init', '-I', action='store_true',
+                           default=False, help='Initialize sentence embeddings with actual word embeddings')
 
     argparser.add_argument('--report', '-r', default=100, type=int,
                            help='Number of batches between performance reports')
@@ -170,6 +172,7 @@ def main(argv):
     adversarial_batch_size = args.adversarial_batch_size
     adversarial_sentence_length = args.adversarial_sentence_length
     adversarial_pooling_name = args.adversarial_pooling
+    adversarial_smart_init = args.adversarial_smart_init
 
     name_to_adversarial_pooling = {
         'sum': tf.reduce_sum,
@@ -583,7 +586,8 @@ def main(argv):
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
                         sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
-                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob}
+                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob
+                    }
 
                     _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
 

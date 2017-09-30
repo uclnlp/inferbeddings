@@ -23,9 +23,14 @@ class AdversarialSets:
         self.neutral_idx = neutral_idx
 
     def _get_sequence(self, name):
+        """
+        Utility function.
+
+        :param name: Name of the Variable
+        :return: tf.Variable with shape [batch size, sequence length, embedding size]
+        """
         with tf.variable_scope(self.scope_name):
-            res = tf.get_variable(name=name,
-                                  shape=[self.batch_size, self.sequence_length, self.embedding_size],
+            res = tf.get_variable(name=name, shape=[self.batch_size, self.sequence_length, self.embedding_size],
                                   initializer=tf.contrib.layers.xavier_initializer())
         return res
 
