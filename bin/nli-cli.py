@@ -633,6 +633,22 @@ def main(argv):
             if use_adversarial_training:
                 session.run([adversary_init_op, adversary_optimizer_init_op])
 
+                if adversarial_smart_init:
+                    _token_indices = np.array(sorted(index_to_token.keys()))
+
+                    for a_var in adversary_vars:
+                        # Create a [batch size, sentence length, embedding size] NumPy tensor of sentence embeddings
+                        a_word_idx = _token_indices[
+                            random_state.randint(low=0, high=len(_token_indices),
+                                                 size=[adversarial_batch_size, adversarial_sentence_length])]
+                        np_embedding_layer = session.run(embedding_layer)
+                        np_adversarial_embeddings = np_embedding_layer[a_word_idx]
+                        assert np_adversarial_embeddings.shape == (adversarial_batch_size, adversarial_sentence_length,
+                                                                   embedding_size)
+
+                        assign_op = a_var.assign(np_adversarial_embeddings)
+                        session.run(assign_op)
+
                 for a_epoch in range(1, nb_adversary_epochs + 1):
                     adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
                     _, adversary_loss_value = session.run([adversary_training_step, adversary_loss],
