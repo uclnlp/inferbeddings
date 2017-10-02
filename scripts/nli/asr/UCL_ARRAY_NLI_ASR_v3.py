@@ -50,11 +50,11 @@ def main(argv):
     hyperparameters_space_1 = dict(
         rule_id=[0, 1, 2, 3, 4, 5, 6, 7, 8],
         weight=[0.0, 0.001, 0.01,  0.1,  1.0, 10.0, 100.0, 1000.0],
-        adversarial_batch_size=[100],
+        adversarial_batch_size=[1000],
         adversarial_sentence_length=[10],
         nb_adversary_epochs=[10],
         memory_limit=[0],
-        adversarial_pooling=['sum', 'max', 'mean', 'logsumexp']
+        adversarial_pooling=['sum', 'max']  # ['sum', 'max', 'mean', 'logsumexp']
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
