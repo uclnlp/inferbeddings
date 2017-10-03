@@ -483,6 +483,11 @@ def main(argv):
             for adversary_var in adversary_vars:
                 assert adversary_var.name.startswith('discriminator/adversary/rule')
 
+            adversary_var_to_assign_op = dict()
+            adversary_var_value_ph = tf.placeholder(dtype=tf.float32, shape=[None, None, None], name='adversary_var_value')
+            for a_var in adversary_vars:
+                adversary_var_to_assign_op[a_var] = a_var.assign(adversary_var_value_ph)
+
         adversary_init_op = tf.variables_initializer(adversary_vars)
 
         adv_opt_scope_name = 'adversary_optimizer'
@@ -646,8 +651,11 @@ def main(argv):
                         assert np_adversarial_embeddings.shape == (adversarial_batch_size, adversarial_sentence_length,
                                                                    embedding_size)
 
-                        assign_op = a_var.assign(np_adversarial_embeddings)
-                        session.run(assign_op)
+                        assert a_var in adversary_var_to_assign_op
+                        assign_op = adversary_var_to_assign_op[a_var]
+
+                        logger.info('Clever initialization of the adversarial embeddings ..')
+                        session.run(assign_op, feed_dict={adversary_var_value_ph: np_adversarial_embeddings})
 
                 for a_epoch in range(1, nb_adversary_epochs + 1):
                     adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
