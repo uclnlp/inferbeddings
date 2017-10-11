@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-'''
-Tensorflow Implementation of the Scaled ELU function and Dropout
-'''
-
 from __future__ import absolute_import, division, print_function
 import numbers
 from tensorflow.contrib import layers
@@ -24,7 +20,7 @@ def selu(x):
     with ops.name_scope('elu') as scope:
         alpha = 1.6732632423543772848170429916717
         scale = 1.0507009873554804934193349852946
-        return scale*tf.where(x>=0.0, x, alpha*tf.nn.elu(x))
+        return scale*tf.where(x >= 0.0, x, alpha*tf.nn.elu(x))
 
 
 # (3) initialize weights with stddev sqrt(1/n)
@@ -33,7 +29,7 @@ initializer = layers.variance_scaling_initializer(factor=1.0, mode='FAN_IN')
 
 
 # (4) use this dropout
-def dropout_selu(x, rate, alpha= -1.7580993408473766, fixedPointMean=0.0, fixedPointVar=1.0,
+def dropout_selu(x, rate, alpha=-1.7580993408473766, fixedPointMean=0.0, fixedPointVar=1.0,
                  noise_shape=None, seed=None, name=None, training=False):
     """Dropout to a value with rescaling."""
 

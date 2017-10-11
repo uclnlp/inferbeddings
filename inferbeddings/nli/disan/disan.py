@@ -14,19 +14,6 @@ VERY_NEGATIVE_NUMBER = -VERY_BIG_NUMBER
 def disan(rep_tensor, rep_mask, scope=None,
           keep_prob=1., is_train=None, wd=0., activation='elu',
           tensor_dict=None, name=''):
-    """
-
-    :param rep_tensor:
-    :param rep_mask:
-    :param scope:
-    :param keep_prob:
-    :param is_train:
-    :param wd:
-    :param activation:
-    :param tensor_dict:
-    :param name:
-    :return:
-    """
     with tf.variable_scope(scope or 'DiSAN'):
         with tf.variable_scope('ct_attn'):
             fw_res = directional_attention_with_dense(
@@ -185,7 +172,7 @@ def linear(args, output_size, bias, bias_start=0.0, scope=None, squeeze=False, w
         flat_args = [tf.cond(is_train, lambda: tf.nn.dropout(arg, input_keep_prob), lambda: arg)# for dense layer [(-1, d)]
                      for arg in flat_args]
     flat_out = _linear(flat_args, output_size, bias, bias_start=bias_start, scope=scope) # dense
-    out = reconstruct(flat_out, args[0], 1) # ()
+    out = reconstruct(flat_out, args[0], 1)
     if squeeze:
         out = tf.squeeze(out, [len(args[0].get_shape().as_list())-1])
 
