@@ -207,46 +207,46 @@ def main(argv):
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_is), len(dev_is), len(test_is)))
     all_is = train_is + dev_is + test_is
 
-    # Create a sequence of tokens containing all sentences in the dataset
-    token_seq = []
-    for instance in all_is:
-        token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
-
-    token_set = set(token_seq)
-    allowed_words = None
-    if is_only_use_pretrained_embeddings:
-        assert (glove_path is not None) or (word2vec_path is not None)
-        if glove_path:
-            logger.info('Loading GloVe words from {}'.format(glove_path))
-            assert os.path.isfile(glove_path)
-            allowed_words = load_glove_words(path=glove_path, words=token_set)
-        elif word2vec_path:
-            logger.info('Loading word2vec words from {}'.format(word2vec_path))
-            assert os.path.isfile(word2vec_path)
-            allowed_words = load_word2vec_words(path=word2vec_path, words=token_set)
-        logger.info('Number of allowed words: {}'.format(len(allowed_words)))
-
-    # Count the number of occurrences of each token
-    token_counts = dict()
-    for token in token_seq:
-        if (allowed_words is None) or (token in allowed_words):
-            if token not in token_counts:
-                token_counts[token] = 0
-            token_counts[token] += 1
-
-    # Sort the tokens according to their frequency and lexicographic ordering
-    sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
-
     # Enumeration of tokens start at index=3:
     # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
     bos_idx, eos_idx, unk_idx = 1, 2, 3
     start_idx = 1 + (1 if has_bos else 0) + (1 if has_eos else 0) + (1 if has_unk else 0)
 
-    if restore_path:
+    if not restore_path:
+        # Create a sequence of tokens containing all sentences in the dataset
+        token_seq = []
+        for instance in all_is:
+            token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
+
+        token_set = set(token_seq)
+        allowed_words = None
+        if is_only_use_pretrained_embeddings:
+            assert (glove_path is not None) or (word2vec_path is not None)
+            if glove_path:
+                logger.info('Loading GloVe words from {}'.format(glove_path))
+                assert os.path.isfile(glove_path)
+                allowed_words = load_glove_words(path=glove_path, words=token_set)
+            elif word2vec_path:
+                logger.info('Loading word2vec words from {}'.format(word2vec_path))
+                assert os.path.isfile(word2vec_path)
+                allowed_words = load_word2vec_words(path=word2vec_path, words=token_set)
+            logger.info('Number of allowed words: {}'.format(len(allowed_words)))
+
+        # Count the number of occurrences of each token
+        token_counts = dict()
+        for token in token_seq:
+            if (allowed_words is None) or (token in allowed_words):
+                if token not in token_counts:
+                    token_counts[token] = 0
+                token_counts[token] += 1
+
+        # Sort the tokens according to their frequency and lexicographic ordering
+        sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
+
+        index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
+    else:
         with open('{}/index_to_token.p'.format(save_path), 'rb') as f:
             index_to_token = pickle.load(f)
-    else:
-        index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
 
     token_to_index = {token: index for index, token in index_to_token.items()}
 
