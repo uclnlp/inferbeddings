@@ -6,6 +6,8 @@ import argparse
 import os
 import sys
 
+import pickle
+
 import numpy as np
 import tensorflow as tf
 
@@ -189,12 +191,9 @@ def main(argv):
 
     if memory_limit:
         import resource
-
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         logging.info('Current memory limit: {}, {}'.format(soft, hard))
-
         resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
-
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         logging.info('New memory limit: {}, {}'.format(soft, hard))
 
@@ -243,7 +242,12 @@ def main(argv):
     bos_idx, eos_idx, unk_idx = 1, 2, 3
     start_idx = 1 + (1 if has_bos else 0) + (1 if has_eos else 0) + (1 if has_unk else 0)
 
-    index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
+    if restore_path:
+        with open('{}/index_to_token.p'.format(save_path), 'rb') as f:
+            index_to_token = pickle.load(f)
+    else:
+        index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
+
     token_to_index = {token: index for index, token in index_to_token.items()}
 
     entailment_idx, neutral_idx, contradiction_idx, none_idx = 0, 1, 2, 3
@@ -251,8 +255,10 @@ def main(argv):
         'entailment': entailment_idx,
         'neutral': neutral_idx,
         'contradiction': contradiction_idx,
-        'none': none_idx
     }
+
+    if is_universum:
+        label_to_index['none'] = none_idx
 
     max_len = None
     optimizer_name_to_class = {
@@ -275,10 +281,8 @@ def main(argv):
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
-
     sentence2 = train_dataset['sentence2']
     sentence2_length = train_dataset['sentence2_length']
-
     label = train_dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -623,6 +627,9 @@ def main(argv):
                             best_dev_acc, best_test_acc = dev_acc, test_acc
 
                             if save_path:
+                                with open('{}/index_to_token.p'.format(save_path), 'wb') as f:
+                                    pickle.dump(index_to_token, f)
+
                                 saved_path = saver.save(session, save_path)
                                 logger.info('Model saved in file: {}'.format(saved_path))
 
@@ -632,6 +639,9 @@ def main(argv):
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
                 if hard_save_path:
+                    with open('{}/index_to_token.p'.format(hard_save_path), 'wb') as f:
+                        pickle.dump(index_to_token, f)
+
                     hard_saved_path = saver.save(session, hard_save_path)
                     logger.info('Model saved in file: {}'.format(hard_saved_path))
 
