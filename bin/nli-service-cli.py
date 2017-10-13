@@ -65,14 +65,17 @@ def main(argv):
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
-                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'esim1'])
+                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
 
     argparser.add_argument('--embedding-size', '-e', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', '-r', action='store', type=int, default=200)
 
+    argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
+    argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
+    argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
+    argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
+
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
-    argparser.add_argument('--use-masking', action='store_true')
-    argparser.add_argument('--prepend-null-token', action='store_true')
 
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
@@ -85,9 +88,12 @@ def main(argv):
     embedding_size = args.embedding_size
     representation_size = args.representation_size
 
+    has_bos = args.has_bos
+    has_eos = args.has_eos
+    has_unk = args.has_unk
+    is_lower = args.lower
+
     is_fixed_embeddings = args.fixed_embeddings
-    use_masking = args.use_masking
-    prepend_null_token = args.prepend_null_token
 
     restore_path = args.restore
 
