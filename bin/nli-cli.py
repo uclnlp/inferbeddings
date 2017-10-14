@@ -511,7 +511,6 @@ def main(argv):
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
             assert adversarial_batch_size == var.get_shape()[0].value
-            # sentence_len = var.get_shape()[1].value
 
             def token_init_op(_var, _token_idx, target_idx):
                 token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)

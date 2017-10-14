@@ -156,6 +156,10 @@ def main(argv):
                 sentence1 = request.form['sentence1'] if 'sentence1' in request.form else request.args.get('sentence1')
                 sentence2 = request.form['sentence2'] if 'sentence2' in request.form else request.args.get('sentence2')
 
+                if is_lower:
+                    sentence1 = sentence1.lower()
+                    sentence2 = sentence2.lower()
+
                 sentence1_tkns = tokenizer.tokenize(sentence1)
                 sentence2_tkns = tokenizer.tokenize(sentence2)
 
