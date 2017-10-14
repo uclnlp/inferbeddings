@@ -6,13 +6,20 @@ import argparse
 import os
 import sys
 
+import pickle
+
 import tensorflow as tf
+
+import nltk
 
 from flask import Flask, request, jsonify
 from flask.views import View
 
-from inferbeddings.nli.util import SNLI, count_trainable_parameters, train_tokenizer_on_instances
-from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, ESIMv1
+from inferbeddings.nli import ConditionalBiLSTM
+from inferbeddings.nli import FeedForwardDAM
+from inferbeddings.nli import FeedForwardDAMP
+from inferbeddings.nli import FeedForwardDAMS
+from inferbeddings.nli import ESIMv1
 
 from werkzeug.serving import WSGIRequestHandler, BaseWSGIServer
 
@@ -60,10 +67,6 @@ def main(argv):
 
     argparser = argparse.ArgumentParser('NLI Service', formatter_class=formatter)
 
-    argparser.add_argument('--train', '-t', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
-    argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
-    argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
-
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
 
@@ -81,8 +84,6 @@ def main(argv):
 
     args = argparser.parse_args(argv)
 
-    train_path, valid_path, test_path = args.train, args.valid, args.test
-
     model_name = args.model
 
     embedding_size = args.embedding_size
@@ -97,24 +98,17 @@ def main(argv):
 
     restore_path = args.restore
 
-    logger.debug('Reading corpus ..')
-    train_instances, dev_instances, test_instances = SNLI.generate(
-        train_path=train_path, valid_path=valid_path, test_path=test_path,
-        bos='<bos>', eos='<eos>')
+    assert restore_path is not None
 
-    logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_instances), len(dev_instances), len(test_instances)))
+    with open('{}/index_to_token.p'.format(restore_path), 'rb') as f:
+        index_to_token = pickle.load(f)
 
-    logger.debug('Parsing corpus ..')
+    token_to_index = {token: index for index, token in index_to_token.items()}
 
-    num_words = None
-    all_instances = train_instances + dev_instances + test_instances
-    qs_tokenizer, a_tokenizer = train_tokenizer_on_instances(all_instances, num_words=num_words)
+    bos_idx, eos_idx, unk_idx = 1, 2, 3
 
-    neutral_idx = a_tokenizer.word_index['neutral'] - 1
-    entailment_idx = a_tokenizer.word_index['entailment'] - 1
-    contradiction_idx = a_tokenizer.word_index['contradiction'] - 1
-
-    vocab_size = qs_tokenizer.num_words if qs_tokenizer.num_words else len(qs_tokenizer.word_index) + 1
+    entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+    vocab_size = max(token_to_index.values()) + 1
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
     sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
@@ -136,28 +130,23 @@ def main(argv):
         sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
         representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
-    model_class = None
-    if model_name == 'cbilstm':
-        model_class = ConditionalBiLSTM
-    elif model_name == 'ff-dam':
-        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
-        model_kwargs.update(ff_kwargs)
-        model_class = FeedForwardDAM
-    elif model_name == 'ff-damp':
-        ff_kwargs = dict(use_masking=use_masking, prepend_null_token=prepend_null_token)
-        model_kwargs.update(ff_kwargs)
-        model_class = FeedForwardDAMP
-    elif model_name == 'esim1':
-        ff_kwargs = dict(use_masking=use_masking)
-        model_kwargs.update(ff_kwargs)
-        model_class = ESIMv1
+    mode_name_to_class = {
+        'cbilstm': ConditionalBiLSTM,
+        'ff-dam': FeedForwardDAM,
+        'ff-damp': FeedForwardDAMP,
+        'ff-dams': FeedForwardDAMS,
+        'esim1': ESIMv1
+    }
+
+    model_class = mode_name_to_class[model_name]
 
     assert model_class is not None
     model = model_class(**model_kwargs)
 
+    tokenizer = nltk.tokenize.TreebankWordTokenizer()
+
     with tf.Session() as session:
         saver = tf.train.Saver()
-        logger.debug('Total parameters: {}'.format(count_trainable_parameters()))
         saver.restore(session, restore_path)
 
         class Service(View):
@@ -167,21 +156,38 @@ def main(argv):
                 sentence1 = request.form['sentence1'] if 'sentence1' in request.form else request.args.get('sentence1')
                 sentence2 = request.form['sentence2'] if 'sentence2' in request.form else request.args.get('sentence2')
 
-                sentence1 = '{} {} {}'.format('<bos>', sentence1, '<eos>')
-                sentence2 = '{} {} {}'.format('<bos>', sentence2, '<eos>')
+                sentence1_tkns = tokenizer.tokenize(sentence1)
+                sentence2_tkns = tokenizer.tokenize(sentence2)
 
-                sentence1_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence1]) for item in sublist]
-                sentence2_seq = [item for sublist in qs_tokenizer.texts_to_sequences([sentence2]) for item in sublist]
+                sentence1_ids = []
+                sentence2_ids = []
 
-                padded_sentence1_seq = sentence1_seq  # + ([0] * (51 - len(sentence1_seq)))
-                padded_sentence2_seq = sentence2_seq  # + ([0] * (53 - len(sentence2_seq)))
+                if has_bos:
+                    sentence1_ids += [bos_idx]
+                    sentence2_ids += [bos_idx]
+
+                for token in sentence1_tkns:
+                    if token in token_to_index:
+                        sentence1_ids += [token_to_index[token]]
+                    elif has_unk:
+                        sentence1_ids += [unk_idx]
+
+                for token in sentence2_tkns:
+                    if token in token_to_index:
+                        sentence2_ids += [token_to_index[token]]
+                    elif has_unk:
+                        sentence2_ids += [unk_idx]
+
+                if has_eos:
+                    sentence1_ids += [eos_idx]
+                    sentence2_ids += [eos_idx]
 
                 # Compute answer
                 feed_dict = {
-                    sentence1_ph: [padded_sentence1_seq],
-                    sentence2_ph: [padded_sentence2_seq],
-                    sentence1_length_ph: [len(sentence1_seq)],
-                    sentence2_length_ph: [len(sentence2_seq)],
+                    sentence1_ph: sentence1_ids,
+                    sentence2_ph: sentence2_ids,
+                    sentence1_length_ph: [len(sentence1_ids)],
+                    sentence2_length_ph: [len(sentence2_ids)],
                     dropout_keep_prob_ph: 1.0
                 }
 
