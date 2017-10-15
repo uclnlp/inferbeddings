@@ -1,16 +1,3 @@
-numpy
-tensorflow>=1.2
-scipy
-gensim>=2.0.0
-parsimonious>=0.7
-terminaltables>=2.0
-colorclass>=2.0
-pyDatalog
-scikit-learn
-nltk
+numpy tensorflow>=1.2 scipy gensim>=2.0.0 parsimonious>=0.7 terminaltables>=2.0 colorclass>=2.0 pyDatalog scikit-learn nltk flask
 
-pytest
-pytest-runner
-pytest-pep8
-pytest-xdist
-pytest-cov
+pytest pytest-runner pytest-pep8 pytest-xdist pytest-cov
