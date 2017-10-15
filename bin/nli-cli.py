@@ -245,7 +245,7 @@ def main(argv):
 
         index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
     else:
-        with open('{}/index_to_token.p'.format(restore_path), 'rb') as f:
+        with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
             index_to_token = pickle.load(f)
 
     token_to_index = {token: index for index, token in index_to_token.items()}
@@ -626,7 +626,7 @@ def main(argv):
                             best_dev_acc, best_test_acc = dev_acc, test_acc
 
                             if save_path:
-                                with open('{}/index_to_token.p'.format(save_path), 'wb') as f:
+                                with open('{}_index_to_token.p'.format(save_path), 'wb') as f:
                                     pickle.dump(index_to_token, f)
 
                                 saved_path = saver.save(session, save_path)
@@ -638,7 +638,7 @@ def main(argv):
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
                 if hard_save_path:
-                    with open('{}/index_to_token.p'.format(hard_save_path), 'wb') as f:
+                    with open('{}_index_to_token.p'.format(hard_save_path), 'wb') as f:
                         pickle.dump(index_to_token, f)
 
                     hard_saved_path = saver.save(session, hard_save_path)
