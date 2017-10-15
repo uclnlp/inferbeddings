@@ -78,8 +78,6 @@ def main(argv):
     argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
     argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
 
-    argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
-
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
@@ -94,13 +92,11 @@ def main(argv):
     has_unk = args.has_unk
     is_lower = args.lower
 
-    is_fixed_embeddings = args.fixed_embeddings
-
     restore_path = args.restore
 
     assert restore_path is not None
 
-    with open('{}/index_to_token.p'.format(restore_path), 'rb') as f:
+    with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
         index_to_token = pickle.load(f)
 
     token_to_index = {token: index for index, token in index_to_token.items()}
@@ -116,32 +112,36 @@ def main(argv):
     sentence1_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
     sentence2_length_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
 
-    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                      initializer=tf.contrib.layers.xavier_initializer(),
-                                      trainable=not is_fixed_embeddings)
-
-    sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
-    sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
-
     dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
-    model_kwargs = dict(
-        sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
-        sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
-        representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+    discriminator_scope_name = 'discriminator'
+    with tf.variable_scope(discriminator_scope_name):
 
-    mode_name_to_class = {
-        'cbilstm': ConditionalBiLSTM,
-        'ff-dam': FeedForwardDAM,
-        'ff-damp': FeedForwardDAMP,
-        'ff-dams': FeedForwardDAMS,
-        'esim1': ESIMv1
-    }
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size])
 
-    model_class = mode_name_to_class[model_name]
+        sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, sentence1_ph)
+        sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, sentence2_ph)
 
-    assert model_class is not None
-    model = model_class(**model_kwargs)
+        model_kwargs = dict(
+            sequence1=sentence1_embedding, sequence1_length=sentence1_length_ph,
+            sequence2=sentence2_embedding, sequence2_length=sentence2_length_ph,
+            representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+
+        mode_name_to_class = {
+            'cbilstm': ConditionalBiLSTM,
+            'ff-dam': FeedForwardDAM,
+            'ff-damp': FeedForwardDAMP,
+            'ff-dams': FeedForwardDAMS,
+            'esim1': ESIMv1
+        }
+
+        model_class = mode_name_to_class[model_name]
+
+        assert model_class is not None
+        model = model_class(**model_kwargs)
+
+    for var in tf.all_variables():
+        print(var)
 
     tokenizer = nltk.tokenize.TreebankWordTokenizer()
 

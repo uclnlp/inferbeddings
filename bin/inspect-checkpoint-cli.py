@@ -23,7 +23,7 @@ def main(argv):
 
     file_name = args.file_name
 
-    print_tensors_in_checkpoint_file(file_name=file_name)
+    print_tensors_in_checkpoint_file(file_name=file_name, tensor_name='', all_tensors=False)
 
 
 if __name__ == '__main__':
