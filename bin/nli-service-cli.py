@@ -78,7 +78,7 @@ def main(argv):
     argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
     argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
 
-    argparser.add_argument('--restore', action='store', type=str, default=None)
+    argparser.add_argument('--restore', '-R', action='store', type=str, default=None, required=True)
 
     args = argparser.parse_args(argv)
 
@@ -93,8 +93,6 @@ def main(argv):
     is_lower = args.lower
 
     restore_path = args.restore
-
-    assert restore_path is not None
 
     with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
         index_to_token = pickle.load(f)
@@ -188,8 +186,8 @@ def main(argv):
 
                 # Compute answer
                 feed_dict = {
-                    sentence1_ph: sentence1_ids,
-                    sentence2_ph: sentence2_ids,
+                    sentence1_ph: [sentence1_ids],
+                    sentence2_ph: [sentence2_ids],
                     sentence1_length_ph: [len(sentence1_ids)],
                     sentence2_length_ph: [len(sentence2_ids)],
                     dropout_keep_prob_ph: 1.0
