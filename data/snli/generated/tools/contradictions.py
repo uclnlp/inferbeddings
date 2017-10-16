@@ -6,9 +6,6 @@ import argparse
 import os
 import sys
 
-import numpy as np
-import tensorflow as tf
-
 import gzip
 import json
 
@@ -60,7 +57,7 @@ def main(argv):
                     'sentence2_binary_parse': sentence1_binary_parse
                 })
 
-            print(new_obj)
+            print(json.dumps(new_obj))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
