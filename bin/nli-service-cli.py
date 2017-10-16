@@ -165,9 +165,6 @@ def main(argv):
                 sentence1_tkns = tokenizer.tokenize(sentence1)
                 sentence2_tkns = tokenizer.tokenize(sentence2)
 
-                print(sentence1)
-                print(sentence1_tkns)
-
                 sentence1_ids = []
                 sentence2_ids = []
 
