@@ -24,7 +24,7 @@ def to_cmd(c, idx, _path=None):
         _path = '/home/pminervi/workspace/inferbeddings/'
     command = 'ssh $HOSTNAME /home/pminervi/bin/xpy-gpu -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
-              '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
+              '--nb-epochs 100 --has-bos --has-unk -p ' \
               '-S -I --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} -P {} ' \
               '--hard-save /home/pminervi/workspace/inferbeddings/models/snli/dam_1/regularized/dam_3_{}'.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
