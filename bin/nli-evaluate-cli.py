@@ -6,16 +6,16 @@ import argparse
 import os
 import sys
 
+import json
+import gzip
 import pickle
 
+import numpy as np
 import tensorflow as tf
 
 import nltk
 
-from flask import Flask, request, jsonify
-from flask.views import View
-
-from inferbeddings.nli import tfutil
+from inferbeddings.nli import util, tfutil
 
 from inferbeddings.nli import ConditionalBiLSTM
 from inferbeddings.nli import FeedForwardDAM
@@ -23,44 +23,10 @@ from inferbeddings.nli import FeedForwardDAMP
 from inferbeddings.nli import FeedForwardDAMS
 from inferbeddings.nli import ESIMv1
 
-from werkzeug.serving import WSGIRequestHandler, BaseWSGIServer
-
 import logging
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
-
-WSGIRequestHandler.protocol_version = "HTTP/1.1"
-BaseWSGIServer.protocol_version = "HTTP/1.1"
-
-app = Flask('nli-service')
-
-
-class InvalidAPIUsage(Exception):
-    """
-    Class used for handling error messages.
-    """
-    DEFAULT_STATUS_CODE = 400
-
-    def __init__(self, message, status_code=None, payload=None):
-        Exception.__init__(self)
-        self.message = message
-        self.status_code = self.DEFAULT_STATUS_CODE
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
-
-    def to_dict(self):
-        rv = dict(self.payload or ())
-        rv['message'] = self.message
-        return rv
-
-
-@app.errorhandler(InvalidAPIUsage)
-def handle_invalid_usage(error):
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
 
 
 def main(argv):
@@ -82,6 +48,9 @@ def main(argv):
 
     argparser.add_argument('--restore', '-R', action='store', type=str, default=None, required=True)
 
+    argparser.add_argument('--eval', action='store', default=None, type=str)
+    argparser.add_argument('--batch-size', '-b', action='store', default=32, type=int)
+
     args = argparser.parse_args(argv)
 
     model_name = args.model
@@ -96,6 +65,9 @@ def main(argv):
 
     restore_path = args.restore
 
+    eval_path = args.eval
+    batch_size = args.batch_size
+
     with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
         index_to_token = pickle.load(f)
 
@@ -106,6 +78,11 @@ def main(argv):
     bos_idx, eos_idx, unk_idx = 1, 2, 3
 
     entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+    label_to_index = {
+        'entailment': entailment_idx,
+        'neutral': neutral_idx,
+        'contradiction': contradiction_idx,
+    }
     vocab_size = max(token_to_index.values()) + 1
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -146,28 +123,36 @@ def main(argv):
         model = model_class(**model_kwargs)
 
         logits = model()
+        predictions_op = tf.argmax(logits, axis=1, name='predictions')
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
 
-    tokenizer = nltk.tokenize.TreebankWordTokenizer()
+    sentence1_all = []
+    sentence2_all = []
+    gold_label_all = []
 
-    with tf.Session() as session:
-        saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
-        saver.restore(session, restore_path)
+    with gzip.open(eval_path, 'rb') as f:
+        for line in f:
+            decoded_line = line.decode('utf-8')
 
-        class Service(View):
-            methods = ['GET', 'POST']
+            if is_lower:
+                decoded_line = decoded_line.lower()
 
-            def dispatch_request(self):
-                sentence1 = request.form['sentence1'] if 'sentence1' in request.form else request.args.get('sentence1')
-                sentence2 = request.form['sentence2'] if 'sentence2' in request.form else request.args.get('sentence2')
+            obj = json.loads(decoded_line)
 
-                if is_lower:
-                    sentence1 = sentence1.lower()
-                    sentence2 = sentence2.lower()
+            gold_label = obj['gold_label']
 
-                sentence1_tokens = tokenizer.tokenize(sentence1)
-                sentence2_tokens = tokenizer.tokenize(sentence2)
+            if gold_label in ['contradiction', 'entailment', 'neutral']:
+                gold_label_all += [label_to_index[gold_label]]
+
+                sentence1_parse = obj['sentence1_parse']
+                sentence2_parse = obj['sentence2_parse']
+
+                sentence1_tree = nltk.Tree.fromstring(sentence1_parse)
+                sentence2_tree = nltk.Tree.fromstring(sentence2_parse)
+
+                sentence1_tokens = sentence1_tree.leaves()
+                sentence2_tokens = sentence2_tree.leaves()
 
                 sentence1_ids = []
                 sentence2_ids = []
@@ -192,28 +177,44 @@ def main(argv):
                     sentence1_ids += [eos_idx]
                     sentence2_ids += [eos_idx]
 
-                # Compute answer
-                feed_dict = {
-                    sentence1_ph: [sentence1_ids],
-                    sentence2_ph: [sentence2_ids],
-                    sentence1_len_ph: [len(sentence1_ids)],
-                    sentence2_len_ph: [len(sentence2_ids)],
-                    dropout_keep_prob_ph: 1.0
-                }
+                sentence1_all += [sentence1_ids]
+                sentence2_all += [sentence2_ids]
 
-                predictions = session.run(tf.nn.softmax(logits), feed_dict=feed_dict)[0]
-                answer = {
-                    'neutral': str(predictions[neutral_idx]),
-                    'contradiction': str(predictions[contradiction_idx]),
-                    'entailment': str(predictions[entailment_idx])
-                }
+    sentence1_all_len = [len(s) for s in sentence1_all]
+    sentence2_all_len = [len(s) for s in sentence2_all]
 
-                return jsonify(answer)
+    np_sentence1 = util.pad_sequences(sequences=sentence1_all)
+    np_sentence2 = util.pad_sequences(sequences=sentence2_all)
 
-        app.add_url_rule('/v1/nli', view_func=Service.as_view('request'))
+    np_sentence1_len = np.array(sentence1_all_len)
+    np_sentence2_len = np.array(sentence2_all_len)
 
-        app.run(host='0.0.0.0', port=8889, debug=False)
+    gold_label = np.array(gold_label_all)
 
+    with tf.Session() as session:
+        saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
+        saver.restore(session, restore_path)
+
+        from inferbeddings.models.training.util import make_batches
+        nb_instances = gold_label.shape[0]
+        batches = make_batches(size=nb_instances, batch_size=batch_size)
+
+        predictions = []
+
+        for batch_idx, (batch_start, batch_end) in enumerate(batches):
+            feed_dict = {
+                sentence1_ph: np_sentence1[batch_start:batch_end],
+                sentence2_ph: np_sentence2[batch_start:batch_end],
+                sentence1_len_ph: np_sentence1_len[batch_start:batch_end],
+                sentence2_len_ph: np_sentence2_len[batch_start:batch_end],
+                dropout_keep_prob_ph: 1.0
+            }
+
+            _predictions = session.run(predictions_op, feed_dict=feed_dict)
+            predictions += _predictions.tolist()
+
+        matches = np.array(predictions) == gold_label
+        print(np.mean(matches))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
