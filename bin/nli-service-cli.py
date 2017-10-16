@@ -101,6 +101,8 @@ def main(argv):
 
     token_to_index = {token: index for index, token in index_to_token.items()}
 
+    # Enumeration of tokens start at index=3:
+    # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
     bos_idx, eos_idx, unk_idx = 1, 2, 3
 
     entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
@@ -145,10 +147,12 @@ def main(argv):
 
         logits = model()
 
+    discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
+
     tokenizer = nltk.tokenize.TreebankWordTokenizer()
 
     with tf.Session() as session:
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
         saver.restore(session, restore_path)
 
         class Service(View):
