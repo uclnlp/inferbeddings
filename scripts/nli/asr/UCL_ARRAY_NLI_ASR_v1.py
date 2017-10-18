@@ -49,7 +49,7 @@ def main(argv):
 
     hyperparameters_space_1 = dict(
         rule_id=[0, 1, 2, 3, 4, 5, 6, 7, 8],
-        weight=[0.0, 0.001, 0.01,  0.1,  1.0, 10.0, 100.0, 1000.0],
+        weight=[0.0, 0.0001, 0.01,  1.0, 100.0, 10000.0],
         adversarial_batch_size=[256],
         adversarial_sentence_length=[10],
         nb_adversary_epochs=[10],
@@ -68,7 +68,7 @@ def main(argv):
 
     configurations = list(configurations)
 
-    command_lines = set()
+    command_lines = []
     for idx, cfg in enumerate(configurations):
         logfile = to_logfile(cfg, path)
 
@@ -80,11 +80,9 @@ def main(argv):
 
         if not completed:
             command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx, _path=args.path), logfile)
-            command_lines |= {command_line}
+            command_lines += [command_line]
 
-    # Sort command lines and remove duplicates
-    sorted_command_lines = sorted(command_lines)
-    nb_jobs = len(sorted_command_lines)
+    nb_jobs = len(command_lines)
 
     header = """#!/bin/bash
 
@@ -109,7 +107,7 @@ cd /home/pminervi/workspace/inferbeddings/
 
     print(header)
 
-    for job_id, command_line in enumerate(sorted_command_lines, 1):
+    for job_id, command_line in enumerate(command_lines, 1):
         print('sleep 10 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
 
 
