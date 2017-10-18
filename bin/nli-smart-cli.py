@@ -17,7 +17,7 @@ from inferbeddings.models.training.util import make_batches
 from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
-from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
+from inferbeddings.nli.regularizers.base import contradiction_symmetry_l2
 from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3
 
 from inferbeddings.models.training import constraints
@@ -310,8 +310,8 @@ def main(argv):
         loss = tf.reduce_mean(losses)
 
         if rule0_weight:
-            loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
-                                                                      contradiction_idx=contradiction_idx)
+            loss += rule0_weight * contradiction_symmetry_l2(model_class, model_kwargs,
+                                                             contradiction_idx=contradiction_idx)
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
