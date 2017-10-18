@@ -17,7 +17,7 @@ from inferbeddings.models.training.util import make_batches
 from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
-from inferbeddings.nli.regularizers.base import contradiction_symmetry_l2
+from inferbeddings.nli.regularizers.base import contradiction_symmetry_l1, contradiction_symmetry_l2
 from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3
 
 from inferbeddings.models.training import constraints
@@ -82,7 +82,10 @@ def main(argv):
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
 
-    for i in range(0, 9):
+    argparser.add_argument('--rule00-weight', '--00', action='store', type=float, default=None)
+    argparser.add_argument('--rule01-weight', '--01', action='store', type=float, default=None)
+
+    for i in range(1, 9):
         argparser.add_argument('--rule{}-weight'.format(i), '-{}'.format(i), action='store', type=float, default=None)
 
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
@@ -138,7 +141,9 @@ def main(argv):
     glove_path = args.glove
 
     # Experimental RTE regularizers
-    rule0_weight = args.rule0_weight
+    rule00_weight = args.rule00_weight
+    rule01_weight = args.rule01_weight
+
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
     rule3_weight = args.rule3_weight
@@ -309,9 +314,17 @@ def main(argv):
         losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label_ph)
         loss = tf.reduce_mean(losses)
 
-        if rule0_weight:
-            loss += rule0_weight * contradiction_symmetry_l2(model_class, model_kwargs,
-                                                             contradiction_idx=contradiction_idx)
+        a_pooling_function = name_to_adversarial_pooling[adversarial_pooling_name]
+
+        if rule00_weight:
+            loss += rule00_weight * contradiction_symmetry_l2(model_class, model_kwargs,
+                                                              contradiction_idx=contradiction_idx,
+                                                              pooling_function=a_pooling_function)
+
+        if rule01_weight:
+            loss += rule01_weight * contradiction_symmetry_l1(model_class, model_kwargs,
+                                                              contradiction_idx=contradiction_idx,
+                                                              pooling_function=a_pooling_function)
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
