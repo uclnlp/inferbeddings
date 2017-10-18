@@ -483,6 +483,8 @@ def main(argv):
                 adversary_loss += rule8_weight * adversarial_pooling(rule8_loss)
                 adversary_vars += rule8_vars
 
+            loss += adversary_loss
+
             assert len(adversary_vars) > 0
             for adversary_var in adversary_vars:
                 assert adversary_var.name.startswith('discriminator/adversary/rule')

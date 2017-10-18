@@ -82,25 +82,11 @@ def main(argv):
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
 
-    argparser.add_argument('--rule0-weight', '-0', action='store', type=float, default=None)
-    argparser.add_argument('--rule1-weight', '-1', action='store', type=float, default=None)
-    argparser.add_argument('--rule2-weight', '-2', action='store', type=float, default=None)
-    argparser.add_argument('--rule3-weight', '-3', action='store', type=float, default=None)
-    argparser.add_argument('--rule4-weight', '-4', action='store', type=float, default=None)
-    argparser.add_argument('--rule5-weight', '-5', action='store', type=float, default=None)
-    argparser.add_argument('--rule6-weight', '-6', action='store', type=float, default=None)
-    argparser.add_argument('--rule7-weight', '-7', action='store', type=float, default=None)
-    argparser.add_argument('--rule8-weight', '-8', action='store', type=float, default=None)
+    for i in range(0, 9):
+        argparser.add_argument('--rule{}-weight'.format(i), '-{}'.format(i), action='store', type=float, default=None)
 
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
-    argparser.add_argument('--adversarial-sentence-length', '-L', action='store', type=int, default=None)
-
     argparser.add_argument('--adversarial-pooling', '-P', default='max', choices=['sum', 'max', 'mean', 'logsumexp'])
-
-    argparser.add_argument('--adversarial-smart-init', '-I', action='store_true',
-                           default=False, help='Initialize sentence embeddings with actual word embeddings')
-    argparser.add_argument('--adversarial-smart-init-2', '-J', action='store_true',
-                           default=False, help='Initialize sentence embeddings with actual sentence embeddings')
 
     argparser.add_argument('--report', '-r', default=100, type=int, help='Number of batches between performance reports')
     argparser.add_argument('--report-loss', default=100, type=int, help='Number of batches between loss reports')
@@ -164,11 +150,7 @@ def main(argv):
     rule8_weight = args.rule8_weight
 
     a_batch_size = args.adversarial_batch_size
-    a_sentence_length = args.adversarial_sentence_length
     adversarial_pooling_name = args.adversarial_pooling
-
-    adversarial_smart_init = args.adversarial_smart_init
-    adversarial_smart_init_2 = args.adversarial_smart_init_2
 
     name_to_adversarial_pooling = {
         'sum': tf.reduce_sum,
@@ -375,14 +357,10 @@ def main(argv):
         adversary_scope_name = discriminator_scope_name
         with tf.variable_scope(adversary_scope_name):
 
-            if a_sentence_length is None:
-                a_sentence_length = max(train_dataset['sentence1_length'].max(), train_dataset['sentence2_length'].max())
-
             adversarial = AdversarialSets3(model_class=model_class, model_kwargs=model_kwargs, scope_name='adversary',
                                            entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx)
 
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
-            adversary_vars = []
 
             adversarial_pooling = name_to_adversarial_pooling[adversarial_pooling_name]
             rule_id_to_placeholders = dict()
@@ -390,15 +368,19 @@ def main(argv):
             def f(rule_idx):
                 nb_sequences = adversarial.rule_nb_sequences(rule_idx)
                 a_args, rule_placeholders = [], []
+
                 for seq_id in range(nb_sequences):
                     a_sentence_ph = tf.placeholder(dtype=tf.int32, shape=[None, None],
                                                    name='a_rule{}_sentence{}'.format(rule_idx, seq_id))
                     a_sentence_len_ph = tf.placeholder(dtype=tf.int32, shape=[None],
                                                        name='a_rule{}_sentence{}_length'.format(rule_idx, seq_id))
+
                     a_clipped_sentence = tfutil.clip_sentence(a_sentence_ph, a_sentence_len_ph)
                     a_sentence_embedding = tf.nn.embedding_lookup(embedding_layer, a_clipped_sentence)
+
                     a_args += [a_sentence_embedding, a_sentence_len_ph]
                     rule_placeholders += [(a_sentence_ph, a_sentence_len_ph)]
+
                 rule_id_to_placeholders[rule_idx] = rule_placeholders
                 rule_loss = adversarial.rule1_loss(*a_args)
                 return rule_loss
@@ -428,48 +410,12 @@ def main(argv):
                 rule1_loss = f(8)
                 adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
 
-            assert len(adversary_vars) > 0
-            for adversary_var in adversary_vars:
-                assert adversary_var.name.startswith('discriminator/adversary/rule')
-
-            adversary_var_to_assign_op = dict()
-            adversary_var_value_ph = tf.placeholder(dtype=tf.float32, shape=[None, None, None], name='adversary_var_value')
-            for a_var in adversary_vars:
-                adversary_var_to_assign_op[a_var] = a_var.assign(adversary_var_value_ph)
-
-        adversary_init_op = tf.variables_initializer(adversary_vars)
-
-        adv_opt_scope_name = 'adversary_optimizer'
-        with tf.variable_scope(adv_opt_scope_name):
-            adversary_optimizer = optimizer_class(learning_rate=learning_rate)
-            adversary_training_step = adversary_optimizer.minimize(- adversary_loss, var_list=adversary_vars)
-
-            adversary_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=adv_opt_scope_name)
-            adversary_optimizer_init_op = tf.variables_initializer(adversary_optimizer_vars)
-
         logger.info('Adversarial Batch Size: {}'.format(a_batch_size))
-
-        adversary_projection_steps = []
-        for var in adversary_vars:
-            if is_normalize_embeddings:
-                unit_sphere_adversarial_embeddings = constraints.unit_sphere(var, norm=1.0, axis=-1)
-                adversary_projection_steps += [unit_sphere_adversarial_embeddings]
-
-            assert a_batch_size == var.get_shape()[0].value
-
-            def token_init_op(_var, _token_idx, target_idx):
-                token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)
-                tiled_token_emb = tf.tile(tf.expand_dims(token_emb, 0), (a_batch_size, 1))
-                return _var[:, target_idx, :].assign(tiled_token_emb)
-
-            if has_bos:
-                adversary_projection_steps += [token_init_op(var, bos_idx, 0)]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars, max_to_keep=1)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
-    # session_config.log_device_placement = True
 
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
@@ -477,9 +423,6 @@ def main(argv):
             tfutil.count_trainable_parameters(var_list=discriminator_vars)))
         logger.info('Total Trainable Discriminator Parameters: {}'.format(
             tfutil.count_trainable_parameters(var_list=trainable_discriminator_vars)))
-
-        if use_adversarial_training:
-            session.run([adversary_init_op, adversary_optimizer_init_op])
 
         if restore_path:
             saver.restore(session, restore_path)
@@ -588,46 +531,6 @@ def main(argv):
 
                     hard_saved_path = saver.save(session, hard_save_path)
                     logger.info('Model saved in file: {}'.format(hard_saved_path))
-
-            if use_adversarial_training:
-                session.run([adversary_init_op, adversary_optimizer_init_op])
-
-                if adversarial_smart_init:
-                    _token_indices = np.array(sorted(index_to_token.keys()))
-
-                    np_embedding_layer = session.run(embedding_layer)
-                    for a_var in adversary_vars:
-
-                        # Create a [batch size, sentence length, embedding size] NumPy tensor of sentence embeddings
-                        a_word_idx = _token_indices[
-                            rs.randint(low=0, high=len(_token_indices), size=[a_batch_size, a_sentence_length])
-                        ]
-                        np_adversarial_embeddings = np_embedding_layer[a_word_idx]
-
-                        assert np_adversarial_embeddings.shape == (a_batch_size, a_sentence_length, embedding_size)
-                        assert a_var in adversary_var_to_assign_op
-                        assign_op = adversary_var_to_assign_op[a_var]
-
-                        logger.info('Clever initialization of the adversarial embeddings ..')
-                        session.run(assign_op, feed_dict={adversary_var_value_ph: np_adversarial_embeddings})
-
-                if adversarial_smart_init_2:
-                    s1 = train_dataset['sentence1']
-                    s1_len = train_dataset['sentence1_length']
-
-                    s2 = train_dataset['sentence2']
-                    s2_len = train_dataset['sentence2_length']
-
-                    print(s1[0, :])
-
-                for a_epoch in range(1, nb_adversary_epochs + 1):
-                    adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
-                    _, adversary_loss_value = session.run([adversary_training_step, adversary_loss],
-                                                          feed_dict=adversary_feed_dict)
-                    logger.info('Adversary Epoch {0}/{1}\tLoss: {2}'.format(epoch, a_epoch, adversary_loss_value))
-
-                    for adversary_projection_step in adversary_projection_steps:
-                        session.run(adversary_projection_step)
 
     logger.info('Training finished.')
 

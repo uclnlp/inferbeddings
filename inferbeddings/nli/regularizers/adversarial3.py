@@ -41,7 +41,7 @@ class AdversarialSets3:
         method = getattr(self, 'rule{}_loss'.format(rule_idx))
         sig = signature(method)
         params = sig.parameters
-        return (len(params) - 1) / 2
+        return int(len(params) / 2)
 
     def rule1_loss(self,
                    sequence1, sequence1_length,
