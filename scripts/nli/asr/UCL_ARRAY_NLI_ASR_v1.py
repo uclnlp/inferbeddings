@@ -91,7 +91,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=24G,tmem=24G
+# #$ -l h_vmem=24G,tmem=24G
+#$ -l tmem=24G
 #$ -l h_rt=24:00:00
 #$ -P gpu
 #$ -l gpu=1
