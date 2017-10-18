@@ -24,11 +24,11 @@ def to_cmd(c, idx, _path=None):
         _path = '/home/pminervi/workspace/inferbeddings/'
     command = 'ssh $HOSTNAME /home/pminervi/bin/xpy-gpu -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
-              '--nb-epochs 100 --has-bos --has-unk -p --glove /home/pminervi/data/glove/glove.840B.300d.txt ' \
-              '-S --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} --memory-limit {} ' \
+              '--nb-epochs 100 --has-bos --has-unk -p ' \
+              '-S -I --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} -P {} ' \
               '--hard-save /home/pminervi/workspace/inferbeddings/models/snli/dam_1/regularized/dam_1_{}'.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
-                        c['memory_limit'] * 1024 * 1024 * 1024, idx)
+                        c['adversarial_pooling'], idx)
     return command
 
 
@@ -50,10 +50,10 @@ def main(argv):
     hyperparameters_space_1 = dict(
         rule_id=[0, 1, 2, 3, 4, 5, 6, 7, 8],
         weight=[0.0, 0.001, 0.01,  0.1,  1.0, 10.0, 100.0, 1000.0],
-        adversarial_batch_size=[100],
+        adversarial_batch_size=[256],
         adversarial_sentence_length=[10],
         nb_adversary_epochs=[10],
-        memory_limit=[0]
+        adversarial_pooling=['sum', 'max']  # ['sum', 'max', 'mean', 'logsumexp']
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
@@ -76,7 +76,7 @@ def main(argv):
         if os.path.isfile(logfile):
             with open(logfile, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-                completed = 'Epoch 20/1' in content
+                completed = 'Epoch 10/1' in content
 
         if not completed:
             command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx, _path=args.path), logfile)
