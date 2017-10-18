@@ -18,8 +18,7 @@ from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
 from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
-from inferbeddings.nli.regularizers.adversarial import AdversarialSets
-from inferbeddings.nli.regularizers.adversarial2 import AdversarialSets2
+from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3
 
 from inferbeddings.models.training import constraints
 
@@ -379,64 +378,55 @@ def main(argv):
             if a_sentence_length is None:
                 a_sentence_length = max(train_dataset['sentence1_length'].max(), train_dataset['sentence2_length'].max())
 
-            adversarial = AdversarialSets2(model_class=model_class, model_kwargs=model_kwargs,
-                                           embedding_size=embedding_size,
-                                           scope_name='adversary',
-                                           batch_size=a_batch_size,
-                                           max_sequence_length=a_sentence_length,
-                                           entailment_idx=entailment_idx,
-                                           contradiction_idx=contradiction_idx,
-                                           neutral_idx=neutral_idx)
+            adversarial = AdversarialSets3(model_class=model_class, model_kwargs=model_kwargs, scope_name='adversary',
+                                           entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx)
 
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
             adversary_vars = []
 
             adversarial_pooling = name_to_adversarial_pooling[adversarial_pooling_name]
+            rule_id_to_placeholders = dict()
 
-            rule_id_to_vars = dict()
+            def f(rule_idx):
+                nb_sequences = adversarial.rule_nb_sequences(rule_idx)
+                a_args, rule_placeholders = [], []
+                for seq_id in range(nb_sequences):
+                    a_sentence_ph = tf.placeholder(dtype=tf.int32, shape=[None, None],
+                                                   name='a_rule{}_sentence{}'.format(rule_idx, seq_id))
+                    a_sentence_len_ph = tf.placeholder(dtype=tf.int32, shape=[None],
+                                                       name='a_rule{}_sentence{}_length'.format(rule_idx, seq_id))
+                    a_clipped_sentence = tfutil.clip_sentence(a_sentence_ph, a_sentence_len_ph)
+                    a_sentence_embedding = tf.nn.embedding_lookup(embedding_layer, a_clipped_sentence)
+                    a_args += [a_sentence_embedding, a_sentence_len_ph]
+                    rule_placeholders += [(a_sentence_ph, a_sentence_len_ph)]
+                rule_id_to_placeholders[rule_idx] = rule_placeholders
+                rule_loss = adversarial.rule1_loss(*a_args)
+                return rule_loss
 
             if rule1_weight:
-                rule1_loss, rule1_vars = adversarial.rule1_loss()
+                rule1_loss = f(1)
                 adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
-
-                adversary_vars += rule1_vars
-                rule_id_to_vars[1] = rule1_vars
             if rule2_weight:
-                rule2_loss, rule2_vars, rule2_var_lengths = adversarial.rule2_loss()
-                adversary_loss += rule2_weight * adversarial_pooling(rule2_loss)
-
-                adversary_vars += rule2_vars
-                rule_id_to_vars[1] = rule2_vars
+                rule1_loss = f(2)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
             if rule3_weight:
-                rule3_loss, rule3_vars = adversarial.rule3_loss()
-                adversary_loss += rule3_weight * adversarial_pooling(rule3_loss)
-
-                adversary_vars += rule3_vars
+                rule1_loss = f(3)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
             if rule4_weight:
-                rule4_loss, rule4_vars = adversarial.rule4_loss()
-                adversary_loss += rule4_weight * adversarial_pooling(rule4_loss)
-
-                adversary_vars += rule4_vars
+                rule1_loss = f(4)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
             if rule5_weight:
-                rule5_loss, rule5_vars = adversarial.rule5_loss()
-                adversary_loss += rule5_weight * adversarial_pooling(rule5_loss)
-
-                adversary_vars += rule5_vars
+                rule1_loss = f(5)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
             if rule6_weight:
-                rule6_loss, rule6_vars = adversarial.rule6_loss()
-                adversary_loss += rule6_weight * adversarial_pooling(rule6_loss)
-
-                adversary_vars += rule6_vars
+                rule1_loss = f(6)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
             if rule7_weight:
-                rule7_loss, rule7_vars = adversarial.rule7_loss()
-                adversary_loss += rule7_weight * adversarial_pooling(rule7_loss)
-
-                adversary_vars += rule7_vars
+                rule1_loss = f(7)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
             if rule8_weight:
-                rule8_loss, rule8_vars = adversarial.rule8_loss()
-                adversary_loss += rule8_weight * adversarial_pooling(rule8_loss)
-
-                adversary_vars += rule8_vars
+                rule1_loss = f(8)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
 
             assert len(adversary_vars) > 0
             for adversary_var in adversary_vars:

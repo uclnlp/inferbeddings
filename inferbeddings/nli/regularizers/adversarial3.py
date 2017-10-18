@@ -8,15 +8,11 @@ class AdversarialSets3:
     Utility class for generating Adversarial Sets for RTE.
     """
 
-    def __init__(self, model_class, model_kwargs,
-                 scope_name='adversary', embedding_size=300, batch_size=1024, max_sequence_length=10,
+    def __init__(self, model_class, model_kwargs, scope_name='adversary',
                  entailment_idx=0, contradiction_idx=1, neutral_idx=2):
         self.model_class = model_class
         self.model_kwargs = model_kwargs
-
         self.scope_name = scope_name
-        self.embedding_size = embedding_size
-        self.batch_size = batch_size
 
         self.entailment_idx = entailment_idx
         self.contradiction_idx = contradiction_idx
@@ -35,6 +31,17 @@ class AdversarialSets3:
 
         logits = self.model_class(reuse=True, **model_kwargs)()
         return tf.nn.softmax(logits)[:, predicate_idx]
+
+    def rule_loss(self, rule_idx, *args):
+        method = getattr(self, 'rule{}_loss'.format(rule_idx))
+        return method(*args)
+
+    def rule_nb_sequences(self, rule_idx):
+        from inspect import signature
+        method = getattr(self, 'rule{}_loss'.format(rule_idx))
+        sig = signature(method)
+        params = sig.parameters
+        return (len(params) - 1) / 2
 
     def rule1_loss(self,
                    sequence1, sequence1_length,
