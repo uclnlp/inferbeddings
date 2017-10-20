@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, idx, _path=None):
     if _path is None:
         _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '/home/pminervi/bin/xpy-gpu -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+    command = '/home/pminervi/bin/xpy-gpu -u {}/bin/nli-smart-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p ' \
               '-S -I --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -P {} -E data/snli/generated/snli_1.0_contradictions_*.gz ' \
