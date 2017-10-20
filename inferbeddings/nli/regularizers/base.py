@@ -53,6 +53,7 @@ def contradiction_symmetry_l2(model_class, model_kwargs,
 
     inv_model = model_class(reuse=True, **inv_model_kwargs)
     inv_logits = inv_model()
+
     inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 
     losses = contradiction_prob - inv_contradiction_prob
