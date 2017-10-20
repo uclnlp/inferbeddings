@@ -593,7 +593,14 @@ def main(argv):
                                     dropout_keep_prob_ph: 1.0
                                 }
                             a_losses_value = session.run(a_losses, feed_dict=t_feed_dict)
-                            print(a_losses_value)
+
+                            a_input_idxs = np.argsort(np.argsort(- a_losses_value))
+                            for i in a_input_idxs[:10]:
+                                t_sentence1 = t_feed_dict[sentence1_ph][i]
+                                t_sentence2 = t_feed_dict[sentence2_ph][i]
+
+                                logger.info('[ {} / {} ] Sentence1: {}'.format(i, a_losses_value[i], ' '.join([index_to_token[x] for x in t_sentence1 if x not in [0, 1, 2]])))
+                                logger.info('[ {} / {} ] Sentence2: {}'.format(i, a_losses_value[i], ' '.join([index_to_token[x] for x in t_sentence2 if x not in [0, 1, 2]])))
 
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
