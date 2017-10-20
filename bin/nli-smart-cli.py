@@ -15,6 +15,7 @@ from inferbeddings.io import load_glove, load_glove_words
 from inferbeddings.models.training.util import make_batches
 
 from inferbeddings.nli import util, tfutil
+from inferbeddings.nli.evaluation import util as eutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
 from inferbeddings.nli.regularizers.base import contradiction_symmetry_l1, contradiction_symmetry_l2
@@ -94,6 +95,8 @@ def main(argv):
     argparser.add_argument('--report', '-r', default=100, type=int, help='Number of batches between performance reports')
     argparser.add_argument('--report-loss', default=100, type=int, help='Number of batches between loss reports')
 
+    argparser.add_argument('--eval', '-E', nargs='+', type=str, help='Evaluate on these additional sets')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -165,6 +168,8 @@ def main(argv):
 
     report_interval = args.report
     report_loss_interval = args.report_loss
+
+    eval_paths = args.eval
 
     np.random.seed(seed)
     rs = np.random.RandomState(seed)
@@ -569,6 +574,14 @@ def main(argv):
 
                         logger.info('Epoch {0}/{1}/{2}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
                                     .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
+
+                        for eval_path in eval_paths:
+                            eval_path_acc = eutil.evaluate(session, eval_path, label_to_index, token_to_index, predictions, batch_size,
+                                                           sentence1_ph, sentence2_ph, sentence1_len_ph, sentence2_len_ph, dropout_keep_prob_ph,
+                                                           has_bos=has_bos, has_eos=has_eos, has_unk=has_unk, is_lower=is_lower,
+                                                           bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx)
+                            logger.info('Epoch {0}/{1}/{2}\tAccuracy on {3} is {4}'.format(epoch, d_epoch, batch_idx,
+                                                                                           eval_path, eval_path_acc))
 
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 

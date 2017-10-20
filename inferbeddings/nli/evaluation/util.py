@@ -11,10 +11,10 @@ from inferbeddings.nli import util
 from inferbeddings.models.training.util import make_batches
 
 
-def eval(session, eval_path, label_to_index, token_to_index, predictions_op, batch_size,
-         sentence1_ph, sentence2_ph, sentence1_len_ph, sentence2_len_ph, dropout_keep_prob_ph,
-         has_bos=False, has_eos=False, has_unk=False, is_lower=False,
-         bos_idx=1, eos_idx=2, unk_idx=3):
+def evaluate(session, eval_path, label_to_index, token_to_index, predictions_op, batch_size,
+             sentence1_ph, sentence2_ph, sentence1_len_ph, sentence2_len_ph, dropout_keep_prob_ph,
+             has_bos=False, has_eos=False, has_unk=False, is_lower=False,
+             bos_idx=1, eos_idx=2, unk_idx=3):
     sentence1_all = []
     sentence2_all = []
     gold_label_all = []
@@ -88,7 +88,6 @@ def eval(session, eval_path, label_to_index, token_to_index, predictions_op, bat
         feed_dict = {
             sentence1_ph: np_sentence1[batch_start:batch_end],
             sentence2_ph: np_sentence2[batch_start:batch_end],
-
 
             sentence1_len_ph: np_sentence1_len[batch_start:batch_end],
             sentence2_len_ph: np_sentence2_len[batch_start:batch_end],
