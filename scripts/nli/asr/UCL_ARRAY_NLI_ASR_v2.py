@@ -25,7 +25,7 @@ def to_cmd(c, idx, _path=None):
     command = '/home/pminervi/bin/xpy-gpu -u {}/bin/nli-smart-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p ' \
-              '-S -I --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -P {} -E data/snli/generated/snli_1.0_contradictions_*.gz ' \
+              '-S --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -P {} -E data/snli/generated/snli_1.0_contradictions_*.gz ' \
               '--hard-save /home/pminervi/workspace/inferbeddings/models/snli/dam_1/regularized/dam_2_{}'.format(_path, c['rule_id'], c['weight'],
                         c['adversarial_batch_size'], c['adversarial_pooling'], idx)
     return command
