@@ -321,15 +321,16 @@ def main(argv):
 
         a_pooling_function = name_to_adversarial_pooling[adversarial_pooling_name]
 
+        a_losses = None
         if rule00_weight:
-            loss += rule00_weight * contradiction_symmetry_l2(model_class, model_kwargs,
-                                                              contradiction_idx=contradiction_idx,
-                                                              pooling_function=a_pooling_function)
+            a_loss, a_losses = contradiction_symmetry_l2(model_class, model_kwargs, contradiction_idx=contradiction_idx,
+                                                         pooling_function=a_pooling_function, debug=True)
+            loss += rule00_weight * a_loss
 
         if rule01_weight:
-            loss += rule01_weight * contradiction_symmetry_l1(model_class, model_kwargs,
-                                                              contradiction_idx=contradiction_idx,
-                                                              pooling_function=a_pooling_function)
+            a_loss, a_losses = contradiction_symmetry_l1(model_class, model_kwargs, contradiction_idx=contradiction_idx,
+                                                         pooling_function=a_pooling_function, debug=True)
+            loss += rule01_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
@@ -582,6 +583,17 @@ def main(argv):
                                                            bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx)
                             logger.info('Epoch {0}/{1}/{2}\tAccuracy on {3} is {4}'.format(epoch, d_epoch, batch_idx,
                                                                                            eval_path, eval_path_acc))
+
+                        if a_losses is not None:
+                            t_feed_dict = a_feed_dict
+                            if len(t_feed_dict) == 0:
+                                t_feed_dict = {
+                                    sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+                                    sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+                                    dropout_keep_prob_ph: 1.0
+                                }
+                            a_losses_value = session.run(a_losses, feed_dict=t_feed_dict)
+                            print(a_losses_value)
 
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
