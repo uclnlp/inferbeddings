@@ -25,10 +25,9 @@ def to_cmd(c, idx, _path=None):
     command = '/home/pminervi/bin/xpy-gpu -u {}/bin/nli-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p ' \
-              '-S -I --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -L {} -A {} -P {} ' \
+              '-S -I --restore /home/pminervi/workspace/inferbeddings/models/snli/dam_1/dam_1 -{} {} -B {} -P {} ' \
               '--hard-save /home/pminervi/workspace/inferbeddings/models/snli/dam_1/regularized/dam_2_{}'.format(_path, c['rule_id'], c['weight'],
-                        c['adversarial_batch_size'], c['adversarial_sentence_length'], c['nb_adversary_epochs'],
-                        c['adversarial_pooling'], idx)
+                        c['adversarial_batch_size'], c['adversarial_pooling'], idx)
     return command
 
 
@@ -51,8 +50,6 @@ def main(argv):
         rule_id=['00', '01'],
         weight=[0.0, 0.0001, 0.01,  1.0, 100.0, 10000.0],
         adversarial_batch_size=[64, 256, 512, 1024],
-        adversarial_sentence_length=[10],
-        nb_adversary_epochs=[10],
         adversarial_pooling=['sum', 'max', 'mean']  # ['sum', 'max', 'mean', 'logsumexp']
     )
 
