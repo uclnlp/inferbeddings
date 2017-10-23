@@ -592,10 +592,12 @@ def main(argv):
                             t_feed_dict = a_feed_dict
                             if len(t_feed_dict) == 0:
                                 t_feed_dict = {
-                                    sentence1_ph: sentences1, sentence1_len_ph: sizes1,
-                                    sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+                                    sentence1_ph: sentences1[:1024], sentence1_len_ph: sizes1[:1024],
+                                    sentence2_ph: sentences2[:1024], sentence2_len_ph: sizes2[:1024],
                                     dropout_keep_prob_ph: 1.0
                                 }
+                            print(t_feed_dict[sentence1_ph].shape)
+                            #print(t_feed_dict['sentence1'].shape)
                             a_losses_value = session.run(a_losses, feed_dict=t_feed_dict)
 
                             a_input_idxs = np.argsort(np.argsort(- a_losses_value))
