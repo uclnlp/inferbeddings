@@ -94,7 +94,7 @@ export LANGUAGE="en_US:en"
 
 shopt -s huponexit
 
-cd /home/pminervi/workspace/inferbeddings/
+cd /home/ucacmin/workspace/inferbeddings/
 
 """.format(nb_jobs)
 
