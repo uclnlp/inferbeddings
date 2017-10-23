@@ -431,6 +431,7 @@ def main(argv):
 
             loss += adversary_loss
 
+        print('XXX')
         logger.info('Adversarial Batch Size: {}'.format(a_batch_size))
 
     a_feed_dict = dict()
@@ -493,6 +494,9 @@ def main(argv):
 
             if use_adversarial_training:
                 for rule_idx, rule_placeholders in rule_id_to_placeholders.items():
+
+                    print('XXX')
+
                     a_idxs = a_rs.choice(a_batch_size, nb_train_sentences)
                     for a_sentence_ph, a_sentence_len_ph in rule_placeholders:
                         # Select a random sentence from the training set
