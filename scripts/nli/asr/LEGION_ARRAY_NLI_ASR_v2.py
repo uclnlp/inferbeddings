@@ -92,8 +92,6 @@ def main(argv):
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
-shopt -s huponexit
-
 cd /home/ucacmin/workspace/inferbeddings/
 
 """.format(nb_jobs)
