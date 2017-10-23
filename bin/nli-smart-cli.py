@@ -431,7 +431,6 @@ def main(argv):
 
             loss += adversary_loss
 
-        print('XXX')
         logger.info('Adversarial Batch Size: {}'.format(a_batch_size))
 
     a_feed_dict = dict()
@@ -494,8 +493,6 @@ def main(argv):
 
             if use_adversarial_training:
                 for rule_idx, rule_placeholders in rule_id_to_placeholders.items():
-
-                    print('XXX')
 
                     a_idxs = a_rs.choice(a_batch_size, nb_train_sentences)
                     for a_sentence_ph, a_sentence_len_ph in rule_placeholders:
@@ -596,8 +593,6 @@ def main(argv):
                                     sentence2_ph: sentences2[:1024], sentence2_len_ph: sizes2[:1024],
                                     dropout_keep_prob_ph: 1.0
                                 }
-                            print(t_feed_dict[sentence1_ph].shape)
-                            #print(t_feed_dict['sentence1'].shape)
                             a_losses_value = session.run(a_losses, feed_dict=t_feed_dict)
 
                             a_input_idxs = np.argsort(np.argsort(- a_losses_value))
