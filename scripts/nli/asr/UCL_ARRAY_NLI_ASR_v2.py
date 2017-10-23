@@ -48,7 +48,7 @@ def main(argv):
 
     hyperparameters_space_1 = dict(
         rule_id=['00', '01'],
-        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0 100.0, 1000.0, 10000.0],
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0],
         adversarial_pooling=['sum', 'max', 'mean', 'logsumexp']
     )
 
