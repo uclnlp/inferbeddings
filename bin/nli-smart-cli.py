@@ -18,7 +18,11 @@ from inferbeddings.nli import util, tfutil
 from inferbeddings.nli.evaluation import util as eutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
-from inferbeddings.nli.regularizers.base import contradiction_symmetry_l1, contradiction_symmetry_l2
+from inferbeddings.nli.regularizers.base import contradiction_symmetry_l1
+from inferbeddings.nli.regularizers.base import contradiction_symmetry_l2
+from inferbeddings.nli.regularizers.base import contradiction_kullback_leibler
+from inferbeddings.nli.regularizers.base import contradiction_jensen_shannon
+
 from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3
 
 from inferbeddings.models.training import constraints
@@ -85,6 +89,8 @@ def main(argv):
 
     argparser.add_argument('--rule00-weight', '--00', action='store', type=float, default=None)
     argparser.add_argument('--rule01-weight', '--01', action='store', type=float, default=None)
+    argparser.add_argument('--rule02-weight', '--02', action='store', type=float, default=None)
+    argparser.add_argument('--rule03-weight', '--03', action='store', type=float, default=None)
 
     for i in range(1, 9):
         argparser.add_argument('--rule{}-weight'.format(i), '-{}'.format(i), action='store', type=float, default=None)
@@ -146,6 +152,8 @@ def main(argv):
     # Experimental RTE regularizers
     rule00_weight = args.rule00_weight
     rule01_weight = args.rule01_weight
+    rule02_weight = args.rule02_weight
+    rule03_weight = args.rule03_weight
 
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
@@ -331,6 +339,16 @@ def main(argv):
             a_loss, a_losses = contradiction_symmetry_l1(model_class, model_kwargs, contradiction_idx=contradiction_idx,
                                                          pooling_function=a_pooling_function, debug=True)
             loss += rule01_weight * a_loss
+
+        if rule02_weight:
+            a_loss, a_losses = contradiction_kullback_leibler(model_class, model_kwargs, contradiction_idx=contradiction_idx,
+                                                              pooling_function=a_pooling_function, debug=True)
+            loss += rule02_weight * a_loss
+
+        if rule03_weight:
+            a_loss, a_losses = contradiction_jensen_shannon(model_class, model_kwargs, contradiction_idx=contradiction_idx,
+                                                            pooling_function=a_pooling_function, debug=True)
+            loss += rule03_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
