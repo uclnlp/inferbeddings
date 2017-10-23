@@ -27,8 +27,8 @@ def contradiction_symmetry_l1(model_class, model_kwargs,
 
     inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 
-    losses = contradiction_prob - inv_contradiction_prob
-    loss = pooling_function(abs(losses))
+    losses = abs(contradiction_prob - inv_contradiction_prob)
+    loss = pooling_function(losses)
 
     return (loss, losses) if debug else loss
 
@@ -56,8 +56,8 @@ def contradiction_symmetry_l2(model_class, model_kwargs,
 
     inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 
-    losses = contradiction_prob - inv_contradiction_prob
-    loss = pooling_function(losses ** 2)
+    losses = (contradiction_prob - inv_contradiction_prob) ** 2
+    loss = pooling_function(losses)
 
     return (loss, losses) if debug else loss
 
