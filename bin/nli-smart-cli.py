@@ -613,8 +613,6 @@ def main(argv):
                                 }
                             a_losses_value = session.run(a_losses, feed_dict=t_feed_dict)
 
-                            print(a_losses_value)
-
                             a_input_idxs = np.argsort(- a_losses_value)
                             for i in a_input_idxs[:10]:
                                 t_sentence1 = t_feed_dict[sentence1_ph][i]
