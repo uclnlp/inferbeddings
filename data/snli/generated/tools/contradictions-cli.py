@@ -21,11 +21,13 @@ def main(argv):
     argparser = argparse.ArgumentParser('Tool for generating new SNLI examples', formatter_class=fmt)
     argparser.add_argument('path', action='store', type=str, default=None)
     argparser.add_argument('--invert', '-i', action='store_true')
+    argparser.add_argument('--retain', '-r', action='store_true')
 
     args = argparser.parse_args(argv)
 
     path = args.path
     is_invert = args.invert
+    is_retain = args.retain
 
     instances = []
 
@@ -58,6 +60,10 @@ def main(argv):
                 })
 
             print(json.dumps(new_obj))
+        else:
+            if is_retain:
+                print(json.dumps(obj))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
