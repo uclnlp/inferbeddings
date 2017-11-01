@@ -6,6 +6,8 @@ import argparse
 import os
 import sys
 
+import pickle
+
 import numpy as np
 import tensorflow as tf
 
@@ -15,7 +17,7 @@ from inferbeddings.models.training.util import make_batches
 from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
-from inferbeddings.nli.regularizers.base import symmetry_contradiction_regularizer
+from inferbeddings.nli.regularizers.base import contradiction_symmetry_l2
 from inferbeddings.nli.regularizers.adversarial import AdversarialSets
 
 from inferbeddings.models.training import constraints
@@ -95,6 +97,11 @@ def main(argv):
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-sentence-length', '-L', action='store', type=int, default=10)
 
+    argparser.add_argument('--adversarial-pooling', '-P', default='max',
+                           choices=['sum', 'max', 'mean', 'logsumexp'])
+    argparser.add_argument('--adversarial-smart-init', '-I', action='store_true',
+                           default=False, help='Initialize sentence embeddings with actual word embeddings')
+
     argparser.add_argument('--report', '-r', default=100, type=int,
                            help='Number of batches between performance reports')
     argparser.add_argument('--report-loss', default=100, type=int,
@@ -102,6 +109,7 @@ def main(argv):
 
     argparser.add_argument('--memory-limit', default=None, type=int,
                            help='The maximum area (in bytes) of address space which may be taken by the process.')
+    argparser.add_argument('--universum', '-U', action='store_true')
 
     args = argparser.parse_args(argv)
 
@@ -165,20 +173,27 @@ def main(argv):
 
     adversarial_batch_size = args.adversarial_batch_size
     adversarial_sentence_length = args.adversarial_sentence_length
+    adversarial_pooling_name = args.adversarial_pooling
+    adversarial_smart_init = args.adversarial_smart_init
+
+    name_to_adversarial_pooling = {
+        'sum': tf.reduce_sum,
+        'max': tf.reduce_max,
+        'mean': tf.reduce_mean,
+        'logsumexp': tf.reduce_logsumexp
+    }
 
     report_interval = args.report
     report_loss_interval = args.report_loss
 
     memory_limit = args.memory_limit
+    is_universum = args.universum
 
     if memory_limit:
         import resource
-
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         logging.info('Current memory limit: {}, {}'.format(soft, hard))
-
         resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
-
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
         logging.info('New memory limit: {}, {}'.format(soft, hard))
 
@@ -192,54 +207,64 @@ def main(argv):
     logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_is), len(dev_is), len(test_is)))
     all_is = train_is + dev_is + test_is
 
-    # Create a sequence of tokens containing all sentences in the dataset
-    token_seq = []
-    for instance in all_is:
-        token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
-
-    token_set = set(token_seq)
-    allowed_words = None
-    if is_only_use_pretrained_embeddings:
-        assert (glove_path is not None) or (word2vec_path is not None)
-        if glove_path:
-            logger.info('Loading GloVe words from {}'.format(glove_path))
-            assert os.path.isfile(glove_path)
-            allowed_words = load_glove_words(path=glove_path, words=token_set)
-        elif word2vec_path:
-            logger.info('Loading word2vec words from {}'.format(word2vec_path))
-            assert os.path.isfile(word2vec_path)
-            allowed_words = load_word2vec_words(path=word2vec_path, words=token_set)
-        logger.info('Number of allowed words: {}'.format(len(allowed_words)))
-
-    # Count the number of occurrences of each token
-    token_counts = dict()
-    for token in token_seq:
-        if (allowed_words is None) or (token in allowed_words):
-            if token not in token_counts:
-                token_counts[token] = 0
-            token_counts[token] += 1
-
-    # Sort the tokens according to their frequency and lexicographic ordering
-    sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
-
     # Enumeration of tokens start at index=3:
     # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
     bos_idx, eos_idx, unk_idx = 1, 2, 3
     start_idx = 1 + (1 if has_bos else 0) + (1 if has_eos else 0) + (1 if has_unk else 0)
 
-    index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
+    if not restore_path:
+        # Create a sequence of tokens containing all sentences in the dataset
+        token_seq = []
+        for instance in all_is:
+            token_seq += instance['sentence1_parse_tokens'] + instance['sentence2_parse_tokens']
+
+        token_set = set(token_seq)
+        allowed_words = None
+        if is_only_use_pretrained_embeddings:
+            assert (glove_path is not None) or (word2vec_path is not None)
+            if glove_path:
+                logger.info('Loading GloVe words from {}'.format(glove_path))
+                assert os.path.isfile(glove_path)
+                allowed_words = load_glove_words(path=glove_path, words=token_set)
+            elif word2vec_path:
+                logger.info('Loading word2vec words from {}'.format(word2vec_path))
+                assert os.path.isfile(word2vec_path)
+                allowed_words = load_word2vec_words(path=word2vec_path, words=token_set)
+            logger.info('Number of allowed words: {}'.format(len(allowed_words)))
+
+        # Count the number of occurrences of each token
+        token_counts = dict()
+        for token in token_seq:
+            if (allowed_words is None) or (token in allowed_words):
+                if token not in token_counts:
+                    token_counts[token] = 0
+                token_counts[token] += 1
+
+        # Sort the tokens according to their frequency and lexicographic ordering
+        sorted_vocabulary = sorted(token_counts.keys(), key=lambda t: (- token_counts[t], t))
+
+        index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
+    else:
+        with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
+            index_to_token = pickle.load(f)
+
     token_to_index = {token: index for index, token in index_to_token.items()}
 
-    entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+    entailment_idx, neutral_idx, contradiction_idx, none_idx = 0, 1, 2, 3
     label_to_index = {
         'entailment': entailment_idx,
         'neutral': neutral_idx,
-        'contradiction': contradiction_idx}
+        'contradiction': contradiction_idx,
+    }
+
+    if is_universum:
+        label_to_index['none'] = none_idx
 
     max_len = None
     optimizer_name_to_class = {
         'adagrad': tf.train.AdagradOptimizer,
-        'adam': tf.train.AdamOptimizer}
+        'adam': tf.train.AdamOptimizer
+    }
 
     optimizer_class = optimizer_name_to_class[optimizer_name]
     assert optimizer_class
@@ -256,10 +281,8 @@ def main(argv):
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
-
     sentence2 = train_dataset['sentence2']
     sentence2_length = train_dataset['sentence2_length']
-
     label = train_dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -325,6 +348,9 @@ def main(argv):
             sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
             representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
+        if is_universum:
+            model_kwargs['nb_classes'] = 4
+
         if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
             model_kwargs['init_std_dev'] = std_dev
 
@@ -348,8 +374,8 @@ def main(argv):
         loss = tf.reduce_mean(losses)
 
         if rule0_weight:
-            loss += rule0_weight * symmetry_contradiction_regularizer(model_class, model_kwargs,
-                                                                      contradiction_idx=contradiction_idx)
+            loss += rule0_weight * contradiction_symmetry_l2(model_class, model_kwargs,
+                                                             contradiction_idx=contradiction_idx)
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
@@ -422,42 +448,51 @@ def main(argv):
             adversary_loss = tf.constant(0.0, dtype=tf.float32)
             adversary_vars = []
 
+            adversarial_pooling = name_to_adversarial_pooling[adversarial_pooling_name]
+
             if rule1_weight:
                 rule1_loss, rule1_vars = adversarial.rule1_loss()
-                adversary_loss += rule1_weight * tf.reduce_max(rule1_loss)
+                adversary_loss += rule1_weight * adversarial_pooling(rule1_loss)
                 adversary_vars += rule1_vars
             if rule2_weight:
                 rule2_loss, rule2_vars = adversarial.rule2_loss()
-                adversary_loss += rule2_weight * tf.reduce_max(rule2_loss)
+                adversary_loss += rule2_weight * adversarial_pooling(rule2_loss)
                 adversary_vars += rule2_vars
             if rule3_weight:
                 rule3_loss, rule3_vars = adversarial.rule3_loss()
-                adversary_loss += rule3_weight * tf.reduce_max(rule3_loss)
+                adversary_loss += rule3_weight * adversarial_pooling(rule3_loss)
                 adversary_vars += rule3_vars
             if rule4_weight:
                 rule4_loss, rule4_vars = adversarial.rule4_loss()
-                adversary_loss += rule4_weight * tf.reduce_max(rule4_loss)
+                adversary_loss += rule4_weight * adversarial_pooling(rule4_loss)
                 adversary_vars += rule4_vars
             if rule5_weight:
                 rule5_loss, rule5_vars = adversarial.rule5_loss()
-                adversary_loss += rule5_weight * tf.reduce_max(rule5_loss)
+                adversary_loss += rule5_weight * adversarial_pooling(rule5_loss)
                 adversary_vars += rule5_vars
             if rule6_weight:
                 rule6_loss, rule6_vars = adversarial.rule6_loss()
-                adversary_loss += rule6_weight * tf.reduce_max(rule6_loss)
+                adversary_loss += rule6_weight * adversarial_pooling(rule6_loss)
                 adversary_vars += rule6_vars
             if rule7_weight:
                 rule7_loss, rule7_vars = adversarial.rule7_loss()
-                adversary_loss += rule7_weight * tf.reduce_max(rule7_loss)
+                adversary_loss += rule7_weight * adversarial_pooling(rule7_loss)
                 adversary_vars += rule7_vars
             if rule8_weight:
                 rule8_loss, rule8_vars = adversarial.rule8_loss()
-                adversary_loss += rule8_weight * tf.reduce_max(rule8_loss)
+                adversary_loss += rule8_weight * adversarial_pooling(rule8_loss)
                 adversary_vars += rule8_vars
+
+            loss += adversary_loss
 
             assert len(adversary_vars) > 0
             for adversary_var in adversary_vars:
                 assert adversary_var.name.startswith('discriminator/adversary/rule')
+
+            adversary_var_to_assign_op = dict()
+            adversary_var_value_ph = tf.placeholder(dtype=tf.float32, shape=[None, None, None], name='adversary_var_value')
+            for a_var in adversary_vars:
+                adversary_var_to_assign_op[a_var] = a_var.assign(adversary_var_value_ph)
 
         adversary_init_op = tf.variables_initializer(adversary_vars)
 
@@ -478,7 +513,6 @@ def main(argv):
                 adversary_projection_steps += [unit_sphere_adversarial_embeddings]
 
             assert adversarial_batch_size == var.get_shape()[0].value
-            # sentence_len = var.get_shape()[1].value
 
             def token_init_op(_var, _token_idx, target_idx):
                 token_emb = tf.nn.embedding_lookup(embedding_layer, _token_idx)
@@ -492,7 +526,7 @@ def main(argv):
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
-    session_config.log_device_placement = True
+    # session_config.log_device_placement = True
 
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
@@ -562,7 +596,8 @@ def main(argv):
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
                         sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
-                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob}
+                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob
+                    }
 
                     _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
 
@@ -593,6 +628,9 @@ def main(argv):
                             best_dev_acc, best_test_acc = dev_acc, test_acc
 
                             if save_path:
+                                with open('{}_index_to_token.p'.format(save_path), 'wb') as f:
+                                    pickle.dump(index_to_token, f)
+
                                 saved_path = saver.save(session, save_path)
                                 logger.info('Model saved in file: {}'.format(saved_path))
 
@@ -602,11 +640,33 @@ def main(argv):
                 logger.info('Epoch {0}/{1}\tEpoch Loss Stats: {2}'.format(epoch, d_epoch, stats(epoch_loss_values)))
 
                 if hard_save_path:
+                    with open('{}_index_to_token.p'.format(hard_save_path), 'wb') as f:
+                        pickle.dump(index_to_token, f)
+
                     hard_saved_path = saver.save(session, hard_save_path)
                     logger.info('Model saved in file: {}'.format(hard_saved_path))
 
             if use_adversarial_training:
                 session.run([adversary_init_op, adversary_optimizer_init_op])
+
+                if adversarial_smart_init:
+                    _token_indices = np.array(sorted(index_to_token.keys()))
+
+                    for a_var in adversary_vars:
+                        # Create a [batch size, sentence length, embedding size] NumPy tensor of sentence embeddings
+                        a_word_idx = _token_indices[
+                            random_state.randint(low=0, high=len(_token_indices),
+                                                 size=[adversarial_batch_size, adversarial_sentence_length])]
+                        np_embedding_layer = session.run(embedding_layer)
+                        np_adversarial_embeddings = np_embedding_layer[a_word_idx]
+                        assert np_adversarial_embeddings.shape == (adversarial_batch_size, adversarial_sentence_length,
+                                                                   embedding_size)
+
+                        assert a_var in adversary_var_to_assign_op
+                        assign_op = adversary_var_to_assign_op[a_var]
+
+                        logger.info('Clever initialization of the adversarial embeddings ..')
+                        session.run(assign_op, feed_dict={adversary_var_value_ph: np_adversarial_embeddings})
 
                 for a_epoch in range(1, nb_adversary_epochs + 1):
                     adversary_feed_dict = {dropout_keep_prob_ph: 1.0}
