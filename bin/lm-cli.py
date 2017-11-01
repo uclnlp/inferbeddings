@@ -6,15 +6,20 @@ import time
 import numpy as np
 import tensorflow as tf
 
+from inferbeddings.lm import reader
+from inferbeddings.lm.model import LanguageModel
+
 
 logging = tf.logging
 flags = tf.flags
 
 flags.DEFINE_integer("num_gpus", 1, "Number of GPUs.")
+flags.DEFINE_integer("train_path", "data/lm/ptb/ptb.train.txt", "Training set.")
+flags.DEFINE_integer("valid_path", "data/lm/ptb/ptb.valid.txt", "Validation set.")
+flags.DEFINE_integer("test_path", "data/lm/ptb/ptb.test.txt", "Test set.")
 
 FLAGS = flags.FLAGS
 BASIC = "basic"
-CUDNN = "cudnn"
 BLOCK = "block"
 
 
@@ -23,8 +28,7 @@ class Input(object):
     self.batch_size = batch_size = config.batch_size
     self.num_steps = num_steps = config.num_steps
     self.epoch_size = ((len(data) // batch_size) - 1) // num_steps
-    self.input_data, self.targets = reader.ptb_producer(
-        data, batch_size, num_steps, name=name)
+    self.input_data, self.targets = reader.producer(data, batch_size, num_steps, name=name)
 
 
 class SmallConfig(object):
@@ -40,14 +44,10 @@ class SmallConfig(object):
     lr_decay = 0.5
     batch_size = 20
     vocab_size = 10000
-    rnn_mode = CUDNN
 
 
 def get_config():
     config = SmallConfig()
-    if FLAGS.rnn_mode:
-        config.rnn_mode = FLAGS.rnn_mode
-    config.rnn_mode = BASIC
     return config
 
 
@@ -87,15 +87,30 @@ def run_epoch(session, model, eval_op=None, verbose=False):
 
 
 def main(_):
+    raw_data = reader.raw_data()
+    train_data, valid_data, test_data, _ = raw_data
+
     config = get_config()
     eval_config = get_config()
-    eval_config.batch_size = 1
-    eval_config.num_steps = 1
+    eval_config.batch_size, eval_config.num_steps = 1, 1
 
     with tf.Graph().as_default():
-        initializer = tf.random_uniform_initializer(-config.init_scale, config.init_scale)
+        initializer = tf.random_uniform_initializer(- config.init_scale, config.init_scale)
 
+        with tf.name_scope("train"):
+            train_input = Input(config=config, data=train_data, name="train_input")
+            with tf.variable_scope("model", reuse=None, initializer=initializer):
+                m = LanguageModel(is_training=True, config=config, input_=train_input)
 
+        with tf.name_scope("valid"):
+            valid_input = Input(config=config, data=valid_data, name="valid_input")
+            with tf.variable_scope("model", reuse=True, initializer=initializer):
+                m = LanguageModel(is_training=False, config=config, input_=valid_input)
+
+        with tf.name_scope("test"):
+            valid_input = Input(config=config, data=test_data, name="test_input")
+            with tf.variable_scope("model", reuse=True, initializer=initializer):
+                m = LanguageModel(is_training=False, config=eval_config, input_=valid_input)
 
 if __name__ == '__main__':
     tf.app.run()
