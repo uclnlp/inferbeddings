@@ -1,116 +1,137 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time
-
-import numpy as np
 import tensorflow as tf
 
-from inferbeddings.lm import reader
-from inferbeddings.lm.model import LanguageModel
+import argparse
+import time
+import os
+
+import pickle
+
+from inferbeddings.lm.utils import TextLoader
+from inferbeddings.lm.languagemodel import LanguageModel
 
 
-logging = tf.logging
-flags = tf.flags
-
-flags.DEFINE_integer("num_gpus", 1, "Number of GPUs.")
-flags.DEFINE_integer("train_path", "data/lm/ptb/ptb.train.txt", "Training set.")
-flags.DEFINE_integer("valid_path", "data/lm/ptb/ptb.valid.txt", "Validation set.")
-flags.DEFINE_integer("test_path", "data/lm/ptb/ptb.test.txt", "Test set.")
-
-FLAGS = flags.FLAGS
-BASIC = "basic"
-BLOCK = "block"
-
-
-class Input(object):
-  def __init__(self, config, data, name=None):
-    self.batch_size = batch_size = config.batch_size
-    self.num_steps = num_steps = config.num_steps
-    self.epoch_size = ((len(data) // batch_size) - 1) // num_steps
-    self.input_data, self.targets = reader.producer(data, batch_size, num_steps, name=name)
-
-
-class SmallConfig(object):
-    init_scale = 0.1
-    learning_rate = 1.0
-    max_grad_norm = 5
-    num_layers = 2
-    num_steps = 20
-    hidden_size = 200
-    max_epoch = 4
-    max_max_epoch = 13
-    keep_prob = 1.0
-    lr_decay = 0.5
-    batch_size = 20
-    vocab_size = 10000
-
-
-def get_config():
-    config = SmallConfig()
-    return config
-
-
-def run_epoch(session, model, eval_op=None, verbose=False):
-    start_time = time.time()
-    costs = 0.0
-    iters = 0
-    state = session.run(model.initial_state)
-
-    fetches = {
-        "cost": model.cost,
-        "final_state": model.final_state
-    }
-    if eval_op is not None:
-        fetches["eval_op"] = eval_op
-
-    for step in range(model.input.epoch_size):
-        feed_dict = {}
-        for i, (c, h) in enumerate(model.initial_state):
-            feed_dict[c] = state[i].c
-            feed_dict[h] = state[i].h
-
-        vals = session.run(fetches, feed_dict)
-        cost = vals["cost"]
-        state = vals["final_state"]
-
-        costs += cost
-        iters += model.input.num_steps
-
-        if verbose and step % (model.input.epoch_size // 10) == 10:
-            print("%.3f perplexity: %.3f speed: %.0f wps" %
-                  (step * 1.0 / model.input.epoch_size, np.exp(costs / iters),
-                   iters * model.input.batch_size * max(1, FLAGS.num_gpus) /
-                   (time.time() - start_time)))
-
-    return np.exp(costs / iters)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', type=str, default='data/lm/neuromancer',
+                       help='data directory containing input.txt')
+    parser.add_argument('--input_encoding', type=str, default=None,
+                       help='character encoding of input.txt, from https://docs.python.org/3/library/codecs.html#standard-encodings')
+    parser.add_argument('--log_dir', type=str, default='logs',
+                       help='directory containing tensorboard logs')
+    parser.add_argument('--save_dir', type=str, default='save',
+                       help='directory to store checkpointed models')
+    parser.add_argument('--rnn_size', type=int, default=256,
+                       help='size of RNN hidden state')
+    parser.add_argument('--num_layers', type=int, default=2,
+                       help='number of layers in the RNN')
+    parser.add_argument('--model', type=str, default='lstm',
+                       help='rnn, gru, or lstm')
+    parser.add_argument('--batch_size', type=int, default=50,
+                       help='minibatch size')
+    parser.add_argument('--seq_length', type=int, default=25,
+                       help='RNN sequence length')
+    parser.add_argument('--num_epochs', type=int, default=50,
+                       help='number of epochs')
+    parser.add_argument('--save_every', type=int, default=1000,
+                       help='save frequency')
+    parser.add_argument('--grad_clip', type=float, default=5.,
+                       help='clip gradients at this value')
+    parser.add_argument('--learning_rate', type=float, default=0.002,
+                       help='learning rate')
+    parser.add_argument('--decay_rate', type=float, default=0.97,
+                       help='decay rate for rmsprop')
+    parser.add_argument('--init_from', type=str, default=None,
+                       help="""continue training from saved model at this path. Path must contain files saved by previous training process:
+                            'config.pkl'        : configuration;
+                            'words_vocab.pkl'   : vocabulary definitions;
+                            'checkpoint'        : paths to model file(s) (created by tf).
+                                                  Note: this file contains absolute paths, be careful when moving files around;
+                            'model.ckpt-*'      : file(s) with model definition (created by tf)
+                        """)
+    args = parser.parse_args()
+    train(args)
 
 
-def main(_):
-    raw_data = reader.raw_data()
-    train_data, valid_data, test_data, _ = raw_data
+def train(args):
+    data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length, args.input_encoding)
+    args.vocab_size = data_loader.vocab_size
 
-    config = get_config()
-    eval_config = get_config()
-    eval_config.batch_size, eval_config.num_steps = 1, 1
+    # check compatibility if training is continued from previously saved model
+    if args.init_from is not None:
+        # check if all necessary files exist
+        assert os.path.isdir(args.init_from), " %s must be a path" % args.init_from
+        assert os.path.isfile(os.path.join(args.init_from,"config.pkl")),"config.pkl file does not exist in path %s"%args.init_from
+        assert os.path.isfile(os.path.join(args.init_from,"words_vocab.pkl")),"words_vocab.pkl.pkl file does not exist in path %s" % args.init_from
+        ckpt = tf.train.get_checkpoint_state(args.init_from)
+        assert ckpt,"No checkpoint found"
+        assert ckpt.model_checkpoint_path,"No model path found in checkpoint"
 
-    with tf.Graph().as_default():
-        initializer = tf.random_uniform_initializer(- config.init_scale, config.init_scale)
+        # open old config and check if models are compatible
+        with open(os.path.join(args.init_from, 'config.pkl'), 'rb') as f:
+            saved_model_args = pickle.load(f)
+        need_be_same=["model","rnn_size","num_layers","seq_length"]
+        for checkme in need_be_same:
+            assert vars(saved_model_args)[checkme]==vars(args)[checkme],"Command line argument and saved model disagree on '%s' "%checkme
 
-        with tf.name_scope("train"):
-            train_input = Input(config=config, data=train_data, name="train_input")
-            with tf.variable_scope("model", reuse=None, initializer=initializer):
-                m = LanguageModel(is_training=True, config=config, input_=train_input)
+        # open saved vocab/dict and check if vocabs/dicts are compatible
+        with open(os.path.join(args.init_from, 'words_vocab.pkl'), 'rb') as f:
+            saved_words, saved_vocab = pickle.load(f)
 
-        with tf.name_scope("valid"):
-            valid_input = Input(config=config, data=valid_data, name="valid_input")
-            with tf.variable_scope("model", reuse=True, initializer=initializer):
-                m = LanguageModel(is_training=False, config=config, input_=valid_input)
+        assert saved_words == data_loader.words, "Data and loaded model disagree on word set!"
+        assert saved_vocab == data_loader.vocab, "Data and loaded model disagree on dictionary mappings!"
 
-        with tf.name_scope("test"):
-            valid_input = Input(config=config, data=test_data, name="test_input")
-            with tf.variable_scope("model", reuse=True, initializer=initializer):
-                m = LanguageModel(is_training=False, config=eval_config, input_=valid_input)
+    with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
+        pickle.dump(args, f)
+    with open(os.path.join(args.save_dir, 'words_vocab.pkl'), 'wb') as f:
+        pickle.dump((data_loader.words, data_loader.vocab), f)
+
+    model = LanguageModel(args)
+
+    merged = tf.summary.merge_all()
+    train_writer = tf.summary.FileWriter(args.log_dir)
+
+    sess_config = tf.ConfigProto()
+    sess_config.gpu_options.allow_growth = True
+
+    with tf.Session(config=sess_config) as sess:
+        train_writer.add_graph(sess.graph)
+        tf.global_variables_initializer().run()
+        saver = tf.train.Saver(tf.global_variables())
+
+        # restore model
+        if args.init_from is not None:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+
+        for e in range(model.epoch_pointer.eval(), args.num_epochs):
+            sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
+            state = sess.run(model.initial_state)
+
+            if args.init_from is None:
+                assign_op = model.epoch_pointer.assign(e)
+                sess.run(assign_op)
+
+            if args.init_from is not None:
+                args.init_from = None
+
+            for b in range(data_loader.pointer, data_loader.num_batches):
+                start = time.time()
+                x, y = data_loader.next_batch()
+                feed = {model.input_data: x, model.targets: y, model.initial_state: state}
+                summary, train_loss, state, _ = sess.run([merged, model.cost, model.final_state, model.train_op], feed)
+                train_writer.add_summary(summary, e * data_loader.num_batches + b)
+                speed = time.time() - start
+
+                if (e * data_loader.num_batches + b) % args.batch_size == 0:
+                    print("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}".format(e * data_loader.num_batches + b, args.num_epochs * data_loader.num_batches, e, train_loss, speed))
+
+                if (e * data_loader.num_batches + b) % args.save_every == 0 or (e == args.num_epochs-1 and b == data_loader.num_batches-1):
+                    checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
+                    saver.save(sess, checkpoint_path, global_step = e * data_loader.num_batches + b)
+                    print("model saved to {}".format(checkpoint_path))
+        train_writer.close()
 
 if __name__ == '__main__':
-    tf.app.run()
+    main()

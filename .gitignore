@@ -108,3 +108,6 @@ data/yago*/tmp/
 data/music_mte10_5k/download/mappingbased_objects_en.ttl.bz
 data/word2vec/GoogleNews-vectors-negative300.bin.gz
 data/multinli/*.zip
+
+# Saved models
+save/
