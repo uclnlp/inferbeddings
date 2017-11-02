@@ -4,7 +4,7 @@ import pytest
 
 from collections import Counter
 
-from inferbeddings.lm.utils import TextLoader
+from inferbeddings.lm.loader import TextLoader
 
 
 def test_build_vocab():

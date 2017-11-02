@@ -9,8 +9,8 @@ import os
 
 import pickle
 
-from inferbeddings.lm.utils import TextLoader
-from inferbeddings.lm.languagemodel import LanguageModel
+from inferbeddings.lm.loader import TextLoader
+from inferbeddings.lm.model import LanguageModel
 
 
 def main():
