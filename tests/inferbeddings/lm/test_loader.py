@@ -8,7 +8,7 @@ from inferbeddings.lm.utils import TextLoader
 
 
 def test_build_vocab():
-    data_loader = TextLoader("tests/data/cat", batch_size=2, seq_length=5)
+    data_loader = TextLoader("tests/data/cat/", batch_size=2, seq_length=5)
 
     sentences = ["I", "love", "cat", "cat"]
     vocab, vocab_inv = data_loader.build_vocab(sentences)
