@@ -1,5 +1,5 @@
 numpy
-tensorflow>=1.4
+tensorflow>=1.3
 scipy
 gensim>=2
 parsimonious>=0.7
