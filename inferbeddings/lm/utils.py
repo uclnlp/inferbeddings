@@ -18,7 +18,7 @@ class TextLoader:
         vocab_file = os.path.join(data_dir, "vocab.pkl")
         tensor_file = os.path.join(data_dir, "data.npy")
 
-        # Let's not read voca and data from file. We many change them.
+        # Let's not read vocab and data from file. We many change them.
         if True or not (os.path.exists(vocab_file) and os.path.exists(tensor_file)):
             print("reading text file")
             self.preprocess(input_file, vocab_file, tensor_file, encoding)
@@ -80,15 +80,17 @@ class TextLoader:
         self.tensor = np.array(list(map(self.vocab.get, x_text)))
         # Save the data to data.npy
         np.save(tensor_file, self.tensor)
+        return
 
     def load_preprocessed(self, vocab_file, tensor_file):
         with open(vocab_file, 'rb') as f:
             self.words = pickle.load(f)
+
         self.vocab_size = len(self.words)
         self.vocab = dict(zip(self.words, range(len(self.words))))
         self.tensor = np.load(tensor_file)
-        self.num_batches = int(self.tensor.size / (self.batch_size *
-                                                   self.seq_length))
+        self.num_batches = int(self.tensor.size / (self.batch_size * self.seq_length))
+        return
 
     def create_batches(self):
         self.num_batches = int(self.tensor.size / (self.batch_size *
@@ -102,8 +104,10 @@ class TextLoader:
 
         ydata[:-1] = xdata[1:]
         ydata[-1] = xdata[0]
+
         self.x_batches = np.split(xdata.reshape(self.batch_size, -1), self.num_batches, 1)
         self.y_batches = np.split(ydata.reshape(self.batch_size, -1), self.num_batches, 1)
+        return
 
     def next_batch(self):
         x, y = self.x_batches[self.pointer], self.y_batches[self.pointer]
@@ -112,3 +116,4 @@ class TextLoader:
 
     def reset_batch_pointer(self):
         self.pointer = 0
+        return
