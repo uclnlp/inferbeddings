@@ -55,11 +55,14 @@ class TextLoader:
         """
         # Build vocabulary
         word_counts = collections.Counter(sentences)
+
         # Mapping from index to word
         vocabulary_inv = [x[0] for x in word_counts.most_common()]
         vocabulary_inv = list(sorted(vocabulary_inv))
+
         # Mapping from word to index
         vocabulary = {x: i for i, x in enumerate(vocabulary_inv)}
+
         return [vocabulary, vocabulary_inv]
 
     def preprocess(self, input_file, vocab_file, tensor_file, encoding):
@@ -80,7 +83,7 @@ class TextLoader:
         self.tensor = np.array(list(map(self.vocab.get, x_text)))
         # Save the data to data.npy
         np.save(tensor_file, self.tensor)
-        return
+
 
     def load_preprocessed(self, vocab_file, tensor_file):
         with open(vocab_file, 'rb') as f:
