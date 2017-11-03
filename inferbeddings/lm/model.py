@@ -16,19 +16,17 @@ class LanguageModel:
             args.batch_size = 1
             args.seq_length = 1
 
-        if args.model == 'rnn':
-            cell_fn = rnn.BasicRNNCell
-        elif args.model == 'gru':
-            cell_fn = rnn.GRUCell
-        elif args.model == 'lstm':
-            cell_fn = rnn.BasicLSTMCell
-        else:
-            raise Exception("model type not supported: {}".format(args.model))
+        cell_to_fn = {
+            'rnn': rnn.BasicRNNCell,
+            'gru': rnn.GRUCell,
+            'lstm': rnn.BasicLSTMCell
+        }
 
-        cells = []
-        for _ in range(args.num_layers):
-            cell = cell_fn(args.rnn_size)
-            cells.append(cell)
+        if args.model not in cell_to_fn:
+            raise Exception("model type not supported: {}".format(args.model))
+        cell_fn = cell_to_fn[args.model]
+
+        cells = [cell_fn(args.rnn_size) for _ in range(args.num_layers)]
 
         self.cell = cell = rnn.MultiRNNCell(cells)
 
