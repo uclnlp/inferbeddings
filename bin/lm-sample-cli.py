@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import tensorflow as tf
-
-import argparse
 import os
+import sys
+import argparse
+
+import tensorflow as tf
 
 import pickle
 
 from inferbeddings.lm.model import LanguageModel
 
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--save_dir', type=str, default='save', help='model directory to load stored checkpointed models from')
     parser.add_argument('-n', type=int, default=200, help='number of words to sample')
@@ -20,7 +21,7 @@ def main():
     parser.add_argument('--width', type=int, default=4, help='width of the beam search')
     parser.add_argument('--sample', type=int, default=1, help='0 to use max at each timestep, 1 to sample at each timestep, 2 to sample on spaces')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     sample(args)
 
 
@@ -39,4 +40,5 @@ def sample(args):
             print(model.sample(sess, words, vocab, args.n, args.prime, args.sample, args.pick, args.width))
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])

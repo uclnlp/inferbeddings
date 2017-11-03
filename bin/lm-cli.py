@@ -19,7 +19,7 @@ import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
-def main():
+def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default='data/lm/neuromancer',
                         help='data directory containing input.txt')
@@ -45,7 +45,7 @@ def main():
                                                    Note: this file contains absolute paths, be careful when moving files around;
                              'model.ckpt-*'      : file(s) with model definition (created by tf)
                              """)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     train(args)
 
 
@@ -125,4 +125,5 @@ def train(args):
                     logger.info("model saved to {}".format(checkpoint_path))
 
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])
