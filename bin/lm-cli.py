@@ -86,24 +86,24 @@ def train(args):
 
     model = LanguageModel(args)
 
-    sess_config = tf.ConfigProto()
-    sess_config.gpu_options.allow_growth = True
+    session_config = tf.ConfigProto()
+    session_config.gpu_options.allow_growth = True
 
-    with tf.Session(config=sess_config) as sess:
+    with tf.Session(config=session_config) as session:
         tf.global_variables_initializer().run()
         saver = tf.train.Saver(tf.global_variables())
 
         # restore model
         if args.init_from is not None:
-            saver.restore(sess, ckpt.model_checkpoint_path)
+            saver.restore(session, ckpt.model_checkpoint_path)
 
         for e in range(model.epoch_pointer.eval(), args.num_epochs):
-            sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
-            state = sess.run(model.initial_state)
+            session.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
+            state = session.run(model.initial_state)
 
             if args.init_from is None:
                 assign_op = model.epoch_pointer.assign(e)
-                sess.run(assign_op)
+                session.run(assign_op)
 
             if args.init_from is not None:
                 args.init_from = None
@@ -112,7 +112,7 @@ def train(args):
                 start = time.time()
                 x, y = data_loader.next_batch()
                 feed = {model.input_data: x, model.targets: y, model.initial_state: state}
-                train_loss, state, _ = sess.run([model.cost, model.final_state, model.train_op], feed)
+                train_loss, state, _ = session.run([model.cost, model.final_state, model.train_op], feed)
                 speed = time.time() - start
 
                 if (e * data_loader.num_batches + b) % args.batch_size == 0:
@@ -120,7 +120,7 @@ def train(args):
 
                 if (e * data_loader.num_batches + b) % args.save_every == 0 or (e == args.num_epochs-1 and b == data_loader.num_batches-1):
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step=e * data_loader.num_batches + b)
+                    saver.save(session, checkpoint_path, global_step=e * data_loader.num_batches + b)
                     logger.info("model saved to {}".format(checkpoint_path))
 
 if __name__ == '__main__':

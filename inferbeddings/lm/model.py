@@ -35,19 +35,9 @@ class LanguageModel:
         self.initial_state = cell.zero_state(args.batch_size, tf.float32)
         self.epoch_pointer = tf.Variable(0, name="epoch_pointer", trainable=False)
 
-        def variable_summaries(var):
-            """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
-            with tf.name_scope('summaries'):
-                mean = tf.reduce_mean(var)
-                tf.summary.scalar('mean', mean)
-                tf.summary.scalar('max', tf.reduce_max(var))
-                tf.summary.scalar('min', tf.reduce_min(var))
-
         with tf.variable_scope('rnnlm'):
             softmax_w = tf.get_variable("softmax_w", [args.rnn_size, args.vocab_size])
-            variable_summaries(softmax_w)
             softmax_b = tf.get_variable("softmax_b", [args.vocab_size])
-            variable_summaries(softmax_b)
 
             embedding = tf.get_variable("embedding", [args.vocab_size, args.rnn_size])
             inputs = tf.split(tf.nn.embedding_lookup(embedding, self.input_data), args.seq_length, 1)
@@ -63,20 +53,18 @@ class LanguageModel:
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
         loss = legacy_seq2seq.sequence_loss_by_example([self.logits],
-                [tf.reshape(self.targets, [-1])],
-                [tf.ones([args.batch_size * args.seq_length])],
-                args.vocab_size)
+                                                       [tf.reshape(self.targets, [-1])],
+                                                       [tf.ones([args.batch_size * args.seq_length])],
+                                                       args.vocab_size)
         self.cost = tf.reduce_sum(loss) / args.batch_size / args.seq_length
-        tf.summary.scalar("cost", self.cost)
         self.final_state = last_state
         self.lr = tf.Variable(0.0, trainable=False)
         tvars = tf.trainable_variables()
-        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
-                args.grad_clip)
+        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars), args.grad_clip)
         optimizer = tf.train.AdamOptimizer(self.lr)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
-    def sample(self, sess, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
+    def sample(self, session, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
         def weighted_pick(weights):
             t = np.cumsum(weights)
             s = np.sum(weights)
@@ -90,8 +78,8 @@ class LanguageModel:
             x = np.zeros((1, 1))
             x[0, 0] = sample[-1]
             feed = {self.input_data: x, self.initial_state: state}
-            [probs, final_state] = sess.run([self.probs, self.final_state],
-                                            feed)
+            [probs, final_state] = session.run([self.probs, self.final_state],
+                                               feed)
             return probs, final_state
 
         def beam_search_pick(prime, width):
@@ -99,24 +87,22 @@ class LanguageModel:
             if not len(prime) or prime == ' ':
                 prime = random.choice(list(vocab.keys()))
             prime_labels = [vocab.get(word, 0) for word in prime.split()]
-            bs = BeamSearch(beam_search_predict,
-                            sess.run(self.cell.zero_state(1, tf.float32)),
-                            prime_labels)
+            bs = BeamSearch(beam_search_predict, session.run(self.cell.zero_state(1, tf.float32)), prime_labels)
             samples, scores = bs.search(None, None, k=width, maxsample=num)
             return samples[np.argmin(scores)]
 
         ret = ''
         if pick == 1:
-            state = sess.run(self.cell.zero_state(1, tf.float32))
+            state = session.run(self.cell.zero_state(1, tf.float32))
             if not len(prime) or prime == ' ':
-                prime  = random.choice(list(vocab.keys()))
-            print (prime)
+                prime = random.choice(list(vocab.keys()))
+            print(prime)
             for word in prime.split()[:-1]:
-                print (word)
+                print(word)
                 x = np.zeros((1, 1))
                 x[0, 0] = vocab.get(word,0)
                 feed = {self.input_data: x, self.initial_state:state}
-                [state] = sess.run([self.final_state], feed)
+                [state] = session.run([self.final_state], feed)
 
             ret = prime
             word = prime.split()[-1]
@@ -124,17 +110,14 @@ class LanguageModel:
                 x = np.zeros((1, 1))
                 x[0, 0] = vocab.get(word, 0)
                 feed = {self.input_data: x, self.initial_state:state}
-                [probs, state] = sess.run([self.probs, self.final_state], feed)
+                probs, state = session.run([self.probs, self.final_state], feed)
                 p = probs[0]
 
                 if sampling_type == 0:
                     sample = np.argmax(p)
                 elif sampling_type == 2:
-                    if word == '\n':
-                        sample = weighted_pick(p)
-                    else:
-                        sample = np.argmax(p)
-                else: # sampling_type == 1 default:
+                    sample = weighted_pick(p) if word == '\n' else np.argmax(p)
+                else:
                     sample = weighted_pick(p)
 
                 pred = words[sample]
