@@ -7,6 +7,10 @@ import numpy as np
 import re
 import pickle
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class TextLoader:
 
@@ -21,11 +25,12 @@ class TextLoader:
 
         # Let's not read vocab and data from file. We many change them.
         if True or not (os.path.exists(vocab_file) and os.path.exists(tensor_file)):
-            print("reading text file")
+            logger.info("reading text file")
             self.preprocess(input_file, vocab_file, tensor_file, encoding)
         else:
-            print("loading preprocessed files")
+            logger.info("loading preprocessed files")
             self.load_preprocessed(vocab_file, tensor_file)
+
         self.create_batches()
         self.reset_batch_pointer()
 

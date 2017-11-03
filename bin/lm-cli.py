@@ -70,7 +70,7 @@ def train(args):
 
         need_be_same = ["model", "rnn_size", "num_layers", "seq_length"]
         for checkme in need_be_same:
-            assert vars(saved_model_args)[checkme] == vars(args)[checkme], "Command line argument and saved model disagree on '%s' "%checkme
+            assert vars(saved_model_args)[checkme] == vars(args)[checkme], "Command line argument and saved model disagree on '{}' ".format(checkme)
 
         # open saved vocab/dict and check if vocabs/dicts are compatible
         with open(os.path.join(args.init_from, 'words_vocab.pkl'), 'rb') as f:
@@ -81,6 +81,7 @@ def train(args):
 
     with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
         pickle.dump(args, f)
+
     with open(os.path.join(args.save_dir, 'words_vocab.pkl'), 'wb') as f:
         pickle.dump((data_loader.words, data_loader.vocab), f)
 

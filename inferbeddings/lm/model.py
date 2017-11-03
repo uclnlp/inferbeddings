@@ -8,6 +8,10 @@ import numpy as np
 
 from inferbeddings.lm.beam import BeamSearch
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class LanguageModel:
     def __init__(self, args, infer=False):
@@ -52,16 +56,20 @@ class LanguageModel:
         output = tf.reshape(tf.concat(outputs, 1), [-1, args.rnn_size])
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
+
         loss = legacy_seq2seq.sequence_loss_by_example([self.logits],
                                                        [tf.reshape(self.targets, [-1])],
                                                        [tf.ones([args.batch_size * args.seq_length])],
                                                        args.vocab_size)
+
         self.cost = tf.reduce_sum(loss) / args.batch_size / args.seq_length
         self.final_state = last_state
         self.lr = tf.Variable(0.0, trainable=False)
+
         tvars = tf.trainable_variables()
         grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars), args.grad_clip)
         optimizer = tf.train.AdamOptimizer(self.lr)
+
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
     def sample(self, session, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
@@ -96,9 +104,11 @@ class LanguageModel:
             state = session.run(self.cell.zero_state(1, tf.float32))
             if not len(prime) or prime == ' ':
                 prime = random.choice(list(vocab.keys()))
-            print(prime)
+
+            logger.info('Prime: {}'.format(prime))
+
             for word in prime.split()[:-1]:
-                print(word)
+                logger.info('Word: {}'.format(word))
                 x = np.zeros((1, 1))
                 x[0, 0] = vocab.get(word,0)
                 feed = {self.input_data: x, self.initial_state:state}
@@ -106,10 +116,14 @@ class LanguageModel:
 
             ret = prime
             word = prime.split()[-1]
+
             for n in range(num):
                 x = np.zeros((1, 1))
                 x[0, 0] = vocab.get(word, 0)
-                feed = {self.input_data: x, self.initial_state:state}
+                feed = {
+                    self.input_data: x,
+                    self.initial_state: state
+                }
                 probs, state = session.run([self.probs, self.final_state], feed)
                 p = probs[0]
 
@@ -127,4 +141,5 @@ class LanguageModel:
             pred = beam_search_pick(prime, width)
             for i, label in enumerate(pred):
                 ret += ' ' + words[label] if i > 0 else words[label]
+
         return ret
