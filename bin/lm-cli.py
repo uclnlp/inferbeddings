@@ -26,8 +26,6 @@ def main():
     parser.add_argument('--input_encoding', type=str, default=None,
                         help='character encoding of input.txt, '
                              'from https://docs.python.org/3/library/codecs.html#standard-encodings')
-    parser.add_argument('--log_dir', type=str, default='logs',
-                        help='directory containing tensorboard logs')
     parser.add_argument('--save_dir', type=str, default='save', help='directory to store checkpointed models')
     parser.add_argument('--rnn_size', type=int, default=256, help='size of RNN hidden state')
     parser.add_argument('--num_layers', type=int, default=2, help='number of layers in the RNN')
@@ -88,14 +86,10 @@ def train(args):
 
     model = LanguageModel(args)
 
-    merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(args.log_dir)
-
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
 
     with tf.Session(config=sess_config) as sess:
-        train_writer.add_graph(sess.graph)
         tf.global_variables_initializer().run()
         saver = tf.train.Saver(tf.global_variables())
 
@@ -118,19 +112,16 @@ def train(args):
                 start = time.time()
                 x, y = data_loader.next_batch()
                 feed = {model.input_data: x, model.targets: y, model.initial_state: state}
-                summary, train_loss, state, _ = sess.run([merged, model.cost, model.final_state, model.train_op], feed)
-                train_writer.add_summary(summary, e * data_loader.num_batches + b)
+                train_loss, state, _ = sess.run([model.cost, model.final_state, model.train_op], feed)
                 speed = time.time() - start
 
                 if (e * data_loader.num_batches + b) % args.batch_size == 0:
-                    print("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}".format(e * data_loader.num_batches + b, args.num_epochs * data_loader.num_batches, e, train_loss, speed))
+                    logger.info("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}".format(e * data_loader.num_batches + b, args.num_epochs * data_loader.num_batches, e, train_loss, speed))
 
                 if (e * data_loader.num_batches + b) % args.save_every == 0 or (e == args.num_epochs-1 and b == data_loader.num_batches-1):
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=e * data_loader.num_batches + b)
-                    print("model saved to {}".format(checkpoint_path))
-
-        train_writer.close()
+                    logger.info("model saved to {}".format(checkpoint_path))
 
 if __name__ == '__main__':
     main()
