@@ -9,6 +9,7 @@ import pickle
 
 
 class TextLoader:
+
     def __init__(self, data_dir, batch_size, seq_length, encoding=None):
         self.data_dir = data_dir
         self.batch_size = batch_size
@@ -46,6 +47,7 @@ class TextLoader:
         string = re.sub(r"\)", " \) ", string)
         string = re.sub(r"\?", " \? ", string)
         string = re.sub(r"\s{2,}", " ", string)
+
         return string.strip().lower()
 
     def build_vocab(self, sentences):
