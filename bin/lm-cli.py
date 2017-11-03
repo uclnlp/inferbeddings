@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import tensorflow as tf
+import os
+import sys
 
 import argparse
 import time
-import os
 
 import pickle
 
+import tensorflow as tf
+
 from inferbeddings.lm.loader import TextLoader
 from inferbeddings.lm.model import LanguageModel
+
+import logging
+
+logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def main():
@@ -40,7 +46,7 @@ def main():
                              'checkpoint'        : paths to model file(s) (created by tf).
                                                    Note: this file contains absolute paths, be careful when moving files around;
                              'model.ckpt-*'      : file(s) with model definition (created by tf)
-                        """)
+                             """)
     args = parser.parse_args()
     train(args)
 
