@@ -18,31 +18,21 @@ def main():
     parser.add_argument('--data_dir', type=str, default='data/lm/neuromancer',
                         help='data directory containing input.txt')
     parser.add_argument('--input_encoding', type=str, default=None,
-                        help='character encoding of input.txt, from https://docs.python.org/3/library/codecs.html#standard-encodings')
+                        help='character encoding of input.txt, '
+                             'from https://docs.python.org/3/library/codecs.html#standard-encodings')
     parser.add_argument('--log_dir', type=str, default='logs',
                         help='directory containing tensorboard logs')
-    parser.add_argument('--save_dir', type=str, default='save',
-                        help='directory to store checkpointed models')
-    parser.add_argument('--rnn_size', type=int, default=256,
-                        help='size of RNN hidden state')
-    parser.add_argument('--num_layers', type=int, default=2,
-                        help='number of layers in the RNN')
-    parser.add_argument('--model', type=str, default='lstm',
-                        help='rnn, gru, or lstm')
-    parser.add_argument('--batch_size', type=int, default=50,
-                        help='minibatch size')
-    parser.add_argument('--seq_length', type=int, default=25,
-                        help='RNN sequence length')
-    parser.add_argument('--num_epochs', type=int, default=50,
-                        help='number of epochs')
-    parser.add_argument('--save_every', type=int, default=1000,
-                        help='save frequency')
-    parser.add_argument('--grad_clip', type=float, default=5.,
-                        help='clip gradients at this value')
-    parser.add_argument('--learning_rate', type=float, default=0.002,
-                        help='learning rate')
-    parser.add_argument('--decay_rate', type=float, default=0.97,
-                        help='decay rate for rmsprop')
+    parser.add_argument('--save_dir', type=str, default='save', help='directory to store checkpointed models')
+    parser.add_argument('--rnn_size', type=int, default=256, help='size of RNN hidden state')
+    parser.add_argument('--num_layers', type=int, default=2, help='number of layers in the RNN')
+    parser.add_argument('--model', type=str, default='lstm', help='rnn, gru, or lstm')
+    parser.add_argument('--batch_size', type=int, default=50, help='minibatch size')
+    parser.add_argument('--seq_length', type=int, default=25, help='RNN sequence length')
+    parser.add_argument('--num_epochs', type=int, default=50, help='number of epochs')
+    parser.add_argument('--save_every', type=int, default=1000, help='save frequency')
+    parser.add_argument('--grad_clip', type=float, default=5., help='clip gradients at this value')
+    parser.add_argument('--learning_rate', type=float, default=0.002, help='learning rate')
+    parser.add_argument('--decay_rate', type=float, default=0.97, help='decay rate for rmsprop')
     parser.add_argument('--init_from', type=str, default=None,
                         help="""continue training from saved model at this path. Path must contain files saved by previous training process:
                              'config.pkl'        : configuration;
@@ -65,6 +55,7 @@ def train(args):
         assert os.path.isdir(args.init_from), " %s must be a path" % args.init_from
         assert os.path.isfile(os.path.join(args.init_from, "config.pkl")), "config.pkl file does not exist in path %s"%args.init_from
         assert os.path.isfile(os.path.join(args.init_from, "words_vocab.pkl")), "words_vocab.pkl.pkl file does not exist in path %s" % args.init_from
+
         ckpt = tf.train.get_checkpoint_state(args.init_from)
         assert ckpt, "No checkpoint found"
         assert ckpt.model_checkpoint_path, "No model path found in checkpoint"
@@ -72,7 +63,8 @@ def train(args):
         # open old config and check if models are compatible
         with open(os.path.join(args.init_from, 'config.pkl'), 'rb') as f:
             saved_model_args = pickle.load(f)
-        need_be_same=["model", "rnn_size", "num_layers", "seq_length"]
+
+        need_be_same = ["model", "rnn_size", "num_layers", "seq_length"]
         for checkme in need_be_same:
             assert vars(saved_model_args)[checkme] == vars(args)[checkme], "Command line argument and saved model disagree on '%s' "%checkme
 
@@ -131,6 +123,7 @@ def train(args):
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=e * data_loader.num_batches + b)
                     print("model saved to {}".format(checkpoint_path))
+
         train_writer.close()
 
 if __name__ == '__main__':
