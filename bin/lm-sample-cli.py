@@ -5,9 +5,9 @@ import tensorflow as tf
 
 import argparse
 import os
-from six.moves import cPickle
 
-from inferbeddings.lm.loader import TextLoader
+import pickle
+
 from inferbeddings.lm.model import LanguageModel
 
 
@@ -32,9 +32,9 @@ def main():
 
 def sample(args):
     with open(os.path.join(args.save_dir, 'config.pkl'), 'rb') as f:
-        saved_args = cPickle.load(f)
+        saved_args = pickle.load(f)
     with open(os.path.join(args.save_dir, 'words_vocab.pkl'), 'rb') as f:
-        words, vocab = cPickle.load(f)
+        words, vocab = pickle.load(f)
     model = LanguageModel(saved_args, True)
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
