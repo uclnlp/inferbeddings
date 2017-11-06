@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class TextLoader:
-
     def __init__(self, data_dir, batch_size, seq_length, encoding=None):
         self.data_dir = data_dir
         self.batch_size = batch_size
@@ -30,7 +29,6 @@ class TextLoader:
         else:
             logger.info("loading preprocessed files")
             self.load_preprocessed(vocab_file, tensor_file)
-
         self.create_batches()
         self.reset_batch_pointer()
 
@@ -55,7 +53,7 @@ class TextLoader:
 
         return string.strip().lower()
 
-    def build_vocab(self, sentences):
+    def build_vocabulary(self, sentences):
         """
         Builds a vocabulary mapping from word to index based on the sentences.
         Returns vocabulary mapping and inverse vocabulary mapping.
@@ -79,7 +77,7 @@ class TextLoader:
         # Optional text cleaning or make them lower case, etc.
         x_text = data.split()
 
-        self.vocab, self.words = self.build_vocab(x_text)
+        self.vocab, self.words = self.build_vocabulary(x_text)
         self.vocab_size = len(self.words)
 
         with open(vocab_file, 'wb') as f:
@@ -90,7 +88,6 @@ class TextLoader:
         self.tensor = np.array(list(map(self.vocab.get, x_text)))
         # Save the data to data.npy
         np.save(tensor_file, self.tensor)
-
 
     def load_preprocessed(self, vocab_file, tensor_file):
         with open(vocab_file, 'rb') as f:
@@ -105,7 +102,7 @@ class TextLoader:
     def create_batches(self):
         self.num_batches = int(self.tensor.size / (self.batch_size *
                                                    self.seq_length))
-        if self.num_batches==0:
+        if self.num_batches == 0:
             assert False, "Not enough data. Make seq_length and batch_size small."
 
         self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]

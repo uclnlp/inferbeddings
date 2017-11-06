@@ -16,11 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class LanguageModel:
-    def __init__(self, args, infer=False):
-        self.args = args
+    def __init__(self, model='rnn', seq_length=25, batch_size=50, rnn_size=256, num_layers=1,
+                 learning_rate=0.1, grad_clip=5.,
+                 vocab_size=None, infer=False):
+
+        assert vocab_size is not None
+
         if infer:
-            args.batch_size = 1
-            args.seq_length = 1
+            batch_size = 1
+            seq_length = 1
 
         cell_to_fn = {
             'rnn': rnn.BasicRNNCell,
@@ -28,26 +32,24 @@ class LanguageModel:
             'lstm': rnn.BasicLSTMCell
         }
 
-        if args.model not in cell_to_fn:
-            raise Exception("model type not supported: {}".format(args.model))
-        cell_fn = cell_to_fn[args.model]
+        if model not in cell_to_fn:
+            raise ValueError("model type not supported: {}".format(model))
 
-        cells = [cell_fn(args.rnn_size) for _ in range(args.num_layers)]
+        cell_fn = cell_to_fn[model]
+        cells = [cell_fn(rnn_size) for _ in range(num_layers)]
 
         self.cell = cell = rnn.MultiRNNCell(cells)
 
-        self.input_data = tf.placeholder(tf.int32, [args.batch_size, args.seq_length])
-        self.targets = tf.placeholder(tf.int32, [args.batch_size, args.seq_length])
-        self.initial_state = cell.zero_state(args.batch_size, tf.float32)
-
-        self.epoch_pointer = tf.Variable(0, name="epoch_pointer", trainable=False)
+        self.input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
+        self.targets = tf.placeholder(tf.int32, [batch_size, seq_length])
+        self.initial_state = cell.zero_state(batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
-            softmax_w = tf.get_variable("softmax_w", [args.rnn_size, args.vocab_size])
-            softmax_b = tf.get_variable("softmax_b", [args.vocab_size])
+            softmax_w = tf.get_variable("softmax_w", [rnn_size, vocab_size])
+            softmax_b = tf.get_variable("softmax_b", [vocab_size])
 
-            embedding = tf.get_variable("embedding", [args.vocab_size, args.rnn_size])
-            inputs = tf.split(tf.nn.embedding_lookup(embedding, self.input_data), args.seq_length, 1)
+            embedding = tf.get_variable("embedding", [vocab_size, rnn_size])
+            inputs = tf.split(tf.nn.embedding_lookup(embedding, self.input_data), seq_length, 1)
             inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
@@ -56,22 +58,21 @@ class LanguageModel:
             return tf.nn.embedding_lookup(embedding, prev_symbol)
 
         outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if infer else None, scope='rnnlm')
-        output = tf.reshape(tf.concat(outputs, 1), [-1, args.rnn_size])
+        output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])
         self.logits = tf.matmul(output, softmax_w) + softmax_b
-        self.probs = tf.nn.softmax(self.logits)
+        self.probabilities = tf.nn.softmax(self.logits)
 
         loss = legacy_seq2seq.sequence_loss_by_example([self.logits],
                                                        [tf.reshape(self.targets, [-1])],
-                                                       [tf.ones([args.batch_size * args.seq_length])],
-                                                       args.vocab_size)
+                                                       [tf.ones([batch_size * seq_length])],
+                                                       vocab_size)
 
-        self.cost = tf.reduce_sum(loss) / args.batch_size / args.seq_length
+        self.cost = tf.reduce_sum(loss) / batch_size / seq_length
         self.final_state = last_state
-        self.lr = tf.Variable(0.0, trainable=False)
 
         tvars = tf.trainable_variables()
-        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars), args.grad_clip)
-        optimizer = tf.train.AdamOptimizer(self.lr)
+        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars), grad_clip)
+        optimizer = tf.train.AdagradOptimizer(learning_rate)
 
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
@@ -88,21 +89,26 @@ class LanguageModel:
             """
             x = np.zeros((1, 1))
             x[0, 0] = sample[-1]
-            feed = {self.input_data: x, self.initial_state: state}
-            [probs, final_state] = session.run([self.probs, self.final_state],
-                                               feed)
-            return probs, final_state
+
+            feed_dict = {
+                self.input_data: x,
+                self.initial_state: state
+            }
+            probabilities, final_state = session.run([self.probabilities, self.final_state], feed_dict=feed_dict)
+
+            return probabilities, final_state
 
         def beam_search_pick(prime, width):
             """Returns the beam search pick."""
             if not len(prime) or prime == ' ':
                 prime = random.choice(list(vocab.keys()))
+
             prime_labels = [vocab.get(word, 0) for word in prime.split()]
             bs = BeamSearch(beam_search_predict, session.run(self.cell.zero_state(1, tf.float32)), prime_labels)
             samples, scores = bs.search(None, None, k=width, maxsample=num)
             return samples[np.argmin(scores)]
 
-        ret = ''
+        res = ''
         if pick == 1:
             state = session.run(self.cell.zero_state(1, tf.float32))
             if not len(prime) or prime == ' ':
@@ -113,11 +119,14 @@ class LanguageModel:
             for word in prime.split()[:-1]:
                 logger.info('Word: {}'.format(word))
                 x = np.zeros((1, 1))
-                x[0, 0] = vocab.get(word,0)
-                feed = {self.input_data: x, self.initial_state:state}
+                x[0, 0] = vocab.get(word, 0)
+                feed = {
+                    self.input_data: x,
+                    self.initial_state: state
+                }
                 [state] = session.run([self.final_state], feed)
 
-            ret = prime
+            res = prime
             word = prime.split()[-1]
 
             for n in range(num):
@@ -127,8 +136,8 @@ class LanguageModel:
                     self.input_data: x,
                     self.initial_state: state
                 }
-                probs, state = session.run([self.probs, self.final_state], feed)
-                p = probs[0]
+                probabilities, state = session.run([self.probabilities, self.final_state], feed)
+                p = probabilities[0]
 
                 if sampling_type == 0:
                     sample = np.argmax(p)
@@ -137,12 +146,11 @@ class LanguageModel:
                 else:
                     sample = weighted_pick(p)
 
-                pred = words[sample]
-                ret += ' ' + pred
-                word = pred
+                predictions = words[sample]
+                res += ' ' + predictions
+                word = predictions
         elif pick == 2:
-            pred = beam_search_pick(prime, width)
-            for i, label in enumerate(pred):
-                ret += ' ' + words[label] if i > 0 else words[label]
-
-        return ret
+            predictions = beam_search_pick(prime, width)
+            for i, label in enumerate(predictions):
+                res += ' ' + words[label] if i > 0 else words[label]
+        return res

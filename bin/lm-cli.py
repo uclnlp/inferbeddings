@@ -21,15 +21,13 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='data/lm/neuromancer',
-                        help='data directory containing input.txt')
+    parser.add_argument('--data_dir', type=str, default='data/lm/neuromancer', help='data directory containing input.txt')
     parser.add_argument('--input_encoding', type=str, default=None,
-                        help='character encoding of input.txt, '
-                             'from https://docs.python.org/3/library/codecs.html#standard-encodings')
+                        help='character encoding of input.txt, from https://docs.python.org/3/library/codecs.html#standard-encodings')
     parser.add_argument('--save_dir', type=str, default='save', help='directory to store checkpointed models')
     parser.add_argument('--rnn_size', type=int, default=256, help='size of RNN hidden state')
-    parser.add_argument('--num_layers', type=int, default=2, help='number of layers in the RNN')
-    parser.add_argument('--model', type=str, default='lstm', help='rnn, gru, or lstm')
+    parser.add_argument('--num_layers', type=int, default=1, help='number of layers in the RNN')
+    parser.add_argument('--model', type=str, default='rnn', help='rnn, gru, or lstm')
     parser.add_argument('--batch_size', type=int, default=50, help='minibatch size')
     parser.add_argument('--seq_length', type=int, default=25, help='RNN sequence length')
     parser.add_argument('--num_epochs', type=int, default=50, help='number of epochs')
@@ -51,16 +49,17 @@ def main(argv):
 
 def train(args):
     data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length, args.input_encoding)
-    args.vocab_size = data_loader.vocab_size
+    vocab_size = data_loader.vocab_size
 
     # check compatibility if training is continued from previously saved model
     if args.init_from is not None:
         # check if all necessary files exist
-        assert os.path.isdir(args.init_from), " %s must be a path" % args.init_from
-        assert os.path.isfile(os.path.join(args.init_from, "config.pkl")), "config.pkl file does not exist in path %s"%args.init_from
-        assert os.path.isfile(os.path.join(args.init_from, "words_vocab.pkl")), "words_vocab.pkl.pkl file does not exist in path %s" % args.init_from
+        assert os.path.isdir(args.init_from)
+        assert os.path.isfile(os.path.join(args.init_from, "config.pkl"))
+        assert os.path.isfile(os.path.join(args.init_from, "words_vocab.pkl"))
 
         ckpt = tf.train.get_checkpoint_state(args.init_from)
+
         assert ckpt, "No checkpoint found"
         assert ckpt.model_checkpoint_path, "No model path found in checkpoint"
 
@@ -70,7 +69,7 @@ def train(args):
 
         need_be_same = ["model", "rnn_size", "num_layers", "seq_length"]
         for checkme in need_be_same:
-            assert vars(saved_model_args)[checkme] == vars(args)[checkme], "Command line argument and saved model disagree on '{}' ".format(checkme)
+            assert vars(saved_model_args)[checkme] == vars(args)[checkme], "Disagreement on '{}'".format(checkme)
 
         # open saved vocab/dict and check if vocabs/dicts are compatible
         with open(os.path.join(args.init_from, 'words_vocab.pkl'), 'rb') as f:
@@ -85,7 +84,10 @@ def train(args):
     with open(os.path.join(args.save_dir, 'words_vocab.pkl'), 'wb') as f:
         pickle.dump((data_loader.words, data_loader.vocab), f)
 
-    model = LanguageModel(args)
+    model = LanguageModel(
+        model=args.model, seq_length=args.seq_length, batch_size=args.batch_size, rnn_size=args.rnn_size,
+        num_layers=args.num_layers, learning_rate=args.learning_rate, grad_clip=args.grad_clip,
+        vocab_size=vocab_size, infer=False)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
@@ -98,36 +100,31 @@ def train(args):
         if args.init_from is not None:
             saver.restore(session, ckpt.model_checkpoint_path)
 
-        for e in range(model.epoch_pointer.eval(), args.num_epochs):
-            assign_lr_op = tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e))
+        for epoch_id in range(0, args.num_epochs):
+            logger.debug('Epoch: {}'.format(epoch_id))
 
-            session.run(assign_lr_op)
+            data_loader.reset_batch_pointer()
             state = session.run(model.initial_state)
 
-            if args.init_from is None:
-                assign_op = model.epoch_pointer.assign(e)
-                session.run(assign_op)
-
-            if args.init_from is not None:
-                args.init_from = None
-
-            for b in range(data_loader.pointer, data_loader.num_batches):
-                start = time.time()
-
+            for batch_id in range(data_loader.pointer, data_loader.num_batches):
+                logger.debug('Epoch: {}\tBatch: {}'.format(epoch_id, batch_id))
                 x, y = data_loader.next_batch()
 
                 feed = {model.input_data: x, model.targets: y, model.initial_state: state}
                 train_loss, state, _ = session.run([model.cost, model.final_state, model.train_op], feed)
-                speed = time.time() - start
 
-                if (e * data_loader.num_batches + b) % args.batch_size == 0:
-                    logger.info("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}".format(e * data_loader.num_batches + b, args.num_epochs * data_loader.num_batches, e, train_loss, speed))
+                if (epoch_id * data_loader.num_batches + batch_id) % args.batch_size == 0:
+                    logger.info("{}/{} (epoch {}), train_loss = {:.3f}"
+                                .format(epoch_id * data_loader.num_batches + batch_id, args.num_epochs * data_loader.num_batches,
+                                        epoch_id, train_loss))
 
-                if (e * data_loader.num_batches + b) % args.save_every == 0 or (e == args.num_epochs-1 and b == data_loader.num_batches-1):
+                if (epoch_id * data_loader.num_batches + batch_id) % args.save_every == 0 or \
+                        (epoch_id == args.num_epochs - 1 and batch_id == data_loader.num_batches-1):
+
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
-                    saver.save(session, checkpoint_path, global_step=e * data_loader.num_batches + b)
+                    saver.save(session, checkpoint_path, global_step=epoch_id * data_loader.num_batches + batch_id)
                     logger.info("model saved to {}".format(checkpoint_path))
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     main(sys.argv[1:])
