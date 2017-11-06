@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import random
+
+import numpy as np
 import tensorflow as tf
+
 from tensorflow.contrib import rnn
 from tensorflow.contrib import legacy_seq2seq
-import random
-import numpy as np
 
 from inferbeddings.lm.beam import BeamSearch
 
