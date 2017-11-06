@@ -37,6 +37,7 @@ class LanguageModel:
         self.input_data = tf.placeholder(tf.int32, [args.batch_size, args.seq_length])
         self.targets = tf.placeholder(tf.int32, [args.batch_size, args.seq_length])
         self.initial_state = cell.zero_state(args.batch_size, tf.float32)
+
         self.epoch_pointer = tf.Variable(0, name="epoch_pointer", trainable=False)
 
         with tf.variable_scope('rnnlm'):

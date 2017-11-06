@@ -99,7 +99,9 @@ def train(args):
             saver.restore(session, ckpt.model_checkpoint_path)
 
         for e in range(model.epoch_pointer.eval(), args.num_epochs):
-            session.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
+            assign_lr_op = tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e))
+
+            session.run(assign_lr_op)
             state = session.run(model.initial_state)
 
             if args.init_from is None:
@@ -111,7 +113,9 @@ def train(args):
 
             for b in range(data_loader.pointer, data_loader.num_batches):
                 start = time.time()
+
                 x, y = data_loader.next_batch()
+
                 feed = {model.input_data: x, model.targets: y, model.initial_state: state}
                 train_loss, state, _ = session.run([model.cost, model.final_state, model.train_op], feed)
                 speed = time.time() - start
