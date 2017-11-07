@@ -24,7 +24,7 @@ def main(argv):
                         help='data directory containing input.txt')
     parser.add_argument('--input_encoding', type=str, default=None,
                         help='character encoding of input.txt, from https://docs.python.org/3/library/codecs.html#standard-encodings')
-    parser.add_argument('--save-dir', type=str, default='save', help='directory to store checkpointed models')
+    parser.add_argument('--save', type=str, default='save', help='directory to store checkpointed models')
     parser.add_argument('--rnn-size', type=int, default=256, help='size of RNN hidden state')
     parser.add_argument('--num-layers', type=int, default=1, help='number of layers in the RNN')
     parser.add_argument('--model', type=str, default='rnn', help='rnn, gru, or lstm')
