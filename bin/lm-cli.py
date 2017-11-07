@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-
 import argparse
-
+import logging
+import os
 import pickle
+import sys
 
 import tensorflow as tf
 
-from inferbeddings.nli import tfutil
+from inferbeddings.lm.legacy.model import LanguageModel
 from inferbeddings.lm.loader import TextLoader
-from inferbeddings.lm.model import LanguageModel
-
-import logging
+from inferbeddings.nli import tfutil
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
@@ -137,8 +134,12 @@ def train(args):
                 logger.debug('Epoch: {}\tBatch: {}'.format(epoch_id, batch_id))
                 x, y = data_loader.next_batch()
 
-                feed = {model.input_data: x, model.targets: y, model.initial_state: state}
-                train_loss, state, _ = session.run([model.cost, model.final_state, train_op], feed)
+                feed_dict = {
+                    model.input_data: x,
+                    model.targets: y,
+                    model.initial_state: state
+                }
+                train_loss, state, _ = session.run([model.cost, model.final_state, train_op], feed_dict=feed_dict)
 
                 if (epoch_id * data_loader.num_batches + batch_id) % args.batch_size == 0:
                     logger.info("{}/{} (epoch {}), train_loss = {:.3f}"

@@ -43,9 +43,9 @@ class LanguageModel:
         self.initial_state = cell.zero_state(batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
-            softmax_w = tf.get_variable("softmax_w", [rnn_size, vocab_size],
-                                        initializer=tf.contrib.layers.xavier_initializer())
-            softmax_b = tf.get_variable("softmax_b", [vocab_size], initializer=tf.zeros_initializer())
+
+            W = tf.get_variable("W", [rnn_size, vocab_size], initializer=tf.contrib.layers.xavier_initializer())
+            b = tf.get_variable("b", [vocab_size], initializer=tf.zeros_initializer())
 
             emb_lookup = tf.nn.embedding_lookup(embedding_layer, self.input_data)
             emb_projection = tf.contrib.layers.fully_connected(inputs=emb_lookup,
@@ -57,14 +57,14 @@ class LanguageModel:
             inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
-            prev = tf.matmul(prev, softmax_w) + softmax_b
+            prev = tf.matmul(prev, W) + b
             prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
             return tf.nn.embedding_lookup(embedding_layer, prev_symbol)
 
         outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if infer else None, scope='rnnlm')
         output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])
 
-        self.logits = tf.matmul(output, softmax_w) + softmax_b
+        self.logits = tf.matmul(output, W) + b
         self.probabilities = tf.nn.softmax(self.logits)
 
         loss = legacy_seq2seq.sequence_loss_by_example([self.logits],

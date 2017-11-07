@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import sys
 import argparse
+import logging
+import os
+import pickle
+import sys
 
 import tensorflow as tf
 
-import pickle
-
-from inferbeddings.lm.model import LanguageModel
-
-import logging
+from inferbeddings.lm.legacy.model import LanguageModel
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
@@ -38,9 +36,14 @@ def sample(args):
     with open(os.path.join(args.save, 'words_vocab.pkl'), 'rb') as f:
         words, vocab = pickle.load(f)
 
+    vocab_size = len(words)
+
+    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, args.embedding_size],
+                                      initializer=tf.contrib.layers.xavier_initializer(), trainable=False)
+
     model = LanguageModel(model=config['model'], seq_length=config['seq_length'], batch_size=config['batch_size'],
                           rnn_size=config['rnn_size'], num_layers=config['num_layers'], vocab_size=config['vocab_size'],
-                          infer=True)
+                          embedding_layer=embedding_layer, infer=True)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
