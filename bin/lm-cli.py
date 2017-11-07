@@ -99,8 +99,8 @@ def train(args):
 
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(tf.gradients(model.cost, tvars), args.grad_clip)
-    optimizer = tf.train.AdagradOptimizer(args.learning_rate)
 
+    optimizer = tf.train.AdagradOptimizer(args.learning_rate)
     train_op = optimizer.apply_gradients(zip(grads, tvars))
 
     session_config = tf.ConfigProto()

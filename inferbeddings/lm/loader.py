@@ -45,9 +45,9 @@ class TextLoader:
         vocabulary_inv = list(sorted(vocabulary_inv))
 
         # Mapping from word to index
-        vocabulary = {x: i for i, x in enumerate(vocabulary_inv)}
+        vocabulary = {word: idx for idx, word in enumerate(vocabulary_inv)}
 
-        return [vocabulary, vocabulary_inv]
+        return vocabulary, vocabulary_inv
 
     def preprocess(self, input_file, vocab_file, tensor_file, encoding):
         with codecs.open(input_file, "r", encoding=encoding) as f:

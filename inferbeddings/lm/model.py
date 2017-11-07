@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import random
-
 import numpy as np
 import tensorflow as tf
 
@@ -17,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class LanguageModel:
     def __init__(self, model='rnn', seq_length=25, batch_size=50, rnn_size=256, num_layers=1,
-                 vocab_size=None, infer=False):
+                 vocab_size=None, infer=False, glove_path=None, vocab=None, seed=0):
 
         assert vocab_size is not None
 
@@ -71,6 +69,8 @@ class LanguageModel:
         self.cost = tf.reduce_sum(loss) / batch_size / seq_length
         self.final_state = last_state
 
+        self.random_state = np.random.RandomState(seed)
+
     def sample(self, session, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
         def weighted_pick(weights):
             t = np.cumsum(weights)
@@ -96,7 +96,7 @@ class LanguageModel:
         def beam_search_pick(prime, width):
             """Returns the beam search pick."""
             if not len(prime) or prime == ' ':
-                prime = random.choice(list(vocab.keys()))
+                prime = self.random_state.choice(list(vocab.keys()))
 
             prime_labels = [vocab.get(word, 0) for word in prime.split()]
             bs = BeamSearch(beam_search_predict, session.run(self.cell.zero_state(1, tf.float32)), prime_labels)
@@ -107,7 +107,7 @@ class LanguageModel:
         if pick == 1:
             state = session.run(self.cell.zero_state(1, tf.float32))
             if not len(prime) or prime == ' ':
-                prime = random.choice(list(vocab.keys()))
+                prime = self.random_state.choice(list(vocab.keys()))
 
             logger.info('Prime: {}'.format(prime))
 
