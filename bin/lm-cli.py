@@ -63,7 +63,7 @@ def train(args):
         'vocab_size': vocab_size,
         'embedding_size': args.embedding_size,
         'rnn_size': args.rnn_size,
-        'num_layers': args.num_layerss
+        'num_layers': args.num_layers
     }
 
     # check compatibility if training is continued from previously saved model
