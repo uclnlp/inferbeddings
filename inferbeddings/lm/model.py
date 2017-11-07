@@ -48,6 +48,7 @@ class LanguageModel:
             softmax_b = tf.get_variable("softmax_b", [vocab_size])
 
             embedding = tf.get_variable("embedding", [vocab_size, rnn_size])
+
             inputs = tf.split(tf.nn.embedding_lookup(embedding, self.input_data), seq_length, 1)
             inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 

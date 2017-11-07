@@ -23,10 +23,14 @@ def main(argv):
     parser.add_argument('--data', type=str, default='data/lm/neuromancer',
                         help='data directory containing input.txt')
     parser.add_argument('--input_encoding', type=str, default=None,
-                        help='character encoding of input.txt, from https://docs.python.org/3/library/codecs.html#standard-encodings')
+                        help='character encoding of input.txt, '
+                             'from https://docs.python.org/3/library/codecs.html#standard-encodings')
+
     parser.add_argument('--save', type=str, default='save', help='directory to store checkpointed models')
+
     parser.add_argument('--rnn-size', type=int, default=256, help='size of RNN hidden state')
     parser.add_argument('--num-layers', type=int, default=1, help='number of layers in the RNN')
+
     parser.add_argument('--model', type=str, default='rnn', help='rnn, gru, or lstm')
     parser.add_argument('--batch-size', type=int, default=50, help='minibatch size')
     parser.add_argument('--seq-length', type=int, default=25, help='RNN sequence length')
@@ -34,6 +38,7 @@ def main(argv):
     parser.add_argument('--save-every', type=int, default=1000, help='save frequency')
     parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
     parser.add_argument('--learning-rate', '--lr', type=float, default=0.002, help='learning rate')
+
     parser.add_argument('--init-from', type=str, default=None,
                         help="""Continue training from saved model at this path. Path must contain files saved by previous training process:
                              'config.pkl'        : configuration;
