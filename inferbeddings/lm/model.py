@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class LanguageModel:
     def __init__(self, model='rnn', seq_length=25, batch_size=50, rnn_size=256, num_layers=1,
-                 vocab_size=None, infer=False, glove_path=None, vocab=None, seed=0):
+                 vocab_size=None, infer=False, seed=0):
 
         assert vocab_size is not None
 
@@ -42,8 +42,9 @@ class LanguageModel:
         self.initial_state = cell.zero_state(batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
-            softmax_w = tf.get_variable("softmax_w", [rnn_size, vocab_size])
-            softmax_b = tf.get_variable("softmax_b", [vocab_size])
+            softmax_w = tf.get_variable("softmax_w", [rnn_size, vocab_size],
+                                        initializer=tf.contrib.layers.xavier_initializer())
+            softmax_b = tf.get_variable("softmax_b", [vocab_size], initializer=tf.zeros_initializer())
 
             embedding = tf.get_variable("embedding", [vocab_size, rnn_size])
 

@@ -28,6 +28,7 @@ def main(argv):
 
     parser.add_argument('--save', type=str, default='save', help='directory to store checkpointed models')
 
+    parser.add_argument('--embedding-size', type=int, default=300, help='embedding size')
     parser.add_argument('--rnn-size', type=int, default=256, help='size of RNN hidden state')
     parser.add_argument('--num-layers', type=int, default=1, help='number of layers in the RNN')
 
@@ -56,8 +57,13 @@ def train(args):
     vocab_size = data_loader.vocab_size
 
     config = {
-        'model': args.model, 'seq_length': args.seq_length, 'batch_size': args.batch_size,
-        'rnn_size': args.rnn_size, 'num_layers': args.num_layers, 'vocab_size': vocab_size
+        'model': args.model,
+        'seq_length': args.seq_length,
+        'batch_size': args.batch_size,
+        'vocab_size': vocab_size,
+        'embedding_size': args.embedding_size,
+        'rnn_size': args.rnn_size,
+        'num_layers': args.num_layerss
     }
 
     # check compatibility if training is continued from previously saved model
@@ -93,6 +99,11 @@ def train(args):
     with open(os.path.join(args.save, 'words_vocab.pkl'), 'wb') as f:
         pickle.dump((data_loader.words, data_loader.vocab), f)
 
+
+
+    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
+                                      initializer=embedding_initializer, trainable=not is_fixed_embeddings)
+
     model = LanguageModel(model=config['model'], seq_length=config['seq_length'], batch_size=config['batch_size'],
                           rnn_size=config['rnn_size'], num_layers=config['num_layers'], vocab_size=config['vocab_size'],
                           infer=False)
@@ -106,9 +117,11 @@ def train(args):
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
+    init_op = tf.global_variables_initializer()
+    saver = tf.train.Saver(tf.global_variables())
+
     with tf.Session(config=session_config) as session:
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(tf.global_variables())
+        session.run(init_op)
 
         # restore model
         if args.init_from is not None:

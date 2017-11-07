@@ -331,23 +331,31 @@ def main(argv):
 
         a_losses = None
         if rule00_weight:
-            a_loss, a_losses = contradiction_symmetry_l2(model_class, model_kwargs, contradiction_idx=contradiction_idx,
-                                                         pooling_function=a_pooling_function, debug=True)
+            a_loss, a_losses = contradiction_symmetry_l2(model_class, model_kwargs,
+                                                         contradiction_idx=contradiction_idx,
+                                                         pooling_function=a_pooling_function,
+                                                         debug=True)
             loss += rule00_weight * a_loss
 
         if rule01_weight:
-            a_loss, a_losses = contradiction_symmetry_l1(model_class, model_kwargs, contradiction_idx=contradiction_idx,
-                                                         pooling_function=a_pooling_function, debug=True)
+            a_loss, a_losses = contradiction_symmetry_l1(model_class, model_kwargs,
+                                                         contradiction_idx=contradiction_idx,
+                                                         pooling_function=a_pooling_function,
+                                                         debug=True)
             loss += rule01_weight * a_loss
 
         if rule02_weight:
-            a_loss, a_losses = contradiction_kullback_leibler(model_class, model_kwargs, contradiction_idx=contradiction_idx,
-                                                              pooling_function=a_pooling_function, debug=True)
+            a_loss, a_losses = contradiction_kullback_leibler(model_class, model_kwargs,
+                                                              contradiction_idx=contradiction_idx,
+                                                              pooling_function=a_pooling_function,
+                                                              debug=True)
             loss += rule02_weight * a_loss
 
         if rule03_weight:
-            a_loss, a_losses = contradiction_jensen_shannon(model_class, model_kwargs, contradiction_idx=contradiction_idx,
-                                                            pooling_function=a_pooling_function, debug=True)
+            a_loss, a_losses = contradiction_jensen_shannon(model_class, model_kwargs,
+                                                            contradiction_idx=contradiction_idx,
+                                                            pooling_function=a_pooling_function,
+                                                            debug=True)
             loss += rule03_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
