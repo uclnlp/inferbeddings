@@ -46,7 +46,7 @@ def sample(args):
         tf.global_variables_initializer().run()
 
         saver = tf.train.Saver(tf.global_variables())
-        ckpt = tf.train.get_checkpoint_state(args.save_dir)
+        ckpt = tf.train.get_checkpoint_state(args.save)
 
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
