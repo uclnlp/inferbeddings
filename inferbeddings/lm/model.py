@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 class LanguageModel:
     def __init__(self, model='rnn', seq_length=25, batch_size=50, rnn_size=256, num_layers=1,
-                 vocab_size=None, infer=False, seed=0):
+                 embedding_layer=None, vocab_size=None, infer=False, seed=0):
 
+        assert embedding_layer is not None
         assert vocab_size is not None
 
         if infer:
@@ -46,15 +47,19 @@ class LanguageModel:
                                         initializer=tf.contrib.layers.xavier_initializer())
             softmax_b = tf.get_variable("softmax_b", [vocab_size], initializer=tf.zeros_initializer())
 
-            embedding = tf.get_variable("embedding", [vocab_size, rnn_size])
+            emb_lookup = tf.nn.embedding_lookup(embedding_layer, self.input_data)
+            emb_projection = tf.contrib.layers.fully_connected(inputs=emb_lookup,
+                                                               num_outputs=rnn_size,
+                                                               weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                                               biases_initializer=tf.zeros_initializer())
 
-            inputs = tf.split(tf.nn.embedding_lookup(embedding, self.input_data), seq_length, 1)
+            inputs = tf.split(emb_lookup, seq_length, 1)
             inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
             prev = tf.matmul(prev, softmax_w) + softmax_b
             prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
-            return tf.nn.embedding_lookup(embedding, prev_symbol)
+            return tf.nn.embedding_lookup(embedding_layer, prev_symbol)
 
         outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if infer else None, scope='rnnlm')
         output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])

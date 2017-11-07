@@ -99,14 +99,12 @@ def train(args):
     with open(os.path.join(args.save, 'words_vocab.pkl'), 'wb') as f:
         pickle.dump((data_loader.words, data_loader.vocab), f)
 
-
-
-    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size],
-                                      initializer=embedding_initializer, trainable=not is_fixed_embeddings)
+    embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, args.embedding_size],
+                                      initializer=tf.contrib.layers.xavier_initializer(), trainable=False)
 
     model = LanguageModel(model=config['model'], seq_length=config['seq_length'], batch_size=config['batch_size'],
                           rnn_size=config['rnn_size'], num_layers=config['num_layers'], vocab_size=config['vocab_size'],
-                          infer=False)
+                          embedding_layer=embedding_layer, infer=False)
 
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(tf.gradients(model.cost, tvars), args.grad_clip)
