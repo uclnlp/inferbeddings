@@ -53,7 +53,7 @@ class LanguageModel:
                                                                weights_initializer=tf.contrib.layers.xavier_initializer(),
                                                                biases_initializer=tf.zeros_initializer())
 
-            inputs = tf.split(emb_lookup, seq_length, 1)
+            inputs = tf.split(emb_projection, seq_length, 1)
             inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
