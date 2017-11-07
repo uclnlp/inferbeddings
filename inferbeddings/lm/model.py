@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 class LanguageModel:
     def __init__(self, model='rnn', seq_length=25, batch_size=50, rnn_size=256, num_layers=1,
-                 learning_rate=0.1, grad_clip=5.,
                  vocab_size=None, infer=False):
 
         assert vocab_size is not None
@@ -59,6 +58,7 @@ class LanguageModel:
 
         outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if infer else None, scope='rnnlm')
         output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])
+
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probabilities = tf.nn.softmax(self.logits)
 
@@ -70,17 +70,11 @@ class LanguageModel:
         self.cost = tf.reduce_sum(loss) / batch_size / seq_length
         self.final_state = last_state
 
-        tvars = tf.trainable_variables()
-        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars), grad_clip)
-        optimizer = tf.train.AdagradOptimizer(learning_rate)
-
-        self.train_op = optimizer.apply_gradients(zip(grads, tvars))
-
     def sample(self, session, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
         def weighted_pick(weights):
             t = np.cumsum(weights)
             s = np.sum(weights)
-            return int(np.searchsorted(t, np.random.rand(1)*s))
+            return int(np.searchsorted(t, np.random.rand(1) * s))
 
         def beam_search_predict(sample, state):
             """Returns the updated probability distribution (`probs`) and
@@ -124,7 +118,7 @@ class LanguageModel:
                     self.input_data: x,
                     self.initial_state: state
                 }
-                [state] = session.run([self.final_state], feed)
+                state = session.run([self.final_state], feed)
 
             res = prime
             word = prime.split()[-1]
