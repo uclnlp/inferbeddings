@@ -10,6 +10,7 @@ import pickle
 
 import tensorflow as tf
 
+from inferbeddings.nli import tfutil
 from inferbeddings.lm.loader import TextLoader
 from inferbeddings.lm.model import LanguageModel
 
@@ -119,6 +120,7 @@ def train(args):
     saver = tf.train.Saver(tf.global_variables())
 
     with tf.Session(config=session_config) as session:
+        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
         session.run(init_op)
 
         # restore model
