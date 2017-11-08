@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-
 from collections import Counter
 
-from inferbeddings.lm.loader import TextLoader
+import pytest
+
+from inferbeddings.lm.legacy.loader import TextLoader
 
 
 def test_build_vocab():

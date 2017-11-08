@@ -9,8 +9,8 @@ import sys
 
 import tensorflow as tf
 
-from inferbeddings.lm.legacy.model import LanguageModel
-from inferbeddings.lm.loader import TextLoader
+from inferbeddings.lm.legacy.loader import TextLoader
+from inferbeddings.lm.model import LanguageModel
 from inferbeddings.nli import tfutil
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))

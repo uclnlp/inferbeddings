@@ -1,105 +1,65 @@
 # -*- coding: utf-8 -*-
 
-import os
-import codecs
-import collections
+import gzip
+import json
+
 import numpy as np
-import re
-import pickle
+import nltk
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class TextLoader:
-    def __init__(self, data_dir, batch_size, seq_length, encoding=None):
-        self.data_dir = data_dir
-        self.batch_size = batch_size
-        self.seq_length = seq_length
+class SNLILoader:
+    def __init__(self,
+                 path='data/snli/snli_1.0_train.jsonl.gz',
+                 token_to_index=None):
 
-        input_file = os.path.join(data_dir, "input.txt")
-        vocab_file = os.path.join(data_dir, "vocab.pkl")
-        tensor_file = os.path.join(data_dir, "data.npy")
+        assert token_to_index is not None
+        assert path is not None
 
-        # Let's not read vocab and data from file. We many change them.
-        if True or not (os.path.exists(vocab_file) and os.path.exists(tensor_file)):
-            logger.info("reading text file")
-            self.preprocess(input_file, vocab_file, tensor_file, encoding)
-        else:
-            logger.info("loading preprocessed files")
-            self.load_preprocessed(vocab_file, tensor_file)
-        self.create_batches()
-        self.reset_batch_pointer()
+        self.path = path
+        self.token_to_index = token_to_index
 
-    def build_vocabulary(self, sentences):
-        """
-        Builds a vocabulary mapping from word to index based on the sentences.
-        Returns vocabulary mapping and inverse vocabulary mapping.
-        """
-        # Build vocabulary
-        word_counts = collections.Counter(sentences)
+        self.sentences = []
 
-        # Mapping from index to word
-        vocabulary_inv = [x[0] for x in word_counts.most_common()]
-        vocabulary_inv = list(sorted(vocabulary_inv))
+        with gzip.open(self.path, 'rb') as f:
+            for line in f:
+                decoded_line = line.decode('utf-8')
+                obj = json.loads(decoded_line)
 
-        # Mapping from word to index
-        vocabulary = {word: idx for idx, word in enumerate(vocabulary_inv)}
+                s1, s2, gl = SNLILoader.extract_sentences(obj)
 
-        return vocabulary, vocabulary_inv
+                if gl in {'entailment', 'neutral', 'contradiction'}:
+                    self.sentences += [s1, s2]
 
-    def preprocess(self, input_file, vocab_file, tensor_file, encoding):
-        with codecs.open(input_file, "r", encoding=encoding) as f:
-            data = f.read()
+        self.tensor = np.array(list(map(self.token_to_index.get, self.sentences)))
 
-        # Optional text cleaning or make them lower case, etc.
-        x_text = data.split()
 
-        self.vocab, self.words = self.build_vocabulary(x_text)
-        self.vocab_size = len(self.words)
 
-        with open(vocab_file, 'wb') as f:
-            pickle.dump(self.words, f)
 
-        # The same operation like this [self.vocab[word] for word in x_text]
-        # index of words as our basic data
-        self.tensor = np.array(list(map(self.vocab.get, x_text)))
-        # Save the data to data.npy
-        np.save(tensor_file, self.tensor)
+    @staticmethod
+    def extract_sentences(obj):
+        sentence1_parse = obj['sentence1_parse']
+        sentence1_tree = nltk.Tree.fromstring(sentence1_parse)
+        sentence1_parse_tokens = sentence1_tree.leaves()
 
-    def load_preprocessed(self, vocab_file, tensor_file):
-        with open(vocab_file, 'rb') as f:
-            self.words = pickle.load(f)
+        sentence2_parse = obj['sentence2_parse']
+        sentence2_tree = nltk.Tree.fromstring(sentence2_parse)
+        sentence2_parse_tokens = sentence2_tree.leaves()
 
-        self.vocab_size = len(self.words)
-        self.vocab = dict(zip(self.words, range(len(self.words))))
-        self.tensor = np.load(tensor_file)
-        self.num_batches = int(self.tensor.size / (self.batch_size * self.seq_length))
-        return
+        gold_label = obj['gold_label']
 
-    def create_batches(self):
-        self.num_batches = int(self.tensor.size / (self.batch_size *
-                                                   self.seq_length))
-        if self.num_batches == 0:
-            assert False, "Not enough data. Make seq_length and batch_size small."
+        return sentence1_parse_tokens, sentence2_parse_tokens, gold_label
 
-        self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]
-        xdata = self.tensor
-        ydata = np.copy(self.tensor)
 
-        ydata[:-1] = xdata[1:]
-        ydata[-1] = xdata[0]
+if __name__ == '__main__':
+    import pickle
 
-        self.x_batches = np.split(xdata.reshape(self.batch_size, -1), self.num_batches, 1)
-        self.y_batches = np.split(ydata.reshape(self.batch_size, -1), self.num_batches, 1)
-        return
+    path = 'models/snli/dam_1/dam_1_index_to_token.p'
+    with open(path, 'rb') as f:
+        index_to_token = pickle.load(f)
+    token_to_index = {token: index for index, token in index_to_token.items()}
 
-    def next_batch(self):
-        x, y = self.x_batches[self.pointer], self.y_batches[self.pointer]
-        self.pointer += 1
-        return x, y
-
-    def reset_batch_pointer(self):
-        self.pointer = 0
-        return
+    loader = SNLILoader(token_to_index=token_to_index)
