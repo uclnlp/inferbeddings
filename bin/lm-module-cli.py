@@ -51,10 +51,10 @@ def train(args):
 
     token_to_index = {token: index for index, token in index_to_token.items()}
 
-    data_loader = SNLILoader(path=args.data,
-                             token_to_index=token_to_index,
-                             batch_size=args.batch_size,
-                             seq_length=args.seq_length)
+    logger.info('Loading the dataset ..')
+
+    loader = SNLILoader(path=args.data, token_to_index=token_to_index,
+                        batch_size=args.batch_size, seq_length=args.seq_length)
     vocab_size = len(token_to_index)
 
     config = {
@@ -67,9 +67,11 @@ def train(args):
         'num_layers': args.num_layers
     }
 
+    logger.info('Generating the computational graph ..')
+
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
-        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, args.embedding_size],
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size + 3, args.embedding_size],
                                           initializer=tf.contrib.layers.xavier_initializer(), trainable=False)
 
     lm_scope_name = 'language_model'
@@ -93,6 +95,8 @@ def train(args):
     saver = tf.train.Saver(tf.global_variables())
     emb_saver = tf.train.Saver([embedding_layer], max_to_keep=1)
 
+    logger.info('Creating the session ..')
+
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
         session.run(init_op)
@@ -102,12 +106,12 @@ def train(args):
         for epoch_id in range(0, args.num_epochs):
             logger.debug('Epoch: {}'.format(epoch_id))
 
-            data_loader.reset_batch_pointer()
+            loader.reset_batch_pointer()
             state = session.run(model.initial_state)
 
-            for batch_id in range(data_loader.pointer, data_loader.num_batches):
+            for batch_id in range(loader.pointer, loader.num_batches):
                 logger.debug('Epoch: {}\tBatch: {}'.format(epoch_id, batch_id))
-                x, y = data_loader.next_batch()
+                x, y = loader.next_batch()
 
                 feed_dict = {
                     model.input_data: x,
@@ -117,9 +121,9 @@ def train(args):
 
                 train_loss, state, _ = session.run([model.cost, model.final_state, train_op], feed_dict=feed_dict)
 
-                if (epoch_id * data_loader.num_batches + batch_id) % args.batch_size == 0:
-                    a = epoch_id * data_loader.num_batches + batch_id
-                    b = args.num_epochs * data_loader.num_batches
+                if (epoch_id * loader.num_batches + batch_id) % args.batch_size == 0:
+                    a = epoch_id * loader.num_batches + batch_id
+                    b = args.num_epochs * loader.num_batches
                     logger.info("{}/{} (epoch {}), train_loss = {:.3f}".format(a, b, epoch_id, train_loss))
 
 if __name__ == '__main__':
