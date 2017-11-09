@@ -25,6 +25,10 @@ class SNLILoader:
         self.path = path
         self.token_to_index = token_to_index
 
+        self.bos_idx = bos_idx
+        self.eos_idx = eos_idx
+        self.unk_idx = unk_idx
+
         self.sentences = []
 
         with gzip.open(self.path, 'rb') as f:
@@ -39,11 +43,11 @@ class SNLILoader:
 
         self.sentence_idxs = []
         for sentence in self.sentences:
-            s_idxs = [self.token_to_index.get(word, unk_idx) for word in sentence]
+            s_idxs = [self.token_to_index.get(word, self.unk_idx) for word in sentence]
             self.sentence_idxs += [s_idxs]
 
         self.tensor = pad_sequences(self.sentence_idxs)
-        
+
 
     @staticmethod
     def extract_sentences(obj):
