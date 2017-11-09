@@ -34,9 +34,9 @@ def main(argv):
     parser.add_argument('--batch-size', type=int, default=128, help='minibatch size')
     parser.add_argument('--seq-length', type=int, default=8, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
-    parser.add_argument('--save-every', type=int, default=1000, help='save frequency')
+    parser.add_argument('--save-every', type=int, default=10, help='save frequency')
     parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
-    parser.add_argument('--learning-rate', '--lr', type=float, default=0.002, help='learning rate')
+    parser.add_argument('--learning-rate', '--lr', type=float, default=0.001, help='learning rate')
 
     args = parser.parse_args(argv)
     train(args)
@@ -84,7 +84,7 @@ def train(args):
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(tf.gradients(model.cost, tvars), args.grad_clip)
 
-    optimizer = tf.train.AdagradOptimizer(args.learning_rate)
+    optimizer = tf.train.AdamOptimizer(args.learning_rate)
     train_op = optimizer.apply_gradients(zip(grads, tvars))
 
     session_config = tf.ConfigProto()
@@ -110,7 +110,6 @@ def train(args):
             state = session.run(model.initial_state)
 
             for batch_id in range(loader.pointer, loader.num_batches):
-                logger.debug('Epoch: {}\tBatch: {}'.format(epoch_id, batch_id))
                 x, y = loader.next_batch()
 
                 feed_dict = {
