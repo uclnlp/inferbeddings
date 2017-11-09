@@ -9,7 +9,7 @@ import sys
 
 import tensorflow as tf
 
-from inferbeddings.lm.legacy.loader import TextLoader
+from inferbeddings.lm.loader import SNLILoader
 from inferbeddings.lm.model import LanguageModel
 from inferbeddings.nli import tfutil
 
@@ -18,8 +18,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', type=str, default='data/lm/neuromancer/',
-                        help='data directory containing input.txt')
+    parser.add_argument('--data', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
 
     parser.add_argument('--vocabulary', type=str, default='models/snli/dam_1/dam_1_index_to_token.p')
     parser.add_argument('--checkpoint', type=str, default='models/snli/dam_1/dam_1')
@@ -33,7 +32,7 @@ def main(argv):
     parser.add_argument('--model', type=str, default='rnn', help='rnn, gru, or lstm')
 
     parser.add_argument('--batch-size', type=int, default=50, help='minibatch size')
-    parser.add_argument('--seq-length', type=int, default=25, help='RNN sequence length')
+    parser.add_argument('--seq-length', type=int, default=16, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=50, help='number of epochs')
     parser.add_argument('--save-every', type=int, default=1000, help='save frequency')
     parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
@@ -52,8 +51,11 @@ def train(args):
 
     token_to_index = {token: index for index, token in index_to_token.items()}
 
-    data_loader = TextLoader(args.data, args.batch_size, args.seq_length, None)
-    vocab_size = data_loader.vocab_size
+    data_loader = SNLILoader(path=args.data,
+                             token_to_index=token_to_index,
+                             batch_size=args.batch_size,
+                             seq_length=args.seq_length)
+    vocab_size = len(token_to_index)
 
     config = {
         'model': args.model,
@@ -64,12 +66,6 @@ def train(args):
         'rnn_size': args.rnn_size,
         'num_layers': args.num_layers
     }
-
-    with open(os.path.join(args.save, 'config.pkl'), 'wb') as f:
-        pickle.dump(config, f)
-
-    with open(os.path.join(args.save, 'words_vocab.pkl'), 'wb') as f:
-        pickle.dump((data_loader.words, data_loader.vocab), f)
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
