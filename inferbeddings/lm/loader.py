@@ -54,7 +54,9 @@ class SNLILoader:
 
         self.tensor = pad_sequences(self.sentence_idxs)
         self.nb_samples, self.max_len = self.tensor.shape
-        self.pointer = 0
+
+        self.create_batches()
+        self.reset_batch_pointer()
 
     def create_batches(self):
         order = self.random_state.permutation(self.nb_samples)
