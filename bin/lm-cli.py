@@ -147,7 +147,7 @@ def train(args):
                                         args.num_epochs * data_loader.num_batches, epoch_id, train_loss))
 
                 if (epoch_id * data_loader.num_batches + batch_id) % args.save_every == 0 or \
-                        (epoch_id == args.num_epochs - 1 and batch_id == data_loader.num_batches-1):
+                        (epoch_id == args.num_epochs - 1 and batch_id == data_loader.num_batches - 1):
 
                     checkpoint_path = os.path.join(args.save, 'model.ckpt')
                     saver.save(session, checkpoint_path, global_step=epoch_id * data_loader.num_batches + batch_id)
