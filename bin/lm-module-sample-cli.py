@@ -50,10 +50,7 @@ def sample(args):
 
     logger.info('Config: {}'.format(str(config)))
 
-    with open(os.path.join(args.save, 'words_vocab.pkl'), 'rb') as f:
-        words, vocab = pickle.load(f)
-
-    vocab_size = len(words)
+    vocab_size = len(config['words'])
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
@@ -80,7 +77,9 @@ def sample(args):
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
 
-            sample_value = model.sample(sess, words, vocab, args.nb_words, args.prime, args.sample, args.pick, args.width)
+            sample_value = model.sample(sess, index_to_token, token_to_index,
+                                        args.nb_words, args.prime, args.sample,
+                                        args.pick, args.width)
             logger.info('Sample: \"{}\"'.format(sample_value))
 
 if __name__ == '__main__':
