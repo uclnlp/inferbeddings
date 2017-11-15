@@ -22,6 +22,8 @@ def main(argv):
     parser.add_argument('--vocabulary', type=str, default='models/snli/dam_1/dam_1_index_to_token.p')
     parser.add_argument('--checkpoint', type=str, default='models/snli/dam_1/dam_1')
 
+    parser.add_argument('--save', type=str, default='save', help='directory to store checkpointed models')
+
     parser.add_argument('--nb-words', '-n', type=int, default=200, help='number of words to sample')
 
     parser.add_argument('--prime', type=str, default=' ', help='prime text')
