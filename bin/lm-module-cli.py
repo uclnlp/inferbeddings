@@ -34,7 +34,9 @@ def main(argv):
     parser.add_argument('--batch-size', type=int, default=128, help='minibatch size')
     parser.add_argument('--seq-length', type=int, default=8, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
-    parser.add_argument('--save-every', type=int, default=10, help='save frequency')
+
+    parser.add_argument('--save-every', type=int, default=1000, help='save frequency')
+
     parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
     parser.add_argument('--learning-rate', '--lr', type=float, default=0.001, help='learning rate')
 
