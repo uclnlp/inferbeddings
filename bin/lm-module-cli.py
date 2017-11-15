@@ -7,6 +7,7 @@ import os
 import pickle
 import sys
 
+import numpy as np
 import tensorflow as tf
 
 from inferbeddings.lm.loader import SNLILoader
@@ -35,7 +36,7 @@ def main(argv):
     parser.add_argument('--seq-length', type=int, default=8, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
 
-    parser.add_argument('--report-every', '-r', type=int, defaut=10, help='report loss frequency')
+    parser.add_argument('--report-every', '-r', type=int, default=10, help='report loss frequency')
     parser.add_argument('--save-every', '-s', type=int, default=100, help='save frequency')
 
     parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
@@ -43,6 +44,12 @@ def main(argv):
 
     args = parser.parse_args(argv)
     train(args)
+
+
+def stats(values):
+    return '{0:.4f} ± {1:.4f}'.format(
+        round(np.mean(values), 4),
+        round(np.std(values), 4))
 
 
 def train(args):
@@ -106,6 +113,8 @@ def train(args):
 
         emb_saver.restore(session, checkpoint_path)
 
+        loss_values = []
+
         for epoch_id in range(0, args.num_epochs):
             logger.debug('Epoch: {}'.format(epoch_id))
 
@@ -121,12 +130,14 @@ def train(args):
                     model.initial_state: state
                 }
 
-                train_loss, state, _ = session.run([model.cost, model.final_state, train_op], feed_dict=feed_dict)
+                loss_value, state, _ = session.run([model.cost, model.final_state, train_op], feed_dict=feed_dict)
+                loss_values += [loss_value]
 
                 if (epoch_id * loader.num_batches + batch_id) % args.report_every == 0:
                     a = epoch_id * loader.num_batches + batch_id
                     b = args.num_epochs * loader.num_batches
-                    logger.info("{}/{} (epoch {}), train_loss = {:.3f}".format(a, b, epoch_id, train_loss))
+                    logger.info("{}/{} (epoch {}), loss = {:.3f}".format(a, b, epoch_id, stats(loss_values)))
+                    loss_values = []
 
                 if (epoch_id * loader.num_batches + batch_id) % args.save_every == 0:
                     checkpoint_path = os.path.join(args.save, 'lm.ckpt')
