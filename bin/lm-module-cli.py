@@ -35,7 +35,8 @@ def main(argv):
     parser.add_argument('--seq-length', type=int, default=8, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
 
-    parser.add_argument('--save-every', type=int, default=1000, help='save frequency')
+    parser.add_argument('--report-every', '-r', type=int, defaut=10, help='report loss frequency')
+    parser.add_argument('--save-every', '-s', type=int, default=100, help='save frequency')
 
     parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
     parser.add_argument('--learning-rate', '--lr', type=float, default=0.001, help='learning rate')
@@ -122,11 +123,12 @@ def train(args):
 
                 train_loss, state, _ = session.run([model.cost, model.final_state, train_op], feed_dict=feed_dict)
 
-                if (epoch_id * loader.num_batches + batch_id) % args.save_every == 0:
+                if (epoch_id * loader.num_batches + batch_id) % args.report_every == 0:
                     a = epoch_id * loader.num_batches + batch_id
                     b = args.num_epochs * loader.num_batches
                     logger.info("{}/{} (epoch {}), train_loss = {:.3f}".format(a, b, epoch_id, train_loss))
 
+                if (epoch_id * loader.num_batches + batch_id) % args.save_every == 0:
                     checkpoint_path = os.path.join(args.save, 'lm.ckpt')
                     saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
                     logger.info("Language model saved to {}".format(checkpoint_path))
