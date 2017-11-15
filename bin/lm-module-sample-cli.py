@@ -11,6 +11,7 @@ import json
 import tensorflow as tf
 
 from inferbeddings.lm.model import LanguageModel
+from inferbeddings.nli import tfutil
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
@@ -50,7 +51,7 @@ def sample(args):
 
     logger.info('Config: {}'.format(str(config)))
 
-    vocab_size = len(config['words'])
+    vocab_size = len(token_to_index)
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
@@ -68,16 +69,25 @@ def sample(args):
                           embedding_layer=embedding_layer,
                           infer=True)
 
-    with tf.Session() as sess:
-        tf.global_variables_initializer().run()
+    init_op = tf.global_variables_initializer()
 
-        saver = tf.train.Saver(tf.global_variables())
+    saver = tf.train.Saver(tf.global_variables())
+    emb_saver = tf.train.Saver([embedding_layer], max_to_keep=1)
+
+    logger.info('Creating the session ..')
+
+    with tf.Session() as session:
+        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
+        session.run(init_op)
+
+        emb_saver.restore(session, checkpoint_path)
+
         ckpt = tf.train.get_checkpoint_state(args.save)
 
         if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
+            saver.restore(session, ckpt.model_checkpoint_path)
 
-            sample_value = model.sample(sess, index_to_token, token_to_index,
+            sample_value = model.sample(session, index_to_token, token_to_index,
                                         args.nb_words, args.prime, args.sample,
                                         args.pick, args.width)
             logger.info('Sample: \"{}\"'.format(sample_value))
