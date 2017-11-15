@@ -56,7 +56,7 @@ def sample(args):
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
         embedding_layer = tf.get_variable('embeddings',
-                                          shape=[vocab_size + 3, args.embedding_size],
+                                          shape=[vocab_size + 3, config['embedding_size']],
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           trainable=False)
 
