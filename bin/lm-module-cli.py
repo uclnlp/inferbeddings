@@ -6,6 +6,7 @@ import logging
 import os
 import pickle
 import sys
+import json
 
 import numpy as np
 import tensorflow as tf
@@ -19,7 +20,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
+    parser.add_argument('--data', '-d', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
 
     parser.add_argument('--vocabulary', type=str, default='models/snli/dam_1/dam_1_index_to_token.p')
     parser.add_argument('--checkpoint', type=str, default='models/snli/dam_1/dam_1')
@@ -76,6 +77,10 @@ def train(args):
         'rnn_size': args.rnn_size,
         'num_layers': args.num_layers
     }
+
+    config_path = os.path.join(args.save, 'config.json')
+    with open(config_path, 'w') as f:
+        json.dump(config, f)
 
     logger.info('Generating the computational graph ..')
 
