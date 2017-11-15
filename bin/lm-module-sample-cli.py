@@ -44,6 +44,13 @@ def sample(args):
     with open(vocabulary_path, 'rb') as f:
         index_to_token = pickle.load(f)
 
+    index_to_token.update({
+        0: '<PAD>',
+        1: '<BOS>',
+        2: '<EOS>',
+        3: '<UNK>'
+    })
+
     token_to_index = {token: index for index, token in index_to_token.items()}
 
     with open(os.path.join(args.save, 'config.json'), 'r') as f:
