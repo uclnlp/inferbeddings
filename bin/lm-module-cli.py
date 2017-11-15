@@ -136,7 +136,7 @@ def train(args):
                 if (epoch_id * loader.num_batches + batch_id) % args.report_every == 0:
                     a = epoch_id * loader.num_batches + batch_id
                     b = args.num_epochs * loader.num_batches
-                    logger.info("{}/{} (epoch {}), loss = {:.3f}".format(a, b, epoch_id, stats(loss_values)))
+                    logger.info("{}/{} (epoch {}), loss = {}".format(a, b, epoch_id, stats(loss_values)))
                     loss_values = []
 
                 if (epoch_id * loader.num_batches + batch_id) % args.save_every == 0:
