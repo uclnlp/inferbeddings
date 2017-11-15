@@ -60,14 +60,16 @@ def sample(args):
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           trainable=False)
 
-    model = LanguageModel(model=config['model'],
-                          seq_length=config['seq_length'],
-                          batch_size=config['batch_size'],
-                          rnn_size=config['rnn_size'],
-                          num_layers=config['num_layers'],
-                          vocab_size=config['vocab_size'],
-                          embedding_layer=embedding_layer,
-                          infer=True)
+    lm_scope_name = 'language_model'
+    with tf.variable_scope(lm_scope_name):
+        model = LanguageModel(model=config['model'],
+                              seq_length=config['seq_length'],
+                              batch_size=config['batch_size'],
+                              rnn_size=config['rnn_size'],
+                              num_layers=config['num_layers'],
+                              vocab_size=config['vocab_size'],
+                              embedding_layer=embedding_layer,
+                              infer=True)
 
     init_op = tf.global_variables_initializer()
 
