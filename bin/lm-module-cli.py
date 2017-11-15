@@ -64,8 +64,10 @@ def train(args):
 
     logger.info('Loading the dataset ..')
 
-    loader = SNLILoader(path=args.data, token_to_index=token_to_index,
-                        batch_size=args.batch_size, seq_length=args.seq_length)
+    loader = SNLILoader(path=args.data,
+                        token_to_index=token_to_index,
+                        batch_size=args.batch_size,
+                        seq_length=args.seq_length)
     vocab_size = len(token_to_index)
 
     config = {
@@ -86,15 +88,21 @@ def train(args):
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
-        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size + 3, args.embedding_size],
-                                          initializer=tf.contrib.layers.xavier_initializer(), trainable=False)
+        embedding_layer = tf.get_variable('embeddings',
+                                          shape=[vocab_size + 3, args.embedding_size],
+                                          initializer=tf.contrib.layers.xavier_initializer(),
+                                          trainable=False)
 
     lm_scope_name = 'language_model'
     with tf.variable_scope(lm_scope_name):
-        model = LanguageModel(model=config['model'], seq_length=config['seq_length'],
-                              batch_size=config['batch_size'], rnn_size=config['rnn_size'],
-                              num_layers=config['num_layers'], vocab_size=config['vocab_size'],
-                              embedding_layer=embedding_layer, infer=False)
+        model = LanguageModel(model=config['model'],
+                              seq_length=config['seq_length'],
+                              batch_size=config['batch_size'],
+                              rnn_size=config['rnn_size'],
+                              num_layers=config['num_layers'],
+                              vocab_size=config['vocab_size'],
+                              embedding_layer=embedding_layer,
+                              infer=False)
 
     tvars = tf.trainable_variables()
     grads, _ = tf.clip_by_global_norm(tf.gradients(model.cost, tvars), args.grad_clip)
