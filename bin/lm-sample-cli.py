@@ -6,6 +6,7 @@ import logging
 import os
 import pickle
 import sys
+import json
 
 import tensorflow as tf
 
@@ -30,8 +31,10 @@ def main(argv):
 
 
 def sample(args):
-    with open(os.path.join(args.save, 'config.pkl'), 'rb') as f:
-        config = pickle.load(f)
+    with open(os.path.join(args.save, 'config.json'), 'r') as f:
+        config = json.load(f)
+
+    logger.info('Config: {}'.format(str(config)))
 
     with open(os.path.join(args.save, 'words_vocab.pkl'), 'rb') as f:
         words, vocab = pickle.load(f)
