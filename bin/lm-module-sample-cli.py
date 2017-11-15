@@ -96,10 +96,11 @@ def sample(args):
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(session, ckpt.model_checkpoint_path)
 
-            sample_value = model.sample(session, index_to_token, token_to_index,
-                                        args.nb_words, args.prime, args.sample,
-                                        args.pick, args.width)
-            logger.info('Sample: \"{}\"'.format(sample_value))
+            for _ in range(10):
+                sample_value = model.sample(session, index_to_token, token_to_index,
+                                            args.nb_words, args.prime, args.sample,
+                                            args.pick, args.width)
+                logger.info('Sample: \"{}\"'.format(sample_value))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
