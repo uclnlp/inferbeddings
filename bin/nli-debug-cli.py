@@ -242,7 +242,7 @@ def main(argv):
 
             predictions_int_value = session.run(predictions_int, feed_dict=batch_feed_dict)
 
-            print(type(predictions_int_value))
+            print(predictions_int_value.tolist())
 
 
 if __name__ == '__main__':
