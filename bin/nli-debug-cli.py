@@ -271,11 +271,16 @@ def main(argv):
         a_contradictions = (np.array(a_predictions_int_value) == contradiction_idx)
         b_contradictions = (np.array(b_predictions_int_value) == contradiction_idx)
 
-        a_b_union = a_contradictions | b_contradictions
+        a_b_union = np.logical_or(a_contradictions, b_contradictions)
         logger.info('Union: {}'.format(a_b_union.sum()))
 
-        a_b_intersection = a_contradictions & b_contradictions
+        a_b_intersection = np.logical_and(a_contradictions, b_contradictions)
         logger.info('Intersection: {}'.format(a_b_intersection.sum()))
+
+        a_b_violations = np.logical_xor(a_contradictions, b_contradictions)
+        logger.info('Violations: {}'.format(a_b_violations.sum()))
+
+        print(a_contradictions.shape, b_contradictions.shape)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
