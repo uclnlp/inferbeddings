@@ -264,7 +264,8 @@ def main(argv):
             batch_b_predictions_int_value = session.run(predictions_int, feed_dict=batch_b_feed_dict)
             b_predictions_int_value += batch_b_predictions_int_value.tolist()
 
-        print(labels)
+        accuracy_value = np.mean((labels == np.array(a_predictions_int_value)).all())
+        print(accuracy_value)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
