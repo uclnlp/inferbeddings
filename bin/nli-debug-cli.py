@@ -25,7 +25,6 @@ import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
-
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
 
@@ -220,8 +219,10 @@ def main(argv):
 
         sentences1 = sentence1[order]
         sentences2 = sentence2[order]
+
         sizes1 = sentence1_length[order]
         sizes2 = sentence2_length[order]
+
         labels = label[order]
 
         a_predictions_int_value = []
@@ -264,8 +265,14 @@ def main(argv):
             batch_b_predictions_int_value = session.run(predictions_int, feed_dict=batch_b_feed_dict)
             b_predictions_int_value += batch_b_predictions_int_value.tolist()
 
-        accuracy_value = np.mean(labels == np.array(a_predictions_int_value))
-        print(accuracy_value)
+        train_accuracy_value = np.mean(labels == np.array(a_predictions_int_value))
+        logger.info('Training accuracy: {}'.format(train_accuracy_value))
+
+        a_contradictions = (np.array(a_predictions_int_value) == contradiction_idx)
+        b_contradictions = (np.array(b_predictions_int_value) == contradiction_idx)
+
+        a_b_union = a_contradictions | b_contradictions
+        a_b_intersection = a_contradictions & b_contradictions
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
