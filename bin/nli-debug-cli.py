@@ -46,15 +46,11 @@ def main(argv):
 
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--seed', action='store', type=int, default=0)
-    argparser.add_argument('--std-dev', action='store', type=float, default=0.01)
 
     argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
     argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
     argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
     argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
-
-    argparser.add_argument('--initialize-embeddings', '-i', action='store', type=str, default=None,
-                           choices=['normal', 'uniform'])
 
     argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
     argparser.add_argument('--normalize-embeddings', '-n', action='store_true')
@@ -75,14 +71,11 @@ def main(argv):
     representation_size = args.representation_size
 
     seed = args.seed
-    std_dev = args.std_dev
 
     has_bos = args.has_bos
     has_eos = args.has_eos
     has_unk = args.has_unk
     is_lower = args.lower
-
-    is_fixed_embeddings = args.fixed_embeddings
 
     restore_path = args.restore
 
@@ -148,7 +141,7 @@ def main(argv):
     with tf.variable_scope(discriminator_scope_name):
         embedding_layer = tf.get_variable('embeddings',
                                           shape=[vocab_size, embedding_size],
-                                          trainable=not is_fixed_embeddings)
+                                          trainable=False)
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
@@ -161,7 +154,7 @@ def main(argv):
             representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
 
         if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
-            model_kwargs['init_std_dev'] = std_dev
+            model_kwargs['init_std_dev'] = 0.01
 
         mode_name_to_class = {
             'cbilstm': ConditionalBiLSTM,
@@ -209,7 +202,8 @@ def main(argv):
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
+        logger.info('Total Parameters: {}'.format(
+            tfutil.count_trainable_parameters()))
 
         logger.info('Total Discriminator Parameters: {}'.format(
             tfutil.count_trainable_parameters(var_list=discriminator_vars)))
