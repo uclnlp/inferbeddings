@@ -85,24 +85,6 @@ def main(argv):
     argparser.add_argument('--hard-save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
-    argparser.add_argument('--glove', action='store', type=str, default=None)
-
-    argparser.add_argument('--rule00-weight', '--00', action='store', type=float, default=None)
-    argparser.add_argument('--rule01-weight', '--01', action='store', type=float, default=None)
-    argparser.add_argument('--rule02-weight', '--02', action='store', type=float, default=None)
-    argparser.add_argument('--rule03-weight', '--03', action='store', type=float, default=None)
-
-    for i in range(1, 9):
-        argparser.add_argument('--rule{}-weight'.format(i), '-{}'.format(i), action='store', type=float, default=None)
-
-    argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
-    argparser.add_argument('--adversarial-pooling', '-P', default='max', choices=['sum', 'max', 'mean', 'logsumexp'])
-
-    argparser.add_argument('--report', '-r', default=100, type=int, help='Number of batches between performance reports')
-    argparser.add_argument('--report-loss', default=100, type=int, help='Number of batches between loss reports')
-
-    argparser.add_argument('--eval', '-E', nargs='+', type=str, help='Evaluate on these additional sets')
-
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -120,8 +102,6 @@ def main(argv):
     has_eos = args.has_eos
     has_unk = args.has_unk
     is_lower = args.lower
-
-    initialize_embeddings = args.initialize_embeddings
 
     is_fixed_embeddings = args.fixed_embeddings
     is_normalize_embeddings = args.normalize_embeddings
