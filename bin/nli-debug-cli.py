@@ -240,7 +240,9 @@ def main(argv):
                 dropout_keep_prob_ph: 1.0
             }
 
-            session.run(predictions_int, feed_dict=batch_feed_dict)
+            predictions_int_value = session.run(predictions_int, feed_dict=batch_feed_dict)
+
+            print(predictions_int_value)
 
 
 if __name__ == '__main__':
