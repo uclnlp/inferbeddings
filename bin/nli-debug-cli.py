@@ -224,28 +224,47 @@ def main(argv):
         sizes2 = sentence2_length[order]
         labels = label[order]
 
-        predictions_int_value = []
+        a_predictions_int_value = []
+        b_predictions_int_value = []
 
         for batch_idx, (batch_start, batch_end) in enumerate(batches):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
+
             batch_sizes1 = sizes1[batch_start:batch_end]
             batch_sizes2 = sizes2[batch_start:batch_end]
+
             batch_labels = labels[batch_start:batch_end]
 
-            batch_feed_dict = {
+            batch_a_feed_dict = {
                 sentence1_ph: batch_sentences1,
                 sentence1_len_ph: batch_sizes1,
+
                 sentence2_ph: batch_sentences2,
                 sentence2_len_ph: batch_sizes2,
+
                 label_ph: batch_labels,
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_predictions_int_value = session.run(predictions_int, feed_dict=batch_feed_dict)
-            predictions_int_value += batch_predictions_int_value.tolist()
+            batch_a_predictions_int_value = session.run(predictions_int, feed_dict=batch_a_feed_dict)
+            a_predictions_int_value += batch_a_predictions_int_value.tolist()
 
-            
+            batch_b_feed_dict = {
+                sentence1_ph: batch_sentences2,
+                sentence1_len_ph: batch_sizes2,
+
+                sentence2_ph: batch_sentences1,
+                sentence2_len_ph: batch_sizes1,
+
+                label_ph: batch_labels,
+                dropout_keep_prob_ph: 1.0
+            }
+
+            batch_b_predictions_int_value = session.run(predictions_int, feed_dict=batch_b_feed_dict)
+            b_predictions_int_value += batch_b_predictions_int_value.tolist()
+
+        print(labels)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
