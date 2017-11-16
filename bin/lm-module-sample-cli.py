@@ -44,6 +44,11 @@ def sample(args):
     with open(vocabulary_path, 'rb') as f:
         index_to_token = pickle.load(f)
 
+    # print(0, index_to_token.get(0, None))
+    # print(1, index_to_token.get(1, None))
+    # print(2, index_to_token.get(2, None))
+    # print(3, index_to_token.get(3, None))
+
     index_to_token.update({
         0: '<PAD>',
         1: '<BOS>',
