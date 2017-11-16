@@ -265,6 +265,8 @@ def main(argv):
             b_predictions_int_value += batch_b_predictions_int_value.tolist()
 
         accuracy_value = np.mean((labels == np.array(a_predictions_int_value)).all())
+        print(labels)
+        print(np.array(a_predictions_int_value))
         print(accuracy_value)
 
 if __name__ == '__main__':
