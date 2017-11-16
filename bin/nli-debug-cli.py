@@ -85,6 +85,7 @@ def main(argv):
     representation_size = args.representation_size
 
     seed = args.seed
+    std_dev = args.std_dev
 
     has_bos = args.has_bos
     has_eos = args.has_eos
