@@ -224,6 +224,8 @@ def main(argv):
         sizes2 = sentence2_length[order]
         labels = label[order]
 
+        predictions_int_value = []
+
         for batch_idx, (batch_start, batch_end) in enumerate(batches):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
@@ -240,10 +242,10 @@ def main(argv):
                 dropout_keep_prob_ph: 1.0
             }
 
-            predictions_int_value = session.run(predictions_int, feed_dict=batch_feed_dict)
+            batch_predictions_int_value = session.run(predictions_int, feed_dict=batch_feed_dict)
+            predictions_int_value += batch_predictions_int_value.tolist()
 
-            print(predictions_int_value.tolist())
-
+            
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
