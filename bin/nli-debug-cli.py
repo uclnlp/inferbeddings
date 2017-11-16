@@ -11,23 +11,13 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.io import load_glove, load_glove_words
-from inferbeddings.models.training.util import make_batches
-
 from inferbeddings.nli import util, tfutil
-from inferbeddings.nli.evaluation import util as eutil
-from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
+from inferbeddings.nli import ConditionalBiLSTM
+from inferbeddings.nli import FeedForwardDAM
+from inferbeddings.nli import FeedForwardDAMP
+from inferbeddings.nli import FeedForwardDAMS
+from inferbeddings.nli import ESIMv1
 
-from inferbeddings.nli.regularizers.base import contradiction_symmetry_l1
-from inferbeddings.nli.regularizers.base import contradiction_symmetry_l2
-from inferbeddings.nli.regularizers.base import contradiction_kullback_leibler
-from inferbeddings.nli.regularizers.base import contradiction_jensen_shannon
-
-from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3
-
-from inferbeddings.models.training import constraints
-
-from inferbeddings.nli.evaluation import accuracy, stats
 
 import logging
 
