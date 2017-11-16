@@ -272,7 +272,10 @@ def main(argv):
         b_contradictions = (np.array(b_predictions_int_value) == contradiction_idx)
 
         a_b_union = a_contradictions | b_contradictions
+        logger.info('Union: {}'.format(a_b_union.sum()))
+
         a_b_intersection = a_contradictions & b_contradictions
+        logger.info('Intersection: {}'.format(a_b_intersection.sum()))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
