@@ -267,6 +267,7 @@ def main(argv):
         accuracy_value = np.mean((labels == np.array(a_predictions_int_value)).all())
         print(labels)
         print(np.array(a_predictions_int_value))
+        print((labels == np.array(a_predictions_int_value)).all())
         print(accuracy_value)
 
 if __name__ == '__main__':
