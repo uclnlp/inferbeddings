@@ -175,8 +175,6 @@ def main(argv):
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
 
     trainable_discriminator_vars = list(discriminator_vars)
-    if is_fixed_embeddings:
-        trainable_discriminator_vars.remove(embedding_layer)
 
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
