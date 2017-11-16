@@ -11,6 +11,8 @@ import pickle
 import numpy as np
 import tensorflow as tf
 
+from inferbeddings.models.training.util import make_batches
+
 from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM
 from inferbeddings.nli import FeedForwardDAM
@@ -70,6 +72,8 @@ def main(argv):
     embedding_size = args.embedding_size
     representation_size = args.representation_size
 
+    batch_size = args.batch_size
+
     seed = args.seed
 
     has_bos = args.has_bos
@@ -117,10 +121,8 @@ def main(argv):
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
-
     sentence2 = train_dataset['sentence2']
     sentence2_length = train_dataset['sentence2_length']
-
     label = train_dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
@@ -211,7 +213,34 @@ def main(argv):
 
         saver.restore(session, restore_path)
 
+        nb_instances = sentence1.shape[0]
+        batches = make_batches(size=nb_instances, batch_size=batch_size)
 
+        order = rs.permutation(nb_instances)
+
+        sentences1 = sentence1[order]
+        sentences2 = sentence2[order]
+        sizes1 = sentence1_length[order]
+        sizes2 = sentence2_length[order]
+        labels = label[order]
+
+        for batch_idx, (batch_start, batch_end) in enumerate(batches):
+            batch_sentences1 = sentences1[batch_start:batch_end]
+            batch_sentences2 = sentences2[batch_start:batch_end]
+            batch_sizes1 = sizes1[batch_start:batch_end]
+            batch_sizes2 = sizes2[batch_start:batch_end]
+            batch_labels = labels[batch_start:batch_end]
+
+            batch_feed_dict = {
+                sentence1_ph: batch_sentences1,
+                sentence1_len_ph: batch_sizes1,
+                sentence2_ph: batch_sentences2,
+                sentence2_len_ph: batch_sizes2,
+                label_ph: batch_labels,
+                dropout_keep_prob_ph: 1.0
+            }
+
+            session.run(predictions_int, feed_dict=batch_feed_dict)
 
 
 if __name__ == '__main__':
