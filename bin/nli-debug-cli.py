@@ -48,17 +48,11 @@ def main(argv):
 
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
-    argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
-                           choices=['adagrad', 'adam'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
-
-    argparser.add_argument('--nb-epochs', '-e', action='store', type=int, default=1000)
-    argparser.add_argument('--nb-discriminator-epochs', '-D', action='store', type=int, default=1)
-    argparser.add_argument('--nb-adversary-epochs', '-A', action='store', type=int, default=1000)
 
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
@@ -81,8 +75,6 @@ def main(argv):
                            help='Only use pre-trained word embeddings')
     argparser.add_argument('--semi-sort', '-S', action='store_true')
 
-    argparser.add_argument('--save', action='store', type=str, default=None)
-    argparser.add_argument('--hard-save', action='store', type=str, default=None)
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
@@ -104,15 +96,6 @@ def main(argv):
     is_lower = args.lower
 
     is_fixed_embeddings = args.fixed_embeddings
-    is_normalize_embeddings = args.normalize_embeddings
-    is_only_use_pretrained_embeddings = args.only_use_pretrained_embeddings
-    is_semi_sort = args.semi_sort
-
-    logger.info('has_bos: {}, has_eos: {}, has_unk: {}'.format(has_bos, has_eos, has_unk))
-    logger.info('is_lower: {}, is_fixed_embeddings: {}, is_normalize_embeddings: {}'
-                .format(is_lower, is_fixed_embeddings, is_normalize_embeddings))
-    logger.info('is_only_use_pretrained_embeddings: {}, is_semi_sort: {}'
-                .format(is_only_use_pretrained_embeddings, is_semi_sort))
 
     restore_path = args.restore
 
@@ -208,7 +191,6 @@ def main(argv):
 
         logits = model()
         predictions = tf.argmax(logits, axis=1, name='predictions')
-
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
 
