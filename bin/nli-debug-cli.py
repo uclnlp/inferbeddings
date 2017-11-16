@@ -55,9 +55,6 @@ def main(argv):
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
 
     argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
-    argparser.add_argument('--learning-rate', action='store', type=float, default=0.1)
-    argparser.add_argument('--clip', '-c', action='store', type=float, default=None)
-    argparser.add_argument('--nb-words', action='store', type=int, default=None)
     argparser.add_argument('--seed', action='store', type=int, default=0)
     argparser.add_argument('--std-dev', action='store', type=float, default=0.01)
 
@@ -88,7 +85,6 @@ def main(argv):
     representation_size = args.representation_size
 
     seed = args.seed
-    std_dev = args.std_dev
 
     has_bos = args.has_bos
     has_eos = args.has_eos
