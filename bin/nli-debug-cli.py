@@ -26,6 +26,10 @@ import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
+# Running:
+#  $ python3 ./bin/nli-debug-cli.py -m ff-dam --batch-size 32 --representation-size 200 --has-bos --has-unk
+#    --restore models/snli/dam_1/dam_1
+
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
 
