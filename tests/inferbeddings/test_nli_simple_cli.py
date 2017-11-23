@@ -68,8 +68,8 @@ def test_nli_cli_restore():
 
 
 @pytest.mark.light
-def test_nli_smart_cli_restore():
-    cmd_str = './bin/nli-smart-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+def test_nli_simple_cli_restore():
+    cmd_str = './bin/nli-simple-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adam --learning-rate 0.0 -c 100 -i normal ' \
               '--nb-epochs 1 --has-bos -t data/snli/tiny/tiny.jsonl.gz -v data/snli/tiny/tiny.jsonl.gz ' \
               '-T data/snli/tiny/tiny.jsonl.gz --restore tests/models/snly_tiny_ffdam/dam_1 --report 1'
