@@ -54,12 +54,6 @@ def main(argv):
     argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
     argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
 
-    argparser.add_argument('--fixed-embeddings', '-f', action='store_true')
-    argparser.add_argument('--normalize-embeddings', '-n', action='store_true')
-    argparser.add_argument('--only-use-pretrained-embeddings', '-p', action='store_true',
-                           help='Only use pre-trained word embeddings')
-    argparser.add_argument('--semi-sort', '-S', action='store_true')
-
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
     args = argparser.parse_args(argv)
