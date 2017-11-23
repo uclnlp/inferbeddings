@@ -9,6 +9,7 @@ pyDatalog
 scikit-learn
 nltk
 flask
+tqdm
 
 pytest
 pytest-runner

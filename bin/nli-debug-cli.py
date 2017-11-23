@@ -227,7 +227,8 @@ def main(argv):
         a_predictions_int_value = []
         b_predictions_int_value = []
 
-        for batch_idx, (batch_start, batch_end) in enumerate(batches):
+        from tqdm import tqdm
+        for batch_idx, (batch_start, batch_end) in tqdm(enumerate(batches)):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
 
