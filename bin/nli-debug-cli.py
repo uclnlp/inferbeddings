@@ -25,6 +25,7 @@ import logging
 
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
+
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
 
