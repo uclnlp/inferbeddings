@@ -1,29 +1,29 @@
 # -*- coding: utf-8 -*-
 
-from collections import Counter
+import numpy as np
 
 import pytest
 
-from inferbeddings.lm.legacy.loader import TextLoader
+from inferbeddings.lm.loader2 import SNLILoader
 
 
-def test_build_vocab():
-    data_loader = TextLoader("tests/data/cat/", batch_size=2, seq_length=5)
+def test_snli_loader():
+    import pickle
 
-    sentences = ["I", "love", "cat", "cat"]
-    vocab, vocab_inv = data_loader.build_vocabulary(sentences)
+    path = 'models/snli/dam_1/dam_1_index_to_token.p'
+    with open(path, 'rb') as f:
+        index_to_token = pickle.load(f)
 
-    assert Counter(list(vocab)) == Counter(list(["I", "love", "cat"]))
-    assert vocab == {'I': 0, 'love': 2, 'cat': 1}
-    assert Counter(list(vocab_inv)) == Counter(list(["I", "love", "cat"]))
+    token_to_index = {token: index for index, token in index_to_token.items()}
+    loader = SNLILoader(path='data/snli/snli_1.0_test.jsonl.gz', token_to_index=token_to_index)
 
+    loader.create_batches()
 
-def test_batch_vocab():
-    data_loader = TextLoader("tests/data/cat/", batch_size=2, seq_length=5)
+    batch = loader.next_batch()
 
-    assert Counter(list(data_loader.x_batches[0][0][1:])) == Counter(list(data_loader.y_batches[0][0][:-1]))
-    assert Counter(list(data_loader.x_batches[0][1][1:])) == Counter(list(data_loader.y_batches[0][1][:-1]))
+    print(batch)
 
 
 if __name__ == '__main__':
-    pytest.main([__file__])
+    # pytest.main([__file__])
+    test_snli_loader()

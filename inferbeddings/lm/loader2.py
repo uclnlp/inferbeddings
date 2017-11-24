@@ -6,7 +6,6 @@ import json
 import numpy as np
 import nltk
 
-from inferbeddings.nli.util import pad_sequences
 from inferbeddings.models.training.util import make_batches
 
 import logging
@@ -47,51 +46,34 @@ class SNLILoader:
                 if gl in {'entailment', 'neutral', 'contradiction'}:
                     self.sentences += [s1, s2]
 
-        self.sentence_idxs = []
+        self.text_idxs = []
         for sentence in self.sentences:
-            s_idxs = [self.token_to_index.get(word, self.unk_idx) for word in sentence]
-            self.sentence_idxs += [s_idxs]
+            for word in sentence:
+                self.text_idxs += [self.token_to_index.get(word, self.unk_idx)]
 
-        self.tensor = pad_sequences(self.sentence_idxs)
-        self.nb_samples, self.max_len = self.tensor.shape
+        self.tensor = np.array(self.text_idxs)
 
         self.create_batches()
         self.reset_batch_pointer()
 
     def create_batches(self):
-        order = self.random_state.permutation(self.nb_samples)
-        tensor_shuf = self.tensor[order, :]
+        self.num_batches = int(self.tensor.size / (self.batch_size * self.seq_length))
 
-        _batch_lst = make_batches(self.nb_samples, self.batch_size)
-        self.batches = []
+        if self.num_batches==0:
+            assert False, "Not enough data. Make seq_length and batch_size small."
 
-        for batch_start, batch_end in _batch_lst:
-            batch_size = batch_end - batch_start
-            batch = tensor_shuf[batch_start:batch_end, :]
+        self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]
 
-            assert batch.shape[0] == batch_size
+        x_data = self.tensor
+        y_data = np.copy(self.tensor)
 
-            x = np.zeros(shape=(batch_size, self.seq_length))
-            y = np.zeros(shape=(batch_size, self.seq_length))
+        y_data[:-1] = x_data[1:]
+        y_data[-1] = x_data[0]
 
-            for i in range(batch_size):
-                start_idx = self.random_state.randint(low=0, high=self.max_len - 1)
-                end_idx = min(start_idx + self.seq_length, self.max_len)
+        x_batches = np.split(x_data.reshape(self.batch_size, -1), self.num_batches, 1)
+        y_batches = np.split(y_data.reshape(self.batch_size, -1), self.num_batches, 1)
 
-                x[i, 0:(end_idx - start_idx)] = batch[i, start_idx:end_idx]
-
-                start_idx += 1
-                end_idx = min(start_idx + self.seq_length, self.max_len)
-
-                y[i, 0:(end_idx - start_idx)] = batch[i, start_idx:end_idx]
-
-                d = {
-                    'x': x,
-                    'y': y
-                }
-                self.batches += [d]
-
-        self.num_batches = len(self.batches)
+        self.batches = [{'x': x, 'y': y} for x, y in zip(x_batches, y_batches)]
         return
 
     def next_batch(self):
