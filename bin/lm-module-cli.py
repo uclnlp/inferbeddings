@@ -25,7 +25,7 @@ def main(argv):
     parser.add_argument('--vocabulary', type=str, default='models/snli/dam_1/dam_1_index_to_token.p')
     parser.add_argument('--checkpoint', type=str, default='models/snli/dam_1/dam_1')
 
-    parser.add_argument('--save', type=str, default='save', help='directory to store checkpointed models')
+    parser.add_argument('--save', type=str, default='./models/lm/', help='directory to store checkpointed models')
 
     parser.add_argument('--embedding-size', type=int, default=300, help='embedding size')
     parser.add_argument('--rnn-size', type=int, default=256, help='size of RNN hidden state')

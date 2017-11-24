@@ -43,7 +43,6 @@ class LanguageModel:
         self.initial_state = cell.zero_state(batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
-
             W = tf.get_variable("W", [rnn_size, vocab_size], initializer=tf.contrib.layers.xavier_initializer())
             b = tf.get_variable("b", [vocab_size], initializer=tf.zeros_initializer())
 

@@ -13,6 +13,8 @@ import tensorflow as tf
 
 from inferbeddings.models.training.util import make_batches
 
+from tqdm import tqdm
+
 from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM
 from inferbeddings.nli import FeedForwardDAM
@@ -125,8 +127,6 @@ def main(argv):
     clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
     clipped_sentence2 = tfutil.clip_sentence(sentence2_ph, sentence2_len_ph)
 
-    label_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='label')
-
     token_set = set(token_to_index.keys())
     vocab_size = max(token_to_index.values()) + 1
 
@@ -170,22 +170,17 @@ def main(argv):
     trainable_discriminator_vars = list(discriminator_vars)
 
     predictions_int = tf.cast(predictions, tf.int32)
-    labels_int = tf.cast(label_ph, tf.int32)
 
     d_sentence1, d_sentence2 = dataset['sentence1'], dataset['sentence2']
     d_sentence1_len, d_sentence2_len = dataset['sentence1_length'], dataset['sentence2_length']
     d_label = dataset['label']
 
     nb_train_instances = d_label.shape[0]
-
     max_sentence_len = max(d_sentence1.shape[1], d_sentence2.shape[1])
+
     d_sentence = np.zeros(shape=(nb_train_instances * 2, max_sentence_len), dtype=np.int)
     d_sentence[0:d_sentence1.shape[0], 0:d_sentence1.shape[1]] = d_sentence1
     d_sentence[d_sentence1.shape[0]:, 0:d_sentence2.shape[1]] = d_sentence2
-
-    d_sentence_len = np.concatenate((d_sentence1_len, d_sentence2_len), axis=0)
-
-    nb_train_sentences = d_sentence_len.shape[0]
 
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
 
@@ -220,15 +215,11 @@ def main(argv):
         a_predictions_int_value = []
         b_predictions_int_value = []
 
-        from tqdm import tqdm
         for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
-
             batch_sizes1 = sizes1[batch_start:batch_end]
             batch_sizes2 = sizes2[batch_start:batch_end]
-
-            batch_labels = labels[batch_start:batch_end]
 
             batch_a_feed_dict = {
                 sentence1_ph: batch_sentences1,
@@ -237,7 +228,6 @@ def main(argv):
                 sentence2_ph: batch_sentences2,
                 sentence2_len_ph: batch_sizes2,
 
-                label_ph: batch_labels,
                 dropout_keep_prob_ph: 1.0
             }
 
@@ -251,7 +241,6 @@ def main(argv):
                 sentence2_ph: batch_sentences1,
                 sentence2_len_ph: batch_sizes1,
 
-                label_ph: batch_labels,
                 dropout_keep_prob_ph: 1.0
             }
 
@@ -265,6 +254,12 @@ def main(argv):
 
         a_contradictions = (np.array(a_predictions_int_value) == contradiction_idx)
         b_contradictions = (np.array(b_predictions_int_value) == contradiction_idx)
+
+        a_entailment = (np.array(a_predictions_int_value) == entailment_idx)
+        b_entailment = (np.array(b_predictions_int_value) == entailment_idx)
+
+        a_neutral = (np.array(a_predictions_int_value) == neutral_idx)
+        b_neutral = (np.array(b_predictions_int_value) == neutral_idx)
 
         a_b_union = np.logical_or(a_contradictions, b_contradictions)
         logger.info('Union: {}'.format(a_b_union.sum()))
