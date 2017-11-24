@@ -38,10 +38,7 @@ def main(argv):
 
     argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=fmt)
 
-    argparser.add_argument('--train', '-t', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
-    argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
-    argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
-
+    argparser.add_argument('--data', '-d', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
     argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
 
@@ -50,7 +47,6 @@ def main(argv):
 
     argparser.add_argument('--batch-size', action='store', type=int, default=1024)
 
-    argparser.add_argument('--dropout-keep-prob', action='store', type=float, default=1.0)
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
     argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
@@ -63,7 +59,7 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     # Command line arguments
-    train_path, valid_path, test_path = args.train, args.valid, args.test
+    data_path = args.data
 
     model_name = args.model
 
@@ -86,10 +82,9 @@ def main(argv):
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
-    train_is, dev_is, test_is = util.SNLI.generate(train_path=train_path, valid_path=valid_path, test_path=test_path, is_lower=is_lower)
+    data_is, _, _ = util.SNLI.generate(train_path=data_path, valid_path=None, test_path=None, is_lower=is_lower)
 
-    logger.info('Train size: {}\tDev size: {}\tTest size: {}'.format(len(train_is), len(dev_is), len(test_is)))
-    all_is = train_is + dev_is + test_is
+    logger.info('Data size: {}'.format(len(data_is)))
 
     # Enumeration of tokens start at index=3:
     # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
@@ -113,15 +108,13 @@ def main(argv):
                 bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
                 max_len=max_len)
 
-    train_dataset = util.instances_to_dataset(train_is, token_to_index, label_to_index, **args)
-    dev_dataset = util.instances_to_dataset(dev_is, token_to_index, label_to_index, **args)
-    test_dataset = util.instances_to_dataset(test_is, token_to_index, label_to_index, **args)
+    dataset = util.instances_to_dataset(data_is, token_to_index, label_to_index, **args)
 
-    sentence1 = train_dataset['sentence1']
-    sentence1_length = train_dataset['sentence1_length']
-    sentence2 = train_dataset['sentence2']
-    sentence2_length = train_dataset['sentence2_length']
-    label = train_dataset['label']
+    sentence1 = dataset['sentence1']
+    sentence1_length = dataset['sentence1_length']
+    sentence2 = dataset['sentence2']
+    sentence2_length = dataset['sentence2_length']
+    label = dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
     sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
@@ -179,9 +172,9 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    d_sentence1, d_sentence2 = train_dataset['sentence1'], train_dataset['sentence2']
-    d_sentence1_len, d_sentence2_len = train_dataset['sentence1_length'], train_dataset['sentence2_length']
-    d_label = train_dataset['label']
+    d_sentence1, d_sentence2 = dataset['sentence1'], dataset['sentence2']
+    d_sentence1_len, d_sentence2_len = dataset['sentence1_length'], dataset['sentence2_length']
+    d_label = dataset['label']
 
     nb_train_instances = d_label.shape[0]
 
@@ -228,7 +221,7 @@ def main(argv):
         b_predictions_int_value = []
 
         from tqdm import tqdm
-        for batch_idx, (batch_start, batch_end) in tqdm(enumerate(batches)):
+        for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
 
@@ -265,8 +258,10 @@ def main(argv):
             batch_b_predictions_int_value = session.run(predictions_int, feed_dict=batch_b_feed_dict)
             b_predictions_int_value += batch_b_predictions_int_value.tolist()
 
+        logger.info('Number of examples: {}'.format(labels.shape[0]))
+
         train_accuracy_value = np.mean(labels == np.array(a_predictions_int_value))
-        logger.info('Training accuracy: {}'.format(train_accuracy_value))
+        logger.info('Accuracy: {}'.format(train_accuracy_value))
 
         a_contradictions = (np.array(a_predictions_int_value) == contradiction_idx)
         b_contradictions = (np.array(b_predictions_int_value) == contradiction_idx)
