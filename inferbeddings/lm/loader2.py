@@ -40,26 +40,27 @@ class SNLILoader:
             for line in f:
                 decoded_line = line.decode('utf-8')
                 obj = json.loads(decoded_line)
-
                 s1, s2, gl = SNLILoader.extract_sentences(obj)
-
                 if gl in {'entailment', 'neutral', 'contradiction'}:
                     self.sentences += [s1, s2]
-
-        self.text_idxs = []
-        for sentence in self.sentences:
-            for word in sentence:
-                self.text_idxs += [self.token_to_index.get(word, self.unk_idx)]
-
-        self.tensor = np.array(self.text_idxs)
 
         self.create_batches()
         self.reset_batch_pointer()
 
     def create_batches(self):
+        self.text_idxs = []
+        order = self.random_state.permutation(len(self.sentences))
+
+        for i in order:
+            sentence = self.sentences[i]
+            for word in sentence:
+                self.text_idxs += [self.token_to_index.get(word, self.unk_idx)]
+
+        self.tensor = np.array(self.text_idxs)
+
         self.num_batches = int(self.tensor.size / (self.batch_size * self.seq_length))
 
-        if self.num_batches==0:
+        if self.num_batches == 0:
             assert False, "Not enough data. Make seq_length and batch_size small."
 
         self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]
