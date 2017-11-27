@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-
 import pytest
 
 from inferbeddings.lm.loader2 import SNLILoader
 
 
-def test_snli_loader():
+def test_lm_snli_loader():
     import pickle
 
     path = 'models/snli/dam_1/dam_1_index_to_token.p'

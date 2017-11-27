@@ -41,7 +41,6 @@ def main(argv):
     parser.add_argument('--report-every', '-r', type=int, default=10, help='report loss frequency')
     parser.add_argument('--save-every', '-s', type=int, default=100, help='save frequency')
 
-    parser.add_argument('--grad-clip', type=float, default=5., help='clip gradients at this value')
     parser.add_argument('--learning-rate', '--lr', type=float, default=0.001, help='learning rate')
 
     args = parser.parse_args(argv)
@@ -111,11 +110,8 @@ def train(args):
                               embedding_layer=embedding_layer,
                               infer=False)
 
-    tvars = tf.trainable_variables()
-    grads, _ = tf.clip_by_global_norm(tf.gradients(model.cost, tvars), args.grad_clip)
-
-    optimizer = tf.train.AdamOptimizer(args.learning_rate)
-    train_op = optimizer.apply_gradients(zip(grads, tvars))
+    optimizer = tf.train.AdagradOptimizer(args.learning_rate)
+    train_op = optimizer.minimize(model.cost)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True

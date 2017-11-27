@@ -102,7 +102,7 @@ class LanguageModel:
             if not len(prime) or prime == ' ':
                 prime = self.random_state.choice(list(vocab.keys()))
 
-            prime_labels = [vocab.get(word, 0) for word in prime.split()]
+            prime_labels = [vocab.get(w, 0) for w in prime.split()]
             bs = BeamSearch(beam_search_predict, session.run(self.cell.zero_state(1, tf.float32)), prime_labels)
             samples, scores = bs.search(None, None, k=width, maxsample=num)
             return samples[np.argmin(scores)]
