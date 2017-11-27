@@ -20,11 +20,12 @@ def test_snli_loader():
 
     loader.create_batches()
 
-    x, y = loader.next_batch()
-
-    print([index_to_token[i] for i in x[1, :]])
+    for batch_id in range(loader.pointer, loader.num_batches):
+        x, y = loader.next_batch()
+        assert x.shape == y.shape
+        for j in range(x.shape[0]):
+            assert x[j].shape == y[j].shape
 
 
 if __name__ == '__main__':
-    # pytest.main([__file__])
-    test_snli_loader()
+    pytest.main([__file__])
