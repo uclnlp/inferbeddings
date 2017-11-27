@@ -34,8 +34,8 @@ def main(argv):
 
     parser.add_argument('--model', type=str, default='lstm', help='rnn, gru, or lstm')
 
-    parser.add_argument('--batch-size', type=int, default=256, help='minibatch size')
-    parser.add_argument('--seq-length', type=int, default=16, help='RNN sequence length')
+    parser.add_argument('--batch-size', type=int, default=32, help='minibatch size')
+    parser.add_argument('--seq-length', type=int, default=4, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
 
     parser.add_argument('--report-every', '-r', type=int, default=10, help='report loss frequency')
