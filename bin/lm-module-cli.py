@@ -70,7 +70,7 @@ def train(args):
 
     valid_loader = SNLILoader(path=args.valid,
                               token_to_index=token_to_index,
-                              batch_size=1024,
+                              batch_size=args.batch_size,
                               seq_length=args.seq_length,
                               shuffle=False)
 
