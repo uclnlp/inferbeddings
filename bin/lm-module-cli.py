@@ -100,7 +100,7 @@ def train(args):
                                           trainable=False)
 
     lm_scope_name = 'language_model'
-    with tf.variable_scope(lm_scope_name):
+    with tf.variable_scope(lm_scope_name) as scope:
         model = LanguageModel(model=config['model'],
                               seq_length=config['seq_length'],
                               batch_size=config['batch_size'],
@@ -109,6 +109,16 @@ def train(args):
                               vocab_size=config['vocab_size'],
                               embedding_layer=embedding_layer,
                               infer=False)
+
+        scope.reuse_variables()
+        imodel = LanguageModel(model=config['model'],
+                               seq_length=config['seq_length'],
+                               batch_size=config['batch_size'],
+                               rnn_size=config['rnn_size'],
+                               num_layers=config['num_layers'],
+                               vocab_size=config['vocab_size'],
+                               embedding_layer=embedding_layer,
+                               infer=True)
 
     optimizer = tf.train.AdagradOptimizer(args.learning_rate)
     train_op = optimizer.minimize(model.cost)
@@ -155,6 +165,9 @@ def train(args):
                     b = args.num_epochs * loader.num_batches
                     logger.info("{}/{} (epoch {}), loss = {}".format(a, b, epoch_id, stats(loss_values)))
                     loss_values = []
+
+                    sample_value = imodel.sample(session, index_to_token, token_to_index, 10, 'A', 0, 1, 4)
+                    logger.info('Sample: {}'.format(sample_value))
 
             valid_loader.reset_batch_pointer()
             state = session.run(model.initial_state)
