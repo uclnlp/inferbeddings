@@ -35,11 +35,11 @@ def main(argv):
     parser.add_argument('--model', type=str, default='lstm', help='rnn, gru, or lstm')
 
     parser.add_argument('--batch-size', type=int, default=256, help='minibatch size')
-    parser.add_argument('--seq-length', type=int, default=8, help='RNN sequence length')
+    parser.add_argument('--seq-length', type=int, default=16, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
 
     parser.add_argument('--report-every', '-r', type=int, default=10, help='report loss frequency')
-    parser.add_argument('--save-every', '-s', type=int, default=100, help='save frequency')
+    parser.add_argument('--save-every', '-s', type=int, default=1000, help='save frequency')
 
     parser.add_argument('--learning-rate', '--lr', type=float, default=0.1, help='learning rate')
 
@@ -169,31 +169,32 @@ def train(args):
                     sample_value = imodel.sample(session, index_to_token, token_to_index, 10, 'A', 0, 1, 4)
                     logger.info('Sample: {}'.format(sample_value))
 
-            valid_loader.reset_batch_pointer()
-            state = session.run(model.initial_state)
+                if (epoch_id * loader.num_batches + batch_id) % args.save_every == 0:
+                    valid_loader.reset_batch_pointer()
+                    state = session.run(model.initial_state)
 
-            valid_log_perplexity = 0.0
+                    valid_log_perplexity = 0.0
 
-            for batch_id in range(valid_loader.pointer, valid_loader.num_batches):
-                x, y = valid_loader.next_batch()
+                    for batch_id in range(valid_loader.pointer, valid_loader.num_batches):
+                        x, y = valid_loader.next_batch()
 
-                feed_dict = {
-                    model.input_data: x,
-                    model.targets: y,
-                    model.initial_state: state
-                }
+                        feed_dict = {
+                            model.input_data: x,
+                            model.targets: y,
+                            model.initial_state: state
+                        }
 
-                batch_valid_log_perplexity, state = session.run([model.cost, model.final_state], feed_dict=feed_dict)
-                valid_log_perplexity += batch_valid_log_perplexity
+                        batch_valid_log_perplexity, state = session.run([model.cost, model.final_state], feed_dict=feed_dict)
+                        valid_log_perplexity += batch_valid_log_perplexity
 
-            if best_valid_log_perplexity is None or valid_log_perplexity > best_valid_log_perplexity:
-                checkpoint_path = os.path.join(args.save, 'lm.ckpt')
-                saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
-                logger.info("Language model saved to {}".format(checkpoint_path))
+                    if best_valid_log_perplexity is None or valid_log_perplexity > best_valid_log_perplexity:
+                        checkpoint_path = os.path.join(args.save, 'lm.ckpt')
+                        saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
+                        logger.info("Language model saved to {}".format(checkpoint_path))
 
-                config['valid_log_perplexity'] = best_valid_log_perplexity
-                with open(config_path, 'w') as f:
-                    json.dump(config, f)
+                        config['valid_log_perplexity'] = best_valid_log_perplexity
+                        with open(config_path, 'w') as f:
+                            json.dump(config, f)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
