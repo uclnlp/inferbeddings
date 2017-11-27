@@ -21,8 +21,8 @@ def summary(configuration):
 
 def to_cmd(c, _path=None):
     if _path is None:
-        _path = '/home/pminervi/workspace/inferbeddings/'
-    command = '/home/pminervi/bin/cpy {}/bin/lm-module-cli.py' \
+        _path = '/home/ucacmin/workspace/inferbeddings/'
+    command = '{}/bin/lm-module-cli.py' \
               ' --rnn-size {}' \
               ' --num-layers {}' \
               ' --nb-batches 10' \
@@ -31,7 +31,7 @@ def to_cmd(c, _path=None):
               ' --seq-length {}' \
               ' --num-epochs 100' \
               ' --learning-rate {}' \
-              ''.format(_path, _path, _path, _path, _path,
+              ''.format(_path,
                         c['rnn_size'],
                         c['num_layers'],
                         c['batch_size'],
@@ -41,7 +41,7 @@ def to_cmd(c, _path=None):
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_lm_v1.%s.log" % (path, summary(c))
+    outfile = "%s/legion_lm_v1.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -65,10 +65,10 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/lm/ucl_lm_v1/'
+    path = '/home/ucacmin/Scratch/inferbeddings/logs/lm/legion_lm_v1/'
 
     # Check that we are on the UCLCS cluster first
-    if os.path.exists('/home/pminervi/'):
+    if os.path.exists('/home/ucacmin/'):
         # If the folder that will contain logs does not exist, create it
         if not os.path.exists(path):
             os.makedirs(path)
@@ -93,14 +93,14 @@ def main(argv):
     sorted_command_lines = sorted(command_lines)
     nb_jobs = len(sorted_command_lines)
 
-    header = """#!/bin/bash
+    header = """#!/bin/bash -l
 
 #$ -cwd
 #$ -S /bin/bash
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=8G,tmem=8G
+#$ -l mem=12G
 #$ -l h_rt=24:00:00
 
 """.format(nb_jobs)
