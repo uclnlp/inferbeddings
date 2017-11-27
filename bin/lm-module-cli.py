@@ -121,7 +121,9 @@ def train(args):
                                infer=True)
 
     optimizer = tf.train.AdagradOptimizer(args.learning_rate)
-    train_op = optimizer.minimize(model.cost)
+
+    tvars = tf.trainable_variables()
+    train_op = optimizer.minimize(model.cost, var_list=[var for var in tvars])
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
@@ -134,7 +136,8 @@ def train(args):
     logger.info('Creating the session ..')
 
     with tf.Session(config=session_config) as session:
-        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
+        logger.info('Trainable Parameters: {}'.format(
+            tfutil.count_trainable_parameters(var_list=[var for var in tvars])))
         session.run(init_op)
 
         emb_saver.restore(session, checkpoint_path)
