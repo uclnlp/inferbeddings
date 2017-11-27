@@ -15,13 +15,14 @@ def test_snli_loader():
         index_to_token = pickle.load(f)
 
     token_to_index = {token: index for index, token in index_to_token.items()}
+
     loader = SNLILoader(path='data/snli/snli_1.0_test.jsonl.gz', token_to_index=token_to_index)
 
     loader.create_batches()
 
-    batch = loader.next_batch()
+    x, y = loader.next_batch()
 
-    print(batch)
+    print([index_to_token[i] for i in x[1, :]])
 
 
 if __name__ == '__main__':

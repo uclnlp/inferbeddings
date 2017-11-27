@@ -66,10 +66,9 @@ class LanguageModel:
         self.logits = tf.matmul(output, W) + b
         self.probabilities = tf.nn.softmax(self.logits)
 
-        loss = legacy_seq2seq.sequence_loss_by_example([self.logits],
-                                                       [tf.reshape(self.targets, [-1])],
-                                                       [tf.ones([batch_size * seq_length])],
-                                                       vocab_size)
+        loss = legacy_seq2seq.sequence_loss_by_example(logits=[self.logits],
+                                                       targets=[tf.reshape(self.targets, [-1])],
+                                                       weights=[tf.ones([batch_size * seq_length])])
 
         self.cost = tf.reduce_sum(loss) / batch_size / seq_length
         self.final_state = last_state

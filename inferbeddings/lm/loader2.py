@@ -6,8 +6,6 @@ import json
 import numpy as np
 import nltk
 
-from inferbeddings.models.training.util import make_batches
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,12 +16,13 @@ class SNLILoader:
                  path='data/snli/snli_1.0_train.jsonl.gz',
                  batch_size=32, seq_length=8,
                  token_to_index=None,
-                 bos_idx=1, eos_idx=2, unk_idx=3, seed=0):
+                 bos_idx=1, eos_idx=2, unk_idx=3, seed=0, shuffle=True):
 
         assert token_to_index is not None
         assert path is not None
 
         self.path = path
+
         self.batch_size, self.seq_length = batch_size, seq_length
         self.token_to_index = token_to_index
 
@@ -32,20 +31,26 @@ class SNLILoader:
         self.unk_idx = unk_idx
 
         self.seed = seed
+        self.shuffle = shuffle
+
         self.random_state = np.random.RandomState(self.seed)
 
-        self.sentences = []
+        self.sentences = SNLILoader.read_from_path(self.path)
 
-        with gzip.open(self.path, 'rb') as f:
+        self.create_batches()
+        self.reset_batch_pointer()
+
+    @staticmethod
+    def read_from_path(path):
+        res = []
+        with gzip.open(path, 'rb') as f:
             for line in f:
                 decoded_line = line.decode('utf-8')
                 obj = json.loads(decoded_line)
                 s1, s2, gl = SNLILoader.extract_sentences(obj)
                 if gl in {'entailment', 'neutral', 'contradiction'}:
-                    self.sentences += [s1, s2]
-
-        self.create_batches()
-        self.reset_batch_pointer()
+                    res += [s1, s2]
+        return res
 
     def create_batches(self):
         self.text_idxs = []
@@ -57,7 +62,6 @@ class SNLILoader:
                 self.text_idxs += [self.token_to_index.get(word, self.unk_idx)]
 
         self.tensor = np.array(self.text_idxs)
-
         self.num_batches = int(self.tensor.size / (self.batch_size * self.seq_length))
 
         if self.num_batches == 0:

@@ -11,7 +11,7 @@ import json
 import numpy as np
 import tensorflow as tf
 
-from inferbeddings.lm.loader import SNLILoader
+from inferbeddings.lm.loader2 import SNLILoader
 from inferbeddings.lm.model import LanguageModel
 from inferbeddings.nli import tfutil
 
@@ -20,7 +20,8 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data', '-d', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
+    parser.add_argument('--train', '-t', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
+    parser.add_argument('--valid', '-v', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
 
     parser.add_argument('--vocabulary', type=str, default='models/snli/dam_1/dam_1_index_to_token.p')
     parser.add_argument('--checkpoint', type=str, default='models/snli/dam_1/dam_1')
@@ -33,7 +34,7 @@ def main(argv):
 
     parser.add_argument('--model', type=str, default='lstm', help='rnn, gru, or lstm')
 
-    parser.add_argument('--batch-size', type=int, default=128, help='minibatch size')
+    parser.add_argument('--batch-size', type=int, default=256, help='minibatch size')
     parser.add_argument('--seq-length', type=int, default=8, help='RNN sequence length')
     parser.add_argument('--num-epochs', type=int, default=100, help='number of epochs')
 
@@ -62,10 +63,18 @@ def train(args):
 
     logger.info('Loading the dataset ..')
 
-    loader = SNLILoader(path=args.data,
+    loader = SNLILoader(path=args.train,
                         token_to_index=token_to_index,
                         batch_size=args.batch_size,
-                        seq_length=args.seq_length)
+                        seq_length=args.seq_length,
+                        shuffle=True)
+
+    valid_loader = SNLILoader(path=args.valid,
+                              token_to_index=token_to_index,
+                              batch_size=1024,
+                              seq_length=args.seq_length,
+                              shuffle=False)
+
     vocab_size = len(token_to_index)
 
     config = {
@@ -125,6 +134,7 @@ def train(args):
         emb_saver.restore(session, checkpoint_path)
 
         loss_values = []
+        best_valid_log_perplexity = None
 
         for epoch_id in range(0, args.num_epochs):
             logger.debug('Epoch: {}'.format(epoch_id))
@@ -150,10 +160,31 @@ def train(args):
                     logger.info("{}/{} (epoch {}), loss = {}".format(a, b, epoch_id, stats(loss_values)))
                     loss_values = []
 
-                if (epoch_id * loader.num_batches + batch_id) % args.save_every == 0:
-                    checkpoint_path = os.path.join(args.save, 'lm.ckpt')
-                    saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
-                    logger.info("Language model saved to {}".format(checkpoint_path))
+            valid_loader.reset_batch_pointer()
+            state = session.run(model.initial_state)
+
+            valid_log_perplexity = 0.0
+
+            for batch_id in range(valid_loader.pointer, valid_loader.num_batches):
+                x, y = valid_loader.next_batch()
+
+                feed_dict = {
+                    model.input_data: x,
+                    model.targets: y,
+                    model.initial_state: state
+                }
+
+                batch_valid_log_perplexity, state = session.run([model.cost, model.final_state], feed_dict=feed_dict)
+                valid_log_perplexity += batch_valid_log_perplexity
+
+            if best_valid_log_perplexity is None or valid_log_perplexity > best_valid_log_perplexity:
+                checkpoint_path = os.path.join(args.save, 'lm.ckpt')
+                saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
+                logger.info("Language model saved to {}".format(checkpoint_path))
+
+                config['valid_log_perplexity'] = best_valid_log_perplexity
+                with open(config_path, 'w') as f:
+                    json.dump(config, f)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
