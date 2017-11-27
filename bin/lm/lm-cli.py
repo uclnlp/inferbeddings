@@ -17,6 +17,8 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def main(argv):
+    logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', type=str, default='data/lm/neuromancer',
                         help='data directory containing input.txt')
