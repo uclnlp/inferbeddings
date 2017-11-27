@@ -41,7 +41,7 @@ def main(argv):
     parser.add_argument('--report-every', '-r', type=int, default=10, help='report loss frequency')
     parser.add_argument('--save-every', '-s', type=int, default=100, help='save frequency')
 
-    parser.add_argument('--learning-rate', '--lr', type=float, default=0.001, help='learning rate')
+    parser.add_argument('--learning-rate', '--lr', type=float, default=0.1, help='learning rate')
 
     args = parser.parse_args(argv)
     train(args)
