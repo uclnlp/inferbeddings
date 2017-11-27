@@ -195,6 +195,7 @@ def train(args):
                         saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
                         logger.info("Language model saved to {}".format(checkpoint_path))
 
+                        best_valid_log_perplexity = valid_log_perplexity
                         config['valid_log_perplexity'] = best_valid_log_perplexity
                         with open(config_path, 'w') as f:
                             json.dump(config, f)
