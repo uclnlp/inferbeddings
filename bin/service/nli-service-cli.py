@@ -200,8 +200,9 @@ def main(argv):
                     sentence2_len_ph: [len(sentence2_ids)],
                     dropout_keep_prob_ph: 1.0
                 }
+                probabilities = tf.nn.softmax(logits)
 
-                predictions = session.run(tf.nn.softmax(logits), feed_dict=feed_dict)[0]
+                predictions = session.run(probabilities, feed_dict=feed_dict)[0]
                 answer = {
                     'neutral': str(predictions[neutral_idx]),
                     'contradiction': str(predictions[contradiction_idx]),

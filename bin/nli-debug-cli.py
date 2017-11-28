@@ -163,6 +163,8 @@ def main(argv):
         model = model_class(**model_kwargs)
 
         logits = model()
+        probabilities = tf.nn.softmax(logits)
+
         predictions = tf.argmax(logits, axis=1, name='predictions')
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
@@ -220,6 +222,9 @@ def main(argv):
         a_predictions_int_value = []
         b_predictions_int_value = []
 
+        a_probabilities_value = []
+        b_probabilities_value = []
+
         for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
@@ -236,8 +241,17 @@ def main(argv):
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_a_predictions_int_value = session.run(predictions_int, feed_dict=batch_a_feed_dict)
+            batch_a_predictions_int_value, batch_a_probabilities_value = session.run([predictions_int, probabilities], feed_dict=batch_a_feed_dict)
+
             a_predictions_int_value += batch_a_predictions_int_value.tolist()
+            for i in range(batch_a_probabilities_value.shape[0]):
+                a_probabilities_value += [
+                    {
+                        'neutral': batch_a_probabilities_value[i, neutral_idx],
+                        'contradiction': batch_a_probabilities_value[i, contradiction_idx],
+                        'entailment': batch_a_probabilities_value[i, entailment_idx]
+                    }
+                ]
 
             batch_b_feed_dict = {
                 sentence1_ph: batch_sentences2,
@@ -249,8 +263,22 @@ def main(argv):
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_b_predictions_int_value = session.run(predictions_int, feed_dict=batch_b_feed_dict)
+            batch_b_predictions_int_value, batch_b_probabilities_value = session.run([predictions_int, probabilities], feed_dict=batch_b_feed_dict)
             b_predictions_int_value += batch_b_predictions_int_value.tolist()
+            for i in range(batch_b_probabilities_value.shape[0]):
+                b_probabilities_value += [
+                    {
+                        'neutral': batch_b_probabilities_value[i, neutral_idx],
+                        'contradiction': batch_b_probabilities_value[i, contradiction_idx],
+                        'entailment': batch_b_probabilities_value[i, entailment_idx]
+                    }
+                ]
+
+        for i, instance in enumerate(data_is):
+            instance.update({
+                'a': a_probabilities_value[i],
+                'b': b_probabilities_value[i],
+            })
 
         logger.info('Number of examples: {}'.format(labels.shape[0]))
 
