@@ -69,7 +69,7 @@ def main(argv):
 
     argparser = argparse.ArgumentParser('NLI Service', formatter_class=formatter)
 
-    argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
+    argparser.add_argument('--model', '-m', action='store', type=str, default='ff-dam',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
 
     argparser.add_argument('--embedding-size', '-e', action='store', type=int, default=300)
