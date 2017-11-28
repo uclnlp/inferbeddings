@@ -58,6 +58,13 @@ def train(args):
     with open(vocabulary_path, 'rb') as f:
         index_to_token = pickle.load(f)
 
+    index_to_token.update({
+        0: '<PAD>',
+        1: '<BOS>',
+        2: '<EOS>',
+        3: '<UNK>'
+    })
+
     token_to_index = {token: index for index, token in index_to_token.items()}
 
     logger.info('Loading the dataset ..')
@@ -91,6 +98,9 @@ def train(args):
         json.dump(config, f)
 
     logger.info('Generating the computational graph ..')
+
+    print(max(index_to_token.keys()), vocab_size + 3)
+    assert max(index_to_token.keys()) + 1 == vocab_size + 3
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
