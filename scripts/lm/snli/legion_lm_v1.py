@@ -22,7 +22,7 @@ def summary(configuration):
 def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucacmin/workspace/inferbeddings/'
-    command = '{}/bin/lm-module-cli.py' \
+    command = '/home/ucacmin/a3/bin/python3 {}/bin/lm-module-cli.py' \
               ' --rnn-size {}' \
               ' --num-layers {}' \
               ' --nb-batches 10' \
