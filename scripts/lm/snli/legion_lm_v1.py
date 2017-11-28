@@ -102,6 +102,8 @@ def main(argv):
 #$ -l mem=12G
 #$ -l h_rt=24:00:00
 
+cd /home/ucacmin/workspace/inferbeddings/
+
 """.format(nb_jobs)
 
     print(header)
