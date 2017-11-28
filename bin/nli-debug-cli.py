@@ -171,6 +171,7 @@ def main(argv):
 
     predictions_int = tf.cast(predictions, tf.int32)
 
+    # Dataset, in the form of matrices and arrays
     d_sentence1, d_sentence2 = dataset['sentence1'], dataset['sentence2']
     d_sentence1_len, d_sentence2_len = dataset['sentence1_length'], dataset['sentence2_length']
     d_label = dataset['label']
@@ -178,9 +179,13 @@ def main(argv):
     nb_train_instances = d_label.shape[0]
     max_sentence_len = max(d_sentence1.shape[1], d_sentence2.shape[1])
 
+    # Single big matrix containing all sentences in the dataset
     d_sentence = np.zeros(shape=(nb_train_instances * 2, max_sentence_len), dtype=np.int)
     d_sentence[0:d_sentence1.shape[0], 0:d_sentence1.shape[1]] = d_sentence1
     d_sentence[d_sentence1.shape[0]:, 0:d_sentence2.shape[1]] = d_sentence2
+
+    d_sentence_len = np.concatenate([d_sentence1_len, d_sentence2_len])
+    assert d_sentence.shape[0] == d_sentence_len.shape[0]
 
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
 
@@ -252,25 +257,35 @@ def main(argv):
         train_accuracy_value = np.mean(labels == np.array(a_predictions_int_value))
         logger.info('Accuracy: {}'.format(train_accuracy_value))
 
-        a_contradictions = (np.array(a_predictions_int_value) == contradiction_idx)
-        b_contradictions = (np.array(b_predictions_int_value) == contradiction_idx)
+        s1s2_con = (np.array(a_predictions_int_value) == contradiction_idx)
+        s2s1_con = (np.array(b_predictions_int_value) == contradiction_idx)
 
-        a_entailment = (np.array(a_predictions_int_value) == entailment_idx)
-        b_entailment = (np.array(b_predictions_int_value) == entailment_idx)
+        assert s1s2_con.shape == s2s1_con.shape
 
-        a_neutral = (np.array(a_predictions_int_value) == neutral_idx)
-        b_neutral = (np.array(b_predictions_int_value) == neutral_idx)
+        s1s2_ent = (np.array(a_predictions_int_value) == entailment_idx)
+        s2s1_ent = (np.array(b_predictions_int_value) == entailment_idx)
 
-        a_b_union = np.logical_or(a_contradictions, b_contradictions)
-        logger.info('Union: {}'.format(a_b_union.sum()))
+        s1s2_neu = (np.array(a_predictions_int_value) == neutral_idx)
+        s2s1_neu = (np.array(b_predictions_int_value) == neutral_idx)
 
-        a_b_intersection = np.logical_and(a_contradictions, b_contradictions)
-        logger.info('Intersection: {}'.format(a_b_intersection.sum()))
+        logger.info('(S1 contradicts S2) XOR (S2 contradicts S1): {}'
+                    .format(np.logical_xor(s1s2_con, s2s1_con).sum()))
 
-        a_b_violations = np.logical_xor(a_contradictions, b_contradictions)
-        logger.info('Violations: {}'.format(a_b_violations.sum()))
+        logger.info('(S1 contradicts S2): {}'
+                    .format(s1s2_con.sum()))
+        logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1)'
+                    .format(np.logical_and(s1s2_con, np.logical_not(s2s1_con)).sum()))
 
-        print(a_contradictions.shape, b_contradictions.shape)
+        logger.info('(S1 entailment S2): {}'
+                    .format(s1s2_ent.sum()))
+        logger.info('(S1 entailment S2) AND (S2 contradicts S1): {}'
+                    .format(np.logical_and(s1s2_ent, s2s1_con).sum()))
+
+        logger.info('(S1 neutral S2): {}'
+                    .format(s1s2_con.sum()))
+        logger.info('(S1 neutral S2) AND (S2 contradicts S1): {}'
+                    .format(np.logical_and(s1s2_neu, s2s1_con).sum()))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
