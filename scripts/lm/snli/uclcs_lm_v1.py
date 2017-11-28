@@ -25,7 +25,6 @@ def to_cmd(c, _path=None):
     command = '/home/pminervi/bin/cpy {}/bin/lm-module-cli.py' \
               ' --rnn-size {}' \
               ' --num-layers {}' \
-              ' --nb-batches 10' \
               ' --model lstm' \
               ' --batch-size {}' \
               ' --seq-length {}' \
