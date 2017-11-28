@@ -276,15 +276,29 @@ def main(argv):
         c = np.logical_and(s1s2_con, np.logical_not(s2s1_con)).sum()
         logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1): {0} ({1:.4f})'.format(c, c / b))
 
+        with open('c.p', 'wb') as f:
+            tmp = [data_is[i] for i in np.where(c)[0].tolist()]
+            pickle.dump(tmp, f)
+
         d = s1s2_ent.sum()
         logger.info('(S1 entailment S2): {0}'.format(d))
         e = np.logical_and(s1s2_ent, s2s1_con).sum()
         logger.info('(S1 entailment S2) AND (S2 contradicts S1): {0} ({1:.4f})'.format(e, e / d))
 
+        with open('e.p', 'wb') as f:
+            tmp = [data_is[i] for i in np.where(e)[0].tolist()]
+            pickle.dump(tmp, f)
+
         f = s1s2_con.sum()
         logger.info('(S1 neutral S2): {0}'.format(f))
         g = np.logical_and(s1s2_neu, s2s1_con).sum()
         logger.info('(S1 neutral S2) AND (S2 contradicts S1): {0} ({1:.4f})'.format(g, g / f))
+
+        with open('g.p', 'wb') as f:
+            tmp = [data_is[i] for i in np.where(g)[0].tolist()]
+            pickle.dump(tmp, f)
+
+        print(type(data_is))
 
 
 if __name__ == '__main__':
