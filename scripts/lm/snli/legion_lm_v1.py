@@ -23,6 +23,7 @@ def to_cmd(c, _path=None):
     if _path is None:
         _path = '/home/ucacmin/workspace/inferbeddings/'
     command = '/home/ucacmin/a3/bin/python3 {}/bin/lm-module-cli.py' \
+              ' --save /home/ucacmin/Scratch/models/lm/' \
               ' --rnn-size {}' \
               ' --num-layers {}' \
               ' --model lstm' \
