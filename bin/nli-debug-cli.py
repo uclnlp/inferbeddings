@@ -273,7 +273,7 @@ def main(argv):
 
         logger.info('(S1 contradicts S2): {}'
                     .format(s1s2_con.sum()))
-        logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1)'
+        logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1): {}'
                     .format(np.logical_and(s1s2_con, np.logical_not(s2s1_con)).sum()))
 
         logger.info('(S1 entailment S2): {}'
