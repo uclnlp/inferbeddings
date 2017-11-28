@@ -255,7 +255,7 @@ def main(argv):
         logger.info('Number of examples: {}'.format(labels.shape[0]))
 
         train_accuracy_value = np.mean(labels == np.array(a_predictions_int_value))
-        logger.info('Accuracy: {}'.format(train_accuracy_value))
+        logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
 
         s1s2_con = (np.array(a_predictions_int_value) == contradiction_idx)
         s2s1_con = (np.array(b_predictions_int_value) == contradiction_idx)
@@ -268,23 +268,23 @@ def main(argv):
         s1s2_neu = (np.array(a_predictions_int_value) == neutral_idx)
         s2s1_neu = (np.array(b_predictions_int_value) == neutral_idx)
 
-        logger.info('(S1 contradicts S2) XOR (S2 contradicts S1): {}'
-                    .format(np.logical_xor(s1s2_con, s2s1_con).sum()))
+        a = np.logical_xor(s1s2_con, s2s1_con).sum()
+        logger.info('(S1 contradicts S2) XOR (S2 contradicts S1): {0}'.format(a))
 
-        logger.info('(S1 contradicts S2): {}'
-                    .format(s1s2_con.sum()))
-        logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1): {}'
-                    .format(np.logical_and(s1s2_con, np.logical_not(s2s1_con)).sum()))
+        b = s1s2_con.sum()
+        logger.info('(S1 contradicts S2): {0}'.format(b))
+        c = np.logical_and(s1s2_con, np.logical_not(s2s1_con)).sum()
+        logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1): {0} ({1:.4f})'.format(c, c / b))
 
-        logger.info('(S1 entailment S2): {}'
-                    .format(s1s2_ent.sum()))
-        logger.info('(S1 entailment S2) AND (S2 contradicts S1): {}'
-                    .format(np.logical_and(s1s2_ent, s2s1_con).sum()))
+        d = s1s2_ent.sum()
+        logger.info('(S1 entailment S2): {0}'.format(d))
+        e = np.logical_and(s1s2_ent, s2s1_con).sum()
+        logger.info('(S1 entailment S2) AND (S2 contradicts S1): {0} ({1:.4f})'.format(e, e / d))
 
-        logger.info('(S1 neutral S2): {}'
-                    .format(s1s2_con.sum()))
-        logger.info('(S1 neutral S2) AND (S2 contradicts S1): {}'
-                    .format(np.logical_and(s1s2_neu, s2s1_con).sum()))
+        f = s1s2_con.sum()
+        logger.info('(S1 neutral S2): {0}'.format(f))
+        g = np.logical_and(s1s2_neu, s2s1_con).sum()
+        logger.info('(S1 neutral S2) AND (S2 contradicts S1): {0} ({1:.4f})'.format(g, g / f))
 
 
 if __name__ == '__main__':
