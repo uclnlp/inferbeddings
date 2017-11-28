@@ -58,6 +58,8 @@ def main(argv):
 
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
+    argparser.add_argument('--check-transitivity', action='store_true', default=False)
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -78,6 +80,8 @@ def main(argv):
     is_lower = args.lower
 
     restore_path = args.restore
+
+    is_check_transitivity = args.check_transitivity
 
     np.random.seed(seed)
     rs = np.random.RandomState(seed)
@@ -132,9 +136,7 @@ def main(argv):
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
-        embedding_layer = tf.get_variable('embeddings',
-                                          shape=[vocab_size, embedding_size],
-                                          trainable=False)
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size], trainable=False)
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
@@ -172,22 +174,6 @@ def main(argv):
     trainable_discriminator_vars = list(discriminator_vars)
 
     predictions_int = tf.cast(predictions, tf.int32)
-
-    # Dataset, in the form of matrices and arrays
-    d_sentence1, d_sentence2 = dataset['sentence1'], dataset['sentence2']
-    d_sentence1_len, d_sentence2_len = dataset['sentence1_length'], dataset['sentence2_length']
-    d_label = dataset['label']
-
-    nb_train_instances = d_label.shape[0]
-    max_sentence_len = max(d_sentence1.shape[1], d_sentence2.shape[1])
-
-    # Single big matrix containing all sentences in the dataset
-    d_sentence = np.zeros(shape=(nb_train_instances * 2, max_sentence_len), dtype=np.int)
-    d_sentence[0:d_sentence1.shape[0], 0:d_sentence1.shape[1]] = d_sentence1
-    d_sentence[d_sentence1.shape[0]:, 0:d_sentence2.shape[1]] = d_sentence2
-
-    d_sentence_len = np.concatenate([d_sentence1_len, d_sentence2_len])
-    assert d_sentence.shape[0] == d_sentence_len.shape[0]
 
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
 
@@ -234,45 +220,39 @@ def main(argv):
             batch_a_feed_dict = {
                 sentence1_ph: batch_sentences1,
                 sentence1_len_ph: batch_sizes1,
-
                 sentence2_ph: batch_sentences2,
                 sentence2_len_ph: batch_sizes2,
-
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_a_predictions_int_value, batch_a_probabilities_value = session.run([predictions_int, probabilities], feed_dict=batch_a_feed_dict)
+            batch_a_predictions_int_value, batch_a_probabilities_value = session.run(
+                [predictions_int, probabilities], feed_dict=batch_a_feed_dict)
 
             a_predictions_int_value += batch_a_predictions_int_value.tolist()
             for i in range(batch_a_probabilities_value.shape[0]):
-                a_probabilities_value += [
-                    {
-                        'neutral': batch_a_probabilities_value[i, neutral_idx],
-                        'contradiction': batch_a_probabilities_value[i, contradiction_idx],
-                        'entailment': batch_a_probabilities_value[i, entailment_idx]
-                    }
-                ]
+                a_probabilities_value += [{
+                    'neutral': batch_a_probabilities_value[i, neutral_idx],
+                    'contradiction': batch_a_probabilities_value[i, contradiction_idx],
+                    'entailment': batch_a_probabilities_value[i, entailment_idx]
+                }]
 
             batch_b_feed_dict = {
                 sentence1_ph: batch_sentences2,
                 sentence1_len_ph: batch_sizes2,
-
                 sentence2_ph: batch_sentences1,
                 sentence2_len_ph: batch_sizes1,
-
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_b_predictions_int_value, batch_b_probabilities_value = session.run([predictions_int, probabilities], feed_dict=batch_b_feed_dict)
+            batch_b_predictions_int_value, batch_b_probabilities_value = session.run(
+                [predictions_int, probabilities], feed_dict=batch_b_feed_dict)
             b_predictions_int_value += batch_b_predictions_int_value.tolist()
             for i in range(batch_b_probabilities_value.shape[0]):
-                b_probabilities_value += [
-                    {
-                        'neutral': batch_b_probabilities_value[i, neutral_idx],
-                        'contradiction': batch_b_probabilities_value[i, contradiction_idx],
-                        'entailment': batch_b_probabilities_value[i, entailment_idx]
-                    }
-                ]
+                b_probabilities_value += [{
+                    'neutral': batch_b_probabilities_value[i, neutral_idx],
+                    'contradiction': batch_b_probabilities_value[i, contradiction_idx],
+                    'entailment': batch_b_probabilities_value[i, entailment_idx]
+                }]
 
         for i, instance in enumerate(data_is):
             instance.update({
@@ -326,7 +306,93 @@ def main(argv):
             tmp = [data_is[i] for i in np.where(g)[0].tolist()]
             pickle.dump(tmp, f)
 
-        print(type(data_is))
+        if is_check_transitivity:
+            # Find S1, S2 such that entails(S1, S2)
+            print(type(s1s2_ent))
+
+            c_predictions_int_value = []
+            c_probabilities_value = []
+
+            d_predictions_int_value = []
+            d_probabilities_value = []
+
+            # Find candidate S3 sentences
+            order = rs.permutation(nb_instances)
+
+            sentences3 = sentence2[order]
+            sizes3 = sentence2_length[order]
+
+            for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
+                batch_sentences2 = sentences2[batch_start:batch_end]
+                batch_sentences3 = sentences3[batch_start:batch_end]
+
+                batch_sizes2 = sizes2[batch_start:batch_end]
+                batch_sizes3 = sizes3[batch_start:batch_end]
+
+                batch_c_feed_dict = {
+                    sentence1_ph: batch_sentences2,
+                    sentence1_len_ph: batch_sizes2,
+                    sentence2_ph: batch_sentences3,
+                    sentence2_len_ph: batch_sizes3,
+                    dropout_keep_prob_ph: 1.0
+                }
+
+                batch_c_predictions_int_value, batch_c_probabilities_value = session.run(
+                    [predictions_int, probabilities], feed_dict=batch_c_feed_dict)
+
+                c_predictions_int_value += batch_c_predictions_int_value.tolist()
+                for i in range(batch_c_probabilities_value.shape[0]):
+                    c_probabilities_value += [{
+                        'neutral': batch_c_probabilities_value[i, neutral_idx],
+                        'contradiction': batch_c_probabilities_value[i, contradiction_idx],
+                        'entailment': batch_c_probabilities_value[i, entailment_idx]
+                    }]
+
+                batch_sentences1 = sentences1[batch_start:batch_end]
+                batch_sentences3 = sentences3[batch_start:batch_end]
+
+                batch_sizes1 = sizes1[batch_start:batch_end]
+                batch_sizes3 = sizes3[batch_start:batch_end]
+
+                batch_d_feed_dict = {
+                    sentence1_ph: batch_sentences1,
+                    sentence1_len_ph: batch_sizes1,
+                    sentence2_ph: batch_sentences3,
+                    sentence2_len_ph: batch_sizes3,
+                    dropout_keep_prob_ph: 1.0
+                }
+
+                batch_d_predictions_int_value, batch_d_probabilities_value = session.run(
+                    [predictions_int, probabilities], feed_dict=batch_d_feed_dict)
+
+                d_predictions_int_value += batch_d_predictions_int_value.tolist()
+                for i in range(batch_d_probabilities_value.shape[0]):
+                    d_probabilities_value += [{
+                        'neutral': batch_d_probabilities_value[i, neutral_idx],
+                        'contradiction': batch_d_probabilities_value[i, contradiction_idx],
+                        'entailment': batch_d_probabilities_value[i, entailment_idx]
+                    }]
+
+            s2s3_ent = (np.array(c_predictions_int_value) == entailment_idx)
+            s1s3_ent = (np.array(c_predictions_int_value) == entailment_idx)
+
+            body = np.logical_and(s1s2_ent, s2s3_ent)
+            body_not_head = np.logical_and(body, np.logical_not(s1s3_ent))
+
+            logger.info('(S1 entails S2) and (S2 entails S3): {0}'.format(body.sum()))
+            logger.info('body AND NOT(head): {0} ({1:.4f})'
+                        .format(body_not_head.sum(), body_not_head.sum() / body.sum()))
+
+            with open('h.p', 'wb') as f:
+                tmp = []
+                for idx in np.where(body_not_head)[0].tolist():
+                    s1 = data_is[idx]['sentence1']
+                    s2 = data_is[idx]['sentence2']
+                    s3 = data_is[order[idx]]['sentence2']
+                    tmp += [{
+                        's1': s1, 's2': s2, 's3': s3
+                    }]
+                pickle.dump(tmp, f)
 
 
 if __name__ == '__main__':
