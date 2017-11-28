@@ -41,13 +41,13 @@ def main(argv):
     argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=fmt)
 
     argparser.add_argument('--data', '-d', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
-    argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
+    argparser.add_argument('--model', '-m', action='store', type=str, default='ff-dam',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
 
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
 
-    argparser.add_argument('--batch-size', action='store', type=int, default=1024)
+    argparser.add_argument('--batch-size', action='store', type=int, default=32)
 
     argparser.add_argument('--seed', action='store', type=int, default=0)
 
