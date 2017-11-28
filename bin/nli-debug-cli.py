@@ -58,7 +58,7 @@ def main(argv):
 
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
-    argparser.add_argument('--check-transitivity', action='store_true', default=False)
+    argparser.add_argument('--check-transitivity', '-x', action='store_true', default=False)
 
     args = argparser.parse_args(argv)
 
