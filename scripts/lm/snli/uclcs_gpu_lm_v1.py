@@ -64,7 +64,7 @@ def main(argv):
 
     configurations = cartesian_product(hyperparameters_space)
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/lm/ucl_lm_v1/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/lm/ucl_gpu_lm_v1/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pminervi/'):
