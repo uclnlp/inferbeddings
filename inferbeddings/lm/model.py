@@ -60,7 +60,9 @@ class LanguageModel:
             prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
             return tf.nn.embedding_lookup(embedding_layer, prev_symbol)
 
-        outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if infer else None, scope='rnnlm')
+        outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell,
+                                                         loop_function=loop if infer else None,
+                                                         scope='rnnlm')
         output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])
 
         self.logits = tf.matmul(output, W) + b
@@ -94,7 +96,6 @@ class LanguageModel:
                 self.initial_state: state
             }
             probabilities, final_state = session.run([self.probabilities, self.final_state], feed_dict=feed_dict)
-
             return probabilities, final_state
 
         def beam_search_pick(prime, width):

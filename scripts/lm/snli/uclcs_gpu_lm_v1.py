@@ -108,6 +108,7 @@ export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
 cd /home/pminervi/workspace/inferbeddings/
+export PYTHONPATH=.
 
 """.format(nb_jobs)
 
