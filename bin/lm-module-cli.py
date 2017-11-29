@@ -199,7 +199,7 @@ def train(args):
                         batch_valid_log_perplexity, state = session.run([model.cost, model.final_state], feed_dict=feed_dict)
                         valid_log_perplexity += batch_valid_log_perplexity
 
-                    if best_valid_log_perplexity is None or valid_log_perplexity > best_valid_log_perplexity:
+                    if best_valid_log_perplexity is None or valid_log_perplexity < best_valid_log_perplexity:
                         checkpoint_path = os.path.join(args.save, 'lm.ckpt')
                         saver.save(session, checkpoint_path, global_step=epoch_id * loader.num_batches + batch_id)
                         logger.info("Language model saved to {}".format(checkpoint_path))
