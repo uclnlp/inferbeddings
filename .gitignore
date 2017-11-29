@@ -112,3 +112,4 @@ data/multinli/*.gz
 
 # Saved models
 save/
+models/lm/lm.ckpt-*.data-00000-*

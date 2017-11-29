@@ -1,0 +1,1 @@
+{"model": "lstm", "seq_length": 8, "batch_size": 32, "vocab_size": 38978, "embedding_size": 300, "rnn_size": 512, "num_layers": 1, "valid_log_perplexity": 9549.715612411499}
