@@ -99,7 +99,7 @@ def train(args):
     logger.info('Generating the computational graph ..')
 
     print(max(index_to_token.keys()), vocab_size + 3)
-    assert max(index_to_token.keys()) + 1 == vocab_size + 3
+    assert max(index_to_token.keys()) == vocab_size + 3
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
