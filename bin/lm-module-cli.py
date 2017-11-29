@@ -98,13 +98,13 @@ def train(args):
 
     logger.info('Generating the computational graph ..')
 
-    print(max(index_to_token.keys()), vocab_size + 3)
-    assert max(index_to_token.keys()) == vocab_size + 3
+    print(max(index_to_token.keys()), vocab_size)
+    assert max(index_to_token.keys()) + 1 == vocab_size
 
     discriminator_scope_name = 'discriminator'
     with tf.variable_scope(discriminator_scope_name):
         embedding_layer = tf.get_variable('embeddings',
-                                          shape=[vocab_size + 3, args.embedding_size],
+                                          shape=[vocab_size, args.embedding_size],
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           trainable=False)
 
