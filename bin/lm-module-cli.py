@@ -186,6 +186,7 @@ def train(args):
                     state = session.run(model.initial_state)
 
                     valid_log_perplexity = 0.0
+                    valid_log_perplexities = []
 
                     for batch_id in range(valid_loader.pointer, valid_loader.num_batches):
                         x, y = valid_loader.next_batch()
@@ -198,6 +199,7 @@ def train(args):
 
                         batch_valid_log_perplexity, state = session.run([model.cost, model.final_state], feed_dict=feed_dict)
                         valid_log_perplexity += batch_valid_log_perplexity
+                        valid_log_perplexities += [batch_valid_log_perplexity]
 
                     if best_valid_log_perplexity is None or valid_log_perplexity < best_valid_log_perplexity:
                         checkpoint_path = os.path.join(args.save, 'lm.ckpt')
@@ -205,6 +207,7 @@ def train(args):
                         logger.info("Language model saved to {}".format(checkpoint_path))
 
                         logger.info('Validation Log-Perplexity: {0:.4f}'.format(valid_log_perplexity))
+                        logger.info('Validation Log-Perplexities: {0}'.format(stats(valid_log_perplexities)))
 
                         best_valid_log_perplexity = valid_log_perplexity
                         config['valid_log_perplexity'] = best_valid_log_perplexity
