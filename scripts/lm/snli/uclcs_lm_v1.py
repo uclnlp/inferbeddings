@@ -102,6 +102,8 @@ def main(argv):
 #$ -l h_vmem=8G,tmem=8G
 #$ -l h_rt=24:00:00
 
+cd /home/pminervi/workspace/inferbeddings/
+
 """.format(nb_jobs)
 
     print(header)
