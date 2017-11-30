@@ -60,7 +60,9 @@ class LanguageModel:
             prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
             return tf.nn.embedding_lookup(embedding_layer, prev_symbol)
 
-        outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell,
+        outputs, last_state = legacy_seq2seq.rnn_decoder(decoder_inputs=inputs,
+                                                         initial_state=self.initial_state,
+                                                         cell=cell,
                                                          loop_function=loop if infer else None,
                                                          scope='rnnlm')
         output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])
