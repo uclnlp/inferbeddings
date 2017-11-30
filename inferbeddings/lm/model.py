@@ -146,6 +146,8 @@ class LanguageModel:
                 else:
                     sample = weighted_pick(p)
 
+                sample = np.clip(sample, 0, max(words.keys()))
+
                 predictions = words[sample]
                 res += ' ' + predictions
                 word = predictions

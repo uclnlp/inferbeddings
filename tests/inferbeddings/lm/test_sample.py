@@ -33,6 +33,8 @@ def test_lm_sample():
     vocab_size = len(token_to_index)
     embedding_size = 300
 
+    print('vocab_size: {}'.format(vocab_size))
+
     with open('{}/config.json'.format(lm_path), 'r') as f:
         config = json.load(f)
 
@@ -63,8 +65,16 @@ def test_lm_sample():
         ckpt = tf.train.get_checkpoint_state(lm_path)
         saver.restore(session, ckpt.model_checkpoint_path)
 
-        sample_value = imodel.sample(session, index_to_token, token_to_index, 10, 'A', 0, 1, 4)
-        print(sample_value)
+        for _ in range(32):
+            sample_value = imodel.sample(session=session,
+                                         words=index_to_token,
+                                         vocab=token_to_index,
+                                         num=20,
+                                         prime='. A',
+                                         pick=1,
+                                         sampling_type=1,
+                                         width=4)
+            print(sample_value)
 
 if __name__ == '__main__':
     #pytest.main([__file__])
