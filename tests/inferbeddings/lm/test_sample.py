@@ -65,7 +65,7 @@ def test_lm_sample():
         ckpt = tf.train.get_checkpoint_state(lm_path)
         saver.restore(session, ckpt.model_checkpoint_path)
 
-        for _ in range(32):
+        for _ in range(4):
             sample_value = imodel.sample(session=session,
                                          words=index_to_token,
                                          vocab=token_to_index,
@@ -75,6 +75,10 @@ def test_lm_sample():
                                          sampling_type=1,
                                          width=4)
             print(sample_value)
+
+        sequence = [token_to_index[w] for w in ['A', 'girl', 'runs']]
+        imodel.score_sequence(session=session, sequence=sequence)
+
 
 if __name__ == '__main__':
     #pytest.main([__file__])

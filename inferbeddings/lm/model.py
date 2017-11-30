@@ -77,6 +77,23 @@ class LanguageModel:
 
         self.random_state = np.random.RandomState(seed)
 
+    def score_sequence(self, session, sequence):
+        x = np.zeros((1, 1))
+        state = session.run(self.cell.zero_state(1, tf.float32))
+        res = 0.0
+        for i, idx in enumerate(sequence):
+            x[0, 0] = idx
+            feed = {
+                self.input_data: x,
+                self.initial_state: state
+            }
+            probabilities, state = session.run([self.probabilities, self.final_state], feed)
+            if i < len(sequence) - 1:
+                next_idx = sequence[i + 1]
+                res += np.log(probabilities[0, next_idx])
+        print(res)
+        return res
+
     def sample(self, session, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
         def weighted_pick(weights):
             t = np.cumsum(weights)
