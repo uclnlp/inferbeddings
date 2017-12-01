@@ -39,7 +39,7 @@ def main(argv):
     with open('{}/config.json'.format(lm_path), 'r') as f:
         config = json.load(f)
 
-    seq_length = config['seq_length']
+    seq_length = 1# config['seq_length']
     batch_size = 1  # config['batch_size']
     rnn_size = config['rnn_size']
     num_layers = config['num_layers']
@@ -130,11 +130,6 @@ def main(argv):
         cost_value, state = session.run([cost, final_state], feed_dict=fd)
 
         print(cost_value)
-
-
-
-
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
