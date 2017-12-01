@@ -244,7 +244,7 @@ def main(argv):
 
         print(inconsistencies_value)
         tmp = np.argsort(- np.array(inconsistencies_value))
-        print(tmp)
+        print(inconsistencies_value[tmp[0]])
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
