@@ -26,6 +26,31 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
+
+sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
+sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
+
+sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
+sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
+
+dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
+
+def contradiction_loss(
+        sentences1, sizes1, sentences2, sizes2):
+
+    feed_dict_1 = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+        dropout_keep_prob_ph: 1.0
+    }
+
+    feed_dict_2 = {
+        sentence1_ph: sentences2, sentence1_len_ph: sizes2,
+        sentence2_ph: sentences1, sentence2_len_ph: sizes1,
+        dropout_keep_prob_ph: 1.0
+    }
+
 
 # Running:
 #  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
@@ -96,7 +121,6 @@ def main(argv):
 
     token_to_index = {token: index for index, token in index_to_token.items()}
 
-    entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
     label_to_index = {
         'entailment': entailment_idx,
         'neutral': neutral_idx,
@@ -119,12 +143,6 @@ def main(argv):
     sentence2_length = dataset['sentence2_length']
     label = dataset['label']
 
-    sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
-    sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
-
-    sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
-    sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
-
     clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
     clipped_sentence2 = tfutil.clip_sentence(sentence2_ph, sentence2_len_ph)
 
@@ -136,8 +154,6 @@ def main(argv):
 
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
-
-        dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
         model_kwargs = dict(
             sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
@@ -212,22 +228,26 @@ def main(argv):
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_predictions_int_value, batch_probabilities_value = session.run(
+            batch_predictions_int, batch_probabilities = session.run(
                 [predictions_int, probabilities], feed_dict=batch_feed_dict)
 
-            predictions_int_value += batch_predictions_int_value.tolist()
+            predictions_int_value += batch_predictions_int.tolist()
 
-            for i in range(batch_probabilities_value.shape[0]):
+            for i in range(batch_probabilities.shape[0]):
                 a_probabilities_value += [{
-                    'neutral': batch_probabilities_value[i, neutral_idx],
-                    'contradiction': batch_probabilities_value[i, contradiction_idx],
-                    'entailment': batch_probabilities_value[i, entailment_idx]
+                    'neutral': batch_probabilities[i, neutral_idx],
+                    'contradiction': batch_probabilities[i, contradiction_idx],
+                    'entailment': batch_probabilities[i, entailment_idx]
                 }]
 
         logger.info('Number of examples: {}'.format(labels.shape[0]))
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
+
+
+
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
