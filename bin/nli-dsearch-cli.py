@@ -57,8 +57,6 @@ def main(argv):
 
     argparser.add_argument('--restore', action='store', type=str, default=None)
 
-    argparser.add_argument('--check-transitivity', '-x', action='store_true', default=False)
-
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -79,8 +77,6 @@ def main(argv):
     is_lower = args.lower
 
     restore_path = args.restore
-
-    is_check_transitivity = args.check_transitivity
 
     np.random.seed(seed)
     rs = np.random.RandomState(seed)
@@ -132,7 +128,6 @@ def main(argv):
     clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
     clipped_sentence2 = tfutil.clip_sentence(sentence2_ph, sentence2_len_ph)
 
-    token_set = set(token_to_index.keys())
     vocab_size = max(token_to_index.values()) + 1
 
     discriminator_scope_name = 'discriminator'
@@ -172,8 +167,6 @@ def main(argv):
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
 
-    trainable_discriminator_vars = list(discriminator_vars)
-
     predictions_int = tf.cast(predictions, tf.int32)
 
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
@@ -182,14 +175,7 @@ def main(argv):
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config=session_config) as session:
-        logger.info('Total Parameters: {}'.format(
-            tfutil.count_trainable_parameters()))
-
-        logger.info('Total Discriminator Parameters: {}'.format(
-            tfutil.count_trainable_parameters(var_list=discriminator_vars)))
-
-        logger.info('Total Trainable Discriminator Parameters: {}'.format(
-            tfutil.count_trainable_parameters(var_list=trainable_discriminator_vars)))
+        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
 
         saver.restore(session, restore_path)
 
@@ -212,14 +198,17 @@ def main(argv):
         for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
+
             batch_sizes1 = sizes1[batch_start:batch_end]
             batch_sizes2 = sizes2[batch_start:batch_end]
 
             batch_feed_dict = {
                 sentence1_ph: batch_sentences1,
-                sentence1_len_ph: batch_sizes1,
+                sentence1_len_ph: batch_sizes1
+
                 sentence2_ph: batch_sentences2,
                 sentence2_len_ph: batch_sizes2,
+
                 dropout_keep_prob_ph: 1.0
             }
 
@@ -227,6 +216,7 @@ def main(argv):
                 [predictions_int, probabilities], feed_dict=batch_feed_dict)
 
             predictions_int_value += batch_predictions_int_value.tolist()
+
             for i in range(batch_probabilities_value.shape[0]):
                 a_probabilities_value += [{
                     'neutral': batch_probabilities_value[i, neutral_idx],
