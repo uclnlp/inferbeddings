@@ -38,20 +38,22 @@ dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
 session = probabilities = None
 
-def contradiction_loss(
-        sentences1, sizes1, sentences2, sizes2):
 
+def inconsistency_loss(sentences1, sizes1, sentences2, sizes2):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
         dropout_keep_prob_ph: 1.0
     }
-
     feed_dict_2 = {
         sentence1_ph: sentences2, sentence1_len_ph: sizes2,
         sentence2_ph: sentences1, sentence2_len_ph: sizes1,
         dropout_keep_prob_ph: 1.0
     }
+    probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
+    probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
+    return np.maximum(0, probabilities_1 - probabilities_2)
+
 
 
 # Running:
@@ -213,8 +215,10 @@ def main(argv):
 
         labels = label[order]
 
+        logger.info('Number of examples: {}'.format(labels.shape[0]))
+
         predictions_int_value = []
-        a_probabilities_value = []
+        inconsistencies_value = []
 
         for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
@@ -224,34 +228,19 @@ def main(argv):
             batch_sizes2 = sizes2[batch_start:batch_end]
 
             batch_feed_dict = {
-                sentence1_ph: batch_sentences1,
-                sentence1_len_ph: batch_sizes1,
-
-                sentence2_ph: batch_sentences2,
-                sentence2_len_ph: batch_sizes2,
-
+                sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
+                sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
                 dropout_keep_prob_ph: 1.0
             }
 
-            batch_predictions_int, batch_probabilities = session.run(
-                [predictions_int, probabilities], feed_dict=batch_feed_dict)
-
+            batch_predictions_int = session.run(predictions_int, feed_dict=batch_feed_dict)
             predictions_int_value += batch_predictions_int.tolist()
 
-            for i in range(batch_probabilities.shape[0]):
-                a_probabilities_value += [{
-                    'neutral': batch_probabilities[i, neutral_idx],
-                    'contradiction': batch_probabilities[i, contradiction_idx],
-                    'entailment': batch_probabilities[i, entailment_idx]
-                }]
-
-        logger.info('Number of examples: {}'.format(labels.shape[0]))
+            batch_inconsistencies = inconsistency_loss(batch_sentences1, batch_sizes1, batch_sentences2, batch_sizes2)
+            inconsistencies_value += batch_inconsistencies.tolist()
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
-
-
-
 
 
 if __name__ == '__main__':
