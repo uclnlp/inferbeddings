@@ -10,10 +10,10 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import legacy_seq2seq
 
+from inferbeddings.nli import tfutil
+
 import pickle
 import json
-
-from inferbeddings.lm.model import LanguageModel
 
 import logging
 
@@ -24,7 +24,6 @@ def main(argv):
     vocabulary_path = 'models/snli/dam_1/dam_1_index_to_token.p'
     checkpoint_path = 'models/snli/dam_1/dam_1'
     lm_path = 'models/lm/'
-
 
     with open(vocabulary_path, 'rb') as f:
         index_to_token = pickle.load(f)
@@ -41,7 +40,7 @@ def main(argv):
         config = json.load(f)
 
     seq_length = config['seq_length']
-    batch_size = config['batch_size']
+    batch_size = 1  # config['batch_size']
     rnn_size = config['rnn_size']
     num_layers = config['num_layers']
 
@@ -62,8 +61,8 @@ def main(argv):
 
         cell = rnn.MultiRNNCell(cells)
 
-        input_data = tf.placeholder(tf.int32, [batch_size, seq_length])
-        targets = tf.placeholder(tf.int32, [batch_size, seq_length])
+        input_data = tf.placeholder(tf.int32, [None, seq_length])
+        targets = tf.placeholder(tf.int32, [None, seq_length])
         initial_state = cell.zero_state(batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
@@ -109,9 +108,32 @@ def main(argv):
         emb_saver.restore(session, checkpoint_path)
 
         ckpt = tf.train.get_checkpoint_state(lm_path)
+        assert ckpt is not None
         saver.restore(session, ckpt.model_checkpoint_path)
 
-        
+        logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
+
+        state = session.run(cell.zero_state(batch_size, tf.float32))
+
+        x = np.zeros(shape=(1, seq_length))
+        y = np.zeros(shape=(1, seq_length))
+
+        x[0, :] = [token_to_index[t] for t in ['A', 'happy', 'girl', 'runs', 'with', 'a', 'red', 'ball']]
+        y[0, :] = [token_to_index[t] for t in ['happy', 'girl', 'runs', 'with', 'a', 'red', 'ball', '.']]
+
+        fd = {
+            input_data: x,
+            targets: y,
+            initial_state: state
+        }
+
+        cost_value, state = session.run([cost, final_state], feed_dict=fd)
+
+        print(cost_value)
+
+
+
+
 
 
 if __name__ == '__main__':

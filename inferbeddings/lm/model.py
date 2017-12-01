@@ -93,7 +93,6 @@ class LanguageModel:
             if i < len(sequence) - 1:
                 next_idx = sequence[i + 1]
                 res += np.log(probabilities[0, next_idx])
-        print(res)
         return res
 
     def sample(self, session, words, vocab, num=200, prime='first all', sampling_type=1, pick=0, width=4):
