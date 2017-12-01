@@ -244,7 +244,12 @@ def main(argv):
 
         print(inconsistencies_value)
         tmp = np.argsort(- np.array(inconsistencies_value))
-        print(inconsistencies_value[tmp[0]])
+
+        moe_idx = tmp[0]
+        logger.info('Most offending example: {}'.format(moe_idx))
+
+        print(data_is[moe_idx]['sentence1'])
+        print(data_is[moe_idx]['sentence2'])
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
