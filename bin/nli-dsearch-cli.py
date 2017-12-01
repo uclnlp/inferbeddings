@@ -52,7 +52,7 @@ def inconsistency_loss(sentences1, sizes1, sentences2, sizes2):
     }
     probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
     probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
-    return np.maximum(0, probabilities_1 - probabilities_2)
+    return np.maximum(0, probabilities_1[contradiction_idx] - probabilities_2[contradiction_idx])
 
 
 
