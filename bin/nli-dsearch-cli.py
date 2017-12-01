@@ -36,6 +36,8 @@ sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_
 
 dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
+session = probabilities = None
+
 def contradiction_loss(
         sentences1, sizes1, sentences2, sizes2):
 
@@ -177,6 +179,8 @@ def main(argv):
         model = model_class(**model_kwargs)
 
         logits = model()
+
+        global probabilities
         probabilities = tf.nn.softmax(logits)
 
         predictions = tf.argmax(logits, axis=1, name='predictions')
@@ -190,6 +194,7 @@ def main(argv):
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
+    global session
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
 
