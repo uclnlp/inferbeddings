@@ -243,7 +243,7 @@ def main(argv):
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
 
         print(inconsistencies_value)
-        tmp = np.argsort(inconsistencies_value)
+        tmp = np.argsort(- inconsistencies_value)
         print(tmp)
 
 if __name__ == '__main__':
