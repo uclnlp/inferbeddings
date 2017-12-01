@@ -204,7 +204,7 @@ def main(argv):
 
             batch_feed_dict = {
                 sentence1_ph: batch_sentences1,
-                sentence1_len_ph: batch_sizes1
+                sentence1_len_ph: batch_sizes1,
 
                 sentence2_ph: batch_sentences2,
                 sentence2_len_ph: batch_sizes2,
