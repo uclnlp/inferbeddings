@@ -246,8 +246,8 @@ def main(argv):
         tmp = np.argsort(- np.array(inconsistencies_value))
 
         for i in range(32):
-            print('[{}] {}'.format(i, data_is[tmp[i]]['sentence1']))
-            print('[{}] {}'.format(i, data_is[tmp[i]]['sentence2']))
+            print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence1'], inconsistencies_value[tmp[i]]))
+            print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence2'], inconsistencies_value[tmp[i]]))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
