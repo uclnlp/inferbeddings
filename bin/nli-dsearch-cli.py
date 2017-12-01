@@ -242,7 +242,8 @@ def main(argv):
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
 
-        print(inconsistencies_value)
+        tmp = np.argsort(inconsistencies_value)
+        print(tmp)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
