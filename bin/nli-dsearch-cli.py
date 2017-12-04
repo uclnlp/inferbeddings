@@ -154,7 +154,7 @@ def main(argv):
     data_is, _, _ = util.SNLI.generate(train_path=data_path, valid_path=None, test_path=None, is_lower=is_lower)
 
     # data_is = [data_is[767]]
-    data_is = [data_is[766], data_is[767]]
+    # data_is = [data_is[766], data_is[767]]
 
     logger.info('Data size: {}'.format(len(data_is)))
 
@@ -350,7 +350,7 @@ def main(argv):
 
         assert ranking.shape[0] == len(data_is)
 
-        for i in range(min(128, ranking.shape[0])):
+        for i in range(min(16, ranking.shape[0])):
             idx = ranking[i]
             print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], inconsistencies_value[idx]))
             print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], inconsistencies_value[idx]))
