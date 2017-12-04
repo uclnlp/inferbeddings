@@ -338,7 +338,7 @@ def main(argv):
         tmp = np.argsort(- np.array(inconsistencies_value))
         assert tmp.shape[0] == len(data_is)
 
-        for i in range(min(32, tmp.shape[0])):
+        for i in range(min(10, tmp.shape[0])):
             print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence1'], inconsistencies_value[tmp[i]]))
             print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence2'], inconsistencies_value[tmp[i]]))
 
