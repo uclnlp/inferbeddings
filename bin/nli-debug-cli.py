@@ -29,8 +29,7 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 # Running:
-#  $ python3 ./bin/nli-debug-cli.py -m ff-dam --batch-size 32 --representation-size 200 --has-bos --has-unk
-#    --restore models/snli/dam_1/dam_1
+#  $ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
 
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
@@ -218,10 +217,8 @@ def main(argv):
             batch_sizes2 = sizes2[batch_start:batch_end]
 
             batch_a_feed_dict = {
-                sentence1_ph: batch_sentences1,
-                sentence1_len_ph: batch_sizes1,
-                sentence2_ph: batch_sentences2,
-                sentence2_len_ph: batch_sizes2,
+                sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
+                sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
                 dropout_keep_prob_ph: 1.0
             }
 
@@ -237,10 +234,8 @@ def main(argv):
                 }]
 
             batch_b_feed_dict = {
-                sentence1_ph: batch_sentences2,
-                sentence1_len_ph: batch_sizes2,
-                sentence2_ph: batch_sentences1,
-                sentence2_len_ph: batch_sizes1,
+                sentence1_ph: batch_sentences2, sentence1_len_ph: batch_sizes2,
+                sentence2_ph: batch_sentences1, sentence2_len_ph: batch_sizes1,
                 dropout_keep_prob_ph: 1.0
             }
 
@@ -317,7 +312,8 @@ def main(argv):
             d_probabilities_value = []
 
             # Find candidate S3 sentences
-            order = rs.permutation(nb_instances)
+            # order = rs.permutation(nb_instances)
+            order = np.arange(nb_instances)
 
             sentences3 = sentence2[order]
             sizes3 = sentence2_length[order]
@@ -330,10 +326,8 @@ def main(argv):
                 batch_sizes3 = sizes3[batch_start:batch_end]
 
                 batch_c_feed_dict = {
-                    sentence1_ph: batch_sentences2,
-                    sentence1_len_ph: batch_sizes2,
-                    sentence2_ph: batch_sentences3,
-                    sentence2_len_ph: batch_sizes3,
+                    sentence1_ph: batch_sentences2, sentence1_len_ph: batch_sizes2,
+                    sentence2_ph: batch_sentences3, sentence2_len_ph: batch_sizes3,
                     dropout_keep_prob_ph: 1.0
                 }
 
@@ -355,10 +349,8 @@ def main(argv):
                 batch_sizes3 = sizes3[batch_start:batch_end]
 
                 batch_d_feed_dict = {
-                    sentence1_ph: batch_sentences1,
-                    sentence1_len_ph: batch_sizes1,
-                    sentence2_ph: batch_sentences3,
-                    sentence2_len_ph: batch_sizes3,
+                    sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
+                    sentence2_ph: batch_sentences3, sentence2_len_ph: batch_sizes3,
                     dropout_keep_prob_ph: 1.0
                 }
 
