@@ -194,7 +194,8 @@ def main(argv):
         nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
-        order = rs.permutation(nb_instances)
+        # order = rs.permutation(nb_instances)
+        order = np.arange(nb_instances)
 
         sentences1 = sentence1[order]
         sentences2 = sentence2[order]
