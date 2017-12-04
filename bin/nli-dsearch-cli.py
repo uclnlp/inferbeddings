@@ -82,9 +82,14 @@ def inconsistency_loss(sentences1, sizes1,
         sentence2_ph: sentences1, sentence2_len_ph: sizes1,
         dropout_keep_prob_ph: 1.0
     }
+
     probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
     probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
-    res = relu(probabilities_1[:, contradiction_idx] - probabilities_2[:, contradiction_idx])
+
+    ans_1 = probabilities_1[:, contradiction_idx]
+    ans_2 = probabilities_2[:, contradiction_idx]
+
+    res = relu(ans_1 - ans_2)
     return res
 
 
@@ -142,11 +147,14 @@ def main(argv):
     lm_path = args.lm
 
     np.random.seed(seed)
-    rs = np.random.RandomState(seed)
+    # rs = np.random.RandomState(seed)
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
     data_is, _, _ = util.SNLI.generate(train_path=data_path, valid_path=None, test_path=None, is_lower=is_lower)
+
+    # data_is = [data_is[767]]
+    data_is = [data_is[766], data_is[767]]
 
     logger.info('Data size: {}'.format(len(data_is)))
 
@@ -191,8 +199,10 @@ def main(argv):
 
     sentence1 = dataset['sentence1']
     sentence1_length = dataset['sentence1_length']
+
     sentence2 = dataset['sentence2']
     sentence2_length = dataset['sentence2_length']
+
     label = dataset['label']
 
     clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
@@ -297,7 +307,8 @@ def main(argv):
         nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
-        order = rs.permutation(nb_instances)
+        # order = rs.permutation(nb_instances)
+        order = np.arange(nb_instances)
 
         sentences1 = sentence1[order]
         sentences2 = sentence2[order]
@@ -335,12 +346,14 @@ def main(argv):
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
 
-        tmp = np.argsort(- np.array(inconsistencies_value))
-        assert tmp.shape[0] == len(data_is)
+        ranking = np.argsort(np.array(inconsistencies_value))[::-1]
 
-        for i in range(min(10, tmp.shape[0])):
-            print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence1'], inconsistencies_value[tmp[i]]))
-            print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence2'], inconsistencies_value[tmp[i]]))
+        assert ranking.shape[0] == len(data_is)
+
+        for i in range(min(128, ranking.shape[0])):
+            idx = ranking[i]
+            print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], inconsistencies_value[idx]))
+            print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], inconsistencies_value[idx]))
 
 
 if __name__ == '__main__':

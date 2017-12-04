@@ -36,6 +36,9 @@ BaseWSGIServer.protocol_version = "HTTP/1.1"
 app = Flask('nli-service')
 
 
+# Run with:
+#  $ ./bin/service/nli-service-cli.py -R models/snli/dam_1/dam_1
+
 class InvalidAPIUsage(Exception):
     """
     Class used for handling error messages.
