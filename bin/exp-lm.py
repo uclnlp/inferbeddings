@@ -39,8 +39,8 @@ def main(argv):
     with open('{}/config.json'.format(lm_path), 'r') as f:
         config = json.load(f)
 
-    seq_length = 1# config['seq_length']
-    batch_size = 1  # config['batch_size']
+    seq_length = 1
+    batch_size = 1
     rnn_size = config['rnn_size']
     num_layers = config['num_layers']
 
@@ -113,21 +113,23 @@ def main(argv):
 
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
 
-        state = session.run(cell.zero_state(batch_size, tf.float32))
+        sequence = [token_to_index[w] for w in ['A', 'happy', 'girl', 'flies', 'in', 'a', 'gun']]
+
+        state = session.run(cell.zero_state(1, tf.float32))
 
         x = np.zeros(shape=(1, seq_length))
         y = np.zeros(shape=(1, seq_length))
 
-        x[0, :] = [token_to_index[t] for t in ['A', 'happy', 'girl', 'runs', 'with', 'a', 'red', 'ball']]
-        y[0, :] = [token_to_index[t] for t in ['happy', 'girl', 'runs', 'with', 'a', 'red', 'ball', '.']]
-
-        fd = {
-            input_data: x,
-            targets: y,
-            initial_state: state
-        }
-
-        cost_value, state = session.run([cost, final_state], feed_dict=fd)
+        log_perplexity = 0.0
+        for i in range(len(sequence)):
+            if i + 1 < len(sequence):
+                x[0, 0] = sequence[i]
+                y[0, 0] = sequence[i + 1]
+                feed = {
+                    input_data: x, targets: y, initial_state: state
+                }
+                cost_value, state = session.run([cost, final_state], feed_dict=feed)
+                log_perplexity += cost_value
 
         print(cost_value)
 
