@@ -126,12 +126,14 @@ def main(argv):
                 x[0, 0] = sequence[i]
                 y[0, 0] = sequence[i + 1]
                 feed = {
-                    input_data: x, targets: y, initial_state: state
+                    input_data: x,
+                    targets: y,
+                    initial_state: state
                 }
                 cost_value, state = session.run([cost, final_state], feed_dict=feed)
                 log_perplexity += cost_value
 
-        print(cost_value)
+        print(log_perplexity)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

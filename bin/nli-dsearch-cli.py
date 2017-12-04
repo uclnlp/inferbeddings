@@ -41,15 +41,18 @@ sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_
 dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
 session = probabilities = None
-cell = input_data_ph = targets_ph = initial_state_ph = final_state = cost = None
+
+lm_input_data_ph = lm_targets_ph = None
+lm_cell = lm_initial_state = lm_final_state = None
+lm_cost = None
 
 
 def relu(x):
-    return np.maximum(0, x)
+    return np.maximum(x, 0)
 
 
 def log_perplexity(sentence_ids):
-    state = session.run(cell.zero_state(1, tf.float32))
+    state = session.run(lm_cell.zero_state(1, tf.float32))
 
     x = np.zeros(shape=(1, 1))
     y = np.zeros(shape=(1, 1))
@@ -60,14 +63,15 @@ def log_perplexity(sentence_ids):
             x[0, 0] = sentence_ids[i]
             y[0, 0] = sentence_ids[i + 1]
             feed = {
-                input_data_ph: x, targets_ph: y, initial_state_ph: state
+                lm_input_data_ph: x, lm_targets_ph: y, lm_initial_state: state
             }
-            cost_value, state = session.run([cost, final_state], feed_dict=feed)
+            cost_value, state = session.run([lm_cost, lm_final_state], feed_dict=feed)
             log_perplexity_val += cost_value
     return log_perplexity_val
 
 
-def inconsistency_loss(sentences1, sizes1, sentences2, sizes2):
+def inconsistency_loss(sentences1, sizes1,
+                       sentences2, sizes2):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -80,7 +84,8 @@ def inconsistency_loss(sentences1, sizes1, sentences2, sizes2):
     }
     probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
     probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
-    return relu(probabilities_1[contradiction_idx] - probabilities_2[contradiction_idx])
+    res = relu(probabilities_1[:, contradiction_idx] - probabilities_2[:, contradiction_idx])
+    return res
 
 
 # Running:
@@ -200,12 +205,15 @@ def main(argv):
         embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size], trainable=False)
         sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
         sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
+
         model_kwargs = dict(
             sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
             sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
             representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+
         if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
             model_kwargs['init_std_dev'] = 0.01
+
         mode_name_to_class = {
             'cbilstm': ConditionalBiLSTM,
             'ff-dam': FeedForwardDAM,
@@ -215,10 +223,13 @@ def main(argv):
         }
         model_class = mode_name_to_class[model_name]
         assert model_class is not None
+
         model = model_class(**model_kwargs)
         logits = model()
+
         global probabilities
         probabilities = tf.nn.softmax(logits)
+
         predictions = tf.argmax(logits, axis=1, name='predictions')
 
     lm_scope_name = 'language_model'
@@ -226,43 +237,42 @@ def main(argv):
         cell_fn = rnn.BasicLSTMCell
         cells = [cell_fn(rnn_size) for _ in range(num_layers)]
 
-        global cell
-        cell = rnn.MultiRNNCell(cells)
+        global lm_cell
+        lm_cell = rnn.MultiRNNCell(cells)
 
-        global input_data_ph
-        input_data_ph = tf.placeholder(tf.int32, [None, seq_length])
-        global targets_ph
-        targets_ph = tf.placeholder(tf.int32, [None, seq_length])
-
-        global initial_state_ph
-        initial_state_ph = cell.zero_state(lm_batch_size, tf.float32)
+        global lm_input_data_ph, lm_targets_ph, lm_initial_state
+        lm_input_data_ph = tf.placeholder(tf.int32, [None, seq_length], name='input_data')
+        lm_targets_ph = tf.placeholder(tf.int32, [None, seq_length], name='targets')
+        lm_initial_state = lm_cell.zero_state(lm_batch_size, tf.float32, )
 
         with tf.variable_scope('rnnlm'):
-            W = tf.get_variable(name='W', shape=[rnn_size, vocab_size],
-                                initializer=tf.contrib.layers.xavier_initializer())
+            lm_W = tf.get_variable(name='W', shape=[rnn_size, vocab_size],
+                                   initializer=tf.contrib.layers.xavier_initializer())
 
-            b = tf.get_variable(name='b', shape=[vocab_size],
-                                initializer=tf.zeros_initializer())
+            lm_b = tf.get_variable(name='b', shape=[vocab_size],
+                                   initializer=tf.zeros_initializer())
 
-            emb_lookup = tf.nn.embedding_lookup(embedding_layer, input_data_ph)
-            emb_projection = tf.contrib.layers.fully_connected(inputs=emb_lookup, num_outputs=rnn_size,
-                                                               weights_initializer=tf.contrib.layers.xavier_initializer(),
-                                                               biases_initializer=tf.zeros_initializer())
+            lm_emb_lookup = tf.nn.embedding_lookup(embedding_layer, lm_input_data_ph)
+            lm_emb_projection = tf.contrib.layers.fully_connected(inputs=lm_emb_lookup, num_outputs=rnn_size,
+                                                                  weights_initializer=tf.contrib.layers.xavier_initializer(),
+                                                                  biases_initializer=tf.zeros_initializer())
 
-            inputs = tf.split(emb_projection, seq_length, 1)
-            inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
+            lm_inputs = tf.split(lm_emb_projection, seq_length, 1)
+            lm_inputs = [tf.squeeze(input_, [1]) for input_ in lm_inputs]
 
-        outputs, last_state = legacy_seq2seq.rnn_decoder(decoder_inputs=inputs, initial_state=initial_state_ph,
-                                                         cell=cell, loop_function=None, scope='rnnlm')
+        lm_outputs, lm_last_state = legacy_seq2seq.rnn_decoder(decoder_inputs=lm_inputs, initial_state=lm_initial_state,
+                                                               cell=lm_cell, loop_function=None, scope='rnnlm')
 
-        output = tf.reshape(tf.concat(outputs, 1), [-1, rnn_size])
-        logits = tf.matmul(output, W) + b
-        probabilities = tf.nn.softmax(logits)
-        loss = legacy_seq2seq.sequence_loss_by_example(logits=[logits], targets=[tf.reshape(targets_ph, [-1])],
-                                                       weights=[tf.ones([lm_batch_size * seq_length])])
-        global cost, final_state
-        cost = tf.reduce_sum(loss) / lm_batch_size / seq_length
-        final_state = last_state
+        lm_output = tf.reshape(tf.concat(lm_outputs, 1), [-1, rnn_size])
+
+        lm_logits = tf.matmul(lm_output, lm_W) + lm_b
+        lm_probabilities = tf.nn.softmax(lm_logits)
+
+        lm_loss = legacy_seq2seq.sequence_loss_by_example(logits=[lm_logits], targets=[tf.reshape(lm_targets_ph, [-1])],
+                                                          weights=[tf.ones([lm_batch_size * seq_length])])
+        global lm_cost, lm_final_state
+        lm_cost = tf.reduce_sum(lm_loss) / lm_batch_size / seq_length
+        lm_final_state = lm_last_state
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     lm_vars = tfutil.get_variables_in_scope(lm_scope_name)
@@ -318,18 +328,20 @@ def main(argv):
             batch_predictions_int = session.run(predictions_int, feed_dict=batch_feed_dict)
             predictions_int_value += batch_predictions_int.tolist()
 
-            batch_inconsistencies = inconsistency_loss(batch_sentences1, batch_sizes1, batch_sentences2, batch_sizes2)
+            batch_inconsistencies = inconsistency_loss(batch_sentences1, batch_sizes1,
+                                                       batch_sentences2, batch_sizes2)
             inconsistencies_value += batch_inconsistencies.tolist()
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
 
-        print(inconsistencies_value)
         tmp = np.argsort(- np.array(inconsistencies_value))
+        assert tmp.shape[0] == len(data_is)
 
-        for i in range(32):
+        for i in range(min(32, tmp.shape[0])):
             print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence1'], inconsistencies_value[tmp[i]]))
             print('[{}] {} ({})'.format(i, data_is[tmp[i]]['sentence2'], inconsistencies_value[tmp[i]]))
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
