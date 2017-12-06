@@ -43,13 +43,13 @@ sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_
 
 dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
+index_to_token = token_to_index = None
 session = probabilities = None
 
 lm_input_data_ph = lm_targets_ph = None
 lm_cell = lm_initial_state = lm_final_state = None
 
-lm_loss = None
-lm_cost = None
+lm_loss = lm_cost = None
 
 
 def relu(x):
@@ -74,7 +74,7 @@ def log_perplexity(sentences, sizes):
         loss_values += [loss_value]
     loss_values = np.array(loss_values).transpose()
     __sizes = _sizes - 2
-    res = np.array([np.sum(loss_values[i, :__sizes[i]]) for i in range(loss_values.shape[0])])
+    res = np.array([np.sum(loss_values[_i, :__sizes[_i]]) for _i in range(loss_values.shape[0])])
     return res
 
 
@@ -127,7 +127,9 @@ def corrupt(sentence1, size1, sentence2, size2,
 
     # Corrupt corruptions2
     for i in range(nb_corruptions):
-        where_to_corrupt = rs.randint(low=1, high=sizes2[i])
+        # Do not corrupt the last token - usually a '.'
+        # where_to_corrupt = rs.randint(low=1, high=sizes2[i])
+        where_to_corrupt = rs.randint(low=1, high=sizes2[i] - 1)
         new_word = rs.randint(low=1, high=nb_words)
         corruptions2[i, where_to_corrupt] = new_word
 
@@ -147,14 +149,14 @@ def search(sentences1, sizes1, sentences2, sizes2,
 
     corruptions1, c_sizes1, corruptions2, c_sizes2 = \
         corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
-                nb_corruptions=128, nb_words=512)
+                nb_corruptions=1024, nb_words=256)
 
     # Compute all relevant metrics for the corruptions
     nb_corruptions = corruptions1.shape[0]
     batches = make_batches(size=nb_corruptions, batch_size=batch_size)
 
     clv, cilv, clpv = [], [], []
-    for b_start, b_end in batches:
+    for b_start, b_end in tqdm(batches):
         bc1, bs1 = corruptions1[b_start:b_end, :], c_sizes1[b_start:b_end]
         bc2, bs2 = corruptions2[b_start:b_end, :], c_sizes2[b_start:b_end]
 
@@ -170,6 +172,9 @@ def search(sentences1, sizes1, sentences2, sizes2,
     low_perplexity_mask = clpv <= slpv[0] + epsilon
     print('clpv', clpv)
     print('slpv', slpv[0])
+    # print('mask', low_perplexity_mask)
+    for i in np.where(low_perplexity_mask)[0].tolist():
+        print([index_to_token[idx] for idx in corruptions2[i]])
 
 # Running:
 #  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
@@ -240,6 +245,7 @@ def main(argv):
     # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
     bos_idx, eos_idx, unk_idx = 1, 2, 3
 
+    global index_to_token, token_to_index
     with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
         index_to_token = pickle.load(f)
 
