@@ -194,7 +194,6 @@ def main(argv):
         nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
-        # order = rs.permutation(nb_instances)
         order = np.arange(nb_instances)
 
         sentences1 = sentence1[order]
@@ -313,7 +312,6 @@ def main(argv):
             d_probabilities_value = []
 
             # Find candidate S3 sentences
-            # order = rs.permutation(nb_instances)
             order = np.arange(nb_instances)
 
             sentences3 = sentence2[order]
@@ -373,8 +371,7 @@ def main(argv):
             body_not_head = np.logical_and(body, np.logical_not(s1s3_ent))
 
             logger.info('(S1 entails S2) and (S2 entails S3): {0}'.format(body.sum()))
-            logger.info('body AND NOT(head): {0} ({1:.4f})'
-                        .format(body_not_head.sum(), body_not_head.sum() / body.sum()))
+            logger.info('body AND NOT(head): {0} ({1:.4f})'.format(body_not_head.sum(), body_not_head.sum() / body.sum()))
 
             with open('h.p', 'wb') as f:
                 tmp = []
@@ -382,9 +379,7 @@ def main(argv):
                     s1 = data_is[idx]['sentence1']
                     s2 = data_is[idx]['sentence2']
                     s3 = data_is[order[idx]]['sentence2']
-                    tmp += [{
-                        's1': s1, 's2': s2, 's3': s3
-                    }]
+                    tmp += [{'s1': s1, 's2': s2, 's3': s3}]
                 pickle.dump(tmp, f)
 
 

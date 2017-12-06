@@ -51,27 +51,29 @@ def relu(x):
     return np.maximum(x, 0)
 
 
-def log_perplexity(sentence_ids):
-    state = session.run(lm_cell.zero_state(1, tf.float32))
-
+def log_perplexity(sentences, sizes):
+    assert sentences.shape[0] == sizes.shape[0]
     x = np.zeros(shape=(1, 1))
     y = np.zeros(shape=(1, 1))
+    log_perplexity_vals = []
+    for i in range(sentences.shape[0]):
+        sentence, size = sentences[i, 1:], sizes[i] - 1
+        state = session.run(lm_cell.zero_state(1, tf.float32))
+        log_perplexity_val = 0.0
+        for j in range(size):
+            if j + 1 < size:
+                x[0, 0] = sentence[j]
+                y[0, 0] = sentence[j + 1]
+                feed = {
+                    lm_input_data_ph: x, lm_targets_ph: y, lm_initial_state: state
+                }
+                cost_value, state = session.run([lm_cost, lm_final_state], feed_dict=feed)
+                log_perplexity_val += cost_value
+        log_perplexity_vals += [log_perplexity_val]
+    return np.array(log_perplexity_vals)
 
-    log_perplexity_val = 0.0
-    for i in range(len(sentence_ids)):
-        if i + 1 < len(sentence_ids):
-            x[0, 0] = sentence_ids[i]
-            y[0, 0] = sentence_ids[i + 1]
-            feed = {
-                lm_input_data_ph: x, lm_targets_ph: y, lm_initial_state: state
-            }
-            cost_value, state = session.run([lm_cost, lm_final_state], feed_dict=feed)
-            log_perplexity_val += cost_value
-    return log_perplexity_val
 
-
-def inconsistency_loss(sentences1, sizes1,
-                       sentences2, sizes2):
+def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -82,15 +84,26 @@ def inconsistency_loss(sentences1, sizes1,
         sentence2_ph: sentences1, sentence2_len_ph: sizes1,
         dropout_keep_prob_ph: 1.0
     }
-
     probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
     probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
-
     ans_1 = probabilities_1[:, contradiction_idx]
     ans_2 = probabilities_2[:, contradiction_idx]
-
     res = relu(ans_1 - ans_2)
     return res
+
+
+def loss(sentences1, sizes1, sentences2, sizes2, lambda_w=0.1, inconsistency_loss=contradiction_loss):
+    # sentences1, sentences2 = np.array([sentence1]), np.array([sentence2])
+    # sizes1, sizes2 = np.array([size1]), np.array([size2])
+    inconsistency_loss_value = inconsistency_loss(sentences1=sentences1, sizes1=sizes1,
+                                                  sentences2=sentences2, sizes2=sizes2)
+
+    log_perplexity_1_value = log_perplexity(sentences=sentences1, sizes=sizes1)
+    log_perplexity_2_value = log_perplexity(sentences=sentences2, sizes=sizes2)
+
+    log_perplexity_value = log_perplexity_1_value + log_perplexity_2_value
+    loss_value = inconsistency_loss_value - lambda_w * log_perplexity_value
+    return loss_value, inconsistency_loss_value, log_perplexity_value
 
 
 # Running:
@@ -124,6 +137,8 @@ def main(argv):
     argparser.add_argument('--restore', action='store', type=str, default=None)
     argparser.add_argument('--lm', action='store', type=str, default='models/lm/')
 
+    argparser.add_argument('--corrupt', '-c', action='store_true', default=False, help='Corrupt examples so to maximise their inconsistency')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -145,6 +160,8 @@ def main(argv):
 
     restore_path = args.restore
     lm_path = args.lm
+
+    is_corrupt = args.corrupt
 
     np.random.seed(seed)
     # rs = np.random.RandomState(seed)
@@ -339,9 +356,11 @@ def main(argv):
             batch_predictions_int = session.run(predictions_int, feed_dict=batch_feed_dict)
             predictions_int_value += batch_predictions_int.tolist()
 
-            batch_inconsistencies = inconsistency_loss(batch_sentences1, batch_sizes1,
+            batch_inconsistencies = contradiction_loss(batch_sentences1, batch_sizes1,
                                                        batch_sentences2, batch_sizes2)
             inconsistencies_value += batch_inconsistencies.tolist()
+
+            loss(sentences1=batch_sentences1, sizes1=batch_sizes1, sentences2=batch_sentences2, sizes2=batch_sizes2)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
