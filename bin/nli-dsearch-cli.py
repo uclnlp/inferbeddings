@@ -44,6 +44,8 @@ session = probabilities = None
 
 lm_input_data_ph = lm_targets_ph = None
 lm_cell = lm_initial_state = lm_final_state = None
+
+lm_loss = None
 lm_cost = None
 
 
@@ -53,24 +55,23 @@ def relu(x):
 
 def log_perplexity(sentences, sizes):
     assert sentences.shape[0] == sizes.shape[0]
-    x = np.zeros(shape=(1, 1))
-    y = np.zeros(shape=(1, 1))
-    log_perplexity_vals = []
-    for i in range(sentences.shape[0]):
-        sentence, size = sentences[i, 1:], sizes[i] - 1
-        state = session.run(lm_cell.zero_state(1, tf.float32))
-        log_perplexity_val = 0.0
-        for j in range(size):
-            if j + 1 < size:
-                x[0, 0] = sentence[j]
-                y[0, 0] = sentence[j + 1]
-                feed = {
-                    lm_input_data_ph: x, lm_targets_ph: y, lm_initial_state: state
-                }
-                cost_value, state = session.run([lm_cost, lm_final_state], feed_dict=feed)
-                log_perplexity_val += cost_value
-        log_perplexity_vals += [log_perplexity_val]
-    return np.array(log_perplexity_vals)
+    _batch_size = sentences.shape[0]
+    x = np.zeros(shape=(_batch_size, 1))
+    y = np.zeros(shape=(_batch_size, 1))
+    _sentences, _sizes = sentences[:, 1:], sizes[:] - 1
+    state = session.run(lm_cell.zero_state(_batch_size, tf.float32))
+    loss_values = []
+    for j in range(_sizes.max() - 1):
+        x[:, 0] = _sentences[:, j]
+        y[:, 0] = _sentences[:, j + 1]
+        feed = {
+            lm_input_data_ph: x, lm_targets_ph: y, lm_initial_state: state
+        }
+        loss_value, state = session.run([lm_loss, lm_final_state], feed_dict=feed)
+        loss_values += [loss_value]
+    loss_values = np.array(loss_values).transpose()
+    res = loss_values[:, _sizes - 2]
+    return res
 
 
 def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
@@ -93,8 +94,6 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
 
 
 def loss(sentences1, sizes1, sentences2, sizes2, lambda_w=0.1, inconsistency_loss=contradiction_loss):
-    # sentences1, sentences2 = np.array([sentence1]), np.array([sentence2])
-    # sizes1, sizes2 = np.array([size1]), np.array([size2])
     inconsistency_loss_value = inconsistency_loss(sentences1=sentences1, sizes1=sizes1,
                                                   sentences2=sentences2, sizes2=sizes2)
 
@@ -103,6 +102,7 @@ def loss(sentences1, sizes1, sentences2, sizes2, lambda_w=0.1, inconsistency_los
 
     log_perplexity_value = log_perplexity_1_value + log_perplexity_2_value
     loss_value = inconsistency_loss_value - lambda_w * log_perplexity_value
+
     return loss_value, inconsistency_loss_value, log_perplexity_value
 
 
@@ -164,7 +164,6 @@ def main(argv):
     is_corrupt = args.corrupt
 
     np.random.seed(seed)
-    # rs = np.random.RandomState(seed)
     tf.set_random_seed(seed)
 
     logger.debug('Reading corpus ..')
@@ -194,7 +193,7 @@ def main(argv):
         config = json.load(f)
 
     seq_length = 1
-    lm_batch_size = 1
+    lm_batch_size = batch_size
     rnn_size = config['rnn_size']
     num_layers = config['num_layers']
 
@@ -295,9 +294,9 @@ def main(argv):
         lm_logits = tf.matmul(lm_output, lm_W) + lm_b
         lm_probabilities = tf.nn.softmax(lm_logits)
 
+        global lm_loss, lm_cost, lm_final_state
         lm_loss = legacy_seq2seq.sequence_loss_by_example(logits=[lm_logits], targets=[tf.reshape(lm_targets_ph, [-1])],
                                                           weights=[tf.ones([lm_batch_size * seq_length])])
-        global lm_cost, lm_final_state
         lm_cost = tf.reduce_sum(lm_loss) / lm_batch_size / seq_length
         lm_final_state = lm_last_state
 
