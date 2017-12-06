@@ -93,22 +93,34 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
     return res
 
 
-def loss(sentences1, sizes1, sentences2, sizes2, lambda_w=0.1, inconsistency_loss=contradiction_loss):
+def loss(sentences1, sizes1, sentences2, sizes2,
+         lambda_w=0.1, inconsistency_loss=contradiction_loss):
     inconsistency_loss_value = inconsistency_loss(sentences1=sentences1, sizes1=sizes1,
                                                   sentences2=sentences2, sizes2=sizes2)
-
     log_perplexity_1_value = log_perplexity(sentences=sentences1, sizes=sizes1)
     log_perplexity_2_value = log_perplexity(sentences=sentences2, sizes=sizes2)
-
     log_perplexity_value = log_perplexity_1_value + log_perplexity_2_value
     loss_value = inconsistency_loss_value - lambda_w * log_perplexity_value
-
     return loss_value, inconsistency_loss_value, log_perplexity_value
 
+
+def search(sentences1, sizes1, sentences2, sizes2,
+           lambda_w=0.1, inconsistency_loss=contradiction_loss, epsilon=1e-4):
+    s_loss_value, s_inconsistency_loss_value, s_log_perplexity_value = \
+        loss(sentences1=sentences1, sizes1=sizes1,
+             sentences2=sentences2, sizes2=sizes2,
+             lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+
+    # Generate mutations that do not increase the perplexity too much and maximise the inconsistency loss
+
+
+
+    print(s_inconsistency_loss_value)
 
 # Running:
 #  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
 #
+
 
 def main(argv):
     logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
@@ -168,10 +180,6 @@ def main(argv):
 
     logger.debug('Reading corpus ..')
     data_is, _, _ = util.SNLI.generate(train_path=data_path, valid_path=None, test_path=None, is_lower=is_lower)
-
-    # data_is = [data_is[767]]
-    # data_is = [data_is[766], data_is[767]]
-
     logger.info('Data size: {}'.format(len(data_is)))
 
     # Enumeration of tokens start at index=3:
@@ -208,8 +216,7 @@ def main(argv):
     args = dict(
         has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
         bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx,
-        max_len=max_len
-    )
+        max_len=max_len)
 
     dataset = util.instances_to_dataset(data_is, token_to_index, label_to_index, **args)
 
@@ -323,7 +330,6 @@ def main(argv):
         nb_instances = sentence1.shape[0]
         batches = make_batches(size=nb_instances, batch_size=batch_size)
 
-        # order = rs.permutation(nb_instances)
         order = np.arange(nb_instances)
 
         sentences1 = sentence1[order]
@@ -359,7 +365,11 @@ def main(argv):
                                                        batch_sentences2, batch_sizes2)
             inconsistencies_value += batch_inconsistencies.tolist()
 
-            loss(sentences1=batch_sentences1, sizes1=batch_sizes1, sentences2=batch_sentences2, sizes2=batch_sizes2)
+            search(sentences1=batch_sentences1, sizes1=batch_sizes1,
+                   sentences2=batch_sentences2, sizes2=batch_sizes2)
+
+
+            sys.exit(0)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))

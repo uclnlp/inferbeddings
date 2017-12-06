@@ -19,6 +19,8 @@ logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
 def main(argv):
+    logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--train', '-t', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
     parser.add_argument('--valid', '-v', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
