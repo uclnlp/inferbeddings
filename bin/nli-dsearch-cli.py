@@ -28,7 +28,10 @@ from inferbeddings.nli import ESIMv1
 
 import logging
 
+np.set_printoptions(threshold=np.nan)
+
 logger = logging.getLogger(__name__)
+rs = np.random.RandomState(0)
 
 entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
 
@@ -70,7 +73,8 @@ def log_perplexity(sentences, sizes):
         loss_value, state = session.run([lm_loss, lm_final_state], feed_dict=feed)
         loss_values += [loss_value]
     loss_values = np.array(loss_values).transpose()
-    res = loss_values[:, _sizes - 2]
+    __sizes = _sizes - 2
+    res = np.array([np.sum(loss_values[i, :__sizes[i]]) for i in range(loss_values.shape[0])])
     return res
 
 
@@ -85,10 +89,13 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
         sentence2_ph: sentences1, sentence2_len_ph: sizes1,
         dropout_keep_prob_ph: 1.0
     }
+
     probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
     probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
+
     ans_1 = probabilities_1[:, contradiction_idx]
     ans_2 = probabilities_2[:, contradiction_idx]
+
     res = relu(ans_1 - ans_2)
     return res
 
@@ -97,25 +104,72 @@ def loss(sentences1, sizes1, sentences2, sizes2,
          lambda_w=0.1, inconsistency_loss=contradiction_loss):
     inconsistency_loss_value = inconsistency_loss(sentences1=sentences1, sizes1=sizes1,
                                                   sentences2=sentences2, sizes2=sizes2)
+
     log_perplexity_1_value = log_perplexity(sentences=sentences1, sizes=sizes1)
     log_perplexity_2_value = log_perplexity(sentences=sentences2, sizes=sizes2)
+
     log_perplexity_value = log_perplexity_1_value + log_perplexity_2_value
+
     loss_value = inconsistency_loss_value - lambda_w * log_perplexity_value
+
     return loss_value, inconsistency_loss_value, log_perplexity_value
 
 
-def search(sentences1, sizes1, sentences2, sizes2,
-           lambda_w=0.1, inconsistency_loss=contradiction_loss, epsilon=1e-4):
-    s_loss_value, s_inconsistency_loss_value, s_log_perplexity_value = \
-        loss(sentences1=sentences1, sizes1=sizes1,
-             sentences2=sentences2, sizes2=sizes2,
-             lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+def corrupt(sentence1, size1, sentence2, size2,
+            nb_corruptions=1024, nb_words=512):
+    corruptions1 = np.repeat(a=[sentence1], repeats=nb_corruptions, axis=0)
+    corruptions2 = np.repeat(a=[sentence2], repeats=nb_corruptions, axis=0)
+    assert corruptions1.shape == (nb_corruptions, sentence1.shape[0])
 
+    sizes1 = np.repeat(a=size1, repeats=nb_corruptions, axis=0)
+    sizes2 = np.repeat(a=size2, repeats=nb_corruptions, axis=0)
+    assert sizes1.shape[0] == corruptions1.shape[0]
+
+    # Corrupt corruptions2
+    for i in range(nb_corruptions):
+        where_to_corrupt = rs.randint(low=1, high=sizes2[i])
+        new_word = rs.randint(low=1, high=nb_words)
+        corruptions2[i, where_to_corrupt] = new_word
+
+    return corruptions1, sizes1, corruptions2, sizes2
+
+
+def search(sentences1, sizes1, sentences2, sizes2,
+           lambda_w=0.1, inconsistency_loss=contradiction_loss, epsilon=1e-4, batch_size=32):
+    slv, silv, slpv = loss(sentences1=sentences1, sizes1=sizes1,
+                           sentences2=sentences2, sizes2=sizes2,
+                           lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
     # Generate mutations that do not increase the perplexity too much and maximise the inconsistency loss
 
+    # Let's start by corrupting with the first sentence, for simplicity
+    sentence1, size1 = sentences1[0, :], sizes1[0]
+    sentence2, size2 = sentences2[0, :], sizes2[0]
 
+    corruptions1, c_sizes1, corruptions2, c_sizes2 = \
+        corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
+                nb_corruptions=128, nb_words=512)
 
-    print(s_inconsistency_loss_value)
+    # Compute all relevant metrics for the corruptions
+    nb_corruptions = corruptions1.shape[0]
+    batches = make_batches(size=nb_corruptions, batch_size=batch_size)
+
+    clv, cilv, clpv = [], [], []
+    for b_start, b_end in batches:
+        bc1, bs1 = corruptions1[b_start:b_end, :], c_sizes1[b_start:b_end]
+        bc2, bs2 = corruptions2[b_start:b_end, :], c_sizes2[b_start:b_end]
+
+        b_clv, b_cilv, b_clpv = loss(sentences1=bc1, sizes1=bs1, sentences2=bc2, sizes2=bs2,
+                                     lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+        clv += b_clv.tolist()
+        cilv += b_cilv.tolist()
+        clpv += b_clpv.tolist()
+
+    clv, cilv, clpv = np.array(clv), np.array(cilv), np.array(clpv)
+
+    # Select corruptions that did not increase the log-perplexity too much
+    low_perplexity_mask = clpv <= slpv[0] + epsilon
+    print('clpv', clpv)
+    print('slpv', slpv[0])
 
 # Running:
 #  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
@@ -366,8 +420,8 @@ def main(argv):
             inconsistencies_value += batch_inconsistencies.tolist()
 
             search(sentences1=batch_sentences1, sizes1=batch_sizes1,
-                   sentences2=batch_sentences2, sizes2=batch_sizes2)
-
+                   sentences2=batch_sentences2, sizes2=batch_sizes2,
+                   batch_size=batch_size)
 
             sys.exit(0)
 
