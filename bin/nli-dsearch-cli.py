@@ -137,44 +137,49 @@ def corrupt(sentence1, size1, sentence2, size2,
 
 
 def search(sentences1, sizes1, sentences2, sizes2,
-           lambda_w=0.1, inconsistency_loss=contradiction_loss, epsilon=1e-4, batch_size=32):
+           lambda_w=0.1, inconsistency_loss=contradiction_loss,
+           epsilon=1e-4, batch_size=32,
+           nb_corruptions=1024, nb_words=256):
+
     slv, silv, slpv = loss(sentences1=sentences1, sizes1=sizes1,
                            sentences2=sentences2, sizes2=sizes2,
                            lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
-    # Generate mutations that do not increase the perplexity too much and maximise the inconsistency loss
 
-    # Let's start by corrupting with the first sentence, for simplicity
-    sentence1, size1 = sentences1[0, :], sizes1[0]
-    sentence2, size2 = sentences2[0, :], sizes2[0]
+    # Find examples that have a nearly-zero inconsistency loss
+    low_il_idxs = np.where(silv < 1e-6)
 
-    corruptions1, c_sizes1, corruptions2, c_sizes2 = \
-        corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
-                nb_corruptions=1024, nb_words=256)
+    for low_il_idx in low_il_idxs.tolist():
+        sentence1, size1 = sentences1[low_il_idx, :], sizes1[low_il_idx]
+        sentence2, size2 = sentences2[low_il_idx, :], sizes2[low_il_idx]
 
-    # Compute all relevant metrics for the corruptions
-    nb_corruptions = corruptions1.shape[0]
-    batches = make_batches(size=nb_corruptions, batch_size=batch_size)
+        # Generate mutations that do not increase the perplexity too much,
+        #   and maximise the inconsistency loss
+        corruptions1, c_sizes1, corruptions2, c_sizes2 = \
+            corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
+                    nb_corruptions=nb_corruptions, nb_words=nb_words)
 
-    clv, cilv, clpv = [], [], []
-    for b_start, b_end in tqdm(batches):
-        bc1, bs1 = corruptions1[b_start:b_end, :], c_sizes1[b_start:b_end]
-        bc2, bs2 = corruptions2[b_start:b_end, :], c_sizes2[b_start:b_end]
+        # Compute all relevant metrics for the corruptions
+        nb_corruptions = corruptions1.shape[0]
+        batches = make_batches(size=nb_corruptions, batch_size=batch_size)
 
-        b_clv, b_cilv, b_clpv = loss(sentences1=bc1, sizes1=bs1, sentences2=bc2, sizes2=bs2,
-                                     lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
-        clv += b_clv.tolist()
-        cilv += b_cilv.tolist()
-        clpv += b_clpv.tolist()
+        clv, cilv, clpv = [], [], []
+        for b_start, b_end in tqdm(batches):
+            bc1, bs1 = corruptions1[b_start:b_end, :], c_sizes1[b_start:b_end]
+            bc2, bs2 = corruptions2[b_start:b_end, :], c_sizes2[b_start:b_end]
 
-    clv, cilv, clpv = np.array(clv), np.array(cilv), np.array(clpv)
+            b_clv, b_cilv, b_clpv = loss(sentences1=bc1, sizes1=bs1, sentences2=bc2, sizes2=bs2,
+                                         lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+            clv += b_clv.tolist()
+            cilv += b_cilv.tolist()
+            clpv += b_clpv.tolist()
 
-    # Select corruptions that did not increase the log-perplexity too much
-    low_perplexity_mask = clpv <= slpv[0] + epsilon
-    print('clpv', clpv)
-    print('slpv', slpv[0])
-    # print('mask', low_perplexity_mask)
-    for i in np.where(low_perplexity_mask)[0].tolist():
-        print([index_to_token[idx] for idx in corruptions2[i]])
+        clv, cilv, clpv = np.array(clv), np.array(cilv), np.array(clpv)
+
+        # Select corruptions that did not increase the log-perplexity too much
+        low_perplexity_mask = clpv <= slpv[0] + epsilon
+
+        for i in np.where(low_perplexity_mask)[0].tolist():
+            print('CORRUPTION:', [index_to_token[idx] for idx in corruptions2[i] if idx > 0])
 
 # Running:
 #  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
@@ -208,7 +213,10 @@ def main(argv):
     argparser.add_argument('--restore', action='store', type=str, default=None)
     argparser.add_argument('--lm', action='store', type=str, default='models/lm/')
 
-    argparser.add_argument('--corrupt', '-c', action='store_true', default=False, help='Corrupt examples so to maximise their inconsistency')
+    argparser.add_argument('--corrupt', '-c', action='store_true', default=False,
+                           help='Corrupt examples so to maximise their inconsistency')
+    argparser.add_argument('--most-violating', '-M', action='store_true', default=False,
+                           help='Show most violating examples')
 
     args = argparser.parse_args(argv)
 
@@ -233,6 +241,7 @@ def main(argv):
     lm_path = args.lm
 
     is_corrupt = args.corrupt
+    is_most_violating = args.most_violating
 
     np.random.seed(seed)
     tf.set_random_seed(seed)
@@ -421,9 +430,10 @@ def main(argv):
                                                        batch_sentences2, batch_sizes2)
             inconsistencies_value += batch_inconsistencies.tolist()
 
-            search(sentences1=batch_sentences1, sizes1=batch_sizes1,
-                   sentences2=batch_sentences2, sizes2=batch_sizes2,
-                   batch_size=batch_size)
+            if is_corrupt:
+                search(sentences1=batch_sentences1, sizes1=batch_sizes1,
+                       sentences2=batch_sentences2, sizes2=batch_sizes2,
+                       batch_size=batch_size)
 
             sys.exit(0)
 
@@ -434,10 +444,11 @@ def main(argv):
 
         assert ranking.shape[0] == len(data_is)
 
-        for i in range(min(16, ranking.shape[0])):
-            idx = ranking[i]
-            print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], inconsistencies_value[idx]))
-            print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], inconsistencies_value[idx]))
+        if is_most_violating:
+            for i in range(min(1024, ranking.shape[0])):
+                idx = ranking[i]
+                print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], inconsistencies_value[idx]))
+                print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], inconsistencies_value[idx]))
 
 
 if __name__ == '__main__':
