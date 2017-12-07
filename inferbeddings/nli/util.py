@@ -199,7 +199,7 @@ def instances_to_dataset(instances, token_to_index, label_to_index,
         label_idx += [label_to_index[gold_label]]
 
     assert len(sentence1_idx) == len(sentence2_idx) == len(label_idx)
-    assert set(label_idx) == {0, 1, 2}
+    # assert set(label_idx) == {0, 1, 2}
 
     sentence1_length = [len(s) for s in sentence1_idx]
     sentence2_length = [len(s) for s in sentence2_idx]

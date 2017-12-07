@@ -36,6 +36,9 @@ BaseWSGIServer.protocol_version = "HTTP/1.1"
 app = Flask('nli-service')
 
 
+# Run with:
+#  $ ./bin/service/nli-service-cli.py -R models/snli/dam_1/dam_1
+
 class InvalidAPIUsage(Exception):
     """
     Class used for handling error messages.
@@ -69,7 +72,7 @@ def main(argv):
 
     argparser = argparse.ArgumentParser('NLI Service', formatter_class=formatter)
 
-    argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
+    argparser.add_argument('--model', '-m', action='store', type=str, default='ff-dam',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
 
     argparser.add_argument('--embedding-size', '-e', action='store', type=int, default=300)
@@ -200,8 +203,9 @@ def main(argv):
                     sentence2_len_ph: [len(sentence2_ids)],
                     dropout_keep_prob_ph: 1.0
                 }
+                probabilities = tf.nn.softmax(logits)
 
-                predictions = session.run(tf.nn.softmax(logits), feed_dict=feed_dict)[0]
+                predictions = session.run(probabilities, feed_dict=feed_dict)[0]
                 answer = {
                     'neutral': str(predictions[neutral_idx]),
                     'contradiction': str(predictions[contradiction_idx]),

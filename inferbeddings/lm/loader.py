@@ -1,129 +1,117 @@
 # -*- coding: utf-8 -*-
 
-import os
-import codecs
-import collections
+import gzip
+import json
+
 import numpy as np
-import re
-import pickle
+import nltk
+
+from inferbeddings.nli.util import pad_sequences
+from inferbeddings.models.training.util import make_batches
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class TextLoader:
+class SNLILoader:
+    def __init__(self,
+                 path='data/snli/snli_1.0_train.jsonl.gz',
+                 batch_size=32, seq_length=8,
+                 token_to_index=None,
+                 bos_idx=1, eos_idx=2, unk_idx=3, seed=0):
 
-    def __init__(self, data_dir, batch_size, seq_length, encoding=None):
-        self.data_dir = data_dir
-        self.batch_size = batch_size
-        self.seq_length = seq_length
+        assert token_to_index is not None
+        assert path is not None
 
-        input_file = os.path.join(data_dir, "input.txt")
-        vocab_file = os.path.join(data_dir, "vocab.pkl")
-        tensor_file = os.path.join(data_dir, "data.npy")
+        self.path = path
+        self.batch_size, self.seq_length = batch_size, seq_length
+        self.token_to_index = token_to_index
 
-        # Let's not read vocab and data from file. We many change them.
-        if True or not (os.path.exists(vocab_file) and os.path.exists(tensor_file)):
-            logger.info("reading text file")
-            self.preprocess(input_file, vocab_file, tensor_file, encoding)
-        else:
-            logger.info("loading preprocessed files")
-            self.load_preprocessed(vocab_file, tensor_file)
+        self.bos_idx = bos_idx
+        self.eos_idx = eos_idx
+        self.unk_idx = unk_idx
+
+        self.seed = seed
+        self.random_state = np.random.RandomState(self.seed)
+
+        self.sentences = []
+
+        with gzip.open(self.path, 'rb') as f:
+            for line in f:
+                decoded_line = line.decode('utf-8')
+                obj = json.loads(decoded_line)
+
+                s1, s2, gl = SNLILoader.extract_sentences(obj)
+
+                if gl in {'entailment', 'neutral', 'contradiction'}:
+                    self.sentences += [s1, s2]
+
+        self.sentence_idxs = []
+        for sentence in self.sentences:
+            s_idxs = [self.token_to_index.get(word, self.unk_idx) for word in sentence]
+            self.sentence_idxs += [s_idxs]
+
+        self.tensor = pad_sequences(self.sentence_idxs)
+        self.nb_samples, self.max_len = self.tensor.shape
 
         self.create_batches()
         self.reset_batch_pointer()
 
-    def clean_str(self, string):
-        """
-        Tokenization/string cleaning for all datasets except for SST.
-        Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data
-        """
-        string = re.sub(r"[^가-힣A-Za-z0-9(),!?\'\`]", " ", string)
-        string = re.sub(r"\'s", " \'s", string)
-        string = re.sub(r"\'ve", " \'ve", string)
-        string = re.sub(r"n\'t", " n\'t", string)
-        string = re.sub(r"\'re", " \'re", string)
-        string = re.sub(r"\'d", " \'d", string)
-        string = re.sub(r"\'ll", " \'ll", string)
-        string = re.sub(r",", " , ", string)
-        string = re.sub(r"!", " ! ", string)
-        string = re.sub(r"\(", " \( ", string)
-        string = re.sub(r"\)", " \) ", string)
-        string = re.sub(r"\?", " \? ", string)
-        string = re.sub(r"\s{2,}", " ", string)
-
-        return string.strip().lower()
-
-    def build_vocab(self, sentences):
-        """
-        Builds a vocabulary mapping from word to index based on the sentences.
-        Returns vocabulary mapping and inverse vocabulary mapping.
-        """
-        # Build vocabulary
-        word_counts = collections.Counter(sentences)
-
-        # Mapping from index to word
-        vocabulary_inv = [x[0] for x in word_counts.most_common()]
-        vocabulary_inv = list(sorted(vocabulary_inv))
-
-        # Mapping from word to index
-        vocabulary = {x: i for i, x in enumerate(vocabulary_inv)}
-
-        return [vocabulary, vocabulary_inv]
-
-    def preprocess(self, input_file, vocab_file, tensor_file, encoding):
-        with codecs.open(input_file, "r", encoding=encoding) as f:
-            data = f.read()
-
-        # Optional text cleaning or make them lower case, etc.
-        x_text = data.split()
-
-        self.vocab, self.words = self.build_vocab(x_text)
-        self.vocab_size = len(self.words)
-
-        with open(vocab_file, 'wb') as f:
-            pickle.dump(self.words, f)
-
-        # The same operation like this [self.vocab[word] for word in x_text]
-        # index of words as our basic data
-        self.tensor = np.array(list(map(self.vocab.get, x_text)))
-        # Save the data to data.npy
-        np.save(tensor_file, self.tensor)
-
-
-    def load_preprocessed(self, vocab_file, tensor_file):
-        with open(vocab_file, 'rb') as f:
-            self.words = pickle.load(f)
-
-        self.vocab_size = len(self.words)
-        self.vocab = dict(zip(self.words, range(len(self.words))))
-        self.tensor = np.load(tensor_file)
-        self.num_batches = int(self.tensor.size / (self.batch_size * self.seq_length))
-        return
-
     def create_batches(self):
-        self.num_batches = int(self.tensor.size / (self.batch_size *
-                                                   self.seq_length))
-        if self.num_batches==0:
-            assert False, "Not enough data. Make seq_length and batch_size small."
+        order = self.random_state.permutation(self.nb_samples)
+        tensor_shuf = self.tensor[order, :]
 
-        self.tensor = self.tensor[:self.num_batches * self.batch_size * self.seq_length]
-        xdata = self.tensor
-        ydata = np.copy(self.tensor)
+        _batch_lst = make_batches(self.nb_samples, self.batch_size)
+        self.batches = []
 
-        ydata[:-1] = xdata[1:]
-        ydata[-1] = xdata[0]
+        for batch_start, batch_end in _batch_lst:
+            batch_size = batch_end - batch_start
+            batch = tensor_shuf[batch_start:batch_end, :]
 
-        self.x_batches = np.split(xdata.reshape(self.batch_size, -1), self.num_batches, 1)
-        self.y_batches = np.split(ydata.reshape(self.batch_size, -1), self.num_batches, 1)
+            assert batch.shape[0] == batch_size
+
+            x = np.zeros(shape=(batch_size, self.seq_length))
+            y = np.zeros(shape=(batch_size, self.seq_length))
+
+            for i in range(batch_size):
+                start_idx = self.random_state.randint(low=0, high=self.max_len - 1)
+                end_idx = min(start_idx + self.seq_length, self.max_len)
+
+                x[i, 0:(end_idx - start_idx)] = batch[i, start_idx:end_idx]
+
+                start_idx += 1
+                end_idx = min(start_idx + self.seq_length, self.max_len)
+
+                y[i, 0:(end_idx - start_idx)] = batch[i, start_idx:end_idx]
+
+                d = {
+                    'x': x,
+                    'y': y
+                }
+                self.batches += [d]
+
+        self.num_batches = len(self.batches)
         return
 
     def next_batch(self):
-        x, y = self.x_batches[self.pointer], self.y_batches[self.pointer]
+        batch = self.batches[self.pointer]
         self.pointer += 1
-        return x, y
+        return batch['x'], batch['y']
 
     def reset_batch_pointer(self):
         self.pointer = 0
         return
+
+    @staticmethod
+    def extract_sentences(obj):
+        sentence1_parse = obj['sentence1_parse']
+        sentence1_tree = nltk.Tree.fromstring(sentence1_parse)
+        sentence1_parse_tokens = sentence1_tree.leaves()
+
+        sentence2_parse = obj['sentence2_parse']
+        sentence2_tree = nltk.Tree.fromstring(sentence2_parse)
+        sentence2_parse_tokens = sentence2_tree.leaves()
+
+        gold_label = obj['gold_label']
+        return sentence1_parse_tokens, sentence2_parse_tokens, gold_label
