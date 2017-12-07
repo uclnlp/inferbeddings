@@ -89,13 +89,48 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
         sentence2_ph: sentences1, sentence2_len_ph: sizes1,
         dropout_keep_prob_ph: 1.0
     }
-
     probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
     probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
-
     ans_1 = probabilities_1[:, contradiction_idx]
     ans_2 = probabilities_2[:, contradiction_idx]
+    res = relu(ans_1 - ans_2)
+    return res
 
+
+def entailment_loss(sentences1, sizes1, sentences2, sizes2):
+    feed_dict_1 = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+        dropout_keep_prob_ph: 1.0
+    }
+    feed_dict_2 = {
+        sentence1_ph: sentences2, sentence1_len_ph: sizes2,
+        sentence2_ph: sentences1, sentence2_len_ph: sizes1,
+        dropout_keep_prob_ph: 1.0
+    }
+    probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
+    probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
+    ans_1 = probabilities_1[:, entailment_idx]
+    ans_2 = 1.0 - probabilities_2[:, contradiction_idx]
+    res = relu(ans_1 - ans_2)
+    return res
+
+
+def neutral_loss(sentences1, sizes1, sentences2, sizes2):
+    feed_dict_1 = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+        dropout_keep_prob_ph: 1.0
+    }
+    feed_dict_2 = {
+        sentence1_ph: sentences2, sentence1_len_ph: sizes2,
+        sentence2_ph: sentences1, sentence2_len_ph: sizes1,
+        dropout_keep_prob_ph: 1.0
+    }
+    probabilities_1 = session.run(probabilities, feed_dict=feed_dict_1)
+    probabilities_2 = session.run(probabilities, feed_dict=feed_dict_2)
+    ans_1 = probabilities_1[:, neutral_idx]
+    ans_2 = 1.0 - probabilities_2[:, contradiction_idx]
     res = relu(ans_1 - ans_2)
     return res
 
@@ -285,12 +320,8 @@ def main(argv):
 
     dataset = util.instances_to_dataset(data_is, token_to_index, label_to_index, **args)
 
-    sentence1 = dataset['sentence1']
-    sentence1_length = dataset['sentence1_length']
-
-    sentence2 = dataset['sentence2']
-    sentence2_length = dataset['sentence2_length']
-
+    sentence1, sentence1_length = dataset['sentence1'], dataset['sentence1_length']
+    sentence2, sentence2_length = dataset['sentence2'], dataset['sentence2_length']
     label = dataset['label']
 
     clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
@@ -408,7 +439,7 @@ def main(argv):
         logger.info('Number of examples: {}'.format(labels.shape[0]))
 
         predictions_int_value = []
-        inconsistencies_value = []
+        c_losses, e_losses, n_losses = [], [], []
 
         for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
@@ -426,30 +457,48 @@ def main(argv):
             batch_predictions_int = session.run(predictions_int, feed_dict=batch_feed_dict)
             predictions_int_value += batch_predictions_int.tolist()
 
-            batch_inconsistencies = contradiction_loss(batch_sentences1, batch_sizes1,
-                                                       batch_sentences2, batch_sizes2)
-            inconsistencies_value += batch_inconsistencies.tolist()
+            batch_c_loss = contradiction_loss(batch_sentences1, batch_sizes1, batch_sentences2, batch_sizes2)
+            c_losses += batch_c_loss.tolist()
+
+            batch_e_loss = entailment_loss(batch_sentences1, batch_sizes1, batch_sentences2, batch_sizes2)
+            e_losses += batch_e_loss.tolist()
+
+            batch_n_loss = neutral_loss(batch_sentences1, batch_sizes1, batch_sentences2, batch_sizes2)
+            n_losses += batch_n_loss.tolist()
 
             if is_corrupt:
                 search(sentences1=batch_sentences1, sizes1=batch_sizes1,
                        sentences2=batch_sentences2, sizes2=batch_sizes2,
                        batch_size=batch_size)
-
                 sys.exit(0)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
 
-        ranking = np.argsort(np.array(inconsistencies_value))[::-1]
-
-        assert ranking.shape[0] == len(data_is)
-
         if is_most_violating:
-            for i in range(min(1024, ranking.shape[0])):
-                idx = ranking[i]
-                print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], inconsistencies_value[idx]))
-                print('[{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], inconsistencies_value[idx]))
+            c_ranking = np.argsort(np.array(c_losses))[::-1]
+            assert c_ranking.shape[0] == len(data_is)
 
+            for i in range(min(1024, c_ranking.shape[0])):
+                idx = c_ranking[i]
+                print('[C/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], c_losses[idx]))
+                print('[C/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], c_losses[idx]))
+
+            e_ranking = np.argsort(np.array(e_losses))[::-1]
+            assert e_ranking.shape[0] == len(data_is)
+
+            for i in range(min(1024, e_ranking.shape[0])):
+                idx = e_ranking[i]
+                print('[E/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], e_losses[idx]))
+                print('[E/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], e_losses[idx]))
+
+            n_ranking = np.argsort(np.array(n_losses))[::-1]
+            assert n_ranking.shape[0] == len(data_is)
+
+            for i in range(min(1024, n_ranking.shape[0])):
+                idx = n_ranking[i]
+                print('[N/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], n_losses[idx]))
+                print('[N/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], n_losses[idx]))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
