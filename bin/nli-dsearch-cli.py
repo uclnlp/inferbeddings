@@ -435,7 +435,7 @@ def main(argv):
                        sentences2=batch_sentences2, sizes2=batch_sizes2,
                        batch_size=batch_size)
 
-            sys.exit(0)
+                sys.exit(0)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
