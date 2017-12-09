@@ -44,6 +44,9 @@ class BaseESIM(BaseRTEModel):
         # [batch_size, time_steps, embedding_size] -> [batch_size, time_steps, representation_size]
         self.transformed_sequence2 = self._transform_input(self.sequence2, self.sequence2_length, reuse=True)
 
+        self.transformed_sequence1_length = self.sequence1_length
+        self.transformed_sequence2_length = self.sequence2_length
+
         logger.info('Building the Attend graph ..')
 
         self.raw_attentions = None
@@ -52,8 +55,8 @@ class BaseESIM(BaseRTEModel):
         # tensors with shape (batch_size, time_steps, num_units)
         self.alpha, self.beta = self.attend(sequence1=self.transformed_sequence1,
                                             sequence2=self.transformed_sequence2,
-                                            sequence1_length=self.sequence1_length,
-                                            sequence2_length=self.sequence2_length,
+                                            sequence1_length=self.transformed_sequence1_length,
+                                            sequence2_length=self.transformed_sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
 
         logger.info('Building the Compare graph ..')
@@ -67,7 +70,8 @@ class BaseESIM(BaseRTEModel):
                                self.sequence2_length, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
-        self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
+        self.logits = self.aggregate(v1=self.v1, v2=self.v2,
+                                     num_classes=self.nb_classes,
                                      v1_lengths=self.sequence1_length, v2_lengths=self.sequence2_length,
                                      use_masking=use_masking, reuse=self.reuse)
 
@@ -96,8 +100,8 @@ class BaseESIM(BaseRTEModel):
             transformed_sequence2 = self._transform_attend(sequence2, sequence2_length, reuse=True)
 
             # tensor with shape (batch_size, time_steps, time_steps)
-            tmp = tf.transpose(transformed_sequence2, [0, 2, 1])
-            self.raw_attentions = tf.matmul(transformed_sequence1, tmp)
+            self.raw_attentions = tf.matmul(transformed_sequence1,
+                                            tf.transpose(transformed_sequence2, [0, 2, 1]))
 
             masked_raw_attentions = self.raw_attentions
             if use_masking:

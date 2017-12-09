@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Running:
+#  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
+
 import argparse
 
 import sys
@@ -24,7 +27,6 @@ from inferbeddings.nli import FeedForwardDAM
 from inferbeddings.nli import FeedForwardDAMP
 from inferbeddings.nli import FeedForwardDAMS
 from inferbeddings.nli import ESIMv1
-
 
 import logging
 
@@ -56,7 +58,7 @@ def relu(x):
     return np.maximum(x, 0)
 
 
-def log_perplexity(sentences, sizes):
+def log_perplexity(sentences,   sizes):
     assert sentences.shape[0] == sizes.shape[0]
     _batch_size = sentences.shape[0]
     x = np.zeros(shape=(_batch_size, 1))
@@ -162,8 +164,7 @@ def corrupt(sentence1, size1, sentence2, size2,
 
     # Corrupt corruptions2
     for i in range(nb_corruptions):
-        # Do not corrupt the last token - usually a '.'
-        # where_to_corrupt = rs.randint(low=1, high=sizes2[i])
+        # Do not corrupt the last token - usually a '.' - corresponding to high=sizes2[i]
         where_to_corrupt = rs.randint(low=1, high=sizes2[i] - 1)
         new_word = rs.randint(low=1, high=nb_words)
         corruptions2[i, where_to_corrupt] = new_word
@@ -187,8 +188,9 @@ def search(sentences1, sizes1, sentences2, sizes2,
         sentence1, size1 = sentences1[low_il_idx, :], sizes1[low_il_idx]
         sentence2, size2 = sentences2[low_il_idx, :], sizes2[low_il_idx]
 
-        # Generate mutations that do not increase the perplexity too much,
-        #   and maximise the inconsistency loss
+        baseline_slv, baseline_silv, baseline_slpv = slv[low_il_idx], silv[low_il_idx], slpv[low_il_idx]
+
+        # Generate mutations that do not increase the perplexity too much, and maximise the inconsistency loss
         corruptions1, c_sizes1, corruptions2, c_sizes2 = \
             corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
                     nb_corruptions=nb_corruptions, nb_words=nb_words)
@@ -211,14 +213,20 @@ def search(sentences1, sizes1, sentences2, sizes2,
         clv, cilv, clpv = np.array(clv), np.array(cilv), np.array(clpv)
 
         # Select corruptions that did not increase the log-perplexity too much
-        low_perplexity_mask = clpv <= slpv[0] + epsilon
+        low_perplexity_mask = clpv <= slpv[low_il_idx] + epsilon
 
-        for i in np.where(low_perplexity_mask)[0].tolist():
-            print('CORRUPTION:', [index_to_token[idx] for idx in corruptions2[i] if idx > 0])
+        sentence1_str = ' '.join([index_to_token[token_idx] for token_idx in sentence1 if token_idx != 0])
+        sentence2_str = ' '.join([index_to_token[token_idx] for token_idx in sentence2 if token_idx != 0])
 
-# Running:
-#  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
-#
+        logger.info('SENTENCE 1 (il: {}/lp: {}): {}'.format(baseline_silv, baseline_slpv, sentence1_str))
+        logger.info('SENTENCE 2 (il: {}/lp: {}): {}'.format(baseline_silv, baseline_slpv, sentence2_str))
+
+        for idx in np.where(low_perplexity_mask)[0].tolist():
+            corruption_str = ' '.join([index_to_token[token_idx] for token_idx in corruptions2[idx] if token_idx != 0])
+
+            sclv, scilv, sclpv = clv[idx], cilv[idx], clpv[idx]
+            logger.info('CORRUPTION 2 (il: {}/lp: {}): {}'.format(scilv, sclpv, corruption_str))
+    return
 
 
 def main(argv):
@@ -253,6 +261,9 @@ def main(argv):
     argparser.add_argument('--most-violating', '-M', action='store_true', default=False,
                            help='Show most violating examples')
 
+    argparser.add_argument('--epsilon', '-e', action='store', type=float, default=1e-4)
+    argparser.add_argument('--lambda-weight', '-L', action='store', type=float, default=1.0)
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -277,6 +288,9 @@ def main(argv):
 
     is_corrupt = args.corrupt
     is_most_violating = args.most_violating
+
+    epsilon = args.epsilon
+    lambda_w = args.lambda_weight
 
     np.random.seed(seed)
     tf.set_random_seed(seed)
@@ -469,7 +483,7 @@ def main(argv):
             if is_corrupt:
                 search(sentences1=batch_sentences1, sizes1=batch_sizes1,
                        sentences2=batch_sentences2, sizes2=batch_sizes2,
-                       batch_size=batch_size)
+                       batch_size=batch_size, epsilon=epsilon, lambda_w=lambda_w)
                 sys.exit(0)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
