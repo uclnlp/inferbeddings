@@ -182,7 +182,7 @@ def search(sentences1, sizes1, sentences2, sizes2,
                            lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
 
     # Find examples that have a nearly-zero inconsistency loss
-    low_il_idxs = np.where(silv < 1e-6)
+    low_il_idxs = np.where(silv < 1e-6)[0]
 
     for low_il_idx in low_il_idxs.tolist():
         sentence1, size1 = sentences1[low_il_idx, :], sizes1[low_il_idx]
