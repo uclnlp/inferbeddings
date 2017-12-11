@@ -78,6 +78,20 @@ def log_perplexity(sentences,   sizes):
     return res
 
 
+def inference(sentences1, sizes1, sentences2, sizes2):
+    feed_dict = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+        dropout_keep_prob_ph: 1.0
+    }
+    probabilities_value = session.run(probabilities, feed_dict=feed_dict)
+
+    def to_dict(x):
+        return {'contradiction': x[contradiction_idx], 'neutral': x[neutral_idx], 'entailment': x[entailment_idx]}
+
+    return [to_dict(probabilities_value[i, :]) for i in range(probabilities_value.shape[0])]
+
+
 def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
@@ -240,8 +254,21 @@ def search(sentences1, sizes1, sentences2, sizes2,
                     corruption_str = ' '.join([index_to_token[tidx] for tidx in corruptions2[idx] if tidx != 0])
                     msg = '[{}] CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'\
                         .format(counter, corruption_iloss_values[idx], corruption_logperp_values[idx], corruption_str)
+
                     logger.info(msg)
 
+                    _sentence1 = np.array([sentence1])
+                    _size1 = np.array([size1])
+
+                    _sentence2 = corruptions2[idx]
+                    _size2 = np.array([size2])
+
+                    probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
+                    probabilities_2 = inference(_sentence2, _size2, _sentence1, _size1)
+
+                    msg = 'A -> B: {}\tB -> A: {}'.format(str(probabilities_1), str(probabilities_2))
+
+                    logger.info(msg)
                 counter += 1
 
     return
