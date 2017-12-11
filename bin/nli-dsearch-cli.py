@@ -56,7 +56,7 @@ def relu(x):
     return np.maximum(x, 0)
 
 
-def log_perplexity(sentences,   sizes):
+def log_perplexity(sentences, sizes):
     assert sentences.shape[0] == sizes.shape[0]
     _batch_size = sentences.shape[0]
     x = np.zeros(shape=(_batch_size, 1))
@@ -445,7 +445,7 @@ def main(argv):
         global lm_input_data_ph, lm_targets_ph, lm_initial_state
         lm_input_data_ph = tf.placeholder(tf.int32, [None, seq_length], name='input_data')
         lm_targets_ph = tf.placeholder(tf.int32, [None, seq_length], name='targets')
-        lm_initial_state = lm_cell.zero_state(lm_batch_size, tf.float32, )
+        lm_initial_state = lm_cell.zero_state(lm_batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
             lm_W = tf.get_variable(name='W', shape=[rnn_size, vocab_size],
