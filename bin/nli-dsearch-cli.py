@@ -226,17 +226,20 @@ def search(sentences1, sizes1, sentences2, sizes2,
         corruption_logperp_values = np.array(corruption_logperp_values)
 
         # Sort the corruptions by their inconsistency loss:
-        pass
+        corruptions_order = np.argsort(corruption_iloss_values)[::-1]
 
         # Select corruptions that did not increase the log-perplexity too much
         low_perplexity_mask = corruption_logperp_values <= logperp_value[low_iloss_idx] + epsilon
 
-        for idx in range(nb_corruptions):
+        counter = 0
+        for idx in corruptions_order.tolist():
             if idx in np.where(low_perplexity_mask)[0].tolist():
-                corruption_str = ' '.join([index_to_token[tidx] for tidx in corruptions2[idx] if tidx != 0])
-
-                sclv, scilv, sclpv = corruption_loss_values[idx], corruption_iloss_values[idx], corruption_logperp_values[idx]
-                logger.info('CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'.format(scilv, sclpv, corruption_str))
+                if counter < 10:
+                    corruption_str = ' '.join([index_to_token[tidx] for tidx in corruptions2[idx] if tidx != 0])
+                    msg = '[{}] CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'\
+                        .format(counter, corruption_iloss_values[idx], corruption_logperp_values[idx], corruption_str)
+                    logger.info(msg)
+                counter += 1
 
     return
 
