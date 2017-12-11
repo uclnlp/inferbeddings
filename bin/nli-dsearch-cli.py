@@ -204,30 +204,38 @@ def search(sentences1, sizes1, sentences2, sizes2,
         nb_corruptions = corruptions1.shape[0]
         batches = make_batches(size=nb_corruptions, batch_size=batch_size)
 
-        clv, cilv, clpv = [], [], []
-        for b_start, b_end in batches:
-            bc1, bs1 = corruptions1[b_start:b_end, :], corruption_sizes1[b_start:b_end]
-            bc2, bs2 = corruptions2[b_start:b_end, :], corruption_sizes2[b_start:b_end]
+        corruption_loss_values, corruption_iloss_values, corruption_logperp_values = [], [], []
+        for batch_start, batch_end in batches:
+            batch_corruptions1 = corruptions1[batch_start:batch_end, :]
+            batch_corruption_sizes1 = corruption_sizes1[batch_start:batch_end]
 
-            b_clv, b_cilv, b_clpv = loss(sentences1=bc1, sizes1=bs1, sentences2=bc2, sizes2=bs2,
-                                         lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
-            clv += b_clv.tolist()
-            cilv += b_cilv.tolist()
-            clpv += b_clpv.tolist()
+            batch_corruptions2 = corruptions2[batch_start:batch_end, :]
+            batch_corruption_sizes2 = corruption_sizes2[batch_start:batch_end]
 
-        clv, cilv, clpv = np.array(clv), np.array(cilv), np.array(clpv)
+            batch_loss_values, batch_iloss_values, batch_logperp_values = \
+                loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
+                     sentences2=batch_corruptions2, sizes2=batch_corruption_sizes2,
+                     lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+
+            corruption_loss_values += batch_loss_values.tolist()
+            corruption_iloss_values += batch_iloss_values.tolist()
+            corruption_logperp_values += batch_logperp_values.tolist()
+
+        corruption_loss_values = np.array(corruption_loss_values)
+        corruption_iloss_values = np.array(corruption_iloss_values)
+        corruption_logperp_values = np.array(corruption_logperp_values)
 
         # Sort the corruptions by their inconsistency loss:
         pass
 
         # Select corruptions that did not increase the log-perplexity too much
-        low_perplexity_mask = clpv <= logperp_value[low_iloss_idx] + epsilon
+        low_perplexity_mask = corruption_logperp_values <= logperp_value[low_iloss_idx] + epsilon
 
         for idx in range(nb_corruptions):
             if idx in np.where(low_perplexity_mask)[0].tolist():
                 corruption_str = ' '.join([index_to_token[tidx] for tidx in corruptions2[idx] if tidx != 0])
 
-                sclv, scilv, sclpv = clv[idx], cilv[idx], clpv[idx]
+                sclv, scilv, sclpv = corruption_loss_values[idx], corruption_iloss_values[idx], corruption_logperp_values[idx]
                 logger.info('CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'.format(scilv, sclpv, corruption_str))
 
     return
