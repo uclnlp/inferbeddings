@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Running:
+#  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
+
 import os
 import sys
 
@@ -24,8 +27,10 @@ from inferbeddings.nli import ESIMv1
 
 import logging
 
-logger = logging.getLogger(__name__)
+np.set_printoptions(threshold=np.nan)
 
+logger = logging.getLogger(__name__)
+rs = np.random.RandomState(0)
 
 entailment_idx, neutral_idx, contradiction_idx = 0, 1, 2
 
@@ -37,12 +42,13 @@ sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_
 
 dropout_keep_prob_ph = tf.placeholder(tf.float32, name='dropout_keep_prob')
 
-has_bos, has_eos, has_unk = True, False, True
-is_lower = False
-
 index_to_token = token_to_index = None
+session = probabilities = None
 
-batch_size = 32
+lm_input_data_ph = lm_targets_ph = None
+lm_cell = lm_initial_state = lm_final_state = None
+
+lm_loss = lm_cost = None
 
 
 def main(argv):
@@ -94,6 +100,9 @@ def main(argv):
     restore_path = args.restore
     lm_path = args.lm
 
+    np.random.seed(seed)
+    tf.set_random_seed(seed)
+
     logger.debug('Reading corpus ..')
     data_is, _, _ = util.SNLI.generate(train_path=data_path, valid_path=None, test_path=None, is_lower=is_lower)
     logger.info('Data size: {}'.format(len(data_is)))
@@ -133,8 +142,12 @@ def main(argv):
 
     dataset = util.instances_to_dataset(data_is, token_to_index, label_to_index, **args)
 
-    sentence1, sentence1_length = dataset['sentence1'], dataset['sentence1_length']
-    sentence2, sentence2_length = dataset['sentence2'], dataset['sentence2_length']
+    sentence1 = dataset['sentence1']
+    sentence1_length = dataset['sentence1_length']
+
+    sentence2 = dataset['sentence2'],
+    sentence2_length = dataset['sentence2_length']
+
     label = dataset['label']
 
     clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
@@ -151,7 +164,8 @@ def main(argv):
         model_kwargs = dict(
             sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
             sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
-            representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+            representation_size=representation_size,
+            dropout_keep_prob=dropout_keep_prob_ph)
 
         if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
             model_kwargs['init_std_dev'] = 0.01
@@ -216,7 +230,7 @@ def main(argv):
         lm_cost = tf.reduce_sum(lm_loss) / lm_batch_size / seq_length
         lm_final_state = lm_last_state
 
-    
+
 
 
 if __name__ == '__main__':
