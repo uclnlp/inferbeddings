@@ -260,7 +260,7 @@ def search(sentences1, sizes1, sentences2, sizes2,
                     _sentence1 = np.array([sentence1])
                     _size1 = np.array([size1])
 
-                    _sentence2 = corruptions2[idx]
+                    _sentence2 = np.array([corruptions2[idx]])
                     _size2 = np.array([size2])
 
                     probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
