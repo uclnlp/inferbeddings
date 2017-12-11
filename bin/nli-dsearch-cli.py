@@ -309,6 +309,8 @@ def main(argv):
     argparser.add_argument('--epsilon', '-e', action='store', type=float, default=1e-4)
     argparser.add_argument('--lambda-weight', '-L', action='store', type=float, default=1.0)
 
+    argparser.add_argument('--inconsistency', '-i', action='store', type=str, default='contradiction')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -336,6 +338,18 @@ def main(argv):
 
     epsilon = args.epsilon
     lambda_w = args.lambda_weight
+
+    inconsistency_name = args.inconsistency
+
+    iloss = None
+    if inconsistency_name == 'contradiction':
+        iloss = contradiction_loss
+    elif inconsistency_name == 'neutral':
+        iloss = neutral_loss
+    elif inconsistency_name == 'entailment':
+        iloss = entailment_loss
+
+    assert iloss is not None
 
     np.random.seed(seed)
     tf.set_random_seed(seed)
@@ -508,8 +522,12 @@ def main(argv):
             batch_sizes2 = sizes2[batch_start:batch_end]
 
             batch_feed_dict = {
-                sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
-                sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
+                sentence1_ph: batch_sentences1,
+                sentence1_len_ph: batch_sizes1,
+
+                sentence2_ph: batch_sentences2,
+                sentence2_len_ph: batch_sizes2,
+
                 dropout_keep_prob_ph: 1.0
             }
 
