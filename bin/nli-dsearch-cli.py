@@ -192,8 +192,10 @@ def search(sentences1, sizes1, sentences2, sizes2,
         sentence1_str = ' '.join([index_to_token[tidx] for tidx in sentence1 if tidx != 0])
         sentence2_str = ' '.join([index_to_token[tidx] for tidx in sentence2 if tidx != 0])
 
-        logger.info('SENTENCE 1 (il: {}/lp: {}): {}'.format(sample_iloss_value, sample_logperp_value, sentence1_str))
-        logger.info('SENTENCE 2 (il: {}/lp: {}): {}'.format(sample_iloss_value, sample_logperp_value, sentence2_str))
+        logger.info('SENTENCE 1 (inconsistency loss: {} / log-perplexity: {}): {}'
+                    .format(sample_iloss_value, sample_logperp_value, sentence1_str))
+        logger.info('SENTENCE 2 (inconsistency loss: {} / log-perplexity: {}): {}'
+                    .format(sample_iloss_value, sample_logperp_value, sentence2_str))
 
         # Generate mutations that do not increase the perplexity too much, and maximise the inconsistency loss
         corruptions1, corruption_sizes1, corruptions2, corruption_sizes2 = \
@@ -239,6 +241,7 @@ def search(sentences1, sizes1, sentences2, sizes2,
                     msg = '[{}] CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'\
                         .format(counter, corruption_iloss_values[idx], corruption_logperp_values[idx], corruption_str)
                     logger.info(msg)
+
                 counter += 1
 
     return
