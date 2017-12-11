@@ -7,6 +7,8 @@ import sys
 import json
 import pickle
 
+import argparse
+
 import numpy as np
 import tensorflow as tf
 
@@ -14,7 +16,11 @@ from tensorflow.contrib import rnn
 from tensorflow.contrib import legacy_seq2seq
 
 from inferbeddings.nli import util, tfutil
+from inferbeddings.nli import ConditionalBiLSTM
 from inferbeddings.nli import FeedForwardDAM
+from inferbeddings.nli import FeedForwardDAMP
+from inferbeddings.nli import FeedForwardDAMS
+from inferbeddings.nli import ESIMv1
 
 import logging
 
@@ -36,14 +42,58 @@ is_lower = False
 
 index_to_token = token_to_index = None
 
-data_path = 'data/snli/snli_1.0_train.jsonl.gz'
-restore_path = 'models/snli/dam_1/dam_1'
-lm_path = 'models/lm/'
-
 batch_size = 32
 
 
 def main(argv):
+    logger.info('Command line: {}'.format(' '.join(arg for arg in argv)))
+
+    def fmt(prog):
+        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
+
+    argparser = argparse.ArgumentParser('Regularising RTE via Adversarial Sets Regularisation', formatter_class=fmt)
+
+    argparser.add_argument('--data', '-d', action='store', type=str, default='data/snli/snli_1.0_train.jsonl.gz')
+    argparser.add_argument('--model', '-m', action='store', type=str, default='ff-dam',
+                           choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
+
+    argparser.add_argument('--embedding-size', action='store', type=int, default=300)
+    argparser.add_argument('--representation-size', action='store', type=int, default=200)
+
+    argparser.add_argument('--batch-size', action='store', type=int, default=32)
+
+    argparser.add_argument('--seed', action='store', type=int, default=0)
+
+    argparser.add_argument('--has-bos', action='store_true', default=False, help='Has <Beginning Of Sentence> token')
+    argparser.add_argument('--has-eos', action='store_true', default=False, help='Has <End Of Sentence> token')
+    argparser.add_argument('--has-unk', action='store_true', default=False, help='Has <Unknown Word> token')
+    argparser.add_argument('--lower', '-l', action='store_true', default=False, help='Lowercase the corpus')
+
+    argparser.add_argument('--restore', action='store', type=str, default=None)
+    argparser.add_argument('--lm', action='store', type=str, default='models/lm/')
+
+    args = argparser.parse_args(argv)
+
+    # Command line arguments
+    data_path = args.data
+
+    model_name = args.model
+
+    embedding_size = args.embedding_size
+    representation_size = args.representation_size
+
+    batch_size = args.batch_size
+
+    seed = args.seed
+
+    has_bos = args.has_bos
+    has_eos = args.has_eos
+    has_unk = args.has_unk
+    is_lower = args.lower
+
+    restore_path = args.restore
+    lm_path = args.lm
+
     logger.debug('Reading corpus ..')
     data_is, _, _ = util.SNLI.generate(train_path=data_path, valid_path=None, test_path=None, is_lower=is_lower)
     logger.info('Data size: {}'.format(len(data_is)))
@@ -92,6 +142,38 @@ def main(argv):
 
     vocab_size = max(token_to_index.values()) + 1
 
+    discriminator_scope_name = 'discriminator'
+    with tf.variable_scope(discriminator_scope_name):
+        embedding_layer = tf.get_variable('embeddings', shape=[vocab_size, embedding_size], trainable=False)
+        sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
+        sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
+
+        model_kwargs = dict(
+            sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
+            sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
+            representation_size=representation_size, dropout_keep_prob=dropout_keep_prob_ph)
+
+        if model_name in {'ff-dam', 'ff-damp', 'ff-dams'}:
+            model_kwargs['init_std_dev'] = 0.01
+
+        mode_name_to_class = {
+            'cbilstm': ConditionalBiLSTM,
+            'ff-dam': FeedForwardDAM,
+            'ff-damp': FeedForwardDAMP,
+            'ff-dams': FeedForwardDAMS,
+            'esim1': ESIMv1
+        }
+        model_class = mode_name_to_class[model_name]
+        assert model_class is not None
+
+        model = model_class(**model_kwargs)
+        logits = model()
+
+        global probabilities
+        probabilities = tf.nn.softmax(logits)
+
+        predictions = tf.argmax(logits, axis=1, name='predictions')
+
     lm_scope_name = 'language_model'
     with tf.variable_scope(lm_scope_name):
         cell_fn = rnn.BasicLSTMCell
@@ -133,6 +215,8 @@ def main(argv):
                                                           weights=[tf.ones([lm_batch_size * seq_length])])
         lm_cost = tf.reduce_sum(lm_loss) / lm_batch_size / seq_length
         lm_final_state = lm_last_state
+
+    
 
 
 if __name__ == '__main__':
