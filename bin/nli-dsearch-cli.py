@@ -546,8 +546,8 @@ def main(argv):
             if is_corrupt:
                 search(sentences1=batch_sentences1, sizes1=batch_sizes1,
                        sentences2=batch_sentences2, sizes2=batch_sizes2,
-                       batch_size=batch_size, epsilon=epsilon, lambda_w=lambda_w)
-                # sys.exit(0)
+                       batch_size=batch_size, epsilon=epsilon, lambda_w=lambda_w,
+                       inconsistency_loss=iloss)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
