@@ -221,7 +221,9 @@ class AdversarialSets:
         body_score = probability_s1_contradicts_s2
         head_score = probability_s2_contradicts_s1
 
-        loss = tf.nn.relu(body_score - head_score)
+        # loss = tf.nn.relu(body_score - head_score)
+        loss = body_score - head_score
+
         return loss, [sequence1, sequence2]
 
     def rule7_loss(self):

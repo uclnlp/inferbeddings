@@ -25,6 +25,7 @@ from inferbeddings.nli import FeedForwardDAMS
 from inferbeddings.nli import ESIMv1
 
 from inferbeddings.nli.regularizers.x import AdversarialSets
+from inferbeddings.lm.decoder import decode
 
 import logging
 
@@ -131,7 +132,7 @@ def main(argv):
 
     # Enumeration of tokens start at index=3:
     # index=0 PADDING, index=1 START_OF_SENTENCE, index=2 END_OF_SENTENCE, index=3 UNKNOWN_WORD
-    bos_idx, eos_idx, unk_idx = 1, 2, 3
+    pad_idx, bos_idx, eos_idx, unk_idx = 0, 1, 2, 3
 
     global index_to_token, token_to_index
     with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
@@ -264,25 +265,47 @@ def main(argv):
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
     lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
 
+    a_batch_size = 1
+    a_sequence_length = 16
+
     adversary_scope_name = discriminator_scope_name
     with tf.variable_scope(adversary_scope_name):
         adversary = AdversarialSets(model_class=model_class,
                                     model_kwargs=model_kwargs,
                                     embedding_size=embedding_size,
                                     scope_name='adversary',
-                                    batch_size=1,
-                                    sequence_length=10,
+                                    batch_size=a_batch_size,
+                                    sequence_length=a_sequence_length,
                                     entailment_idx=entailment_idx,
                                     contradiction_idx=contradiction_idx,
                                     neutral_idx=neutral_idx)
 
         a_loss, a_sequence_lst = adversary.rule6_loss()
+        a_sequence1_var, a_sequence2_var = a_sequence_lst
+
+    a_optimizer_scope_name = 'adversary/optimizer'
+    with tf.variable_scope(a_optimizer_scope_name):
+        a_optimizer = tf.train.AdamOptimizer()
+        a_step = a_optimizer.minimize(- a_loss, var_list=[a_sequence2_var])
+
+    a_optimizer_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES,
+                                         scope=a_optimizer_scope_name)
+    a_optimizer_vars_init = tf.variables_initializer(a_optimizer_vars)
+
+    a_var_to_assign_op = dict()
+    a_var_value_ph = tf.placeholder(dtype=tf.float32, shape=[None, None, None], name='a_var_value')
+    for a_var in a_sequence_lst:
+        a_var_to_assign_op[a_var] = a_var.assign(a_var_value_ph)
+    a_init_op = tf.variables_initializer(a_sequence_lst)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
-    text = ['The', 'girl', 'runs', 'on', 'the', 'plane', '.']
-    sentence_ids = [token_to_index[token] for token in text]
+    text1 = 'A man sleeps on the beach after removing his helmet'.split() + ['.']
+    sentence1_ids = [token_to_index[token] for token in text1]
+
+    text2 = 'A man sleeps by his bike'.split() + ['.']
+    sentence2_ids = [token_to_index[token] for token in text2]
 
     global session
     with tf.Session(config=session_config) as session:
@@ -293,20 +316,67 @@ def main(argv):
         lm_ckpt = tf.train.get_checkpoint_state(lm_path)
         lm_saver.restore(session, lm_ckpt.model_checkpoint_path)
 
-        embedding_layer_value = session.run(embedding_layer)
-        assert embedding_layer_value.shape == (vocab_size, embedding_size)
+        emb_layer_value = session.run(embedding_layer)
+        assert emb_layer_value.shape == (vocab_size, embedding_size)
 
-        sentences, sizes = np.array([sentence_ids]), np.array([len(sentence_ids)])
+        sentences, sizes = np.array([sentence1_ids]), np.array([len(sentence1_ids)])
         assert log_perplexity(sentences, sizes) >= 0.0
 
-        feed = {
-            sentence1_ph: sentences,
-            sentence1_len_ph: sizes
-        }
-        sentence_embedding = session.run(sentence1_embedding, feed_dict=feed)
-        assert sentence_embedding.shape == (1, len(sentence_ids), embedding_size)
+        logger.info('Initialising adversarial sequences ..')
 
-        print(a_sequence_lst)
+        initial_sentence_emb_value = np.zeros(shape=(a_batch_size, a_sequence_length, embedding_size))
+
+        initial_sentence_emb_value[0, 0, :] = emb_layer_value[bos_idx, :]
+        for i in range(1, a_sequence_length):
+            initial_sentence_emb_value[0, i, :] = emb_layer_value[pad_idx, :]
+
+        sentence1_emb_value = initial_sentence_emb_value.copy()
+        for i, idx in enumerate(sentence1_ids, start=1):
+            sentence1_emb_value[0, i, :] = emb_layer_value[idx, :]
+
+        sentence2_emb_value = initial_sentence_emb_value.copy()
+        for i, idx in enumerate(sentence2_ids, start=1):
+            sentence2_emb_value[0, i, :] = emb_layer_value[idx, :]
+
+        assert len(a_sequence_lst) == 2
+        sentence1_emb_var, sentence2_emb_var = a_sequence_lst[0], a_sequence_lst[1]
+
+        session.run(a_init_op)
+
+        feed = {a_var_value_ph: sentence1_emb_value}
+        session.run(a_var_to_assign_op[sentence1_emb_var], feed_dict=feed)
+
+        feed = {a_var_value_ph: sentence2_emb_value}
+        session.run(a_var_to_assign_op[sentence2_emb_var], feed_dict=feed)
+
+        session.run(a_optimizer_vars_init)
+
+        a_word_idx = 3
+
+        for e_idx in range(1024):
+            a_loss_value = session.run(a_loss, feed_dict={dropout_keep_prob_ph: 1})
+
+            d1_lst = decode(sequence_embedding=session.run(a_sequence1_var)[0, :, :],
+                            embedding_matrix=emb_layer_value[:, :], index_to_token=index_to_token)
+
+            d2_lst = decode(sequence_embedding=session.run(a_sequence2_var)[0, :, :],
+                            embedding_matrix=emb_layer_value[:, :], index_to_token=index_to_token)
+
+            print('{} {} {}'.format(e_idx, a_loss_value, ' '.join(d1_lst)))
+            print('{} {} {}'.format(e_idx, a_loss_value, ' '.join(d2_lst)))
+
+            session.run(a_step, feed_dict={dropout_keep_prob_ph: 1})
+
+            # Clamping all word embeddings, except for the 3rd word
+            u_sentence2_emb = sentence2_emb_value.copy()
+            u_sentence2_emb[:, a_word_idx, :] = session.run(a_sequence2_var)[:, a_word_idx, :]
+
+            # Normalising the embedding
+            u_sentence2_emb /= np.linalg.norm(u_sentence2_emb, axis=2).reshape((batch_size, -1, 1))
+
+            # Updating the embedding
+            feed = {a_var_value_ph: u_sentence2_emb}
+            session.run(a_var_to_assign_op[sentence2_emb_var], feed_dict=feed)
 
 
 if __name__ == '__main__':
