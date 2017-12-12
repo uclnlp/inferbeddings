@@ -24,6 +24,8 @@ from inferbeddings.nli import FeedForwardDAMP
 from inferbeddings.nli import FeedForwardDAMS
 from inferbeddings.nli import ESIMv1
 
+from inferbeddings.nli.regularizers.adversarial import AdversarialSets
+
 import logging
 
 # np.set_printoptions(threshold=np.nan)
@@ -262,8 +264,23 @@ def main(argv):
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
     lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
 
+    adversary = AdversarialSets(model_class=model_class,
+                                model_kwargs=model_kwargs,
+                                embedding_size=embedding_size,
+                                scope_name='adversary',
+                                batch_size=1,
+                                sequence_length=10,
+                                entailment_idx=entailment_idx,
+                                contradiction_idx=contradiction_idx,
+                                neutral_idx=neutral_idx)
+
+    a_loss, a_sequence_set = adversary.rule6_loss()
+
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
+
+    text = ['The', 'girl', 'runs', 'on', 'the', 'plane', '.']
+    sentence_ids = [token_to_index[token] for token in text]
 
     global session
     with tf.Session(config=session_config) as session:
@@ -275,21 +292,19 @@ def main(argv):
         lm_saver.restore(session, lm_ckpt.model_checkpoint_path)
 
         embedding_layer_value = session.run(embedding_layer)
-        print(embedding_layer_value.shape)
+        assert embedding_layer_value.shape == (vocab_size, embedding_size)
 
-        text = ['The', 'girl', 'runs', 'on', 'the', 'plane', '.']
-
-        sentences = np.array([[token_to_index[token] for token in text]])
-        sizes = np.array([len(text)])
-
-        print(log_perplexity(sentences, sizes))
+        sentences, sizes = np.array([sentence_ids]), np.array([len(sentence_ids)])
+        assert log_perplexity(sentences, sizes) >= 0.0
 
         feed = {
             sentence1_ph: sentences,
             sentence1_len_ph: sizes
         }
-        tmp = session.run(sentence1_embedding, feed_dict=feed)
-        print(tmp.shape)
+        sentence_embedding = session.run(sentence1_embedding, feed_dict=feed)
+        assert sentence_embedding.shape == (1, len(sentence_ids), embedding_size)
+
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
