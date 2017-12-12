@@ -24,7 +24,7 @@ from inferbeddings.nli import FeedForwardDAMP
 from inferbeddings.nli import FeedForwardDAMS
 from inferbeddings.nli import ESIMv1
 
-from inferbeddings.nli.regularizers.adversarial import AdversarialSets
+from inferbeddings.nli.regularizers.x import AdversarialSets
 
 import logging
 
@@ -264,17 +264,19 @@ def main(argv):
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
     lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
 
-    adversary = AdversarialSets(model_class=model_class,
-                                model_kwargs=model_kwargs,
-                                embedding_size=embedding_size,
-                                scope_name='adversary',
-                                batch_size=1,
-                                sequence_length=10,
-                                entailment_idx=entailment_idx,
-                                contradiction_idx=contradiction_idx,
-                                neutral_idx=neutral_idx)
+    adversary_scope_name = discriminator_scope_name
+    with tf.variable_scope(adversary_scope_name):
+        adversary = AdversarialSets(model_class=model_class,
+                                    model_kwargs=model_kwargs,
+                                    embedding_size=embedding_size,
+                                    scope_name='adversary',
+                                    batch_size=1,
+                                    sequence_length=10,
+                                    entailment_idx=entailment_idx,
+                                    contradiction_idx=contradiction_idx,
+                                    neutral_idx=neutral_idx)
 
-    a_loss, a_sequence_set = adversary.rule6_loss()
+        a_loss, a_sequence_lst = adversary.rule6_loss()
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
@@ -304,6 +306,7 @@ def main(argv):
         sentence_embedding = session.run(sentence1_embedding, feed_dict=feed)
         assert sentence_embedding.shape == (1, len(sentence_ids), embedding_size)
 
+        print(a_sequence_lst)
 
 
 if __name__ == '__main__':
