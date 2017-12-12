@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Running:
+#  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
+
 import argparse
 
 import sys
@@ -16,15 +19,12 @@ from tensorflow.contrib import legacy_seq2seq
 
 from inferbeddings.models.training.util import make_batches
 
-from tqdm import tqdm
-
 from inferbeddings.nli import util, tfutil
 from inferbeddings.nli import ConditionalBiLSTM
 from inferbeddings.nli import FeedForwardDAM
 from inferbeddings.nli import FeedForwardDAMP
 from inferbeddings.nli import FeedForwardDAMS
 from inferbeddings.nli import ESIMv1
-
 
 import logging
 
@@ -76,6 +76,20 @@ def log_perplexity(sentences, sizes):
     __sizes = _sizes - 2
     res = np.array([np.sum(loss_values[_i, :__sizes[_i]]) for _i in range(loss_values.shape[0])])
     return res
+
+
+def inference(sentences1, sizes1, sentences2, sizes2):
+    feed_dict = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+        dropout_keep_prob_ph: 1.0
+    }
+    probabilities_value = session.run(probabilities, feed_dict=feed_dict)
+
+    def to_dict(x):
+        return {'contradiction': x[contradiction_idx], 'neutral': x[neutral_idx], 'entailment': x[entailment_idx]}
+
+    return [to_dict(probabilities_value[i, :]) for i in range(probabilities_value.shape[0])]
 
 
 def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
@@ -162,8 +176,7 @@ def corrupt(sentence1, size1, sentence2, size2,
 
     # Corrupt corruptions2
     for i in range(nb_corruptions):
-        # Do not corrupt the last token - usually a '.'
-        # where_to_corrupt = rs.randint(low=1, high=sizes2[i])
+        # Do not corrupt the last token - usually a '.' - corresponding to high=sizes2[i]
         where_to_corrupt = rs.randint(low=1, high=sizes2[i] - 1)
         new_word = rs.randint(low=1, high=nb_words)
         corruptions2[i, where_to_corrupt] = new_word
@@ -176,20 +189,30 @@ def search(sentences1, sizes1, sentences2, sizes2,
            epsilon=1e-4, batch_size=32,
            nb_corruptions=1024, nb_words=256):
 
-    slv, silv, slpv = loss(sentences1=sentences1, sizes1=sizes1,
-                           sentences2=sentences2, sizes2=sizes2,
-                           lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+    loss_value, iloss_value, logperp_value = loss(sentences1=sentences1, sizes1=sizes1,
+                                                  sentences2=sentences2, sizes2=sizes2,
+                                                  lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
 
-    # Find examples that have a nearly-zero inconsistency loss
-    low_il_idxs = np.where(silv < 1e-6)
+    # Find examples that have a nearly-zero inconsistency loss, and only work on making those more "adversarial"
+    low_iloss_idxs = np.where(iloss_value < 1e-6)[0]
 
-    for low_il_idx in low_il_idxs.tolist():
-        sentence1, size1 = sentences1[low_il_idx, :], sizes1[low_il_idx]
-        sentence2, size2 = sentences2[low_il_idx, :], sizes2[low_il_idx]
+    for low_iloss_idx in low_iloss_idxs.tolist():
+        sentence1, size1 = sentences1[low_iloss_idx, :], sizes1[low_iloss_idx]
+        sentence2, size2 = sentences2[low_iloss_idx, :], sizes2[low_iloss_idx]
 
-        # Generate mutations that do not increase the perplexity too much,
-        #   and maximise the inconsistency loss
-        corruptions1, c_sizes1, corruptions2, c_sizes2 = \
+        sample_loss_value, sample_iloss_value, sample_logperp_value = \
+            loss_value[low_iloss_idx], iloss_value[low_iloss_idx], logperp_value[low_iloss_idx]
+
+        sentence1_str = ' '.join([index_to_token[tidx] for tidx in sentence1 if tidx != 0])
+        sentence2_str = ' '.join([index_to_token[tidx] for tidx in sentence2 if tidx != 0])
+
+        print('SENTENCE 1 (inconsistency loss: {} / log-perplexity: {}): {}'
+              .format(sample_iloss_value, sample_logperp_value, sentence1_str))
+        print('SENTENCE 2 (inconsistency loss: {} / log-perplexity: {}): {}'
+              .format(sample_iloss_value, sample_logperp_value, sentence2_str))
+
+        # Generate mutations that do not increase the perplexity too much, and maximise the inconsistency loss
+        corruptions1, corruption_sizes1, corruptions2, corruption_sizes2 = \
             corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
                     nb_corruptions=nb_corruptions, nb_words=nb_words)
 
@@ -197,28 +220,58 @@ def search(sentences1, sizes1, sentences2, sizes2,
         nb_corruptions = corruptions1.shape[0]
         batches = make_batches(size=nb_corruptions, batch_size=batch_size)
 
-        clv, cilv, clpv = [], [], []
-        for b_start, b_end in tqdm(batches):
-            bc1, bs1 = corruptions1[b_start:b_end, :], c_sizes1[b_start:b_end]
-            bc2, bs2 = corruptions2[b_start:b_end, :], c_sizes2[b_start:b_end]
+        corruption_loss_values, corruption_iloss_values, corruption_logperp_values = [], [], []
+        for batch_start, batch_end in batches:
+            batch_corruptions1 = corruptions1[batch_start:batch_end, :]
+            batch_corruption_sizes1 = corruption_sizes1[batch_start:batch_end]
 
-            b_clv, b_cilv, b_clpv = loss(sentences1=bc1, sizes1=bs1, sentences2=bc2, sizes2=bs2,
-                                         lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
-            clv += b_clv.tolist()
-            cilv += b_cilv.tolist()
-            clpv += b_clpv.tolist()
+            batch_corruptions2 = corruptions2[batch_start:batch_end, :]
+            batch_corruption_sizes2 = corruption_sizes2[batch_start:batch_end]
 
-        clv, cilv, clpv = np.array(clv), np.array(cilv), np.array(clpv)
+            batch_loss_values, batch_iloss_values, batch_logperp_values = \
+                loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
+                     sentences2=batch_corruptions2, sizes2=batch_corruption_sizes2,
+                     lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+
+            corruption_loss_values += batch_loss_values.tolist()
+            corruption_iloss_values += batch_iloss_values.tolist()
+            corruption_logperp_values += batch_logperp_values.tolist()
+
+        corruption_loss_values = np.array(corruption_loss_values)
+        corruption_iloss_values = np.array(corruption_iloss_values)
+        corruption_logperp_values = np.array(corruption_logperp_values)
+
+        # Sort the corruptions by their inconsistency loss:
+        corruptions_order = np.argsort(corruption_iloss_values)[::-1]
 
         # Select corruptions that did not increase the log-perplexity too much
-        low_perplexity_mask = clpv <= slpv[0] + epsilon
+        low_perplexity_mask = corruption_logperp_values <= logperp_value[low_iloss_idx] + epsilon
 
-        for i in np.where(low_perplexity_mask)[0].tolist():
-            print('CORRUPTION:', [index_to_token[idx] for idx in corruptions2[i] if idx > 0])
+        counter = 0
+        for idx in corruptions_order.tolist():
+            if idx in np.where(low_perplexity_mask)[0].tolist():
+                if counter < 10:
+                    corruption_str = ' '.join([index_to_token[tidx] for tidx in corruptions2[idx] if tidx != 0])
+                    msg = '[{}] CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'\
+                        .format(counter, corruption_iloss_values[idx], corruption_logperp_values[idx], corruption_str)
 
-# Running:
-#  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
-#
+                    print(msg)
+
+                    _sentence1 = np.array([sentence1])
+                    _size1 = np.array([size1])
+
+                    _sentence2 = np.array([corruptions2[idx]])
+                    _size2 = np.array([size2])
+
+                    probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
+                    probabilities_2 = inference(_sentence2, _size2, _sentence1, _size1)
+
+                    msg = 'A -> B: {}\tB -> A: {}'.format(str(probabilities_1), str(probabilities_2))
+
+                    print(msg)
+                counter += 1
+
+    return
 
 
 def main(argv):
@@ -253,6 +306,11 @@ def main(argv):
     argparser.add_argument('--most-violating', '-M', action='store_true', default=False,
                            help='Show most violating examples')
 
+    argparser.add_argument('--epsilon', '-e', action='store', type=float, default=1e-4)
+    argparser.add_argument('--lambda-weight', '-L', action='store', type=float, default=1.0)
+
+    argparser.add_argument('--inconsistency', '-i', action='store', type=str, default='contradiction')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -277,6 +335,21 @@ def main(argv):
 
     is_corrupt = args.corrupt
     is_most_violating = args.most_violating
+
+    epsilon = args.epsilon
+    lambda_w = args.lambda_weight
+
+    inconsistency_name = args.inconsistency
+
+    iloss = None
+    if inconsistency_name == 'contradiction':
+        iloss = contradiction_loss
+    elif inconsistency_name == 'neutral':
+        iloss = neutral_loss
+    elif inconsistency_name == 'entailment':
+        iloss = entailment_loss
+
+    assert iloss is not None
 
     np.random.seed(seed)
     tf.set_random_seed(seed)
@@ -372,7 +445,7 @@ def main(argv):
         global lm_input_data_ph, lm_targets_ph, lm_initial_state
         lm_input_data_ph = tf.placeholder(tf.int32, [None, seq_length], name='input_data')
         lm_targets_ph = tf.placeholder(tf.int32, [None, seq_length], name='targets')
-        lm_initial_state = lm_cell.zero_state(lm_batch_size, tf.float32, )
+        lm_initial_state = lm_cell.zero_state(lm_batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
             lm_W = tf.get_variable(name='W', shape=[rnn_size, vocab_size],
@@ -441,7 +514,7 @@ def main(argv):
         predictions_int_value = []
         c_losses, e_losses, n_losses = [], [], []
 
-        for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
+        for batch_idx, (batch_start, batch_end) in enumerate(batches):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
 
@@ -449,8 +522,12 @@ def main(argv):
             batch_sizes2 = sizes2[batch_start:batch_end]
 
             batch_feed_dict = {
-                sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
-                sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
+                sentence1_ph: batch_sentences1,
+                sentence1_len_ph: batch_sizes1,
+
+                sentence2_ph: batch_sentences2,
+                sentence2_len_ph: batch_sizes2,
+
                 dropout_keep_prob_ph: 1.0
             }
 
@@ -469,8 +546,8 @@ def main(argv):
             if is_corrupt:
                 search(sentences1=batch_sentences1, sizes1=batch_sizes1,
                        sentences2=batch_sentences2, sizes2=batch_sizes2,
-                       batch_size=batch_size)
-                sys.exit(0)
+                       batch_size=batch_size, epsilon=epsilon, lambda_w=lambda_w,
+                       inconsistency_loss=iloss)
 
         train_accuracy_value = np.mean(labels == np.array(predictions_int_value))
         logger.info('Accuracy: {0:.4f}'.format(train_accuracy_value))
