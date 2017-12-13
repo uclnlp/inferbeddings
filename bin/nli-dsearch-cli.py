@@ -575,6 +575,12 @@ def main(argv):
                 print('[E/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], e_losses[idx]))
                 print('[E/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], e_losses[idx]))
 
+                _sentence1, _size1 = sentences1[idx, :].reshape(1, -1), sizes1[idx].reshape(1)
+                _sentence2, _size2 = sentences2[idx, :].reshape(1, -1), sizes2[idx].reshape(1)
+                _ab = inference(_sentence1, _size1, _sentence2, _size2)
+                _ba = inference(_sentence2, _size2, _sentence1, _size1)
+                print('{}\t{}'.format(str(_ab), str(_ba)))
+
             n_ranking = np.argsort(np.array(n_losses))[::-1]
             assert n_ranking.shape[0] == len(data_is)
 
@@ -582,6 +588,12 @@ def main(argv):
                 idx = n_ranking[i]
                 print('[N/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], n_losses[idx]))
                 print('[N/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], n_losses[idx]))
+
+                _sentence1, _size1 = sentences1[idx, :].reshape(1, -1), sizes1[idx].reshape(1)
+                _sentence2, _size2 = sentences2[idx, :].reshape(1, -1), sizes2[idx].reshape(1)
+                _ab = inference(_sentence1, _size1, _sentence2, _size2)
+                _ba = inference(_sentence2, _size2, _sentence1, _size1)
+                print('{}\t{}'.format(str(_ab), str(_ba)))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
