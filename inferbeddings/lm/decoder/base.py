@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*
 
-import numpy as np
+from scipy.spatial.distance import cdist
 
 import logging
 
@@ -23,15 +23,18 @@ def decode(sequence_embedding, embedding_matrix, index_to_token=None):
     return res
 
 
-def find_nearest(vector, embedding_matrix):
+def find_nearest(vector, embedding_matrix, distance_name='cosine'):
     """
     Args:
         vector: vector with shape [embedding_size]
         embedding_matrix: matrix with shape [vocab_size, embedding_size]
+        distance_name: distance name
 
     Returns:
         index of the row in embedding_matrix which is closest to vector
     """
     assert vector.shape[0] == embedding_matrix.shape[1]
-    idx = np.abs(embedding_matrix - vector).sum(1).argmin()
+    idx = cdist(XA=embedding_matrix, XB=vector.reshape(1, -1), metric=distance_name) \
+        .reshape(-1) \
+        .argmin()
     return idx
