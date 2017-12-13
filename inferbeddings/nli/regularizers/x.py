@@ -223,7 +223,42 @@ class AdversarialSets:
 
         # loss = tf.nn.relu(body_score - head_score)
         loss = body_score - head_score
+        return loss, [sequence1, sequence2]
 
+    def rule6e_loss(self):
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='rule6n_sequence1')
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence2 = self._get_sequence(name='rule6n_sequence2')
+
+        # Probability that S1 entails S2
+        probability_s1_entails_s2 = self._probability(sequence1, sequence2, self.entailment_idx)
+        # Probability that S2 contradicts S1
+        probability_s2_contradicts_s1 = self._probability(sequence2, sequence1, self.contradiction_idx)
+
+        body_score = probability_s1_entails_s2
+        head_score = 1 - probability_s2_contradicts_s1
+
+        # loss = tf.nn.relu(body_score - head_score)
+        loss = body_score - head_score
+        return loss, [sequence1, sequence2]
+
+    def rule6n_loss(self):
+        # S1 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence1 = self._get_sequence(name='rule6n_sequence1')
+        # S2 - [batch_size, time_steps, embedding_size] sentence embedding.
+        sequence2 = self._get_sequence(name='rule6n_sequence2')
+
+        # Probability that S1 neutral S2
+        probability_s1_neutral_s2 = self._probability(sequence1, sequence2, self.neutral_idx)
+        # Probability that S2 contradicts S1
+        probability_s2_contradicts_s1 = self._probability(sequence2, sequence1, self.contradiction_idx)
+
+        body_score = probability_s1_neutral_s2
+        head_score = 1 - probability_s2_contradicts_s1
+
+        # loss = tf.nn.relu(body_score - head_score)
+        loss = body_score - head_score
         return loss, [sequence1, sequence2]
 
     def rule7_loss(self):

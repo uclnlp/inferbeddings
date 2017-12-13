@@ -101,6 +101,8 @@ def main(argv):
     argparser.add_argument('--restore', action='store', type=str, default=None)
     argparser.add_argument('--lm', action='store', type=str, default='models/lm/')
 
+    argparser.add_argument('--inconsistency', '-i', action='store', type=str, default='contradiction')
+
     args = argparser.parse_args(argv)
 
     # Command line arguments
@@ -122,6 +124,8 @@ def main(argv):
 
     restore_path = args.restore
     lm_path = args.lm
+
+    inconsistency_name = args.inconsistency
 
     np.random.seed(seed)
     tf.set_random_seed(seed)
@@ -280,7 +284,18 @@ def main(argv):
                                     contradiction_idx=contradiction_idx,
                                     neutral_idx=neutral_idx)
 
-        a_loss, a_sequence_lst = adversary.rule6_loss()
+        iloss = None
+        if inconsistency_name == 'contradiction':
+            iloss = adversary.rule6_loss
+        elif inconsistency_name == 'neutral':
+            iloss = adversary.rule6n_loss
+        elif inconsistency_name == 'entailment':
+            iloss = adversary.rule6e_loss
+
+        assert iloss is not None
+
+        a_loss, a_sequence_lst = iloss()
+
         a_sequence1_var, a_sequence2_var = a_sequence_lst
 
     a_optimizer_scope_name = 'adversary/optimizer'
@@ -339,7 +354,8 @@ def main(argv):
             sentence2_emb_value[0, i, :] = emb_layer_value[idx, :]
 
         assert len(a_sequence_lst) == 2
-        sentence1_emb_var, sentence2_emb_var = a_sequence_lst[0], a_sequence_lst[1]
+        sentence1_emb_var = a_sequence_lst[0]
+        sentence2_emb_var = a_sequence_lst[1]
 
         session.run(a_init_op)
 
@@ -351,7 +367,7 @@ def main(argv):
 
         session.run(a_optimizer_vars_init)
 
-        a_word_idx = 3
+        a_word_idx = 0
 
         for e_idx in range(1024):
             a_loss_value = session.run(a_loss, feed_dict={dropout_keep_prob_ph: 1})
@@ -368,15 +384,19 @@ def main(argv):
             session.run(a_step, feed_dict={dropout_keep_prob_ph: 1})
 
             # Clamping all word embeddings, except for the 3rd word
-            u_sentence2_emb = sentence2_emb_value.copy()
-            u_sentence2_emb[:, a_word_idx, :] = session.run(a_sequence2_var)[:, a_word_idx, :]
+            u_sentence2_emb_value = sentence2_emb_value.copy()
+            u_sentence2_emb_value[:, a_word_idx, :] = session.run(a_sequence2_var)[:, a_word_idx, :]
 
             # Normalising the embedding
-            u_sentence2_emb /= np.linalg.norm(u_sentence2_emb, axis=2).reshape((batch_size, -1, 1))
+            u_sentence2_emb_value /= np.linalg.norm(u_sentence2_emb_value, axis=2).reshape((batch_size, -1, 1))
 
             # Updating the embedding
-            feed = {a_var_value_ph: u_sentence2_emb}
+            feed = {a_var_value_ph: u_sentence2_emb_value}
             session.run(a_var_to_assign_op[sentence2_emb_var], feed_dict=feed)
+
+            # Compute the distances between the original and updated matrices
+            _div = np.abs(u_sentence2_emb_value[0, a_word_idx, :] - sentence2_emb_value[0, a_word_idx, :])
+            print('Divergence: {}'.format(_div.sum()))
 
 
 if __name__ == '__main__':

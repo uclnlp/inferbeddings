@@ -561,6 +561,12 @@ def main(argv):
                 print('[C/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence1'], c_losses[idx]))
                 print('[C/{}/{}] {} ({})'.format(i, idx, data_is[idx]['sentence2'], c_losses[idx]))
 
+                _sentence1, _size1 = sentences1[idx, :].reshape(1, -1), sizes1[idx].reshape(1)
+                _sentence2, _size2 = sentences2[idx, :].reshape(1, -1), sizes2[idx].reshape(1)
+                _ab = inference(_sentence1, _size1, _sentence2, _size2)
+                _ba = inference(_sentence2, _size2, _sentence1, _size1)
+                print('{}\t{}'.format(str(_ab), str(_ba)))
+
             e_ranking = np.argsort(np.array(e_losses))[::-1]
             assert e_ranking.shape[0] == len(data_is)
 
