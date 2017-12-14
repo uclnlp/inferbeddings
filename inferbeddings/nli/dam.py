@@ -56,7 +56,8 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         self.attention_sentence1 = self.attention_sentence2 = None
 
         # tensors with shape (batch_size, time_steps, num_units)
-        self.alpha, self.beta = self.attend(self.transformed_sequence1, self.transformed_sequence2,
+        self.alpha, self.beta = self.attend(sequence1=self.transformed_sequence1,
+                                            sequence2=self.transformed_sequence2,
                                             sequence1_lengths=self.transformed_sequence1_length,
                                             sequence2_lengths=self.transformed_sequence2_length,
                                             use_masking=use_masking, reuse=self.reuse)
@@ -70,7 +71,8 @@ class BaseDecomposableAttentionModel(BaseRTEModel):
         self.v2 = self.compare(self.transformed_sequence2, self.alpha, reuse=True)
 
         logger.info('Building the Aggregate graph ..')
-        self.logits = self.aggregate(self.v1, self.v2, self.nb_classes,
+        self.logits = self.aggregate(v1=self.v1, v2=self.v2,
+                                     num_classes=self.nb_classes,
                                      v1_lengths=self.transformed_sequence1_length,
                                      v2_lengths=self.transformed_sequence2_length,
                                      use_masking=use_masking, reuse=self.reuse)
