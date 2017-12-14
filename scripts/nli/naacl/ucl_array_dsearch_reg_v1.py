@@ -48,9 +48,9 @@ def main(argv):
     args = argparser.parse_args(argv)
 
     hyperparameters_space_1 = dict(
-        rule_id=['00', '01', '02', '03', '6'],
-        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0],
-        adversarial_pooling=['sum', 'max', 'mean']
+        rule_id=['6'],
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0],
+        adversarial_pooling=['sum', 'mean', 'max']
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
@@ -88,8 +88,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l tmem=16G
-#$ -l h_rt=8:00:00
+#$ -l tmem=12G
+#$ -l h_rt=6:00:00
 #$ -P gpu
 #$ -l gpu=1
 
