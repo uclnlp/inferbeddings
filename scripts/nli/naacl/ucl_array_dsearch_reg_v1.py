@@ -27,7 +27,7 @@ def to_cmd(c, idx, _path=None):
               '--nb-epochs 100 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 --{} {} -P {} ' \
               '-E data/snli/generated/snli_1.0_contradictions_*.gz ' \
-              '--hard-save models/snli/dam_1/naacl/dam_1_{}'\
+              '--hard-save models/snli/dam_1/naacl/dsearch_reg_v1/dam_1_{}'\
         .format(c['rule_id'], c['weight'], c['adversarial_pooling'], idx)
     return command
 
@@ -97,6 +97,7 @@ export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
 cd /home/pminervi/workspace/inferbeddings/
+mkdir -p models/snli/dam_1/naacl/dsearch_reg_v1/
 
 """.format(nb_jobs)
 
