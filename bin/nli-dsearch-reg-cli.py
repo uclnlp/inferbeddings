@@ -93,7 +93,8 @@ def main(argv):
     argparser.add_argument('--rule03-weight', '--03', action='store', type=float, default=None)
 
     for i in range(1, 9):
-        argparser.add_argument('--rule{}-weight'.format(i), '-{}'.format(i), action='store', type=float, default=None)
+        argparser.add_argument('--rule{}-weight'.format(i), '--{}'.format(i), '-{}'.format(i),
+                               action='store', type=float, default=None)
 
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-pooling', '-P', default='max', choices=['sum', 'max', 'mean', 'logsumexp'])
