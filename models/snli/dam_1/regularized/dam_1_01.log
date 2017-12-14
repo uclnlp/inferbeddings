@@ -1,0 +1,147 @@
+INFO:nli-smart-cli.py:Command line: -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 --representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform --nb-epochs 100 --has-bos --has-unk -p -S --restore models/snli/dam_1/dam_1 -B 1024 -P sum --01 1 --hard-save models/snli/dam_1/regularized/dam_1_01
+INFO:nli-smart-cli.py:has_bos: True, has_eos: False, has_unk: True
+INFO:nli-smart-cli.py:is_lower: False, is_fixed_embeddings: True, is_normalize_embeddings: True
+INFO:nli-smart-cli.py:is_only_use_pretrained_embeddings: True, is_semi_sort: True
+INFO:nli-smart-cli.py:Train size: 549367	Dev size: 9842	Test size: 9824
+INFO:nli-smart-cli.py:Initializing the embeddings with 𝒰(-1, 1)
+INFO:inferbeddings.nli.dam:Building the Attend graph ..
+INFO:inferbeddings.nli.dam:Building the Compare graph ..
+INFO:inferbeddings.nli.dam:Building the Aggregate graph ..
+INFO:inferbeddings.nli.dam:Building the Attend graph ..
+INFO:inferbeddings.nli.dam:Building the Compare graph ..
+INFO:inferbeddings.nli.dam:Building the Aggregate graph ..
+INFO:inferbeddings.nli.dam:Building the Attend graph ..
+INFO:inferbeddings.nli.dam:Building the Compare graph ..
+INFO:inferbeddings.nli.dam:Building the Aggregate graph ..
+2017-10-18 18:51:39.767553: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2017-10-18 18:51:39.767577: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-10-18 18:51:39.767582: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2017-10-18 18:51:39.767585: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-10-18 18:51:39.767589: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+INFO:root:discriminator/transform_embeddings/fully_connected/weights:0 ((300, 200)): 60000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/attend/transform_attend/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/transform_compare/fully_connected/weights:0 ((400, 200)): 80000 params
+INFO:root:discriminator/transform_compare/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/transform_compare/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/transform_compare/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/weights:0 ((400, 200)): 80000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/fully_connected/weights:0 ((200, 3)): 600 params
+INFO:root:discriminator/aggregate/fully_connected/biases:0 ((3,)): 3 params
+INFO:nli-smart-cli.py:Total Parameters: 381803
+INFO:root:discriminator/embeddings:0 ((38978, 300)): 11693400 params
+INFO:root:discriminator/transform_embeddings/fully_connected/weights:0 ((300, 200)): 60000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/attend/transform_attend/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/transform_compare/fully_connected/weights:0 ((400, 200)): 80000 params
+INFO:root:discriminator/transform_compare/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/transform_compare/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/transform_compare/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/weights:0 ((400, 200)): 80000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/fully_connected/weights:0 ((200, 3)): 600 params
+INFO:root:discriminator/aggregate/fully_connected/biases:0 ((3,)): 3 params
+INFO:nli-smart-cli.py:Total Discriminator Parameters: 12075203
+INFO:root:discriminator/transform_embeddings/fully_connected/weights:0 ((300, 200)): 60000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/attend/transform_attend/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/attend/transform_attend/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/transform_compare/fully_connected/weights:0 ((400, 200)): 80000 params
+INFO:root:discriminator/transform_compare/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/transform_compare/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/transform_compare/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/weights:0 ((400, 200)): 80000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/fully_connected/weights:0 ((200, 3)): 600 params
+INFO:root:discriminator/aggregate/fully_connected/biases:0 ((3,)): 3 params
+INFO:nli-smart-cli.py:Total Trainable Discriminator Parameters: 381803
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/dam_1
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/dam_1
+INFO:nli-smart-cli.py:Epoch 1/1/99	Loss Stats: 0.0749 ± 0.0252
+INFO:nli-smart-cli.py:Epoch 1/1/99	Dev Acc: 85.49	Test Acc: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/99	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/199	Loss Stats: 0.0683 ± 0.0250
+INFO:nli-smart-cli.py:Epoch 1/1/199	Dev Acc: 84.58	Test Acc: 84.68
+INFO:nli-smart-cli.py:Epoch 1/1/199	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/299	Loss Stats: 0.0665 ± 0.0230
+INFO:nli-smart-cli.py:Epoch 1/1/299	Dev Acc: 83.69	Test Acc: 83.79
+INFO:nli-smart-cli.py:Epoch 1/1/299	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/399	Loss Stats: 0.0705 ± 0.0224
+INFO:nli-smart-cli.py:Epoch 1/1/399	Dev Acc: 83.67	Test Acc: 83.76
+INFO:nli-smart-cli.py:Epoch 1/1/399	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/499	Loss Stats: 0.0648 ± 0.0224
+INFO:nli-smart-cli.py:Epoch 1/1/499	Dev Acc: 84.45	Test Acc: 84.75
+INFO:nli-smart-cli.py:Epoch 1/1/499	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/599	Loss Stats: 0.0672 ± 0.0266
+INFO:nli-smart-cli.py:Epoch 1/1/599	Dev Acc: 83.32	Test Acc: 83.55
+INFO:nli-smart-cli.py:Epoch 1/1/599	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/699	Loss Stats: 0.0650 ± 0.0245
+INFO:nli-smart-cli.py:Epoch 1/1/699	Dev Acc: 82.71	Test Acc: 82.95
+INFO:nli-smart-cli.py:Epoch 1/1/699	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/799	Loss Stats: 0.0652 ± 0.0232
+INFO:nli-smart-cli.py:Epoch 1/1/799	Dev Acc: 83.07	Test Acc: 83.39
+INFO:nli-smart-cli.py:Epoch 1/1/799	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/899	Loss Stats: 0.0635 ± 0.0198
+INFO:nli-smart-cli.py:Epoch 1/1/899	Dev Acc: 83.46	Test Acc: 83.90
+INFO:nli-smart-cli.py:Epoch 1/1/899	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/999	Loss Stats: 0.0679 ± 0.0256
+INFO:nli-smart-cli.py:Epoch 1/1/999	Dev Acc: 83.70	Test Acc: 83.80
+INFO:nli-smart-cli.py:Epoch 1/1/999	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1099	Loss Stats: 0.0672 ± 0.0250
+INFO:nli-smart-cli.py:Epoch 1/1/1099	Dev Acc: 84.13	Test Acc: 84.08
+INFO:nli-smart-cli.py:Epoch 1/1/1099	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1199	Loss Stats: 0.0606 ± 0.0235
+INFO:nli-smart-cli.py:Epoch 1/1/1199	Dev Acc: 83.58	Test Acc: 83.44
+INFO:nli-smart-cli.py:Epoch 1/1/1199	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1299	Loss Stats: 0.0645 ± 0.0278
+INFO:nli-smart-cli.py:Epoch 1/1/1299	Dev Acc: 83.79	Test Acc: 83.66
+INFO:nli-smart-cli.py:Epoch 1/1/1299	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1399	Loss Stats: 0.0620 ± 0.0243
+INFO:nli-smart-cli.py:Epoch 1/1/1399	Dev Acc: 82.55	Test Acc: 82.50
+INFO:nli-smart-cli.py:Epoch 1/1/1399	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1499	Loss Stats: 0.0642 ± 0.0215
+INFO:nli-smart-cli.py:Epoch 1/1/1499	Dev Acc: 83.18	Test Acc: 83.26
+INFO:nli-smart-cli.py:Epoch 1/1/1499	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1599	Loss Stats: 0.0654 ± 0.0262
+INFO:nli-smart-cli.py:Epoch 1/1/1599	Dev Acc: 83.50	Test Acc: 83.74
+INFO:nli-smart-cli.py:Epoch 1/1/1599	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1699	Loss Stats: 0.0672 ± 0.0253
+INFO:nli-smart-cli.py:Epoch 1/1/1699	Dev Acc: 82.39	Test Acc: 82.33
+INFO:nli-smart-cli.py:Epoch 1/1/1699	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1799	Loss Stats: 0.0567 ± 0.0202
+INFO:nli-smart-cli.py:Epoch 1/1/1799	Dev Acc: 82.44	Test Acc: 82.47
+INFO:nli-smart-cli.py:Epoch 1/1/1799	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1899	Loss Stats: 0.0656 ± 0.0279
+INFO:nli-smart-cli.py:Epoch 1/1/1899	Dev Acc: 83.11	Test Acc: 83.11
+INFO:nli-smart-cli.py:Epoch 1/1/1899	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+INFO:nli-smart-cli.py:Epoch 1/1/1999	Loss Stats: 0.0668 ± 0.0291
+INFO:nli-smart-cli.py:Epoch 1/1/1999	Dev Acc: 82.15	Test Acc: 82.34
+INFO:nli-smart-cli.py:Epoch 1/1/1999	Best Dev Accuracy: 85.49	Best Test Accuracy: 85.30
+Traceback (most recent call last):
+  File "./bin/nli-smart-cli.py", line 587, in <module>
+    main(sys.argv[1:])
+  File "./bin/nli-smart-cli.py", line 535, in main
+    _, loss_value = session.run([training_step, loss], feed_dict=batch_feed_dict)
+  File "/home/uclmr/.pyenv/versions/3.6.3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 895, in run
+    run_metadata_ptr)
+  File "/home/uclmr/.pyenv/versions/3.6.3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1124, in _run
+    feed_dict_tensor, options, run_metadata)
+  File "/home/uclmr/.pyenv/versions/3.6.3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1321, in _do_run
+    options, run_metadata)
+  File "/home/uclmr/.pyenv/versions/3.6.3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1327, in _do_call
+    return fn(*args)
+  File "/home/uclmr/.pyenv/versions/3.6.3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1306, in _run_fn
+    status, run_metadata)
+KeyboardInterrupt
