@@ -19,9 +19,7 @@ def summary(configuration):
     return '_'.join([('%s=%s' % (k, v)) for (k, v) in kvs])
 
 
-def to_cmd(c, idx, _path=None):
-    if _path is None:
-        _path = '/home/pminervi/workspace/inferbeddings/'
+def to_cmd(c, idx):
     command = 'PYTHONPATH=. xpy ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p ' \
@@ -76,7 +74,7 @@ def main(argv):
                 completed = 'Epoch 10/1' in content
 
         if not completed:
-            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx, _path=args.path), logfile)
+            command_line = '{} > {} 2>&1'.format(to_cmd(cfg, idx), logfile)
             command_lines += [command_line]
 
     nb_jobs = len(command_lines)
