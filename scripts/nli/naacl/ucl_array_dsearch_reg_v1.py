@@ -76,8 +76,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l tmem=12G
-#$ -l h_rt=6:00:00
+#$ -l tmem=20G
+#$ -l h_rt=12:00:00
 #$ -P gpu
 #$ -l gpu=1
 

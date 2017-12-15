@@ -19,7 +19,8 @@ def summary(configuration):
 
 
 def to_cmd(c, idx):
-    command = 'PYTHONPATH=. python3 ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+    command = 'PYTHONPATH=. python3 ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam ' \
+              '--batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 --{} {} -P {} ' \
@@ -76,8 +77,8 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=16G,tmem=16G
-#$ -l h_rt=12:00:00
+#$ -l h_vmem=24G,tmem=24G
+#$ -l h_rt=24:00:00
 
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
