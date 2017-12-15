@@ -6,7 +6,6 @@ import os
 import os.path
 
 import sys
-import argparse
 import logging
 
 
@@ -36,15 +35,6 @@ def to_logfile(c, path):
 
 
 def main(argv):
-    def formatter(prog):
-        return argparse.HelpFormatter(prog, max_help_position=100, width=200)
-
-    argparser = argparse.ArgumentParser('Generating experiments for the UCL cluster', formatter_class=formatter)
-    argparser.add_argument('--debug', '-D', action='store_true', help='Debug flag')
-    argparser.add_argument('--path', '-p', action='store', type=str, default=None, help='Path')
-
-    args = argparser.parse_args(argv)
-
     hyperparameters_space_1 = dict(
         rule_id=['6'],
         weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0],
