@@ -19,18 +19,19 @@ def summary(configuration):
 
 
 def to_cmd(c, idx):
-    command = 'PYTHONPATH=. xpy ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+    command = 'PYTHONPATH=. python3 ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam ' \
+              '--batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 100 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 --{} {} -P {} ' \
               '-E data/snli/generated/snli_1.0_contradictions_*.gz ' \
-              '--hard-save models/snli/dam_1/naacl/dsearch_reg_v1/dam_1_{}'\
+              '--hard-save models/snli/dam_1/naacl/dsearch_reg_v2/dam_1_{}'\
         .format(c['rule_id'], c['weight'], c['adversarial_pooling'], idx)
     return command
 
 
 def to_logfile(c, path):
-    outfile = "%s/ucl_dsearch_reg_v1.%s.log" % (path, summary(c))
+    outfile = "%s/ucl_dsearch_reg_v2.%s.log" % (path, summary(c))
     return outfile
 
 
@@ -43,7 +44,7 @@ def main(argv):
 
     configurations = list(cartesian_product(hyperparameters_space_1))
 
-    path = '/home/pminervi/workspace/inferbeddings/logs/nli/naacl/ucl_dsearch_reg_v1/'
+    path = '/home/pminervi/workspace/inferbeddings/logs/nli/naacl/ucl_dsearch_reg_v2/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pminervi/'):
@@ -76,16 +77,14 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l tmem=20G
-#$ -l h_rt=12:00:00
-#$ -P gpu
-#$ -l gpu=1
+#$ -l h_vmem=24G,tmem=24G
+#$ -l h_rt=24:00:00
 
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
 cd /home/pminervi/workspace/inferbeddings/
-mkdir -p models/snli/dam_1/naacl/dsearch_reg_v1/
+mkdir -p models/snli/dam_1/naacl/dsearch_reg_v2/
 
 """.format(nb_jobs)
 

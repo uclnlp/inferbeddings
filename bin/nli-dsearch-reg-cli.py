@@ -54,7 +54,7 @@ def main(argv):
     argparser.add_argument('--embedding-size', action='store', type=int, default=300)
     argparser.add_argument('--representation-size', action='store', type=int, default=200)
 
-    argparser.add_argument('--batch-size', action='store', type=int, default=1024)
+    argparser.add_argument('--batch-size', action='store', type=int, default=32)
 
     argparser.add_argument('--nb-epochs', '-e', action='store', type=int, default=1000)
     argparser.add_argument('--nb-discriminator-epochs', '-D', action='store', type=int, default=1)
