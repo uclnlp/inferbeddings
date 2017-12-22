@@ -76,10 +76,11 @@ def main(argv):
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l tmem=20G
+#$ -l tmem=12G
 #$ -l h_rt=6:00:00
+#$ -l gpu=1,gpu_pascal=1
 #$ -P gpu
-#$ -l gpu=1
+#$ -l tscratch=1G
 
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
