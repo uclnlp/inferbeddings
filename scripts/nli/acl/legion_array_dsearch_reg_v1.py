@@ -71,14 +71,14 @@ def main(argv):
 
     nb_jobs = len(command_lines)
 
-    header = """#!/bin/bash
+    header = """#!/bin/bash -l
 
 #$ -cwd
 #$ -S /bin/bash
 #$ -o /dev/null
 #$ -e /dev/null
 #$ -t 1-{}
-#$ -l h_vmem=24G,tmem=24G
+#$ -l mem=24G
 #$ -l h_rt=24:00:00
 
 export LANG="en_US.utf8"
