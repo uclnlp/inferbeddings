@@ -256,8 +256,10 @@ def main(argv):
 
     sentence1 = train_dataset['sentence1']
     sentence1_length = train_dataset['sentence1_length']
+
     sentence2 = train_dataset['sentence2']
     sentence2_length = train_dataset['sentence2_length']
+
     label = train_dataset['label']
 
     sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
