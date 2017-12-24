@@ -85,6 +85,8 @@ def main(argv):
 export LANG="en_US.utf8"
 export LANGUAGE="en_US:en"
 
+export LD_LIBRARY_PATH="/usr/local/cuda-8.0/lib64/:$LD_LIBRARY_PATH"
+
 cd /home/pminervi/workspace/inferbeddings/
 mkdir -p models/snli/dam_1/acl/uclgpu_dsearch_reg_v1/
 
