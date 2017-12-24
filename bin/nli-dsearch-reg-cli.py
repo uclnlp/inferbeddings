@@ -138,6 +138,9 @@ def main(argv):
     is_only_use_pretrained_embeddings = args.only_use_pretrained_embeddings
     is_semi_sort = args.semi_sort
 
+    import socket
+    logger.info('Hostname: {}'.format(socket.gethostname()))
+
     logger.info('has_bos: {}, has_eos: {}, has_unk: {}'.format(has_bos, has_eos, has_unk))
     logger.info('is_lower: {}, is_fixed_embeddings: {}, is_normalize_embeddings: {}'
                 .format(is_lower, is_fixed_embeddings, is_normalize_embeddings))
