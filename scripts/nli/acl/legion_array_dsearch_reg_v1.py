@@ -23,7 +23,7 @@ def to_cmd(c, idx):
               './bin/nli-dsearch-reg-cli.py -f -n -m ff-dam ' \
               '--batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
-              '--nb-epochs 100 --has-bos --has-unk -p ' \
+              '--nb-epochs 10 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 --{} {} -P {} ' \
               '-E data/snli/generated/snli_1.0_contradictions_*.gz ' \
               '--hard-save models/snli/dam_1/acl/legion_dsearch_reg_v1/dam_1_{}'\
