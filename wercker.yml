@@ -22,7 +22,7 @@ test-light:
       name: install
       code: |
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install
+        python -m pip install -e .[tf]
 
     - script:
         name: Run unit tests
@@ -37,7 +37,7 @@ test-slow:
       name: install
       code: |
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install
+        python -m pip install -e .[tf]
 
     - script:
         name: Run slow unit tests
@@ -52,7 +52,7 @@ test-veryslow:
       name: install
       code: |
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install
+        python -m pip install -e .[tf]
 
     - script:
         name: Run very slow unit tests
@@ -67,7 +67,7 @@ test-closedform:
       name: install
       code: |
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install
+        python -m pip install -e .[tf]
 
     - script:
         name: Run closed form solutions unit tests
