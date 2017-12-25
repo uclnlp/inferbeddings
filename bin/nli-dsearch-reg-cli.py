@@ -18,10 +18,7 @@ from inferbeddings.nli import util, tfutil
 from inferbeddings.nli.evaluation import util as eutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
-from inferbeddings.nli.regularizers.base import contradiction_symmetry_l1
-from inferbeddings.nli.regularizers.base import contradiction_symmetry_l2
-from inferbeddings.nli.regularizers.base import contradiction_kullback_leibler
-from inferbeddings.nli.regularizers.base import contradiction_jensen_shannon
+import inferbeddings.nli.regularizers.base as R
 
 from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3 as AdversarialSets
 
@@ -87,11 +84,10 @@ def main(argv):
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
 
-    argparser.add_argument('--rule00-weight', '--00', action='store', type=float, default=None)
-    argparser.add_argument('--rule01-weight', '--01', action='store', type=float, default=None)
-    argparser.add_argument('--rule02-weight', '--02', action='store', type=float, default=None)
-    argparser.add_argument('--rule03-weight', '--03', action='store', type=float, default=None)
-
+    for i in range(0, 7):
+        argparser.add_argument('--rule{:02d}-weight'.format(i),
+                               '--{:02d}'.format(i),
+                               action='store', type=float, default=None)
     for i in range(1, 9):
         argparser.add_argument('--rule{}-weight'.format(i), '--{}'.format(i), '-{}'.format(i),
                                action='store', type=float, default=None)
@@ -158,6 +154,9 @@ def main(argv):
     rule01_weight = args.rule01_weight
     rule02_weight = args.rule02_weight
     rule03_weight = args.rule03_weight
+    rule04_weight = args.rule04_weight
+    rule05_weight = args.rule05_weight
+    rule06_weight = args.rule06_weight
 
     rule1_weight = args.rule1_weight
     rule2_weight = args.rule2_weight
@@ -337,32 +336,65 @@ def main(argv):
 
         a_losses = None
         if rule00_weight:
-            a_loss, a_losses = contradiction_symmetry_l2(model_class, model_kwargs,
-                                                         contradiction_idx=contradiction_idx,
-                                                         pooling_function=a_pooling_function,
-                                                         debug=True)
+            a_loss, a_losses = R.contradiction_symmetry_l2(model_class, model_kwargs,
+                                                           entailment_idx=entailment_idx,
+                                                           contradiction_idx=contradiction_idx,
+                                                           neutral_idx=neutral_idx,
+                                                           pooling_function=a_pooling_function,
+                                                           debug=True)
             loss += rule00_weight * a_loss
 
         if rule01_weight:
-            a_loss, a_losses = contradiction_symmetry_l1(model_class, model_kwargs,
-                                                         contradiction_idx=contradiction_idx,
-                                                         pooling_function=a_pooling_function,
-                                                         debug=True)
+            a_loss, a_losses = R.contradiction_symmetry_l1(model_class, model_kwargs,
+                                                           entailment_idx=entailment_idx,
+                                                           contradiction_idx=contradiction_idx,
+                                                           neutral_idx=neutral_idx,
+                                                           pooling_function=a_pooling_function,
+                                                           debug=True)
             loss += rule01_weight * a_loss
 
         if rule02_weight:
-            a_loss, a_losses = contradiction_kullback_leibler(model_class, model_kwargs,
-                                                              contradiction_idx=contradiction_idx,
-                                                              pooling_function=a_pooling_function,
-                                                              debug=True)
+            a_loss, a_losses = R.contradiction_kullback_leibler(model_class, model_kwargs,
+                                                                entailment_idx=entailment_idx,
+                                                                contradiction_idx=contradiction_idx,
+                                                                neutral_idx=neutral_idx,
+                                                                pooling_function=a_pooling_function,
+                                                                debug=True)
             loss += rule02_weight * a_loss
 
         if rule03_weight:
-            a_loss, a_losses = contradiction_jensen_shannon(model_class, model_kwargs,
-                                                            contradiction_idx=contradiction_idx,
-                                                            pooling_function=a_pooling_function,
-                                                            debug=True)
+            a_loss, a_losses = R.contradiction_jensen_shannon(model_class, model_kwargs,
+                                                              entailment_idx=entailment_idx,
+                                                              contradiction_idx=contradiction_idx,
+                                                              neutral_idx=neutral_idx,
+                                                              pooling_function=a_pooling_function,
+                                                              debug=True)
             loss += rule03_weight * a_loss
+
+        if rule04_weight:
+            a_loss, a_losses = R.contradiction_acl(model_class, model_kwargs,
+                                                   entailment_idx=entailment_idx,
+                                                   contradiction_idx=contradiction_idx,
+                                                   neutral_idx=neutral_idx,
+                                                   pooling_function=a_pooling_function,
+                                                   debug=True)
+            loss += rule04_weight * a_loss
+        if rule05_weight:
+            a_loss, a_losses = R.entailment_acl(model_class, model_kwargs,
+                                                entailment_idx=entailment_idx,
+                                                contradiction_idx=contradiction_idx,
+                                                neutral_idx=neutral_idx,
+                                                pooling_function=a_pooling_function,
+                                                debug=True)
+            loss += rule05_weight * a_loss
+        if rule06_weight:
+            a_loss, a_losses = R.neutral_acl(model_class, model_kwargs,
+                                             entailment_idx=entailment_idx,
+                                             contradiction_idx=contradiction_idx,
+                                             neutral_idx=neutral_idx,
+                                             pooling_function=a_pooling_function,
+                                             debug=True)
+            loss += rule06_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
@@ -533,7 +565,7 @@ def main(argv):
                 for rule_idx, rule_placeholders in rule_id_to_placeholders.items():
 
                     a_idxs = a_rs.choice(a_batch_size, nb_train_sentences)
-                    for a_sentence_ph, a_sentence_len_ph in rule_placeholders:
+                    for (a_sentence_ph, a_sentence_len_ph) in rule_placeholders:
                         # Select a random sentence from the training set
                         a_sentence_batch = d_sentence[a_idxs]
                         a_sentence_len_batch = d_sentence_len[a_idxs]

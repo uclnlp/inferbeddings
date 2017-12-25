@@ -38,8 +38,8 @@ def to_logfile(c, path):
 
 def main(argv):
     hyperparameters_space_1 = dict(
-        rule_id=['6'],
-        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0],
+        rule_id=['04', '05', '06'],
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
         adversarial_pooling=['sum', 'mean', 'max']
     )
 
