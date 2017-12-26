@@ -19,7 +19,8 @@ def summary(configuration):
 
 
 def to_cmd(c, idx):
-    command = 'PYTHONPATH=. xpy ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
+    command = 'CUDA_VISIBLE_DEVICES=`./tools/least_used_gpu.sh` PYTHONPATH=. ' \
+              'xpy ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 10 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 --{} {} -P {} ' \
@@ -95,7 +96,7 @@ mkdir -p models/snli/dam_1/acl/uclgpu_dsearch_reg_v1/
     print(header)
 
     for job_id, command_line in enumerate(command_lines, 1):
-        print('sleep 10 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
+        print('sleep 60 && test $SGE_TASK_ID -eq {} && {}'.format(job_id, command_line))
 
 
 if __name__ == '__main__':
