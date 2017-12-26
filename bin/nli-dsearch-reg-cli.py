@@ -7,6 +7,7 @@ import os
 import sys
 
 import pickle
+import socket
 
 import numpy as np
 import tensorflow as tf
@@ -43,8 +44,9 @@ def main(argv):
     argparser.add_argument('--valid', '-v', action='store', type=str, default='data/snli/snli_1.0_dev.jsonl.gz')
     argparser.add_argument('--test', '-T', action='store', type=str, default='data/snli/snli_1.0_test.jsonl.gz')
 
-    argparser.add_argument('--model', '-m', action='store', type=str, default='cbilstm',
+    argparser.add_argument('--model', '-m', action='store', type=str, default='ff-dam',
                            choices=['cbilstm', 'ff-dam', 'ff-damp', 'ff-dams', 'esim1'])
+
     argparser.add_argument('--optimizer', '-o', action='store', type=str, default='adagrad',
                            choices=['adagrad', 'adam'])
 
@@ -134,7 +136,6 @@ def main(argv):
     is_only_use_pretrained_embeddings = args.only_use_pretrained_embeddings
     is_semi_sort = args.semi_sort
 
-    import socket
     logger.info('Hostname: {}'.format(socket.gethostname()))
 
     logger.info('has_bos: {}, has_eos: {}, has_unk: {}'.format(has_bos, has_eos, has_unk))
@@ -337,66 +338,32 @@ def main(argv):
 
         a_pooling_function = name_to_adversarial_pooling[adversarial_pooling_name]
 
+        a_kwargs = dict(model_class=model_class, model_kwargs=model_kwargs,
+                        entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx,
+                        pooling_function=a_pooling_function,
+                        debug=True)
+
         a_losses = None
         if rule00_weight:
-            a_loss, a_losses = R.contradiction_symmetry_l2(model_class, model_kwargs,
-                                                           entailment_idx=entailment_idx,
-                                                           contradiction_idx=contradiction_idx,
-                                                           neutral_idx=neutral_idx,
-                                                           pooling_function=a_pooling_function,
-                                                           debug=True)
+            a_loss, a_losses = R.contradiction_symmetry_l2(**a_kwargs)
             loss += rule00_weight * a_loss
-
         if rule01_weight:
-            a_loss, a_losses = R.contradiction_symmetry_l1(model_class, model_kwargs,
-                                                           entailment_idx=entailment_idx,
-                                                           contradiction_idx=contradiction_idx,
-                                                           neutral_idx=neutral_idx,
-                                                           pooling_function=a_pooling_function,
-                                                           debug=True)
+            a_loss, a_losses = R.contradiction_symmetry_l1(**a_kwargs)
             loss += rule01_weight * a_loss
-
         if rule02_weight:
-            a_loss, a_losses = R.contradiction_kullback_leibler(model_class, model_kwargs,
-                                                                entailment_idx=entailment_idx,
-                                                                contradiction_idx=contradiction_idx,
-                                                                neutral_idx=neutral_idx,
-                                                                pooling_function=a_pooling_function,
-                                                                debug=True)
+            a_loss, a_losses = R.contradiction_kullback_leibler(**a_kwargs)
             loss += rule02_weight * a_loss
-
         if rule03_weight:
-            a_loss, a_losses = R.contradiction_jensen_shannon(model_class, model_kwargs,
-                                                              entailment_idx=entailment_idx,
-                                                              contradiction_idx=contradiction_idx,
-                                                              neutral_idx=neutral_idx,
-                                                              pooling_function=a_pooling_function,
-                                                              debug=True)
+            a_loss, a_losses = R.contradiction_jensen_shannon(**a_kwargs)
             loss += rule03_weight * a_loss
-
         if rule04_weight:
-            a_loss, a_losses = R.contradiction_acl(model_class, model_kwargs,
-                                                   entailment_idx=entailment_idx,
-                                                   contradiction_idx=contradiction_idx,
-                                                   neutral_idx=neutral_idx,
-                                                   pooling_function=a_pooling_function,
-                                                   debug=True)
+            a_loss, a_losses = R.contradiction_acl(**a_kwargs)
             loss += rule04_weight * a_loss
         if rule05_weight:
-            a_loss, a_losses = R.entailment_acl(model_class, model_kwargs,
-                                                entailment_idx=entailment_idx,
-                                                contradiction_idx=contradiction_idx,
-                                                neutral_idx=neutral_idx,
-                                                pooling_function=a_pooling_function,
-                                                debug=True)
+            a_loss, a_losses = R.entailment_acl(**a_kwargs)
             loss += rule05_weight * a_loss
         if rule06_weight:
-            a_loss, a_losses = R.neutral_acl(model_class, model_kwargs,
-                                             entailment_idx=entailment_idx,
-                                             contradiction_idx=contradiction_idx,
-                                             neutral_idx=neutral_idx,
-                                             pooling_function=a_pooling_function,
-                                             debug=True)
+            a_loss, a_losses = R.neutral_acl(**a_kwargs)
             loss += rule06_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
@@ -436,78 +403,7 @@ def main(argv):
     predictions_int = tf.cast(predictions, tf.int32)
     labels_int = tf.cast(label_ph, tf.int32)
 
-    use_adversarial_training = rule1_weight or rule2_weight or rule3_weight or rule4_weight or rule5_weight or rule6_weight or rule7_weight or rule8_weight
-
-    rule_id_to_placeholders = dict()
-
-    if use_adversarial_training:
-        adversary_scope_name = discriminator_scope_name
-        with tf.variable_scope(adversary_scope_name):
-
-            adversary = AdversarialSets(model_class=model_class,
-                                        model_kwargs=model_kwargs,
-                                        scope_name='adversary',
-                                        entailment_idx=entailment_idx,
-                                        contradiction_idx=contradiction_idx,
-                                        neutral_idx=neutral_idx)
-
-            adversary_loss = tf.constant(0.0, dtype=tf.float32)
-
-            adversarial_pooling = name_to_adversarial_pooling[adversarial_pooling_name]
-
-            def f(rule_idx):
-                nb_sequences = adversary.rule_nb_sequences(rule_idx)
-                a_args, rule_placeholders = [], []
-
-                for seq_id in range(nb_sequences):
-                    a_sentence_ph = tf.placeholder(dtype=tf.int32, shape=[None, None],
-                                                   name='a_rule{}_sentence{}'.format(rule_idx, seq_id))
-                    a_sentence_len_ph = tf.placeholder(dtype=tf.int32, shape=[None],
-                                                       name='a_rule{}_sentence{}_length'.format(rule_idx, seq_id))
-
-                    a_clipped_sentence = tfutil.clip_sentence(a_sentence_ph, a_sentence_len_ph)
-                    a_sentence_embedding = tf.nn.embedding_lookup(embedding_layer, a_clipped_sentence)
-
-                    a_args += [a_sentence_embedding, a_sentence_len_ph]
-                    rule_placeholders += [(a_sentence_ph, a_sentence_len_ph)]
-
-                rule_id_to_placeholders[rule_idx] = rule_placeholders
-
-                rule_f = getattr(adversary, 'rule{}_loss'.format(rule_idx))
-                rule_loss = rule_f(*a_args)
-                return rule_loss
-
-            if rule1_weight:
-                r_loss = f(1)
-                adversary_loss += rule1_weight * adversarial_pooling(r_loss)
-            if rule2_weight:
-                r_loss = f(2)
-                adversary_loss += rule2_weight * adversarial_pooling(r_loss)
-            if rule3_weight:
-                r_loss = f(3)
-                adversary_loss += rule3_weight * adversarial_pooling(r_loss)
-            if rule4_weight:
-                r_loss = f(4)
-                adversary_loss += rule4_weight * adversarial_pooling(r_loss)
-            if rule5_weight:
-                r_loss = f(5)
-                adversary_loss += rule5_weight * adversarial_pooling(r_loss)
-            if rule6_weight:
-                r_loss = f(6)
-                adversary_loss += rule6_weight * adversarial_pooling(r_loss)
-            if rule7_weight:
-                r_loss = f(7)
-                adversary_loss += rule7_weight * adversarial_pooling(r_loss)
-            if rule8_weight:
-                r_loss = f(8)
-                adversary_loss += rule8_weight * adversarial_pooling(r_loss)
-
-            loss += adversary_loss
-
-        logger.info('Adversarial Batch Size: {}'.format(a_batch_size))
-
     a_feed_dict = dict()
-    a_rs = np.random.RandomState(seed)
 
     d_sentence1, d_sentence2 = train_dataset['sentence1'], train_dataset['sentence2']
     d_sentence1_len, d_sentence2_len = train_dataset['sentence1_length'], train_dataset['sentence2_length']
@@ -521,8 +417,6 @@ def main(argv):
     d_sentence[d_sentence1.shape[0]:, 0:d_sentence2.shape[1]] = d_sentence2
 
     d_sentence_len = np.concatenate((d_sentence1_len, d_sentence2_len), axis=0)
-
-    nb_train_sentences = d_sentence_len.shape[0]
 
     saver = tf.train.Saver(discriminator_vars + discriminator_optimizer_vars, max_to_keep=1)
 
@@ -563,19 +457,6 @@ def main(argv):
         discriminator_batch_counter = 0
 
         for epoch in range(1, nb_epochs + 1):
-
-            if use_adversarial_training:
-                for rule_idx, rule_placeholders in rule_id_to_placeholders.items():
-
-                    a_idxs = a_rs.choice(a_batch_size, nb_train_sentences)
-                    for (a_sentence_ph, a_sentence_len_ph) in rule_placeholders:
-                        # Select a random sentence from the training set
-                        a_sentence_batch = d_sentence[a_idxs]
-                        a_sentence_len_batch = d_sentence_len[a_idxs]
-
-                        a_feed_dict[a_sentence_ph] = a_sentence_batch
-                        a_feed_dict[a_sentence_len_ph] = a_sentence_len_batch
-
             for d_epoch in range(1, nb_discriminator_epochs + 1):
                 order = rs.permutation(nb_instances)
 
