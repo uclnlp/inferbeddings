@@ -225,7 +225,10 @@ def main(argv):
 
         index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
     else:
-        with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
+        vocab_path = '{}_index_to_token.p'.format(restore_path)
+
+        logger.info('Restoring vocabulary from {} ..'.format(vocab_path))
+        with open(vocab_path, 'rb') as f:
             index_to_token = pickle.load(f)
 
     token_to_index = {token: index for index, token in index_to_token.items()}
