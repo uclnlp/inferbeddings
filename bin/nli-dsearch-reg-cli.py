@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Sample usage:
+
+$ python3 ./bin/nli-dsearch-reg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8
+--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform --nb-epochs 10 --has-bos --has-unk
+-p -S --restore models/snli/dam_1/dam_1 --04 0.0 -P sum -E data/snli/generated/snli_1.0_contradictions_*.gz
+--hard-save models/snli/dam_1/acl/batch_dsearch_reg_v1/dam_1_0
+"""
+
+
 import argparse
 
 import os
@@ -20,8 +30,6 @@ from inferbeddings.nli.evaluation import util as eutil
 from inferbeddings.nli import ConditionalBiLSTM, FeedForwardDAM, FeedForwardDAMP, FeedForwardDAMS, ESIMv1
 
 import inferbeddings.nli.regularizers.base as R
-
-from inferbeddings.nli.regularizers.adversarial3 import AdversarialSets3 as AdversarialSets
 
 from inferbeddings.models.training import constraints
 
@@ -87,18 +95,14 @@ def main(argv):
     argparser.add_argument('--glove', action='store', type=str, default=None)
 
     for i in range(0, 7):
-        argparser.add_argument('--rule{:02d}-weight'.format(i),
-                               '--{:02d}'.format(i),
-                               action='store', type=float, default=None)
-    for i in range(1, 9):
-        argparser.add_argument('--rule{}-weight'.format(i), '--{}'.format(i), '-{}'.format(i),
+        argparser.add_argument('--rule{:02d}-weight'.format(i), '--{:02d}'.format(i),
                                action='store', type=float, default=None)
 
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-pooling', '-P', default='max', choices=['sum', 'max', 'mean', 'logsumexp'])
 
-    argparser.add_argument('--report', '-r', default=100, type=int, help='Number of batches between performance reports')
-    argparser.add_argument('--report-loss', default=100, type=int, help='Number of batches between loss reports')
+    argparser.add_argument('--report', '-r', default=10, type=int, help='Number of batches between performance reports')
+    argparser.add_argument('--report-loss', default=1000, type=int, help='Number of batches between loss reports')
 
     argparser.add_argument('--eval', '-E', nargs='+', type=str, help='Evaluate on these additional sets')
 
@@ -159,16 +163,6 @@ def main(argv):
     rule05_weight = args.rule05_weight
     rule06_weight = args.rule06_weight
 
-    rule1_weight = args.rule1_weight
-    rule2_weight = args.rule2_weight
-    rule3_weight = args.rule3_weight
-    rule4_weight = args.rule4_weight
-    rule5_weight = args.rule5_weight
-    rule6_weight = args.rule6_weight
-    rule7_weight = args.rule7_weight
-    rule8_weight = args.rule8_weight
-
-    a_batch_size = args.adversarial_batch_size
     adversarial_pooling_name = args.adversarial_pooling
 
     name_to_adversarial_pooling = {
@@ -227,8 +221,8 @@ def main(argv):
         index_to_token = {index: token for index, token in enumerate(sorted_vocabulary, start=start_idx)}
     else:
         vocab_path = '{}_index_to_token.p'.format(restore_path)
-
         logger.info('Restoring vocabulary from {} ..'.format(vocab_path))
+
         with open(vocab_path, 'rb') as f:
             index_to_token = pickle.load(f)
 
@@ -340,8 +334,7 @@ def main(argv):
 
         a_kwargs = dict(model_class=model_class, model_kwargs=model_kwargs,
                         entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx,
-                        pooling_function=a_pooling_function,
-                        debug=True)
+                        pooling_function=a_pooling_function, debug=True)
 
         a_losses = None
         if rule00_weight:
@@ -474,8 +467,12 @@ def main(argv):
                 for batch_idx, (batch_start, batch_end) in enumerate(batches):
                     discriminator_batch_counter += 1
 
-                    batch_sentences1, batch_sentences2 = sentences1[batch_start:batch_end], sentences2[batch_start:batch_end]
-                    batch_sizes1, batch_sizes2 = sizes1[batch_start:batch_end], sizes2[batch_start:batch_end]
+                    batch_sentences1 = sentences1[batch_start:batch_end]
+                    batch_sentences2 = sentences2[batch_start:batch_end]
+
+                    batch_sizes1 = sizes1[batch_start:batch_end]
+                    batch_sizes2 = sizes2[batch_start:batch_end]
+
                     batch_labels = labels[batch_start:batch_end]
 
                     batch_max_size1 = np.max(batch_sizes1)
@@ -485,9 +482,14 @@ def main(argv):
                     batch_sentences2 = batch_sentences2[:, :batch_max_size2]
 
                     batch_feed_dict = {
-                        sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
-                        sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
-                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob
+                        sentence1_ph: batch_sentences1,
+                        sentence1_len_ph: batch_sizes1,
+
+                        sentence2_ph: batch_sentences2,
+                        sentence2_len_ph: batch_sizes2,
+
+                        label_ph: batch_labels,
+                        dropout_keep_prob_ph: dropout_keep_prob
                     }
 
                     # Adding the adversaries
