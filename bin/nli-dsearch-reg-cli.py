@@ -101,8 +101,10 @@ def main(argv):
     argparser.add_argument('--adversarial-batch-size', '-B', action='store', type=int, default=32)
     argparser.add_argument('--adversarial-pooling', '-P', default='max', choices=['sum', 'max', 'mean', 'logsumexp'])
 
-    argparser.add_argument('--report', '-r', default=1000, type=int, help='Number of batches between performance reports')
-    argparser.add_argument('--report-loss', default=10, type=int, help='Number of batches between loss reports')
+    argparser.add_argument('--report', '-r', default=10000, type=int,
+                           help='Number of batches between performance reports')
+    argparser.add_argument('--report-loss', default=100, type=int,
+                           help='Number of batches between loss reports')
 
     argparser.add_argument('--eval', '-E', nargs='+', type=str, help='Evaluate on these additional sets')
 
