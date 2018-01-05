@@ -92,7 +92,7 @@ def inference(sentences1, sizes1, sentences2, sizes2):
     return [to_dict(probabilities_value[i, :]) for i in range(probabilities_value.shape[0])]
 
 
-def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
+def contradiction_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -111,7 +111,7 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2):
     return res
 
 
-def entailment_loss(sentences1, sizes1, sentences2, sizes2):
+def entailment_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -130,8 +130,7 @@ def entailment_loss(sentences1, sizes1, sentences2, sizes2):
     return res
 
 
-def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2,
-                                 sentences3, sizes3):
+def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2, sentences3, sizes3):
     feed_dict_12 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -162,7 +161,8 @@ def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2,
     res = relu(body_score - head_score)
     return res
 
-def neutral_loss(sentences1, sizes1, sentences2, sizes2):
+
+def neutral_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -182,47 +182,76 @@ def neutral_loss(sentences1, sizes1, sentences2, sizes2):
 
 
 def joint_loss(sentences1, sizes1, sentences2, sizes2,
-         lambda_w=0.1, inconsistency_loss=contradiction_loss):
+               sentences3=None, sizes3=None,
+               lambda_w=0.1, inconsistency_loss=contradiction_loss):
+
     inconsistency_loss_value = inconsistency_loss(sentences1=sentences1, sizes1=sizes1,
-                                                  sentences2=sentences2, sizes2=sizes2)
+                                                  sentences2=sentences2, sizes2=sizes2,
+                                                  sentences3=sentences3, sizes3=sizes3)
 
     log_perplexity_1_value = log_perplexity(sentences=sentences1, sizes=sizes1)
     log_perplexity_2_value = log_perplexity(sentences=sentences2, sizes=sizes2)
 
     log_perplexity_value = log_perplexity_1_value + log_perplexity_2_value
 
+    if sentences3 is not None:
+        log_perplexity_3_value = log_perplexity(sentences=sentences3, sizes=sizes3)
+        log_perplexity_value += log_perplexity_3_value
+
     loss_value = inconsistency_loss_value - lambda_w * log_perplexity_value
 
     return loss_value, inconsistency_loss_value, log_perplexity_value
 
 
-def corrupt(sentence1, size1, sentence2, size2,
+def corrupt(sentence1, size1,
+            sentence2, size2,
+            sentence3=None, size3=None,
             nb_corruptions=1024, nb_words=512):
+
     corruptions1 = np.repeat(a=[sentence1], repeats=nb_corruptions, axis=0)
     corruptions2 = np.repeat(a=[sentence2], repeats=nb_corruptions, axis=0)
+
+    corruptions3 = None
+    if sentence3 is not None:
+        corruptions2 = np.repeat(a=[sentence3], repeats=nb_corruptions, axis=0)
+
     assert corruptions1.shape == (nb_corruptions, sentence1.shape[0])
 
     sizes1 = np.repeat(a=size1, repeats=nb_corruptions, axis=0)
     sizes2 = np.repeat(a=size2, repeats=nb_corruptions, axis=0)
+
+    sizes3 = None
+    if sentence3 is not None:
+        sizes3 = np.repeat(a=size3, repeats=nb_corruptions, axis=0)
+
     assert sizes1.shape[0] == corruptions1.shape[0]
 
     # Corrupt corruptions2
     for i in range(nb_corruptions):
         # Do not corrupt the last token - usually a '.' - corresponding to high=sizes2[i]
-        where_to_corrupt = rs.randint(low=1, high=sizes2[i] - 1)
-        new_word = rs.randint(low=1, high=nb_words)
-        corruptions2[i, where_to_corrupt] = new_word
 
-    return corruptions1, sizes1, corruptions2, sizes2
+        if corruptions3 is None:
+            where_to_corrupt = rs.randint(low=1, high=sizes2[i] - 1)
+            new_word = rs.randint(low=1, high=nb_words)
+            corruptions2[i, where_to_corrupt] = new_word
+        else:
+            where_to_corrupt = rs.randint(low=1, high=sizes3[i] - 1)
+            new_word = rs.randint(low=1, high=nb_words)
+            corruptions3[i, where_to_corrupt] = new_word
+
+    return (corruptions1, sizes1), (corruptions2, sizes2), (corruptions3, sizes3)
 
 
-def search(sentences1, sizes1, sentences2, sizes2,
+def search(sentences1, sizes1,
+           sentences2, sizes2,
+           sentences3=None, sizes3=None,
            lambda_w=0.1, inconsistency_loss=contradiction_loss,
            epsilon=1e-4, batch_size=32,
            nb_corruptions=1024, nb_words=256):
 
     loss_value, iloss_value, logperp_value = joint_loss(sentences1=sentences1, sizes1=sizes1,
                                                         sentences2=sentences2, sizes2=sizes2,
+                                                        sentences3=sentences3, sizes3=sizes3,
                                                         lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
 
     # Find examples that have a nearly-zero inconsistency loss, and only work on making those more "adversarial"
@@ -232,20 +261,35 @@ def search(sentences1, sizes1, sentences2, sizes2,
         sentence1, size1 = sentences1[low_iloss_idx, :], sizes1[low_iloss_idx]
         sentence2, size2 = sentences2[low_iloss_idx, :], sizes2[low_iloss_idx]
 
+        sentence3, size3 = None, None
+        if sentences3:
+            sentence3, size3 = sentences3[low_iloss_idx, :], sizes3[low_iloss_idx]
+
         sample_loss_value, sample_iloss_value, sample_logperp_value = \
             loss_value[low_iloss_idx], iloss_value[low_iloss_idx], logperp_value[low_iloss_idx]
 
         sentence1_str = ' '.join([index_to_token[tidx] for tidx in sentence1 if tidx != 0])
         sentence2_str = ' '.join([index_to_token[tidx] for tidx in sentence2 if tidx != 0])
 
+        sentence3_str = None
+        if sentence3:
+            sentence3_str = ' '.join([index_to_token[tidx] for tidx in sentence3 if tidx != 0])
+
         print('SENTENCE 1 (inconsistency loss: {} / log-perplexity: {}): {}'
               .format(sample_iloss_value, sample_logperp_value, sentence1_str))
+
         print('SENTENCE 2 (inconsistency loss: {} / log-perplexity: {}): {}'
               .format(sample_iloss_value, sample_logperp_value, sentence2_str))
 
+        if sentences3:
+            print('SENTENCE 3 (inconsistency loss: {} / log-perplexity: {}): {}'
+                  .format(sample_iloss_value, sample_logperp_value, sentence2_str))
+
         # Generate mutations that do not increase the perplexity too much, and maximise the inconsistency loss
-        corruptions1, corruption_sizes1, corruptions2, corruption_sizes2 = \
-            corrupt(sentence1=sentence1, size1=size1, sentence2=sentence2, size2=size2,
+        (corruptions1, corruption_sizes1), (corruptions2, corruption_sizes2), (corruptions3, corruption_sizes3) =\
+            corrupt(sentence1=sentence1, size1=size1,
+                    sentence2=sentence2, size2=size2,
+                    sentence3=sentence3, size3=size3,
                     nb_corruptions=nb_corruptions, nb_words=nb_words)
 
         # Compute all relevant metrics for the corruptions
@@ -254,15 +298,22 @@ def search(sentences1, sizes1, sentences2, sizes2,
 
         corruption_loss_values, corruption_iloss_values, corruption_logperp_values = [], [], []
         for batch_start, batch_end in batches:
+
             batch_corruptions1 = corruptions1[batch_start:batch_end, :]
             batch_corruption_sizes1 = corruption_sizes1[batch_start:batch_end]
 
             batch_corruptions2 = corruptions2[batch_start:batch_end, :]
             batch_corruption_sizes2 = corruption_sizes2[batch_start:batch_end]
 
+            batch_corruptions3, batch_corruption_sizes3 = None, None
+            if corruptions3 is not None:
+                batch_corruptions3 = corruptions3[batch_start:batch_end, :]
+                batch_corruption_sizes3 = corruption_sizes3[batch_start:batch_end]
+
             batch_loss_values, batch_iloss_values, batch_logperp_values = \
                 joint_loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
                            sentences2=batch_corruptions2, sizes2=batch_corruption_sizes2,
+                           sentences3=batch_corruptions3, sizes3=batch_corruption_sizes3,
                            lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
 
             corruption_loss_values += batch_loss_values.tolist()
