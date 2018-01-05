@@ -92,7 +92,8 @@ def inference(sentences1, sizes1, sentences2, sizes2):
     return [to_dict(probabilities_value[i, :]) for i in range(probabilities_value.shape[0])]
 
 
-def contradiction_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
+def contradiction_loss(sentences1, sizes1, sentences2, sizes2,
+                       sentences3=None, sizes3=None):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -111,7 +112,8 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
     return res
 
 
-def entailment_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
+def entailment_loss(sentences1, sizes1, sentences2, sizes2,
+                    sentences3=None, sizes3=None):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -162,7 +164,8 @@ def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2, sentenc
     return res
 
 
-def neutral_loss(sentences1, sizes1, sentences2, sizes2, *args, **kwargs):
+def neutral_loss(sentences1, sizes1, sentences2, sizes2,
+                 sentences3=None, sizes3=None):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -431,7 +434,8 @@ def main(argv):
         iloss = neutral_loss
     elif inconsistency_name == 'entailment':
         iloss = entailment_loss
-
+    elif inconsistency_name == 'entailment-t'
+        iloss = entailment_transitivity_loss
     assert iloss is not None
 
     np.random.seed(seed)
