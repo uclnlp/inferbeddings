@@ -130,6 +130,38 @@ def entailment_loss(sentences1, sizes1, sentences2, sizes2):
     return res
 
 
+def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2,
+                                 sentences3, sizes3):
+    feed_dict_12 = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences2, sentence2_len_ph: sizes2,
+        dropout_keep_prob_ph: 1.0
+    }
+    feed_dict_23 = {
+        sentence1_ph: sentences2, sentence1_len_ph: sizes2,
+        sentence2_ph: sentences3, sentence2_len_ph: sizes3,
+        dropout_keep_prob_ph: 1.0
+    }
+    feed_dict_13 = {
+        sentence1_ph: sentences1, sentence1_len_ph: sizes1,
+        sentence2_ph: sentences3, sentence2_len_ph: sizes3,
+        dropout_keep_prob_ph: 1.0
+    }
+
+    probabilities_12 = session.run(probabilities, feed_dict=feed_dict_12)
+    probabilities_23 = session.run(probabilities, feed_dict=feed_dict_23)
+    probabilities_13 = session.run(probabilities, feed_dict=feed_dict_13)
+
+    ent_12 = probabilities_12[:, entailment_idx]
+    ent_23 = probabilities_23[:, entailment_idx]
+    ent_13 = probabilities_13[:, entailment_idx]
+
+    body_score = tf.minimum(ent_12, ent_23)
+    head_score = ent_13
+
+    res = relu(body_score - head_score)
+    return res
+
 def neutral_loss(sentences1, sizes1, sentences2, sizes2):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
@@ -149,7 +181,7 @@ def neutral_loss(sentences1, sizes1, sentences2, sizes2):
     return res
 
 
-def loss(sentences1, sizes1, sentences2, sizes2,
+def joint_loss(sentences1, sizes1, sentences2, sizes2,
          lambda_w=0.1, inconsistency_loss=contradiction_loss):
     inconsistency_loss_value = inconsistency_loss(sentences1=sentences1, sizes1=sizes1,
                                                   sentences2=sentences2, sizes2=sizes2)
@@ -189,9 +221,9 @@ def search(sentences1, sizes1, sentences2, sizes2,
            epsilon=1e-4, batch_size=32,
            nb_corruptions=1024, nb_words=256):
 
-    loss_value, iloss_value, logperp_value = loss(sentences1=sentences1, sizes1=sizes1,
-                                                  sentences2=sentences2, sizes2=sizes2,
-                                                  lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+    loss_value, iloss_value, logperp_value = joint_loss(sentences1=sentences1, sizes1=sizes1,
+                                                        sentences2=sentences2, sizes2=sizes2,
+                                                        lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
 
     # Find examples that have a nearly-zero inconsistency loss, and only work on making those more "adversarial"
     low_iloss_idxs = np.where(iloss_value < 1e-6)[0]
@@ -229,9 +261,9 @@ def search(sentences1, sizes1, sentences2, sizes2,
             batch_corruption_sizes2 = corruption_sizes2[batch_start:batch_end]
 
             batch_loss_values, batch_iloss_values, batch_logperp_values = \
-                loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
-                     sentences2=batch_corruptions2, sizes2=batch_corruption_sizes2,
-                     lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
+                joint_loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
+                           sentences2=batch_corruptions2, sizes2=batch_corruption_sizes2,
+                           lambda_w=lambda_w, inconsistency_loss=inconsistency_loss)
 
             corruption_loss_values += batch_loss_values.tolist()
             corruption_iloss_values += batch_iloss_values.tolist()
