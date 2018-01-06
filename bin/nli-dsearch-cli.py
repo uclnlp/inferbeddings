@@ -3,6 +3,8 @@
 
 # Running:
 #  $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1
+#
+# $ python3 ./bin/nli-dsearch-cli.py --has-bos --has-unk --restore models/snli/dam_1/dam_1 -i entailment-t -c
 
 import argparse
 
@@ -157,7 +159,7 @@ def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2, sentenc
     ent_23 = probabilities_23[:, entailment_idx]
     ent_13 = probabilities_13[:, entailment_idx]
 
-    body_score = tf.minimum(ent_12, ent_23)
+    body_score = np.minimum(ent_12, ent_23)
     head_score = ent_13
 
     res = relu(body_score - head_score)
