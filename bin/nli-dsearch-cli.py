@@ -80,7 +80,8 @@ def log_perplexity(sentences, sizes):
     return res
 
 
-def inference(sentences1, sizes1, sentences2, sizes2):
+def inference(sentences1, sizes1,
+              sentences2, sizes2):
     feed_dict = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -94,7 +95,8 @@ def inference(sentences1, sizes1, sentences2, sizes2):
     return [to_dict(probabilities_value[i, :]) for i in range(probabilities_value.shape[0])]
 
 
-def contradiction_loss(sentences1, sizes1, sentences2, sizes2,
+def contradiction_loss(sentences1, sizes1,
+                       sentences2, sizes2,
                        sentences3=None, sizes3=None):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
@@ -114,7 +116,8 @@ def contradiction_loss(sentences1, sizes1, sentences2, sizes2,
     return res
 
 
-def entailment_loss(sentences1, sizes1, sentences2, sizes2,
+def entailment_loss(sentences1, sizes1,
+                    sentences2, sizes2,
                     sentences3=None, sizes3=None):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
@@ -134,7 +137,9 @@ def entailment_loss(sentences1, sizes1, sentences2, sizes2,
     return res
 
 
-def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2, sentences3, sizes3):
+def entailment_transitivity_loss(sentences1, sizes1,
+                                 sentences2, sizes2,
+                                 sentences3, sizes3):
     feed_dict_12 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
         sentence2_ph: sentences2, sentence2_len_ph: sizes2,
@@ -166,7 +171,8 @@ def entailment_transitivity_loss(sentences1, sizes1, sentences2, sizes2, sentenc
     return res
 
 
-def neutral_loss(sentences1, sizes1, sentences2, sizes2,
+def neutral_loss(sentences1, sizes1,
+                 sentences2, sizes2,
                  sentences3=None, sizes3=None):
     feed_dict_1 = {
         sentence1_ph: sentences1, sentence1_len_ph: sizes1,
@@ -186,7 +192,8 @@ def neutral_loss(sentences1, sizes1, sentences2, sizes2,
     return res
 
 
-def joint_loss(sentences1, sizes1, sentences2, sizes2,
+def joint_loss(sentences1, sizes1,
+               sentences2, sizes2,
                sentences3=None, sizes3=None,
                lambda_w=0.1, inconsistency_loss=contradiction_loss):
 
@@ -291,7 +298,7 @@ def search(sentences1, sizes1,
                   .format(sample_iloss_value, sample_logperp_value, sentence3_str))
 
         # Generate mutations that do not increase the perplexity too much, and maximise the inconsistency loss
-        (corruptions1, corruption_sizes1), (corruptions2, corruption_sizes2), (corruptions3, corruption_sizes3) =\
+        (corruptions1, corruption_sizes1), (corruptions2, corruption_sizes2), (corruptions3, corruption_sizes3) = \
             corrupt(sentence1=sentence1, size1=size1,
                     sentence2=sentence2, size2=size2,
                     sentence3=sentence3, size3=size3,
@@ -314,6 +321,8 @@ def search(sentences1, sizes1,
             if corruptions3 is not None:
                 batch_corruptions3 = corruptions3[batch_start:batch_end, :]
                 batch_corruption_sizes3 = corruption_sizes3[batch_start:batch_end]
+
+            print('XXX', batch_corruptions3)
 
             batch_loss_values, batch_iloss_values, batch_logperp_values = \
                 joint_loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
