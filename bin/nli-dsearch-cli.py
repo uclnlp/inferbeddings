@@ -229,7 +229,7 @@ def corrupt(sentence1, size1,
 
     assert sizes1.shape[0] == corruptions1.shape[0]
 
-    # Corrupt corruptions2
+    # Corrupt corruptions3 if available, otherwise corrupt corruptions2
     for i in range(nb_corruptions):
         # Do not corrupt the last token - usually a '.' - corresponding to high=sizes2[i]
 
@@ -401,7 +401,9 @@ def main(argv):
     argparser.add_argument('--epsilon', '-e', action='store', type=float, default=1e-4)
     argparser.add_argument('--lambda-weight', '-L', action='store', type=float, default=1.0)
 
-    argparser.add_argument('--inconsistency', '-i', action='store', type=str, default='contradiction')
+    argparser.add_argument('--inconsistency', '-i', action='store', type=str,
+                           choices=['contradiction', 'neutral', 'entailment', 'entailment-t'],
+                           default='contradiction')
 
     args = argparser.parse_args(argv)
 
