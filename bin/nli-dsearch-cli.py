@@ -220,6 +220,8 @@ def corrupt(sentence1, size1,
             sentence3=None, size3=None,
             nb_corruptions=1024, nb_words=512):
 
+    print('XXX', sentence1, sentence2, sentence3)
+
     corruptions1 = np.repeat(a=[sentence1], repeats=nb_corruptions, axis=0)
     corruptions2 = np.repeat(a=[sentence2], repeats=nb_corruptions, axis=0)
 
@@ -321,8 +323,6 @@ def search(sentences1, sizes1,
             if corruptions3 is not None:
                 batch_corruptions3 = corruptions3[batch_start:batch_end, :]
                 batch_corruption_sizes3 = corruption_sizes3[batch_start:batch_end]
-
-            print('XXX', batch_corruptions3)
 
             batch_loss_values, batch_iloss_values, batch_logperp_values = \
                 joint_loss(sentences1=batch_corruptions1, sizes1=batch_corruption_sizes1,
