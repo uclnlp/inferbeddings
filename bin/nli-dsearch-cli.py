@@ -220,14 +220,12 @@ def corrupt(sentence1, size1,
             sentence3=None, size3=None,
             nb_corruptions=1024, nb_words=512):
 
-    print('XXX', sentence1, sentence2, sentence3)
-
     corruptions1 = np.repeat(a=[sentence1], repeats=nb_corruptions, axis=0)
     corruptions2 = np.repeat(a=[sentence2], repeats=nb_corruptions, axis=0)
 
     corruptions3 = None
     if sentence3 is not None:
-        corruptions2 = np.repeat(a=[sentence3], repeats=nb_corruptions, axis=0)
+        corruptions3 = np.repeat(a=[sentence3], repeats=nb_corruptions, axis=0)
 
     assert corruptions1.shape == (nb_corruptions, sentence1.shape[0])
 
