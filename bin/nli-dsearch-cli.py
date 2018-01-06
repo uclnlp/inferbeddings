@@ -277,7 +277,7 @@ def search(sentences1, sizes1,
         sentence2_str = ' '.join([index_to_token[tidx] for tidx in sentence2 if tidx != 0])
 
         sentence3_str = None
-        if sentence3:
+        if sentence3 is not None:
             sentence3_str = ' '.join([index_to_token[tidx] for tidx in sentence3 if tidx != 0])
 
         print('SENTENCE 1 (inconsistency loss: {} / log-perplexity: {}): {}'
@@ -286,7 +286,7 @@ def search(sentences1, sizes1,
         print('SENTENCE 2 (inconsistency loss: {} / log-perplexity: {}): {}'
               .format(sample_iloss_value, sample_logperp_value, sentence2_str))
 
-        if sentences3:
+        if sentences3 is not None:
             print('SENTENCE 3 (inconsistency loss: {} / log-perplexity: {}): {}'
                   .format(sample_iloss_value, sample_logperp_value, sentence3_str))
 
