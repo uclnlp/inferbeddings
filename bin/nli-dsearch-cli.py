@@ -267,7 +267,7 @@ def search(sentences1, sizes1,
         sentence2, size2 = sentences2[low_iloss_idx, :], sizes2[low_iloss_idx]
 
         sentence3, size3 = None, None
-        if sentences3:
+        if sentences3 is not None:
             sentence3, size3 = sentences3[low_iloss_idx, :], sizes3[low_iloss_idx]
 
         sample_loss_value, sample_iloss_value, sample_logperp_value = \
