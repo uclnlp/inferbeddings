@@ -286,7 +286,7 @@ def search(sentences1, sizes1,
 
         if sentences3:
             print('SENTENCE 3 (inconsistency loss: {} / log-perplexity: {}): {}'
-                  .format(sample_iloss_value, sample_logperp_value, sentence2_str))
+                  .format(sample_iloss_value, sample_logperp_value, sentence3_str))
 
         # Generate mutations that do not increase the perplexity too much, and maximise the inconsistency loss
         (corruptions1, corruption_sizes1), (corruptions2, corruption_sizes2), (corruptions3, corruption_sizes3) =\
@@ -333,12 +333,18 @@ def search(sentences1, sizes1,
         # Select corruptions that did not increase the log-perplexity too much
         low_perplexity_mask = corruption_logperp_values <= logperp_value[low_iloss_idx] + epsilon
 
+        if corruptions3 is not None:
+            return
+
         counter = 0
         for idx in corruptions_order.tolist():
             if idx in np.where(low_perplexity_mask)[0].tolist():
                 if counter < 10:
-                    corruption_str = ' '.join([index_to_token[tidx] for tidx in corruptions2[idx] if tidx != 0])
-                    msg = '[{}] CORRUPTION 2 (inconsistency loss: {} / log-perplexity: {}): {}'\
+                    _corruptions = corruptions2
+
+                    corruption_str = ' '.join([index_to_token[tidx] for tidx in _corruptions[idx] if tidx != 0])
+
+                    msg = '[{}] CORRUPTION (inconsistency loss: {} / log-perplexity: {}): {}'\
                         .format(counter, corruption_iloss_values[idx], corruption_logperp_values[idx], corruption_str)
 
                     print(msg)
@@ -346,7 +352,7 @@ def search(sentences1, sizes1,
                     _sentence1 = np.array([sentence1])
                     _size1 = np.array([size1])
 
-                    _sentence2 = np.array([corruptions2[idx]])
+                    _sentence2 = np.array([_corruptions[idx]])
                     _size2 = np.array([size2])
 
                     probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
@@ -434,7 +440,7 @@ def main(argv):
         iloss = neutral_loss
     elif inconsistency_name == 'entailment':
         iloss = entailment_loss
-    elif inconsistency_name == 'entailment-t'
+    elif inconsistency_name == 'entailment-t':
         iloss = entailment_transitivity_loss
     assert iloss is not None
 
@@ -602,6 +608,7 @@ def main(argv):
         c_losses, e_losses, n_losses = [], [], []
 
         for batch_idx, (batch_start, batch_end) in enumerate(batches):
+
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
 
@@ -631,8 +638,15 @@ def main(argv):
             n_losses += batch_n_loss.tolist()
 
             if is_corrupt:
+                batch_sentences3, batch_sizes3 = None, None
+
+                if iloss == entailment_transitivity_loss:
+                    batch_sentences3 = batch_sentences2.copy()
+                    batch_sizes3 = batch_sizes2.copy()
+
                 search(sentences1=batch_sentences1, sizes1=batch_sizes1,
                        sentences2=batch_sentences2, sizes2=batch_sizes2,
+                       sentences3=batch_sentences3, sizes3=batch_sizes3,
                        batch_size=batch_size, epsilon=epsilon, lambda_w=lambda_w,
                        inconsistency_loss=iloss)
 
