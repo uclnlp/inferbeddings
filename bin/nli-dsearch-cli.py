@@ -352,21 +352,38 @@ def search(sentences1, sizes1,
 
                     msg = '[{}] CORRUPTION (inconsistency loss: {} / log-perplexity: {}): {}'\
                         .format(counter, corruption_iloss_values[idx], corruption_logperp_values[idx], corruption_str)
-
                     print(msg)
 
-                    _sentence1 = np.array([sentence1])
-                    _size1 = np.array([size1])
+                    if corruptions3 is None:
+                        _sentence1 = np.array([sentence1])
+                        _size1 = np.array([size1])
 
-                    _sentence2 = np.array([_corruptions[idx]])
-                    _size2 = np.array([size2])
+                        _sentence2 = np.array([_corruptions[idx]])
+                        _size2 = np.array([size2])
 
-                    probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
-                    probabilities_2 = inference(_sentence2, _size2, _sentence1, _size1)
+                        probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
+                        probabilities_2 = inference(_sentence2, _size2, _sentence1, _size1)
 
-                    msg = 'A -> B: {}\tB -> A: {}'.format(str(probabilities_1), str(probabilities_2))
+                        msg = 'A -> B: {}\tB -> A: {}'.format(str(probabilities_1), str(probabilities_2))
+                        print(msg)
+                    else:
+                        _sentence1 = np.array([sentence1])
+                        _size1 = np.array([size1])
 
-                    print(msg)
+                        _sentence2 = np.array([sentence2])
+                        _size2 = np.array([size2])
+
+                        _sentence3 = np.array([_corruptions[idx]])
+                        _size3 = np.array([size3])
+
+                        probabilities_1 = inference(_sentence1, _size1, _sentence2, _size2)
+                        probabilities_2 = inference(_sentence2, _size2, _sentence3, _size3)
+                        probabilities_3 = inference(_sentence1, _size1, _sentence3, _size3)
+
+                        msg = 'A -> B: {}\tB -> C: {}\tA -> C: {}'\
+                            .format(str(probabilities_1), str(probabilities_2), str(probabilities_3))
+                        print(msg)
+
                 counter += 1
 
     return
