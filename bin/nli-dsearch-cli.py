@@ -342,14 +342,11 @@ def search(sentences1, sizes1,
         # Select corruptions that did not increase the log-perplexity too much
         low_perplexity_mask = corruption_logperp_values <= logperp_value[low_iloss_idx] + epsilon
 
-        if corruptions3 is not None:
-            return
-
         counter = 0
         for idx in corruptions_order.tolist():
             if idx in np.where(low_perplexity_mask)[0].tolist():
                 if counter < 10:
-                    _corruptions = corruptions2
+                    _corruptions = corruptions3 if corruptions3 is not None else corruptions2
 
                     corruption_str = ' '.join([index_to_token[tidx] for tidx in _corruptions[idx] if tidx != 0])
 
