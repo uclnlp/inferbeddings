@@ -94,7 +94,7 @@ def main(argv):
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
 
-    for i in range(0, 7):
+    for i in range(0, 8):
         argparser.add_argument('--rule{:02d}-weight'.format(i), '--{:02d}'.format(i),
                                action='store', type=float, default=None)
 
@@ -164,6 +164,7 @@ def main(argv):
     rule04_weight = args.rule04_weight
     rule05_weight = args.rule05_weight
     rule06_weight = args.rule06_weight
+    rule07_weight = args.rule07_weight
 
     adversarial_pooling_name = args.adversarial_pooling
 
@@ -351,6 +352,7 @@ def main(argv):
         if rule03_weight:
             a_loss, a_losses = R.contradiction_jensen_shannon(**a_kwargs)
             loss += rule03_weight * a_loss
+
         if rule04_weight:
             a_loss, a_losses = R.contradiction_acl(**a_kwargs)
             loss += rule04_weight * a_loss
@@ -360,6 +362,10 @@ def main(argv):
         if rule06_weight:
             a_loss, a_losses = R.neutral_acl(**a_kwargs)
             loss += rule06_weight * a_loss
+
+        if rule07_weight:
+            a_loss, a_losses = R.contradiction_acl(is_bi=True, **a_kwargs)
+            loss += rule07_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)

@@ -129,7 +129,7 @@ def contradiction_jensen_shannon(model_class, model_kwargs,
 def contradiction_acl(model_class, model_kwargs,
                       pooling_function=tf.reduce_sum,
                       entailment_idx=0, neutral_idx=1, contradiction_idx=2,
-                      debug=False):
+                      debug=False, is_bi=False):
     model = model_class(reuse=True, **model_kwargs)
     logits = model()
 
@@ -152,7 +152,7 @@ def contradiction_acl(model_class, model_kwargs,
     inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
 
     p_i, q_i = contradiction_prob, inv_contradiction_prob
-    losses = tf.nn.relu(p_i - q_i)
+    losses = tf.nn.relu(p_i - q_i) + (tf.nn.relu(q_i - p_i) if is_bi else 0)
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss
