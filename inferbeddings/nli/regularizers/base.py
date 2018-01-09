@@ -161,11 +161,12 @@ def contradiction_acl(model_class, model_kwargs,
 def entailment_acl(model_class, model_kwargs,
                    pooling_function=tf.reduce_sum,
                    entailment_idx=0, neutral_idx=1, contradiction_idx=2,
-                   debug=False):
+                   debug=False, is_bi=False):
     model = model_class(reuse=True, **model_kwargs)
     logits = model()
 
     entailment_prob = tf.nn.softmax(logits)[:, entailment_idx]
+    contradiction_prob = tf.nn.softmax(logits)[:, contradiction_idx]
 
     inv_sequence2, inv_sequence2_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
     inv_sequence1, inv_sequence1_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
@@ -182,9 +183,14 @@ def entailment_acl(model_class, model_kwargs,
     inv_logits = inv_model()
 
     inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
+    inv_entailment_prob = tf.nn.softmax(inv_logits)[:, entailment_idx]
 
     p_i, q_i = entailment_prob, inv_contradiction_prob
     losses = tf.nn.relu(p_i - (1.0 - q_i))
+
+    if is_bi:
+        p_i, q_i = contradiction_prob, inv_entailment_prob
+        losses += tf.nn.relu(q_i - (1.0 - p_i))
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss
@@ -193,11 +199,12 @@ def entailment_acl(model_class, model_kwargs,
 def neutral_acl(model_class, model_kwargs,
                 pooling_function=tf.reduce_sum,
                 entailment_idx=0, neutral_idx=1, contradiction_idx=2,
-                debug=False):
+                debug=False, is_bi=False):
     model = model_class(reuse=True, **model_kwargs)
     logits = model()
 
     neutral_prob = tf.nn.softmax(logits)[:, neutral_idx]
+    contradiction_prob = tf.nn.softmax(logits)[:, contradiction_idx]
 
     inv_sequence2, inv_sequence2_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
     inv_sequence1, inv_sequence1_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
@@ -214,9 +221,14 @@ def neutral_acl(model_class, model_kwargs,
     inv_logits = inv_model()
 
     inv_contradiction_prob = tf.nn.softmax(inv_logits)[:, contradiction_idx]
+    inv_neutral_prob = tf.nn.softmax(inv_logits)[:, neutral_idx]
 
     p_i, q_i = neutral_prob, inv_contradiction_prob
     losses = tf.nn.relu(p_i - (1.0 - q_i))
+
+    if is_bi:
+        p_i, q_i = contradiction_prob, inv_neutral_prob
+        losses += tf.nn.relu(q_i - (1.0 - p_i))
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss
