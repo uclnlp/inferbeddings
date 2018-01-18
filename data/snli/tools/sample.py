@@ -37,8 +37,7 @@ def main(argv):
     with gzip.open(path, 'rb') as f:
         for line in tqdm(f):
             dl = line.decode('utf-8')
-            obj = json.loads(dl)
-            obj_lst += [obj]
+            obj_lst += [dl]
 
     rs = np.random.RandomState(seed)
 
@@ -50,7 +49,7 @@ def main(argv):
     sample_obj_lst = [obj_lst[i] for i in sample_idxs]
 
     for obj in sample_obj_lst:
-        print(obj)
+        print(obj, end='')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
