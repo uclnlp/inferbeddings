@@ -25,27 +25,27 @@ def to_cmd(c, idx):
               '--nb-epochs 10 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1_01/dam_1_01 --{} {} -P {} ' \
               '-E data/snli/generated/snli_1.0_contradictions_*.gz ' \
-              '--hard-save models/snli/dam_1/acl/batch_dsearch_reg_v2_01/dam_1_01_{}'\
+              '--hard-save models/snli/dam_1/acl/batch_dsearch_reg_v4_01/dam_1_01_{}'\
         .format(c['rule_id'], c['weight'], c['adversarial_pooling'], idx)
     return command
 
 
 def to_logfile(c, path):
-    outfile = "%s/batch_dsearch_reg_v2_01.%s.log" % (path, summary(c))
+    outfile = "%s/batch_dsearch_reg_v4_01.%s.log" % (path, summary(c))
     return outfile
 
 
 def main(argv):
     hyperparameters_space_1 = dict(
-        rule_id=['04'],
+        rule_id=['06'],
         weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
         adversarial_pooling=['sum', 'mean', 'max']
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
 
-    path = './logs/nli/acl/batch_dsearch_reg_v2_01/'
-    _path = './models/snli/dam_1/acl/batch_dsearch_reg_v2_01/'
+    path = './logs/nli/acl/batch_dsearch_reg_v4_01/'
+    _path = './models/snli/dam_1/acl/batch_dsearch_reg_v4_01/'
 
     # Check that we are on the UCLCS cluster first
     if os.path.exists('/home/pasquale/'):
