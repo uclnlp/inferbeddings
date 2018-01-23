@@ -232,3 +232,35 @@ def neutral_acl(model_class, model_kwargs,
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss
+
+
+def entailment_reflexive_acl(model_class, model_kwargs,
+                pooling_function=tf.reduce_sum,
+                entailment_idx=0, neutral_idx=1, contradiction_idx=2,
+                debug=False, is_bi=False):
+
+    sequence1, sequence1_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
+    sequence2, sequence2_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
+
+    model_kwargs_a = model_kwargs.copy()
+    model_kwargs_b = model_kwargs.copy()
+
+    model_kwargs_a['sequence1'], model_kwargs_a['sequence1_length'] = sequence1, sequence1_length
+    model_kwargs_a['sequence2'], model_kwargs_a['sequence2_length'] = sequence1, sequence1_length
+
+    model_kwargs_b['sequence1'], model_kwargs_b['sequence1_length'] = sequence2, sequence2_length
+    model_kwargs_b['sequence2'], model_kwargs_b['sequence2_length'] = sequence2, sequence2_length
+
+    model_a = model_class(reuse=True, **model_kwargs_a)
+    model_b = model_class(reuse=True, **model_kwargs_b)
+
+    logits_a = model_a()
+    logits_b = model_b()
+
+    entailment_a_prob = tf.nn.softmax(logits_a)[:, entailment_idx]
+    entailment_b_prob = tf.nn.softmax(logits_b)[:, entailment_idx]
+
+    losses = tf.nn.relu(1.0 - entailment_a_prob) + tf.nn.relu(1.0 - entailment_b_prob)
+
+    loss = pooling_function(losses)
+    return (loss, losses) if debug else loss

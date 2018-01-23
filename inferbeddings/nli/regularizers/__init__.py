@@ -9,6 +9,8 @@ from inferbeddings.nli.regularizers.base import contradiction_acl
 from inferbeddings.nli.regularizers.base import entailment_acl
 from inferbeddings.nli.regularizers.base import neutral_acl
 
+from inferbeddings.nli.regularizers.base import entailment_reflexive_acl
+
 __all__ = [
     'contradiction_symmetry_l1',
     'contradiction_symmetry_l2',
@@ -17,5 +19,7 @@ __all__ = [
 
     'contradiction_acl',
     'entailment_acl',
-    'neutral_acl'
+    'neutral_acl',
+
+    'entailment_reflexive_acl'
 ]
