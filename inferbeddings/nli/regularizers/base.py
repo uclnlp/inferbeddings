@@ -237,7 +237,7 @@ def neutral_acl(model_class, model_kwargs,
 def entailment_reflexive_acl(model_class, model_kwargs,
                 pooling_function=tf.reduce_sum,
                 entailment_idx=0, neutral_idx=1, contradiction_idx=2,
-                debug=False, is_bi=False):
+                debug=False):
 
     sequence1, sequence1_length = model_kwargs['sequence1'], model_kwargs['sequence1_length']
     sequence2, sequence2_length = model_kwargs['sequence2'], model_kwargs['sequence2_length']
