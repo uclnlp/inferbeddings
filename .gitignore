@@ -92,7 +92,7 @@ ENV/
 
 # Testing
 tmp/
-snippet/
+snippets/snippet/
 logs/
 logs*.tar.gz
 bak/
