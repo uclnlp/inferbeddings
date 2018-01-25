@@ -210,6 +210,12 @@ def main(argv):
         a_probabilities_value = []
         b_probabilities_value = []
 
+        r1_predictions_int_value = []
+        r2_predictions_int_value = []
+
+        r1_probabilities_value = []
+        r2_probabilities_value = []
+
         for batch_idx, (batch_start, batch_end) in tqdm(list(enumerate(batches))):
             batch_sentences1 = sentences1[batch_start:batch_end]
             batch_sentences2 = sentences2[batch_start:batch_end]
@@ -249,6 +255,38 @@ def main(argv):
                     'entailment': batch_b_probabilities_value[i, entailment_idx]
                 }]
 
+            batch_r1_feed_dict = {
+                sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
+                sentence2_ph: batch_sentences1, sentence2_len_ph: batch_sizes1,
+                dropout_keep_prob_ph: 1.0
+            }
+
+            batch_r2_feed_dict = {
+                sentence1_ph: batch_sentences2, sentence1_len_ph: batch_sizes2,
+                sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
+                dropout_keep_prob_ph: 1.0
+            }
+
+            batch_r1_predictions_int_value, batch_r1_probabilities_value = session.run(
+                [predictions_int, probabilities], feed_dict=batch_r1_feed_dict)
+            r1_predictions_int_value += batch_r1_predictions_int_value.tolist()
+            for i in range(batch_r1_probabilities_value.shape[0]):
+                r1_probabilities_value += [{
+                    'neutral': batch_r1_probabilities_value[i, neutral_idx],
+                    'contradiction': batch_r1_probabilities_value[i, contradiction_idx],
+                    'entailment': batch_r1_probabilities_value[i, entailment_idx]
+                }]
+
+            batch_r2_predictions_int_value, batch_r2_probabilities_value = session.run(
+                [predictions_int, probabilities], feed_dict=batch_r2_feed_dict)
+            r2_predictions_int_value += batch_r2_predictions_int_value.tolist()
+            for i in range(batch_r2_probabilities_value.shape[0]):
+                r2_probabilities_value += [{
+                    'neutral': batch_r2_probabilities_value[i, neutral_idx],
+                    'contradiction': batch_r2_probabilities_value[i, contradiction_idx],
+                    'entailment': batch_r2_probabilities_value[i, entailment_idx]
+                }]
+
         for i, instance in enumerate(data_is):
             instance.update({
                 'a': a_probabilities_value[i],
@@ -270,6 +308,11 @@ def main(argv):
 
         s1s2_neu = (np.array(a_predictions_int_value) == neutral_idx)
         s2s1_neu = (np.array(b_predictions_int_value) == neutral_idx)
+
+        s1s1_ent = (np.array(r1_predictions_int_value) == entailment_idx)
+        s2s2_ent = (np.array(r2_predictions_int_value) == entailment_idx)
+
+        assert s1s1_ent.shape == s2s2_ent.shape
 
         a = np.logical_xor(s1s2_con, s2s1_con)
         logger.info('(S1 contradicts S2) XOR (S2 contradicts S1): {0}'.format(a.sum()))
@@ -300,6 +343,19 @@ def main(argv):
         with open('g.p', 'wb') as f:
             tmp = [data_is[i] for i in np.where(g)[0].tolist()]
             pickle.dump(tmp, f)
+
+        m1 = s1s1_ent
+        m2 = s2s2_ent
+
+        n = m1.shape[0] + m2.shape[0]
+
+        logger.info('(True): {0} [{1} + {2}]'.format(n, m1.shape[0], m2.shape[0]))
+        logger.info('(S1 entails S1): {0} [{1} + {2}] ({3:.4f})'.format(
+            m1.sum() + m2.sum(),
+            m1.sum(),
+            m2.sum(),
+            (m1.sum() + m2.sum()) / n
+        ))
 
         if is_check_transitivity:
             # Find S1, S2 such that entails(S1, S2)
