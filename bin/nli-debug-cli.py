@@ -344,13 +344,13 @@ def main(argv):
             tmp = [data_is[i] for i in np.where(g)[0].tolist()]
             pickle.dump(tmp, f)
 
-        m1 = s1s1_ent
-        m2 = s2s2_ent
+        m1 = np.logical_not(s1s1_ent)
+        m2 = np.logical_not(s2s2_ent)
 
         n = m1.shape[0] + m2.shape[0]
 
         logger.info('(True): {0} [{1} + {2}]'.format(n, m1.shape[0], m2.shape[0]))
-        logger.info('(S1 entails S1): {0} [{1} + {2}] ({3:.4f})'.format(
+        logger.info('(True) AND NOT(S1 entails S1): {0} [{1} + {2}] ({3:.4f})'.format(
             m1.sum() + m2.sum(),
             m1.sum(),
             m2.sum(),
