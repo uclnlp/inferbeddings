@@ -2,6 +2,7 @@
 
 import nltk
 
+
 def insert_subtree(tree1, st_idx, tree2):
     len_st = len(list(tree1.subtrees())[st_idx])
     res = []
