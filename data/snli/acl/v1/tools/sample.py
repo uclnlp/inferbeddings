@@ -7,10 +7,8 @@ import sys
 import argparse
 
 import gzip
-import json
 
 import numpy as np
-from tqdm import tqdm
 
 import logging
 
@@ -35,7 +33,7 @@ def main(argv):
 
     obj_lst = []
     with gzip.open(path, 'rb') as f:
-        for line in tqdm(f):
+        for line in f:
             dl = line.decode('utf-8')
             obj_lst += [dl]
 

@@ -1,0 +1,1800 @@
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "2446928775.jpg#3",
+  "gold_label": "contradiction",
+  "pairID": "2446928775.jpg#3r1c",
+  "sentence1": "A man is wearing a suit.",
+  "sentence1_binary_parse": "( ( A man ) ( ( is ( wearing ( a suit ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ is) (VP (VBG wearing) (NP (DT a) (NN suit)))) (. .)))",
+  "sentence2": "A public speaker in a plaid shirt speaks on the microphone.",
+  "sentence2_binary_parse": "( ( ( A ( public speaker ) ) ( in ( a ( plaid shirt ) ) ) ) ( ( speaks ( on ( the microphone ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ public) (NN speaker)) (PP (IN in) (NP (DT a) (JJ plaid) (NN shirt)))) (VP (VBZ speaks) (PP (IN on) (NP (DT the) (NN microphone)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "4848911761.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "4848911761.jpg#1r1e",
+  "sentence1": "Tricks are made by a person in a red jacket while people watching him.",
+  "sentence1_binary_parse": "( Tricks ( ( are ( ( made ( by ( ( a person ) ( in ( a ( red jacket ) ) ) ) ) ) ( while ( people ( watching him ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NNS Tricks)) (VP (VBP are) (VP (VBN made) (PP (IN by) (NP (NP (DT a) (NN person)) (PP (IN in) (NP (DT a) (JJ red) (NN jacket))))) (SBAR (IN while) (S (NP (NNS people)) (VP (VBG watching) (NP (PRP him))))))) (. .)))",
+  "sentence2": "A group of people watch a breakdancer in a red jacket do a one-handed trick.",
+  "sentence2_binary_parse": "( ( ( A group ) ( of people ) ) ( ( watch ( ( ( a breakdancer ) ( in ( a ( red jacket ) ) ) ) ( do ( a ( one-handed trick ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN group)) (PP (IN of) (NP (NNS people)))) (VP (VBP watch) (SBAR (S (NP (NP (DT a) (NN breakdancer)) (PP (IN in) (NP (DT a) (JJ red) (NN jacket)))) (VP (VBP do) (NP (DT a) (JJ one-handed) (NN trick)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "entailment",
+    "neutral",
+    "entailment"
+  ],
+  "captionID": "3716283232.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "3716283232.jpg#0r2n",
+  "sentence1": "Three men are celebrating a business achievement.",
+  "sentence1_binary_parse": "( ( Three men ) ( ( are ( celebrating ( a ( business achievement ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Three) (NNS men)) (VP (VBP are) (VP (VBG celebrating) (NP (DT a) (NN business) (NN achievement)))) (. .)))",
+  "sentence2": "Three men dressed in suits and ties clasps their raised hands while standing in front of corporate logos.",
+  "sentence2_binary_parse": "( ( ( Three men ) ( dressed ( in ( ( suits and ) ties ) ) ) ) ( ( clasps ( ( their ( raised hands ) ) ( while ( standing ( in ( front ( of ( corporate logos ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (CD Three) (NNS men)) (VP (VBN dressed) (PP (IN in) (NP (NNS suits) (CC and) (NNS ties))))) (VP (VBZ clasps) (NP (NP (PRP$ their) (VBN raised) (NNS hands)) (PP (IN while) (S (VP (VBG standing) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (JJ corporate) (NNS logos)))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "798343627.jpg#4",
+  "gold_label": "contradiction",
+  "pairID": "798343627.jpg#4r1c",
+  "sentence1": "A girl is blowing many tiny bubbles.",
+  "sentence1_binary_parse": "( ( A girl ) ( ( is ( blowing ( many ( tiny bubbles ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN girl)) (VP (VBZ is) (VP (VBG blowing) (NP (JJ many) (JJ tiny) (NNS bubbles)))) (. .)))",
+  "sentence2": "A girl is blowing a huge bubble.",
+  "sentence2_binary_parse": "( ( A girl ) ( ( is ( blowing ( a ( huge bubble ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN girl)) (VP (VBZ is) (VP (VBG blowing) (NP (DT a) (JJ huge) (NN bubble)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "4666848560.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "4666848560.jpg#0r1c",
+  "sentence1": "There are twelve police cars in the photo.",
+  "sentence1_binary_parse": "( There ( ( are ( ( twelve ( police cars ) ) ( in ( the photo ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (EX There)) (VP (VBP are) (NP (NP (CD twelve) (NN police) (NNS cars)) (PP (IN in) (NP (DT the) (NN photo))))) (. .)))",
+  "sentence2": "Blue, red, yellow, and white are the dominant colors of a picture of two police vehicles outside of what looks like a smoke roll playing vehicle, a motorcycle in between the two cars with 6 people in the picture.",
+  "sentence2_binary_parse": "( ( ( Blue , ) ( red ( , ( yellow ( , ( and white ) ) ) ) ) ) ( ( are ( ( the ( dominant colors ) ) ( of ( ( a picture ) ( of ( ( two ( police vehicles ) ) ( outside ( of ( what ( ( looks ( like ( ( ( a ( smoke ( roll ( playing vehicle ) ) ) ) , ) ( a motorcycle ) ) ) ) ( in ( between ( ( the ( two cars ) ) ( with ( ( 6 people ) ( in ( the picture ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (NNP Blue)) (, ,) (ADJP (JJ red) (, ,) (JJ yellow) (, ,) (CC and) (JJ white))) (VP (VBP are) (NP (NP (DT the) (JJ dominant) (NNS colors)) (PP (IN of) (NP (NP (DT a) (NN picture)) (PP (IN of) (NP (NP (CD two) (NN police) (NNS vehicles)) (PP (JJ outside) (IN of) (SBAR (WHNP (WP what)) (S (VP (VBZ looks) (PP (IN like) (NP (NP (DT a) (NN smoke) (NN roll) (NN playing) (NN vehicle)) (, ,) (NP (DT a) (NN motorcycle)))) (PP (IN in) (IN between) (NP (NP (DT the) (CD two) (NNS cars)) (PP (IN with) (NP (NP (CD 6) (NNS people)) (PP (IN in) (NP (DT the) (NN picture))))))))))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "7197674214.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "7197674214.jpg#0r1c",
+  "sentence1": "The three players are chasing after the hockey puck.",
+  "sentence1_binary_parse": "( ( The ( three players ) ) ( ( are ( chasing ( after ( the ( hockey puck ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (CD three) (NNS players)) (VP (VBP are) (VP (VBG chasing) (PP (IN after) (NP (DT the) (NN hockey) (NN puck))))) (. .)))",
+  "sentence2": "A soccer player in white kicks a ball as another soccer player lunges towards the ball and a third soccer player in red follows close by.",
+  "sentence2_binary_parse": "( ( ( A ( soccer player ) ) ( in ( ( white kicks ) ( ( ( a ball ) ( as ( another ( soccer player ) ) ) ) ( ( lunges ( towards ( ( ( the ball ) and ) ( a ( third ( soccer player ) ) ) ) ) ) ( in red ) ) ) ) ) ) ( ( follows ( close by ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN soccer) (NN player)) (PP (IN in) (NP (NP (JJ white) (NNS kicks)) (SBAR (S (NP (NP (DT a) (NN ball)) (PP (IN as) (NP (DT another) (NN soccer) (NN player)))) (VP (VBZ lunges) (PP (IN towards) (NP (NP (DT the) (NN ball)) (CC and) (NP (DT a) (JJ third) (NN soccer) (NN player)))) (PP (IN in) (NP (NN red))))))))) (VP (VBZ follows) (ADJP (JJ close) (PP (IN by)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "2574886804.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "2574886804.jpg#1r1n",
+  "sentence1": "Two men with matching baseball team shirts are folding a towel.",
+  "sentence1_binary_parse": "( ( ( Two men ) ( with ( matching ( baseball ( team shirts ) ) ) ) ) ( ( are ( folding ( a towel ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (CD Two) (NNS men)) (PP (IN with) (NP (JJ matching) (NN baseball) (NN team) (NNS shirts)))) (VP (VBP are) (VP (VBG folding) (NP (DT a) (NN towel)))) (. .)))",
+  "sentence2": "Two men with matching t-shirts fold a towel in the living room.",
+  "sentence2_binary_parse": "( ( ( Two men ) ( with ( matching t-shirts ) ) ) ( ( fold ( ( a towel ) ( in ( the ( living room ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (CD Two) (NNS men)) (PP (IN with) (NP (JJ matching) (NNS t-shirts)))) (VP (VBP fold) (NP (NP (DT a) (NN towel)) (PP (IN in) (NP (DT the) (VBG living) (NN room))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "contradiction",
+    "neutral",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "497122685.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "497122685.jpg#1r1e",
+  "sentence1": "A child is moving swiftly toward a body of water.",
+  "sentence1_binary_parse": "( ( A child ) ( ( is ( ( moving swiftly ) ( toward ( ( a body ) ( of water ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN child)) (VP (VBZ is) (VP (VBG moving) (ADVP (RB swiftly)) (PP (IN toward) (NP (NP (DT a) (NN body)) (PP (IN of) (NP (NN water))))))) (. .)))",
+  "sentence2": "Young girl in an bathing suit falling off the end of a slide into a pool.",
+  "sentence2_binary_parse": "( ( ( Young girl ) ( in ( ( an ( bathing suit ) ) ( ( ( falling off ) ( ( the end ) ( of ( a slide ) ) ) ) ( into ( a pool ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (JJ Young) (NN girl)) (PP (IN in) (NP (NP (DT an) (VBG bathing) (NN suit)) (VP (VBG falling) (PRT (RP off)) (NP (NP (DT the) (NN end)) (PP (IN of) (NP (DT a) (NN slide)))) (PP (IN into) (NP (DT a) (NN pool)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "5238681042.jpg#4",
+  "gold_label": "contradiction",
+  "pairID": "5238681042.jpg#4r1c",
+  "sentence1": "Workers having a coffee break",
+  "sentence1_binary_parse": "( ( Workers ( having ( a coffee ) ) ) break )",
+  "sentence1_parse": "(ROOT (S (NP (NP (NNS Workers)) (VP (VBG having) (NP (DT a) (NN coffee)))) (VP (VBP break))))",
+  "sentence2": "Workers are removing ice from a walkway.",
+  "sentence2_binary_parse": "( Workers ( ( are ( ( removing ice ) ( from ( a walkway ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NNPS Workers)) (VP (VBP are) (VP (VBG removing) (NP (NN ice)) (PP (IN from) (NP (DT a) (NN walkway))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "entailment",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "308452930.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "308452930.jpg#1r1n",
+  "sentence1": "Two brothers have a snowball fight.",
+  "sentence1_binary_parse": "( ( Two brothers ) ( ( have ( a ( snowball fight ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NNS brothers)) (VP (VBP have) (NP (DT a) (JJ snowball) (NN fight))) (. .)))",
+  "sentence2": "There are children playing in the snow and one of them is making a snowball.",
+  "sentence2_binary_parse": "( ( ( ( There ( are ( children ( playing ( in ( the snow ) ) ) ) ) ) and ) ( ( one ( of them ) ) ( is ( making ( a snowball ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (S (S (NP (EX There)) (VP (VBP are) (NP (NP (NNS children)) (VP (VBG playing) (PP (IN in) (NP (DT the) (NN snow))))))) (CC and) (S (NP (NP (CD one)) (PP (IN of) (NP (PRP them)))) (VP (VBZ is) (VP (VBG making) (NP (DT a) (NN snowball))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "entailment"
+  ],
+  "captionID": "944860697.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "944860697.jpg#4r1n",
+  "sentence1": "A robber is in a police car.",
+  "sentence1_binary_parse": "( ( A robber ) ( ( is ( in ( a ( police car ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN robber)) (VP (VBZ is) (PP (IN in) (NP (DT a) (NN police) (NN car)))) (. .)))",
+  "sentence2": "A man in a mask in the back of a service vehicle.",
+  "sentence2_binary_parse": "( ( ( ( A man ) ( in ( a mask ) ) ) ( in ( ( the back ) ( of ( a ( service vehicle ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (NN man)) (PP (IN in) (NP (DT a) (NN mask))) (PP (IN in) (NP (NP (DT the) (NN back)) (PP (IN of) (NP (DT a) (NN service) (NN vehicle))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "4970561178.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "4970561178.jpg#2r1n",
+  "sentence1": "A group of women went for a motorcycle ride.",
+  "sentence1_binary_parse": "( ( ( A group ) ( of women ) ) ( ( went ( for ( a ( motorcycle ride ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT A) (NN group)) (PP (IN of) (NP (NNS women)))) (VP (VBD went) (PP (IN for) (NP (DT a) (NN motorcycle) (NN ride)))) (. .)))",
+  "sentence2": "Three women talk to each other next to another woman sitting on a motorcycle.",
+  "sentence2_binary_parse": "( ( Three women ) ( ( ( talk ( to ( each other ) ) ) ( next ( to ( ( another woman ) ( sitting ( on ( a motorcycle ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Three) (NNS women)) (VP (VBP talk) (PP (TO to) (NP (DT each) (JJ other))) (ADVP (JJ next) (PP (TO to) (NP (NP (DT another) (NN woman)) (VP (VBG sitting) (PP (IN on) (NP (DT a) (NN motorcycle)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "2173115233.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "2173115233.jpg#1r1n",
+  "sentence1": "The people are friends.",
+  "sentence1_binary_parse": "( ( The people ) ( ( are friends ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NNS people)) (VP (VBP are) (NP (NNS friends))) (. .)))",
+  "sentence2": "Five individuals standing on grass next to a brick building, holding their own string instrument.",
+  "sentence2_binary_parse": "( ( ( Five individuals ) ( ( ( ( standing ( on grass ) ) ( next ( to ( a ( brick building ) ) ) ) ) , ) ( holding ( their ( own ( string instrument ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (CD Five) (NNS individuals)) (VP (VBG standing) (PP (IN on) (NP (NN grass))) (ADVP (JJ next) (PP (TO to) (NP (DT a) (NN brick) (NN building)))) (, ,) (S (VP (VBG holding) (NP (PRP$ their) (JJ own) (NN string) (NN instrument))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "2110692070.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "2110692070.jpg#0r1n",
+  "sentence1": "A dog is running in the field towards another dog.",
+  "sentence1_binary_parse": "( ( A dog ) ( ( is ( running ( in ( ( the field ) ( towards ( another dog ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN dog)) (VP (VBZ is) (VP (VBG running) (PP (IN in) (NP (NP (DT the) (NN field)) (PP (IN towards) (NP (DT another) (NN dog))))))) (. .)))",
+  "sentence2": "A white and black spotted dog is running through a grassy area.",
+  "sentence2_binary_parse": "( ( A ( ( ( white and ) black ) ( spotted dog ) ) ) ( ( is ( running ( through ( a ( grassy area ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (ADJP (JJ white) (CC and) (JJ black)) (JJ spotted) (NN dog)) (VP (VBZ is) (VP (VBG running) (PP (IN through) (NP (DT a) (JJ grassy) (NN area))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "3656030945.jpg#3",
+  "gold_label": "entailment",
+  "pairID": "3656030945.jpg#3r1n",
+  "sentence1": "Three puppies are in the tub being sprayed with water by the vet.",
+  "sentence1_binary_parse": "( ( Three puppies ) ( ( are ( in ( ( the tub ) ( being ( ( sprayed ( with water ) ) ( by ( the vet ) ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Three) (NNS puppies)) (VP (VBP are) (PP (IN in) (NP (NP (DT the) (NN tub)) (VP (VBG being) (VP (VBN sprayed) (PP (IN with) (NP (NN water))) (PP (IN by) (NP (DT the) (NN vet)))))))) (. .)))",
+  "sentence2": "Three puppies are in the tub being sprayed with water by a person.",
+  "sentence2_binary_parse": "( ( Three puppies ) ( ( are ( in ( ( the tub ) ( being ( ( sprayed ( with water ) ) ( by ( a person ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Three) (NNS puppies)) (VP (VBP are) (PP (IN in) (NP (NP (DT the) (NN tub)) (VP (VBG being) (VP (VBN sprayed) (PP (IN with) (NP (NN water))) (PP (IN by) (NP (DT a) (NN person)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "447800028.jpg#3",
+  "gold_label": "contradiction",
+  "pairID": "447800028.jpg#3r1c",
+  "sentence1": "A dog is sitting on a table.",
+  "sentence1_binary_parse": "( ( A dog ) ( ( is ( sitting ( on ( a table ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN dog)) (VP (VBZ is) (VP (VBG sitting) (PP (IN on) (NP (DT a) (NN table))))) (. .)))",
+  "sentence2": "Dog running with a purple toy in the snowy field.",
+  "sentence2_binary_parse": "( ( Dog ( running ( with ( ( a ( purple toy ) ) ( in ( the ( snowy field ) ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NNP Dog)) (VP (VBG running) (PP (IN with) (NP (NP (DT a) (JJ purple) (NN toy)) (PP (IN in) (NP (DT the) (JJ snowy) (NN field)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "entailment",
+    "neutral",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "5349069500.jpg#4",
+  "gold_label": "entailment",
+  "pairID": "5349069500.jpg#4r1n",
+  "sentence1": "A basket weaver teaching a class at the fair.",
+  "sentence1_binary_parse": "( ( A basket ) ( ( weaver ( ( teaching ( a class ) ) ( at ( the fair ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN basket)) (VP (VBP weaver) (S (VP (VBG teaching) (NP (DT a) (NN class)) (PP (IN at) (NP (DT the) (NN fair)))))) (. .)))",
+  "sentence2": "Instructor on Basket weaving at fair",
+  "sentence2_binary_parse": "( Instructor ( on ( Basket ( weaving ( at fair ) ) ) ) )",
+  "sentence2_parse": "(ROOT (S (VP (VB Instructor) (PP (IN on) (NP (NP (NNP Basket)) (VP (VBG weaving) (PP (IN at) (ADJP (JJ fair)))))))))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "contradiction",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "357725852.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "357725852.jpg#4r1n",
+  "sentence1": "Women looking at the lake from the dock.",
+  "sentence1_binary_parse": "( ( Women ( looking ( at ( ( the lake ) ( from ( the dock ) ) ) ) ) ) . )",
+  "sentence1_parse": "(ROOT (NP (NP (NNS Women)) (VP (VBG looking) (PP (IN at) (NP (NP (DT the) (NN lake)) (PP (IN from) (NP (DT the) (NN dock)))))) (. .)))",
+  "sentence2": "Two people are standing at the end of a wooden dock.",
+  "sentence2_binary_parse": "( ( Two people ) ( ( are ( standing ( at ( ( the end ) ( of ( a ( wooden dock ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Two) (NNS people)) (VP (VBP are) (VP (VBG standing) (PP (IN at) (NP (NP (DT the) (NN end)) (PP (IN of) (NP (DT a) (JJ wooden) (NN dock))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "4749092674.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "4749092674.jpg#2r1e",
+  "sentence1": "The man is wearing a jacket.",
+  "sentence1_binary_parse": "( ( The man ) ( ( is ( wearing ( a jacket ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN man)) (VP (VBZ is) (VP (VBG wearing) (NP (DT a) (NN jacket)))) (. .)))",
+  "sentence2": "A man with a tan jacket with a full grocery bag is crossing the street.",
+  "sentence2_binary_parse": "( ( ( A man ) ( with ( ( a ( tan jacket ) ) ( with ( a ( full ( grocery bag ) ) ) ) ) ) ) ( ( is ( crossing ( the street ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN with) (NP (NP (DT a) (JJ tan) (NN jacket)) (PP (IN with) (NP (DT a) (JJ full) (NN grocery) (NN bag)))))) (VP (VBZ is) (VP (VBG crossing) (NP (DT the) (NN street)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2446009833.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "2446009833.jpg#2r1e",
+  "sentence1": "A woman in white hands something to a woman in blue.",
+  "sentence1_binary_parse": "( ( ( ( A woman ) ( in ( white ( hands something ) ) ) ) ( to ( ( a woman ) ( in blue ) ) ) ) . )",
+  "sentence1_parse": "(ROOT (NP (NP (DT A) (NN woman)) (PP (IN in) (NP (JJ white) (NNS hands) (NN something))) (PP (TO to) (NP (NP (DT a) (NN woman)) (PP (IN in) (NP (NN blue))))) (. .)))",
+  "sentence2": "A woman in a white dress with a white umbrellas is giving something to a woman in dark blue.",
+  "sentence2_binary_parse": "( ( ( A woman ) ( in ( ( a ( white dress ) ) ( with ( a ( white umbrellas ) ) ) ) ) ) ( ( is ( ( giving something ) ( to ( ( a woman ) ( in ( dark blue ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN woman)) (PP (IN in) (NP (NP (DT a) (JJ white) (NN dress)) (PP (IN with) (NP (DT a) (JJ white) (NNS umbrellas)))))) (VP (VBZ is) (VP (VBG giving) (NP (NN something)) (PP (TO to) (NP (NP (DT a) (NN woman)) (PP (IN in) (NP (JJ dark) (NN blue))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2435508244.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "2435508244.jpg#0r1e",
+  "sentence1": "A man sits outside by a table",
+  "sentence1_binary_parse": "( ( A man ) ( ( sits outside ) ( by ( a table ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ sits) (ADVP (RB outside)) (PP (IN by) (NP (DT a) (NN table))))))",
+  "sentence2": "A man in glasses and an orange shirt is sitting outside next to a table with drinks on it.",
+  "sentence2_binary_parse": "( ( ( A man ) ( in ( ( glasses and ) ( an ( orange shirt ) ) ) ) ) ( ( is ( ( sitting ( outside ( next ( to ( a table ) ) ) ) ) ( with ( drinks ( on it ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN in) (NP (NP (NNS glasses)) (CC and) (NP (DT an) (JJ orange) (NN shirt))))) (VP (VBZ is) (VP (VBG sitting) (ADVP (RB outside) (JJ next) (PP (TO to) (NP (DT a) (NN table)))) (PP (IN with) (NP (NP (NNS drinks)) (PP (IN on) (NP (PRP it))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3246773992.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "3246773992.jpg#2r1e",
+  "sentence1": "A girl is dancing.",
+  "sentence1_binary_parse": "( ( A girl ) ( ( is dancing ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN girl)) (VP (VBZ is) (VP (VBG dancing))) (. .)))",
+  "sentence2": "A girl in a costume is performing a dance as other girls in costumes watch.",
+  "sentence2_binary_parse": "( ( ( A girl ) ( in ( a costume ) ) ) ( ( is ( ( performing ( a dance ) ) ( as ( ( other girls ) ( in ( costumes watch ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN girl)) (PP (IN in) (NP (DT a) (NN costume)))) (VP (VBZ is) (VP (VBG performing) (NP (DT a) (NN dance)) (PP (IN as) (NP (NP (JJ other) (NNS girls)) (PP (IN in) (NP (NNS costumes) (NN watch))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "entailment",
+    "neutral",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "2819254573.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "2819254573.jpg#0r1n",
+  "sentence1": "a little boy is riding a roller-coaster",
+  "sentence1_binary_parse": "( ( a ( little boy ) ) ( is ( riding ( a roller-coaster ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT a) (JJ little) (NN boy)) (VP (VBZ is) (VP (VBG riding) (NP (DT a) (NN roller-coaster))))))",
+  "sentence2": "The blond boy is riding roller-coaster with his mouth wide open.",
+  "sentence2_binary_parse": "( ( The ( blond boy ) ) ( ( is ( ( riding roller-coaster ) ( with ( ( his mouth ) ( wide open ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT The) (JJ blond) (NN boy)) (VP (VBZ is) (VP (VBG riding) (NP (NN roller-coaster)) (PP (IN with) (NP (NP (PRP$ his) (NN mouth)) (ADJP (RB wide) (JJ open)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "610825957.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "610825957.jpg#3r1e",
+  "sentence1": "There are at least 2 people.",
+  "sentence1_binary_parse": "( There ( ( are ( ( ( at least ) 2 ) people ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (EX There)) (VP (VBP are) (NP (QP (IN at) (JJS least) (CD 2)) (NNS people))) (. .)))",
+  "sentence2": "A group of people are in a special formation on a soccer field.",
+  "sentence2_binary_parse": "( ( ( A group ) ( of people ) ) ( ( are ( in ( ( a ( special formation ) ) ( on ( a ( soccer field ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN group)) (PP (IN of) (NP (NNS people)))) (VP (VBP are) (PP (IN in) (NP (NP (DT a) (JJ special) (NN formation)) (PP (IN on) (NP (DT a) (NN soccer) (NN field)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "entailment",
+    "entailment",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "4027325112.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "4027325112.jpg#0r1n",
+  "sentence1": "A man sells fish from a stall in the fish market.",
+  "sentence1_binary_parse": "( ( A man ) ( ( ( sells fish ) ( from ( ( a stall ) ( in ( the ( fish market ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ sells) (NP (NN fish)) (PP (IN from) (NP (NP (DT a) (NN stall)) (PP (IN in) (NP (DT the) (NN fish) (NN market)))))) (. .)))",
+  "sentence2": "Two men at a fish market filled with boxes of fish and freshly cut fillets study a weight scale.",
+  "sentence2_binary_parse": "( ( ( ( ( Two men ) ( at ( ( a ( fish market ) ) ( filled ( with ( boxes ( of fish ) ) ) ) ) ) ) and ) ( freshly ( cut fillets ) ) ) ( ( study ( a ( weight scale ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (NP (CD Two) (NNS men)) (PP (IN at) (NP (NP (DT a) (NN fish) (NN market)) (VP (VBN filled) (PP (IN with) (NP (NP (NNS boxes)) (PP (IN of) (NP (NN fish))))))))) (CC and) (NP (RB freshly) (VBN cut) (NNS fillets))) (VP (VBP study) (NP (DT a) (NN weight) (NN scale))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "neutral",
+    "entailment",
+    "neutral",
+    "entailment"
+  ],
+  "captionID": "327944239.jpg#0",
+  "gold_label": "-",
+  "pairID": "327944239.jpg#0r1c",
+  "sentence1": "A man without a shirt is fishing.",
+  "sentence1_binary_parse": "( ( ( A man ) ( without ( a shirt ) ) ) ( ( is fishing ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN without) (NP (DT a) (NN shirt)))) (VP (VBZ is) (VP (VBG fishing))) (. .)))",
+  "sentence2": "Shirtless man with long pole navigates covered boat down a palm tree lined river past a hut.",
+  "sentence2_binary_parse": "( ( ( Shirtless man ) ( with ( ( long ( pole navigates ) ) ( ( covered boat ) ( down ( a ( palm tree ) ) ) ) ) ) ) ( ( ( lined river ) ( past ( a hut ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (JJ Shirtless) (NN man)) (PP (IN with) (NP (NP (JJ long) (NN pole) (NNS navigates)) (VP (VBN covered) (NP (NN boat)) (PP (IN down) (NP (DT a) (NN palm) (NN tree))))))) (VP (VBD lined) (NP (NN river)) (PP (IN past) (NP (DT a) (NN hut)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "8151603778.jpg#4",
+  "gold_label": "contradiction",
+  "pairID": "8151603778.jpg#4r1c",
+  "sentence1": "The man is dancing under the stars.",
+  "sentence1_binary_parse": "( ( The man ) ( ( is ( dancing ( under ( the stars ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN man)) (VP (VBZ is) (VP (VBG dancing) (PP (IN under) (NP (DT the) (NNS stars))))) (. .)))",
+  "sentence2": "An older man wearing stars and stripes rides a bike.",
+  "sentence2_binary_parse": "( ( ( An ( older man ) ) ( ( wearing ( stars ( and ( stripes rides ) ) ) ) ( a bike ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT An) (JJR older) (NN man)) (VP (VBG wearing) (NP (NNS stars) (CC and) (NNS stripes) (NNS rides)) (NP (DT a) (NN bike))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "2425411995.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "2425411995.jpg#2r1n",
+  "sentence1": "Serina Williams plays tennis.",
+  "sentence1_binary_parse": "( ( Serina Williams ) ( ( plays tennis ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NNP Serina) (NNP Williams)) (VP (VBZ plays) (NP (NN tennis))) (. .)))",
+  "sentence2": "A woman in tennis clothes running to hit a ball with her tennis racket.",
+  "sentence2_binary_parse": "( ( ( ( A woman ) ( in ( tennis clothes ) ) ) ( running ( to ( ( hit ( a ball ) ) ( with ( her ( tennis racket ) ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NP (DT A) (NN woman)) (PP (IN in) (NP (NN tennis) (NNS clothes)))) (VP (VBG running) (S (VP (TO to) (VP (VB hit) (NP (DT a) (NN ball)) (PP (IN with) (NP (PRP$ her) (NN tennis) (NN racket))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "6928014516.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "6928014516.jpg#3r1n",
+  "sentence1": "The ginger-haired kid holds the pony's reins.",
+  "sentence1_binary_parse": "( ( The ( ginger-haired kid ) ) ( ( holds ( ( the ( pony 's ) ) reins ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (JJ ginger-haired) (NN kid)) (VP (VBZ holds) (NP (NP (DT the) (NN pony) (POS 's)) (NNS reins))) (. .)))",
+  "sentence2": "A young boy learns how to ride a horse",
+  "sentence2_binary_parse": "( ( A ( young boy ) ) ( learns ( how ( to ( ride ( a horse ) ) ) ) ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (JJ young) (NN boy)) (VP (VBZ learns) (SBAR (WHADVP (WRB how)) (S (VP (TO to) (VP (VB ride) (NP (DT a) (NN horse)))))))))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2550071408.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "2550071408.jpg#2r1n",
+  "sentence1": "The young woman is enjoying the sun",
+  "sentence1_binary_parse": "( ( The ( young woman ) ) ( is ( enjoying ( the sun ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (JJ young) (NN woman)) (VP (VBZ is) (VP (VBG enjoying) (NP (DT the) (NN sun))))))",
+  "sentence2": "a young woman siting on a park bench in the sun.",
+  "sentence2_binary_parse": "( ( ( a ( young woman ) ) ( siting ( on ( ( a ( park bench ) ) ( in ( the sun ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT a) (JJ young) (NN woman)) (VP (VBG siting) (PP (IN on) (NP (NP (DT a) (NN park) (NN bench)) (PP (IN in) (NP (DT the) (NN sun)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3666188658.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "3666188658.jpg#0r1e",
+  "sentence1": "The robe is brown.",
+  "sentence1_binary_parse": "( ( The robe ) ( ( is brown ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN robe)) (VP (VBZ is) (ADJP (JJ brown))) (. .)))",
+  "sentence2": "A man wearing a long brown robe is playing the guitar while another person is sitting at the drums and yet another is wearing a long gray robe and singing.",
+  "sentence2_binary_parse": "( ( ( A man ) ( wearing ( a ( long ( brown robe ) ) ) ) ) ( ( is ( ( playing ( the guitar ) ) ( while ( ( ( ( another person ) ( is ( sitting ( at ( the drums ) ) ) ) ) and ) ( yet ( another ( is ( ( ( wearing ( a ( long ( gray robe ) ) ) ) and ) singing ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (VP (VBG wearing) (NP (DT a) (JJ long) (JJ brown) (NN robe)))) (VP (VBZ is) (VP (VBG playing) (NP (DT the) (NN guitar)) (SBAR (IN while) (S (S (NP (DT another) (NN person)) (VP (VBZ is) (VP (VBG sitting) (PP (IN at) (NP (DT the) (NNS drums)))))) (CC and) (S (ADVP (RB yet)) (NP (DT another)) (VP (VBZ is) (VP (VP (VBG wearing) (NP (DT a) (JJ long) (JJ gray) (NN robe))) (CC and) (VP (VBG singing))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3031722599.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "3031722599.jpg#0r1e",
+  "sentence1": "A street vendor is smiling at a camera.",
+  "sentence1_binary_parse": "( ( A ( street vendor ) ) ( ( is ( smiling ( at ( a camera ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN street) (NN vendor)) (VP (VBZ is) (VP (VBG smiling) (PP (IN at) (NP (DT a) (NN camera))))) (. .)))",
+  "sentence2": "A man wearing a green apron, working at a street side vendor called NY Dosas, miles at the camera.",
+  "sentence2_binary_parse": "( ( ( A man ) ( ( ( wearing ( a ( green apron ) ) ) , ) ( working ( at ( a ( street ( side vendor ) ) ) ) ) ) ) ( ( called ( ( ( NY Dosas ) , ) ( miles ( at ( the camera ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (VP (VP (VBG wearing) (NP (DT a) (JJ green) (NN apron))) (, ,) (VP (VBG working) (PP (IN at) (NP (DT a) (NN street) (NN side) (NN vendor)))))) (VP (VBD called) (NP (NP (NNP NY) (NNP Dosas)) (, ,) (NP (NP (NNS miles)) (PP (IN at) (NP (DT the) (NN camera)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2671167487.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "2671167487.jpg#4r1e",
+  "sentence1": "The woman is adjusting the boat.",
+  "sentence1_binary_parse": "( ( The woman ) ( ( is ( adjusting ( the boat ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN woman)) (VP (VBZ is) (VP (VBG adjusting) (NP (DT the) (NN boat)))) (. .)))",
+  "sentence2": "A woman lowering ballast on a boat.",
+  "sentence2_binary_parse": "( ( ( A woman ) ( ( lowering ballast ) ( on ( a boat ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (NN woman)) (VP (VBG lowering) (NP (NN ballast)) (PP (IN on) (NP (DT a) (NN boat)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "contradiction",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "3102705810.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "3102705810.jpg#4r1n",
+  "sentence1": "Two girls are getting ready to ride horses.",
+  "sentence1_binary_parse": "( ( Two girls ) ( ( are ( getting ( ready ( to ( ride horses ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NNS girls)) (VP (VBP are) (VP (VBG getting) (ADJP (JJ ready) (S (VP (TO to) (VP (VB ride) (NP (NNS horses)))))))) (. .)))",
+  "sentence2": "Two girls feeding a horse an apple.",
+  "sentence2_binary_parse": "( ( ( Two girls ) ( ( feeding ( a horse ) ) ( an apple ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (CD Two) (NNS girls)) (VP (VBG feeding) (NP (DT a) (NN horse)) (NP (DT an) (NN apple))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "2445654384.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "2445654384.jpg#4r1n",
+  "sentence1": "A man telling the girl not be scared on top of a silde.",
+  "sentence1_binary_parse": "( ( ( A man ) ( telling ( ( the girl ) ( not ( be ( scared ( on ( top ( of ( a silde ) ) ) ) ) ) ) ) ) ) . )",
+  "sentence1_parse": "(ROOT (NP (NP (DT A) (NN man)) (VP (VBG telling) (S (NP (DT the) (NN girl)) (RB not) (VP (VB be) (VP (VBN scared) (PP (IN on) (NP (NP (NN top)) (PP (IN of) (NP (DT a) (NN silde))))))))) (. .)))",
+  "sentence2": "A man holding girl at top of a slide",
+  "sentence2_binary_parse": "( ( A ( man ( holding girl ) ) ) ( at ( top ( of ( a slide ) ) ) ) )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (NN man) (VBG holding) (NN girl)) (PP (IN at) (NP (NP (NN top)) (PP (IN of) (NP (DT a) (NN slide)))))))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2856564292.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "2856564292.jpg#0r1e",
+  "sentence1": "a man argues with another who is raising his fist",
+  "sentence1_binary_parse": "( ( a man ) ( argues ( with ( another ( who ( is ( raising ( his fist ) ) ) ) ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT a) (NN man)) (VP (VBZ argues) (PP (IN with) (NP (NP (DT another)) (SBAR (WHNP (WP who)) (S (VP (VBZ is) (VP (VBG raising) (NP (PRP$ his) (NN fist)))))))))))",
+  "sentence2": "A man in a blue shirt was arguing with a man in a green jacket and started to raise his fist in anger.",
+  "sentence2_binary_parse": "( ( ( A man ) ( in ( a ( blue shirt ) ) ) ) ( ( ( ( was ( arguing ( with ( ( a man ) ( in ( a ( green jacket ) ) ) ) ) ) ) and ) ( started ( to ( ( raise ( his fist ) ) ( in anger ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN in) (NP (DT a) (JJ blue) (NN shirt)))) (VP (VP (VBD was) (VP (VBG arguing) (PP (IN with) (NP (NP (DT a) (NN man)) (PP (IN in) (NP (DT a) (JJ green) (NN jacket))))))) (CC and) (VP (VBD started) (S (VP (TO to) (VP (VB raise) (NP (PRP$ his) (NN fist)) (PP (IN in) (NP (NN anger)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "neutral"
+  ],
+  "captionID": "4824252063.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "4824252063.jpg#1r1c",
+  "sentence1": "a man in his van because he caught his victim",
+  "sentence1_binary_parse": "( ( a man ) ( in ( ( his van ) ( because ( he ( caught ( his victim ) ) ) ) ) ) )",
+  "sentence1_parse": "(ROOT (NP (NP (DT a) (NN man)) (PP (IN in) (NP (NP (PRP$ his) (NN van)) (SBAR (IN because) (S (NP (PRP he)) (VP (VBD caught) (NP (PRP$ his) (NN victim)))))))))",
+  "sentence2": "A man with a latex glove and black t-shit is standing in front of a Chevy van.",
+  "sentence2_binary_parse": "( ( ( A man ) ( with ( ( ( a ( latex glove ) ) and ) ( black t-shit ) ) ) ) ( ( is ( standing ( in ( front ( of ( a ( Chevy van ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN with) (NP (NP (DT a) (NN latex) (NN glove)) (CC and) (NP (JJ black) (NN t-shit))))) (VP (VBZ is) (VP (VBG standing) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (DT a) (NNP Chevy) (NNP van))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "2786996501.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "2786996501.jpg#1r1c",
+  "sentence1": "Two boys smile wearing tank tops.",
+  "sentence1_binary_parse": "( ( Two boys ) ( ( smile ( wearing ( tank tops ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NNS boys)) (VP (VBP smile) (S (VP (VBG wearing) (NP (NN tank) (NNS tops))))) (. .)))",
+  "sentence2": "Two smiling young girls wearing plastic sunglasses are lying on the grass.",
+  "sentence2_binary_parse": "( ( ( Two ( smiling ( young girls ) ) ) ( wearing ( plastic sunglasses ) ) ) ( ( are ( lying ( on ( the grass ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (CD Two) (VBG smiling) (JJ young) (NNS girls)) (VP (VBG wearing) (NP (JJ plastic) (NNS sunglasses)))) (VP (VBP are) (VP (VBG lying) (PP (IN on) (NP (DT the) (NN grass))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "neutral",
+    "contradiction",
+    "neutral",
+    "contradiction"
+  ],
+  "captionID": "3344526059.jpg#4",
+  "gold_label": "contradiction",
+  "pairID": "3344526059.jpg#4r1c",
+  "sentence1": "The players are taking rest.",
+  "sentence1_binary_parse": "( ( The players ) ( ( are ( taking rest ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NNS players)) (VP (VBP are) (VP (VBG taking) (NP (NN rest)))) (. .)))",
+  "sentence2": "A hockey player in helmet.",
+  "sentence2_binary_parse": "( ( ( A ( hockey player ) ) ( in helmet ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (NN hockey) (NN player)) (PP (IN in) (NP (NN helmet))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "3225880532.jpg#4",
+  "gold_label": "contradiction",
+  "pairID": "3225880532.jpg#4r1c",
+  "sentence1": "The men are watching a football game on the sofa",
+  "sentence1_binary_parse": "( ( The men ) ( are ( ( watching ( a ( football game ) ) ) ( on ( the sofa ) ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NNS men)) (VP (VBP are) (VP (VBG watching) (NP (DT a) (NN football) (NN game)) (PP (IN on) (NP (DT the) (NN sofa)))))))",
+  "sentence2": "Two men talk outdoors.",
+  "sentence2_binary_parse": "( ( Two men ) ( ( talk outdoors ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Two) (NNS men)) (VP (VBP talk) (ADVP (RB outdoors))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2717373229.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "2717373229.jpg#1r1e",
+  "sentence1": "A car door has not been shut",
+  "sentence1_binary_parse": "( ( A ( car door ) ) ( ( has not ) ( been shut ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN car) (NN door)) (VP (VBZ has) (RB not) (VP (VBN been) (VP (VBN shut))))))",
+  "sentence2": "People checking out a car with all its doors open in a parking lot in the city.",
+  "sentence2_binary_parse": "( ( People ( ( checking out ) ( ( a car ) ( with ( all ( its doors ) ) ) ) ) ) ( ( open ( in ( ( a ( parking lot ) ) ( in ( the city ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (NNS People)) (VP (VBG checking) (PRT (RP out)) (NP (NP (DT a) (NN car)) (PP (IN with) (NP (PDT all) (PRP$ its) (NNS doors)))))) (VP (VBP open) (PP (IN in) (NP (NP (DT a) (NN parking) (NN lot)) (PP (IN in) (NP (DT the) (NN city)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "entailment"
+  ],
+  "captionID": "230486268.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "230486268.jpg#3r1n",
+  "sentence1": "The boy is having fun.",
+  "sentence1_binary_parse": "( ( The boy ) ( ( is ( having fun ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN boy)) (VP (VBZ is) (VP (VBG having) (NP (NN fun)))) (. .)))",
+  "sentence2": "A little boy in a red shirt and swim trunks plays at the beach.",
+  "sentence2_binary_parse": "( ( ( A ( little boy ) ) ( in ( ( ( a ( red shirt ) ) and ) ( swim trunks ) ) ) ) ( ( plays ( at ( the beach ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ little) (NN boy)) (PP (IN in) (NP (NP (DT a) (JJ red) (NN shirt)) (CC and) (NP (JJ swim) (NNS trunks))))) (VP (VBZ plays) (PP (IN at) (NP (DT the) (NN beach)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "contradiction",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "2081679622.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "2081679622.jpg#3r1n",
+  "sentence1": "The boy is bouncing on the sofa",
+  "sentence1_binary_parse": "( ( The boy ) ( is ( bouncing ( on ( the sofa ) ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN boy)) (VP (VBZ is) (VP (VBG bouncing) (PP (IN on) (NP (DT the) (NN sofa)))))))",
+  "sentence2": "The boy in pajama pants jumps off the sofa.",
+  "sentence2_binary_parse": "( ( ( The boy ) ( in ( pajama pants ) ) ) ( ( ( jumps off ) ( the sofa ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT The) (NN boy)) (PP (IN in) (NP (NN pajama) (NNS pants)))) (VP (VBZ jumps) (PRT (RP off)) (NP (DT the) (NN sofa))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3025265622.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "3025265622.jpg#4r1e",
+  "sentence1": "People are taking things from rocks.",
+  "sentence1_binary_parse": "( People ( ( are ( ( taking things ) ( from rocks ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NNS People)) (VP (VBP are) (VP (VBG taking) (NP (NNS things)) (PP (IN from) (NP (NNS rocks))))) (. .)))",
+  "sentence2": "A few women and children are collecting items from rocks.",
+  "sentence2_binary_parse": "( ( ( ( A ( few women ) ) and ) children ) ( ( are ( ( collecting items ) ( from rocks ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ few) (NNS women)) (CC and) (NP (NNS children))) (VP (VBP are) (VP (VBG collecting) (NP (NNS items)) (PP (IN from) (NP (NNS rocks))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3348208268.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "3348208268.jpg#0r1e",
+  "sentence1": "A man breakdances while someone watches.",
+  "sentence1_binary_parse": "( ( A man ) ( ( breakdances ( while ( someone watches ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ breakdances) (SBAR (IN while) (S (NP (NN someone)) (VP (VBZ watches))))) (. .)))",
+  "sentence2": "One man watches while another breakdances, balancing himself for a moment on one hand.",
+  "sentence2_binary_parse": "( ( One man ) ( ( watches ( while ( another ( ( breakdances , ) ( ( balancing himself ) ( for ( ( a moment ) ( on ( one hand ) ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD One) (NN man)) (VP (VBZ watches) (SBAR (IN while) (S (NP (DT another)) (VP (VBZ breakdances) (, ,) (S (VP (VBG balancing) (NP (PRP himself)) (PP (IN for) (NP (NP (DT a) (NN moment)) (PP (IN on) (NP (CD one) (NN hand))))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "7537460976.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "7537460976.jpg#1r1c",
+  "sentence1": "Several people are playing dominoes.",
+  "sentence1_binary_parse": "( ( Several people ) ( ( are ( playing dominoes ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (JJ Several) (NNS people)) (VP (VBP are) (VP (VBG playing) (NP (NNS dominoes)))) (. .)))",
+  "sentence2": "Several people are playing an intense game of paintball while others watch from the sidelines.",
+  "sentence2_binary_parse": "( ( Several people ) ( ( are ( ( playing ( ( an ( intense game ) ) ( of paintball ) ) ) ( while ( others ( watch ( from ( the sidelines ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (JJ Several) (NNS people)) (VP (VBP are) (VP (VBG playing) (NP (NP (DT an) (JJ intense) (NN game)) (PP (IN of) (NP (NN paintball)))) (SBAR (IN while) (S (NP (NNS others)) (VP (VBP watch) (PP (IN from) (NP (DT the) (NNS sidelines)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "7277119012.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "7277119012.jpg#0r1e",
+  "sentence1": "A boy happily watches a man jumping on a stage.",
+  "sentence1_binary_parse": "( ( A boy ) ( happily ( ( watches ( ( a man ) ( jumping ( on ( a stage ) ) ) ) ) . ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN boy)) (ADVP (RB happily)) (VP (VBZ watches) (NP (NP (DT a) (NN man)) (VP (VBG jumping) (PP (IN on) (NP (DT a) (NN stage)))))) (. .)))",
+  "sentence2": "A man on stage in the act of jumping, with a little boy in the background really enjoying it.",
+  "sentence2_binary_parse": "( ( A man ) ( ( on ( ( ( stage ( in ( ( the act ) ( of jumping ) ) ) ) , ) ( with ( ( ( a ( little boy ) ) ( in ( the background ) ) ) ( really ( enjoying it ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (ADVP (RB on)) (VBP stage) (PP (IN in) (NP (NP (DT the) (NN act)) (PP (IN of) (NP (NN jumping))))) (, ,) (PP (IN with) (S (NP (NP (DT a) (JJ little) (NN boy)) (PP (IN in) (NP (DT the) (NN background)))) (ADVP (RB really)) (VP (VBG enjoying) (NP (PRP it)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "1785224814.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "1785224814.jpg#1r1e",
+  "sentence1": "There are people who are about to eat.",
+  "sentence1_binary_parse": "( There ( ( are ( people ( who ( are ( about ( to eat ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (EX There)) (VP (VBP are) (NP (NP (NNS people)) (SBAR (WHNP (WP who)) (S (VP (VBP are) (VP (IN about) (S (VP (TO to) (VP (VB eat)))))))))) (. .)))",
+  "sentence2": "People ordering and picking up food at a restaurant window.",
+  "sentence2_binary_parse": "( ( People ( ( ordering and ) ( ( ( picking up ) food ) ( at ( a ( restaurant window ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NNS People)) (VP (VP (VBG ordering)) (CC and) (VP (VBG picking) (PRT (RP up)) (NP (NN food)) (PP (IN at) (NP (DT a) (NN restaurant) (NN window))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3569329986.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "3569329986.jpg#4r1e",
+  "sentence1": "The girl is not standing still.",
+  "sentence1_binary_parse": "( ( The girl ) ( ( ( is not ) ( standing still ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN girl)) (VP (VBZ is) (RB not) (VP (VBG standing) (ADVP (RB still)))) (. .)))",
+  "sentence2": "A young girl running on grass",
+  "sentence2_binary_parse": "( ( A ( young girl ) ) ( running ( on grass ) ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ young) (NN girl)) (VP (VBG running) (PP (IN on) (NP (NN grass)))))))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "2525471610.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "2525471610.jpg#2r1n",
+  "sentence1": "The man and his son stand at the edge of a pond.",
+  "sentence1_binary_parse": "( ( ( ( The man ) and ) ( his son ) ) ( ( stand ( at ( ( the edge ) ( of ( a pond ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT The) (NN man)) (CC and) (NP (PRP$ his) (NN son))) (VP (VBP stand) (PP (IN at) (NP (NP (DT the) (NN edge)) (PP (IN of) (NP (DT a) (NN pond)))))) (. .)))",
+  "sentence2": "A young boy and an adult man looking at ducks in a pond.",
+  "sentence2_binary_parse": "( ( ( ( ( A ( young boy ) ) and ) ( an ( adult man ) ) ) ( looking ( at ( ducks ( in ( a pond ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NP (DT A) (JJ young) (NN boy)) (CC and) (NP (DT an) (JJ adult) (NN man))) (VP (VBG looking) (PP (IN at) (NP (NP (NNS ducks)) (PP (IN in) (NP (DT a) (NN pond)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "entailment",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "3175887061.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "3175887061.jpg#1r1c",
+  "sentence1": "Two men are sitting watching a movie.",
+  "sentence1_binary_parse": "( ( Two men ) ( ( are ( sitting ( watching ( a movie ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NNS men)) (VP (VBP are) (VP (VBG sitting) (S (VP (VBG watching) (NP (DT a) (NN movie)))))) (. .)))",
+  "sentence2": "Two men are sitting in a restaurant while one of them holds a piece of paper up to the camera.",
+  "sentence2_binary_parse": "( ( Two men ) ( ( are ( ( sitting ( in ( a restaurant ) ) ) ( while ( ( one ( of them ) ) ( ( holds ( ( a piece ) ( of paper ) ) ) ( up ( to ( the camera ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Two) (NNS men)) (VP (VBP are) (VP (VBG sitting) (PP (IN in) (NP (DT a) (NN restaurant))) (SBAR (IN while) (S (NP (NP (CD one)) (PP (IN of) (NP (PRP them)))) (VP (VBZ holds) (NP (NP (DT a) (NN piece)) (PP (IN of) (NP (NN paper)))) (ADVP (RB up) (PP (TO to) (NP (DT the) (NN camera))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "482882307.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "482882307.jpg#1r1c",
+  "sentence1": "The raft is empty.",
+  "sentence1_binary_parse": "( ( The raft ) ( ( is empty ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN raft)) (VP (VBZ is) (ADJP (JJ empty))) (. .)))",
+  "sentence2": "A man flying out of a river raft filled with 6 other people.",
+  "sentence2_binary_parse": "( ( ( A man ) ( ( flying out ) ( of ( a ( river raft ) ) ) ) ) ( ( filled ( with ( 6 ( other people ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (VP (VBG flying) (PRT (RP out)) (PP (IN of) (NP (DT a) (NN river) (NN raft))))) (VP (VBN filled) (PP (IN with) (NP (CD 6) (JJ other) (NNS people)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2279416167.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "2279416167.jpg#3r1e",
+  "sentence1": "A child on a beach.",
+  "sentence1_binary_parse": "( ( ( A child ) ( on ( a beach ) ) ) . )",
+  "sentence1_parse": "(ROOT (NP (NP (DT A) (NN child)) (PP (IN on) (NP (DT a) (NN beach))) (. .)))",
+  "sentence2": "A child making a sand castle on the beach.",
+  "sentence2_binary_parse": "( ( ( A child ) ( ( making ( a ( sand castle ) ) ) ( on ( the beach ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (NN child)) (VP (VBG making) (NP (DT a) (NN sand) (NN castle)) (PP (IN on) (NP (DT the) (NN beach)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "2460126267.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "2460126267.jpg#2r1n",
+  "sentence1": "A boy is with a soccer ball.",
+  "sentence1_binary_parse": "( ( A boy ) ( ( is ( with ( a ( soccer ball ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN boy)) (VP (VBZ is) (PP (IN with) (NP (DT a) (NN soccer) (NN ball)))) (. .)))",
+  "sentence2": "A young boy wearing an orange uniform stands on the field near a colorful ball.",
+  "sentence2_binary_parse": "( ( ( A ( young boy ) ) ( wearing ( an ( orange uniform ) ) ) ) ( ( stands ( on ( ( the field ) ( near ( a ( colorful ball ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ young) (NN boy)) (VP (VBG wearing) (NP (DT an) (JJ orange) (NN uniform)))) (VP (VBZ stands) (PP (IN on) (NP (NP (DT the) (NN field)) (PP (IN near) (NP (DT a) (JJ colorful) (NN ball)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "332045444.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "332045444.jpg#0r1c",
+  "sentence1": "A dog barks at the wall.",
+  "sentence1_binary_parse": "( ( A dog ) ( ( barks ( at ( the wall ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN dog)) (VP (VBZ barks) (PP (IN at) (NP (DT the) (NN wall)))) (. .)))",
+  "sentence2": "A little white curly-haired dog runs across the pavement with a stick in its mouth.",
+  "sentence2_binary_parse": "( ( A ( little ( white ( curly-haired dog ) ) ) ) ( ( runs ( across ( ( the pavement ) ( with ( ( a stick ) ( in ( its mouth ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (JJ little) (JJ white) (JJ curly-haired) (NN dog)) (VP (VBZ runs) (PP (IN across) (NP (NP (DT the) (NN pavement)) (PP (IN with) (NP (NP (DT a) (NN stick)) (PP (IN in) (NP (PRP$ its) (NN mouth)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "2619267133.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "2619267133.jpg#1r1e",
+  "sentence1": "A boy rides a horse.",
+  "sentence1_binary_parse": "( ( A boy ) ( ( rides ( a horse ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN boy)) (VP (VBD rides) (NP (DT a) (NN horse))) (. .)))",
+  "sentence2": "A young boy in a cowboy hat rides a large horse.",
+  "sentence2_binary_parse": "( ( ( A ( young boy ) ) ( in ( a ( cowboy hat ) ) ) ) ( ( rides ( a ( large horse ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ young) (NN boy)) (PP (IN in) (NP (DT a) (NN cowboy) (NN hat)))) (VP (VBD rides) (NP (DT a) (JJ large) (NN horse))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "6098659697.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "6098659697.jpg#3r1e",
+  "sentence1": "A man performs for the public",
+  "sentence1_binary_parse": "( ( A man ) ( performs ( for ( the public ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ performs) (PP (IN for) (NP (DT the) (NN public))))))",
+  "sentence2": "A man on a sidewalk is playing the accordion while happy people pass by.",
+  "sentence2_binary_parse": "( ( ( A man ) ( on ( a sidewalk ) ) ) ( ( is ( ( playing ( the accordion ) ) ( while ( ( happy people ) ( pass by ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN on) (NP (DT a) (NN sidewalk)))) (VP (VBZ is) (VP (VBG playing) (NP (DT the) (NN accordion)) (SBAR (IN while) (S (NP (JJ happy) (NNS people)) (VP (VBP pass) (PP (IN by))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "7986651427.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "7986651427.jpg#1r1c",
+  "sentence1": "the crowd is on planet mars",
+  "sentence1_binary_parse": "( ( the crowd ) ( is ( on ( planet mars ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT the) (NN crowd)) (VP (VBZ is) (PP (IN on) (NP (NN planet) (NNS mars))))))",
+  "sentence2": "A crowd of people in a stadium decked out in white, yellow and green cheer and clap for the team below.",
+  "sentence2_binary_parse": "( ( ( A crowd ) ( of ( people ( in ( a stadium ) ) ) ) ) ( ( ( ( ( decked out ) ( in ( ( white ( , ( ( yellow and ) green ) ) ) ( ( cheer and ) clap ) ) ) ) ( for ( the team ) ) ) below ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN crowd)) (PP (IN of) (NP (NP (NNS people)) (PP (IN in) (NP (DT a) (NN stadium)))))) (VP (VBN decked) (PRT (RP out)) (PP (IN in) (NP (ADJP (JJ white) (, ,) (JJ yellow) (CC and) (JJ green)) (NN cheer) (CC and) (NN clap))) (PP (IN for) (NP (DT the) (NN team))) (ADVP (RB below))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "8064982845.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "8064982845.jpg#0r1c",
+  "sentence1": "A man milks a cow",
+  "sentence1_binary_parse": "( ( A man ) ( milks ( a cow ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ milks) (NP (DT a) (NN cow)))))",
+  "sentence2": "A man surfs on a medium sized wave while holding a paddle that seems to steer him in the direction he wants to go.",
+  "sentence2_binary_parse": "( ( ( A ( man surfs ) ) ( on ( a medium ) ) ) ( ( ( sized wave ) ( while ( ( holding ( ( a paddle ) ( that ( seems ( to ( ( steer him ) ( in ( the direction ) ) ) ) ) ) ) ) ( he ( wants ( to go ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man) (NNS surfs)) (PP (IN on) (NP (DT a) (NN medium)))) (VP (VBD sized) (NP (NN wave)) (SBAR (IN while) (S (S (VP (VBG holding) (NP (NP (DT a) (NN paddle)) (SBAR (WHNP (WDT that)) (S (VP (VBZ seems) (S (VP (TO to) (VP (VB steer) (NP (PRP him)) (PP (IN in) (NP (DT the) (NN direction)))))))))))) (NP (PRP he)) (VP (VBZ wants) (S (VP (TO to) (VP (VB go)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "contradiction",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "3680378579.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "3680378579.jpg#4r1n",
+  "sentence1": "lessons are there to learn",
+  "sentence1_binary_parse": "( lessons ( ( are there ) ( to learn ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (NNS lessons)) (VP (VBP are) (ADVP (RB there)) (S (VP (TO to) (VP (VB learn)))))))",
+  "sentence2": "A woman plays guitar for tips.",
+  "sentence2_binary_parse": "( ( A woman ) ( ( plays ( guitar ( for tips ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN woman)) (VP (VBZ plays) (NP (NP (NN guitar)) (PP (IN for) (NP (NNS tips))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "neutral",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "638855308.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "638855308.jpg#0r1c",
+  "sentence1": "Four older women are sitting in a hot tub",
+  "sentence1_binary_parse": "( ( Four ( older women ) ) ( are ( sitting ( in ( a ( hot tub ) ) ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Four) (JJR older) (NNS women)) (VP (VBP are) (VP (VBG sitting) (PP (IN in) (NP (DT a) (JJ hot) (NN tub)))))))",
+  "sentence2": "An older women looking off into the distance with three older women walking towards her from behind.",
+  "sentence2_binary_parse": "( ( ( An ( older women ) ) ( ( ( looking off ) ( into ( ( the distance ) ( with ( three ( older women ) ) ) ) ) ) ( ( walking ( towards her ) ) ( from behind ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT An) (JJR older) (NNS women)) (VP (VBG looking) (PRT (RP off)) (PP (IN into) (NP (NP (DT the) (NN distance)) (PP (IN with) (NP (CD three) (JJR older) (NNS women))))) (S (VP (VBG walking) (PP (IN towards) (NP (PRP her))) (PP (IN from) (NP (NN behind)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3294336227.jpg#4",
+  "gold_label": "neutral",
+  "pairID": "3294336227.jpg#4r1e",
+  "sentence1": "A man in a coat takes a stroll outdoors.",
+  "sentence1_binary_parse": "( ( ( A man ) ( in ( a coat ) ) ) ( ( ( takes ( a stroll ) ) outdoors ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN in) (NP (DT a) (NN coat)))) (VP (VBZ takes) (NP (DT a) (NN stroll)) (ADVP (RB outdoors))) (. .)))",
+  "sentence2": "Person in a long red coat walking in front of a building.",
+  "sentence2_binary_parse": "( ( ( Person ( in ( a ( long ( red coat ) ) ) ) ) ( walking ( in ( front ( of ( a building ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NP (NNP Person)) (PP (IN in) (NP (DT a) (JJ long) (JJ red) (NN coat)))) (VP (VBG walking) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (DT a) (NN building)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "2929137203.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "2929137203.jpg#0r1c",
+  "sentence1": "There is a group of people behind another group of people hiding underneath a table.",
+  "sentence1_binary_parse": "( There ( ( is ( ( a group ) ( of ( people ( behind ( ( another group ) ( of ( people ( hiding ( underneath ( a table ) ) ) ) ) ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (EX There)) (VP (VBZ is) (NP (NP (DT a) (NN group)) (PP (IN of) (NP (NP (NNS people)) (PP (IN behind) (NP (NP (DT another) (NN group)) (PP (IN of) (NP (NP (NNS people)) (VP (VBG hiding) (PP (IN underneath) (NP (DT a) (NN table)))))))))))) (. .)))",
+  "sentence2": "Several people have gathered behind a group of other people who are sitting around a table.",
+  "sentence2_binary_parse": "( ( Several people ) ( ( have ( gathered ( behind ( ( ( a group ) ( of ( other people ) ) ) ( who ( are ( sitting ( around ( a table ) ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (JJ Several) (NNS people)) (VP (VBP have) (VP (VBN gathered) (PP (IN behind) (NP (NP (DT a) (NN group)) (PP (IN of) (NP (JJ other) (NNS people))) (SBAR (WHNP (WP who)) (S (VP (VBP are) (VP (VBG sitting) (PP (IN around) (NP (DT a) (NN table))))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3358682439.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "3358682439.jpg#0r1e",
+  "sentence1": "Two woman are petting a animal.",
+  "sentence1_binary_parse": "( ( Two woman ) ( ( are ( petting ( a animal ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NN woman)) (VP (VBP are) (VP (VBG petting) (NP (DT a) (NN animal)))) (. .)))",
+  "sentence2": "a woman in jeans and a woman in shorts are petting a baby kangaroo.",
+  "sentence2_binary_parse": "( ( ( a woman ) ( in ( ( jeans and ) ( ( a woman ) ( in shorts ) ) ) ) ) ( ( are ( petting ( a ( baby kangaroo ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT a) (NN woman)) (PP (IN in) (NP (NP (NNS jeans)) (CC and) (NP (NP (DT a) (NN woman)) (PP (IN in) (NP (NNS shorts))))))) (VP (VBP are) (VP (VBG petting) (NP (DT a) (NN baby) (NN kangaroo)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "326280022.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "326280022.jpg#2r1e",
+  "sentence1": "A woman browses a market",
+  "sentence1_binary_parse": "( ( A woman ) ( browses ( a market ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN woman)) (VP (VBZ browses) (NP (DT a) (NN market)))))",
+  "sentence2": "A woman with a cart of eggs walks in a market.",
+  "sentence2_binary_parse": "( ( ( A woman ) ( with ( ( a cart ) ( of eggs ) ) ) ) ( ( walks ( in ( a market ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN woman)) (PP (IN with) (NP (NP (DT a) (NN cart)) (PP (IN of) (NP (NNS eggs)))))) (VP (VBZ walks) (PP (IN in) (NP (DT a) (NN market)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "entailment",
+    "entailment",
+    "contradiction"
+  ],
+  "captionID": "578873882.jpg#1",
+  "gold_label": "-",
+  "pairID": "578873882.jpg#1r1n",
+  "sentence1": "A grounds crew re-sods the park.",
+  "sentence1_binary_parse": "( ( A ( grounds crew ) ) ( ( re-sods ( the park ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NNS grounds) (NN crew)) (VP (VBZ re-sods) (NP (DT the) (NN park))) (. .)))",
+  "sentence2": "A team of men, three in red shirts and two others in baseball jerseys, re-surface a baseball diamond with specialized tools.",
+  "sentence2_binary_parse": "( ( ( ( ( ( A team ) ( of men ) ) , ) ( ( ( three ( in ( red shirts ) ) ) and ) ( ( two others ) ( in ( baseball jerseys ) ) ) ) ) , ) ( ( ( re-surface ( a ( baseball diamond ) ) ) ( with ( specialized tools ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (NP (DT A) (NN team)) (PP (IN of) (NP (NNS men)))) (, ,) (NP (NP (NP (CD three)) (PP (IN in) (NP (JJ red) (NNS shirts)))) (CC and) (NP (NP (CD two) (NNS others)) (PP (IN in) (NP (NN baseball) (NNS jerseys))))) (, ,)) (VP (VBP re-surface) (NP (DT a) (NN baseball) (NN diamond)) (PP (IN with) (NP (JJ specialized) (NNS tools)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3686466222.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "3686466222.jpg#1r1e",
+  "sentence1": "Two men are talking.",
+  "sentence1_binary_parse": "( ( Two men ) ( ( are talking ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NNS men)) (VP (VBP are) (VP (VBG talking))) (. .)))",
+  "sentence2": "Two men heavily immersed in a conversation worth having.",
+  "sentence2_binary_parse": "( ( Two men ) ( heavily ( ( immersed ( in ( ( a ( conversation worth ) ) having ) ) ) . ) ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Two) (NNS men)) (ADVP (RB heavily)) (VP (VBD immersed) (PP (IN in) (NP (NP (DT a) (NN conversation) (NN worth)) (VP (VBG having))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "7981322255.jpg#2",
+  "gold_label": "contradiction",
+  "pairID": "7981322255.jpg#2r1c",
+  "sentence1": "A man is juggling baseballs while fans look on upset",
+  "sentence1_binary_parse": "( ( A man ) ( is ( ( juggling baseballs ) ( while ( fans ( look ( on upset ) ) ) ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ is) (VP (VBG juggling) (NP (NNS baseballs)) (SBAR (IN while) (S (NP (NNS fans)) (VP (VBP look) (PP (IN on) (ADJP (JJ upset))))))))))",
+  "sentence2": "A pro-baseball pitcher sends a curve ball to his opponent while many fans relax and enjoy the game.",
+  "sentence2_binary_parse": "( ( A ( pro-baseball pitcher ) ) ( ( ( ( sends ( a ( curve ball ) ) ) ( to ( his opponent ) ) ) ( while ( ( many fans ) ( ( ( relax and ) enjoy ) ( the game ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (JJ pro-baseball) (NN pitcher)) (VP (VBZ sends) (NP (DT a) (NN curve) (NN ball)) (PP (TO to) (NP (PRP$ his) (NN opponent))) (SBAR (IN while) (S (NP (JJ many) (NNS fans)) (VP (VBP relax) (CC and) (VBP enjoy) (NP (DT the) (NN game)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "4139373408.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "4139373408.jpg#3r1n",
+  "sentence1": "The ornate church contains chatting people.",
+  "sentence1_binary_parse": "( ( The ( ornate church ) ) ( ( contains ( chatting people ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (JJ ornate) (NN church)) (VP (VBZ contains) (S (VP (VBG chatting) (NP (NNS people))))) (. .)))",
+  "sentence2": "Men sitting at a table in a church.",
+  "sentence2_binary_parse": "( ( Men ( sitting ( at ( ( a table ) ( in ( a church ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NNS Men)) (VP (VBG sitting) (PP (IN at) (NP (NP (DT a) (NN table)) (PP (IN in) (NP (DT a) (NN church)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "433720959.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "433720959.jpg#0r1e",
+  "sentence1": "a man raises his forearms",
+  "sentence1_binary_parse": "( ( a man ) ( raises ( his forearms ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT a) (NN man)) (VP (VBZ raises) (NP (PRP$ his) (NNS forearms)))))",
+  "sentence2": "A middle-aged man in a collard shirt is raising his forearms next to his face.",
+  "sentence2_binary_parse": "( ( ( A ( middle-aged man ) ) ( in ( a ( collard shirt ) ) ) ) ( ( is ( ( raising ( his forearms ) ) ( next ( to ( his face ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (JJ middle-aged) (NN man)) (PP (IN in) (NP (DT a) (JJ collard) (NN shirt)))) (VP (VBZ is) (VP (VBG raising) (NP (PRP$ his) (NNS forearms)) (ADVP (JJ next) (PP (TO to) (NP (PRP$ his) (NN face)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "3175887061.jpg#2",
+  "gold_label": "contradiction",
+  "pairID": "3175887061.jpg#2r1c",
+  "sentence1": "Two men are throwing rocks at policemen.",
+  "sentence1_binary_parse": "( ( Two men ) ( ( are ( ( throwing rocks ) ( at policemen ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Two) (NNS men)) (VP (VBP are) (VP (VBG throwing) (NP (NNS rocks)) (PP (IN at) (NP (NNS policemen))))) (. .)))",
+  "sentence2": "A man in a red shirt and a man in a brown shirt smiling at the camera and holding up a sign.",
+  "sentence2_binary_parse": "( ( ( ( ( ( A man ) ( in ( a ( red shirt ) ) ) ) and ) ( ( a man ) ( in ( a ( brown shirt ) ) ) ) ) ( ( ( smiling ( at ( the camera ) ) ) and ) ( ( holding up ) ( a sign ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NP (NP (DT A) (NN man)) (PP (IN in) (NP (DT a) (JJ red) (NN shirt)))) (CC and) (NP (NP (DT a) (NN man)) (PP (IN in) (NP (DT a) (JJ brown) (NN shirt))))) (VP (VP (VBG smiling) (PP (IN at) (NP (DT the) (NN camera)))) (CC and) (VP (VBG holding) (PRT (RP up)) (NP (DT a) (NN sign)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "entailment",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "3171506111.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "3171506111.jpg#0r1c",
+  "sentence1": "Two girls hating the town.",
+  "sentence1_binary_parse": "( ( ( Two girls ) ( hating ( the town ) ) ) . )",
+  "sentence1_parse": "(ROOT (NP (NP (CD Two) (NNS girls)) (VP (VBG hating) (NP (DT the) (NN town))) (. .)))",
+  "sentence2": "Two girls in black dresses enjoying a night on the town.",
+  "sentence2_binary_parse": "( ( ( ( Two girls ) ( in ( black dresses ) ) ) ( enjoying ( ( a night ) ( on ( the town ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (NP (CD Two) (NNS girls)) (PP (IN in) (NP (JJ black) (NNS dresses)))) (VP (VBG enjoying) (NP (NP (DT a) (NN night)) (PP (IN on) (NP (DT the) (NN town))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "entailment"
+  ],
+  "captionID": "2519183562.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "2519183562.jpg#0r1c",
+  "sentence1": "The man is standing.",
+  "sentence1_binary_parse": "( ( The man ) ( ( is standing ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN man)) (VP (VBZ is) (VP (VBG standing))) (. .)))",
+  "sentence2": "A man in reflective sunglasses, a skull T-shirt, and long red shorts sits out of the sun in a folding chair.",
+  "sentence2_binary_parse": "( ( ( A man ) ( in ( ( ( ( ( ( reflective sunglasses ) , ) ( a ( skull T-shirt ) ) ) , ) and ) ( long ( red shorts ) ) ) ) ) ( ( ( sits out ) ( of ( ( the sun ) ( in ( a ( folding chair ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (PP (IN in) (NP (NP (JJ reflective) (NNS sunglasses)) (, ,) (NP (DT a) (NN skull) (NN T-shirt)) (, ,) (CC and) (NP (JJ long) (JJ red) (NNS shorts))))) (VP (VBZ sits) (PRT (RP out)) (PP (IN of) (NP (NP (DT the) (NN sun)) (PP (IN in) (NP (DT a) (JJ folding) (NN chair)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "entailment",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "5615077255.jpg#3",
+  "gold_label": "contradiction",
+  "pairID": "5615077255.jpg#3r1c",
+  "sentence1": "One girl is making posters.",
+  "sentence1_binary_parse": "( ( One girl ) ( ( is ( making posters ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD One) (NN girl)) (VP (VBZ is) (VP (VBG making) (NP (NNS posters)))) (. .)))",
+  "sentence2": "Seven young girls are being creative and making posters.",
+  "sentence2_binary_parse": "( ( Seven ( young girls ) ) ( ( are ( ( ( being creative ) and ) ( making posters ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Seven) (JJ young) (NNS girls)) (VP (VBP are) (VP (VP (VBG being) (ADJP (JJ creative))) (CC and) (VP (VBG making) (NP (NNS posters))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "311907717.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "311907717.jpg#0r1e",
+  "sentence1": "Five men watch tv.",
+  "sentence1_binary_parse": "( ( Five men ) ( ( watch tv ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Five) (NNS men)) (VP (VBP watch) (NP (NN tv))) (. .)))",
+  "sentence2": "Five young men are in a loft, with one holding a whiteboard and one making a shaka sign in front of the television.",
+  "sentence2_binary_parse": "( ( Five ( young men ) ) ( ( ( ( are ( in ( a loft ) ) ) , ) ( with ( one ( holding ( ( a ( ( whiteboard and ) one ) ) ( ( making ( a ( shaka sign ) ) ) ( in ( front ( of ( the television ) ) ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Five) (JJ young) (NNS men)) (VP (VBP are) (PP (IN in) (NP (DT a) (NN loft))) (, ,) (PP (IN with) (NP (NP (CD one)) (VP (VBG holding) (NP (NP (DT a) (NN whiteboard) (CC and) (NN one)) (VP (VBG making) (NP (DT a) (NN shaka) (NN sign)) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (DT the) (NN television))))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "neutral",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "3056595980.jpg#2",
+  "gold_label": "contradiction",
+  "pairID": "3056595980.jpg#2r1c",
+  "sentence1": "The three women are looking into the forest.",
+  "sentence1_binary_parse": "( ( The ( three women ) ) ( ( are ( looking ( into ( the forest ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (CD three) (NNS women)) (VP (VBP are) (VP (VBG looking) (PP (IN into) (NP (DT the) (NN forest))))) (. .)))",
+  "sentence2": "Three women are sitting on a green bench looking out at the coast.",
+  "sentence2_binary_parse": "( ( Three women ) ( ( are ( ( sitting ( on ( a ( green bench ) ) ) ) ( ( looking out ) ( at ( the coast ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Three) (NNS women)) (VP (VBP are) (VP (VBG sitting) (PP (IN on) (NP (DT a) (JJ green) (NN bench))) (S (VP (VBG looking) (PRT (RP out)) (PP (IN at) (NP (DT the) (NN coast))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "4976246643.jpg#1",
+  "gold_label": "entailment",
+  "pairID": "4976246643.jpg#1r1e",
+  "sentence1": "A man is being carried by birds.",
+  "sentence1_binary_parse": "( ( A man ) ( ( is ( being ( carried ( by birds ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ is) (VP (VBG being) (VP (VBN carried) (PP (IN by) (NP (NNS birds)))))) (. .)))",
+  "sentence2": "A picture of an artwork that depicts a man being flown by birds that is in font of a construction area.",
+  "sentence2_binary_parse": "( ( ( A picture ) ( of ( ( an artwork ) ( that ( depicts ( ( a man ) ( being ( flown ( by ( birds ( that ( is ( in ( font ( of ( a ( construction area ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (NN picture)) (PP (IN of) (NP (NP (DT an) (NN artwork)) (SBAR (WHNP (WDT that)) (S (VP (VBZ depicts) (NP (NP (DT a) (NN man)) (VP (VBG being) (VP (VBN flown) (PP (IN by) (NP (NP (NNS birds)) (SBAR (WHNP (WDT that)) (S (VP (VBZ is) (PP (IN in) (NP (NP (NN font)) (PP (IN of) (NP (DT a) (NN construction) (NN area)))))))))))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "2245916742.jpg#2",
+  "gold_label": "contradiction",
+  "pairID": "2245916742.jpg#2r1c",
+  "sentence1": "A child hunts for easter eggs.",
+  "sentence1_binary_parse": "( ( A child ) ( ( hunts ( for ( easter eggs ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN child)) (VP (VBZ hunts) (PP (IN for) (NP (NN easter) (NNS eggs)))) (. .)))",
+  "sentence2": "A man stands by two face structures on Easter Island.",
+  "sentence2_binary_parse": "( ( A man ) ( ( stands ( by ( ( two ( face structures ) ) ( on ( Easter Island ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ stands) (PP (IN by) (NP (NP (CD two) (NN face) (NNS structures)) (PP (IN on) (NP (NNP Easter) (NNP Island)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "4021508253.jpg#1",
+  "gold_label": "contradiction",
+  "pairID": "4021508253.jpg#1r1c",
+  "sentence1": "The lady is reading a book.",
+  "sentence1_binary_parse": "( ( The lady ) ( ( is ( reading ( a book ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN lady)) (VP (VBZ is) (VP (VBG reading) (NP (DT a) (NN book)))) (. .)))",
+  "sentence2": "Lady wearing brown jacket with brown boots and orange colored scarf is hearing music while sitting in the train.",
+  "sentence2_binary_parse": "( ( Lady ( ( wearing ( brown jacket ) ) ( with ( ( ( brown boots ) and ) ( orange ( colored scarf ) ) ) ) ) ) ( ( is ( ( hearing music ) ( while ( sitting ( in ( the train ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (NNP Lady)) (VP (VBG wearing) (NP (JJ brown) (NN jacket)) (PP (IN with) (NP (NP (JJ brown) (NNS boots)) (CC and) (NP (JJ orange) (JJ colored) (NN scarf)))))) (VP (VBZ is) (VP (VBG hearing) (NP (NN music)) (PP (IN while) (S (VP (VBG sitting) (PP (IN in) (NP (DT the) (NN train)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3721881082.jpg#1",
+  "gold_label": "entailment",
+  "pairID": "3721881082.jpg#1r1e",
+  "sentence1": "People are outside.",
+  "sentence1_binary_parse": "( People ( ( are outside ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NNS People)) (VP (VBP are) (ADJP (JJ outside))) (. .)))",
+  "sentence2": "A woman wearing colonial clothing is sitting on the grass reading to a young girl.",
+  "sentence2_binary_parse": "( ( ( A woman ) ( wearing ( colonial clothing ) ) ) ( ( is ( ( sitting ( on ( the ( grass reading ) ) ) ) ( to ( a ( young girl ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN woman)) (VP (VBG wearing) (NP (JJ colonial) (NN clothing)))) (VP (VBZ is) (VP (VBG sitting) (PP (IN on) (NP (DT the) (NN grass) (NN reading))) (PP (TO to) (NP (DT a) (JJ young) (NN girl))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "4526977553.jpg#2",
+  "gold_label": "entailment",
+  "pairID": "4526977553.jpg#2r1e",
+  "sentence1": "A person is outside.",
+  "sentence1_binary_parse": "( ( A person ) ( ( is outside ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN person)) (VP (VBZ is) (ADVP (RB outside))) (. .)))",
+  "sentence2": "A woman wearing jeans is walking down the street.",
+  "sentence2_binary_parse": "( ( ( A woman ) ( wearing jeans ) ) ( ( is ( ( walking down ) ( the street ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN woman)) (VP (VBG wearing) (NP (NNS jeans)))) (VP (VBZ is) (VP (VBG walking) (PRT (RP down)) (NP (DT the) (NN street)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "4797784790.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "4797784790.jpg#0r1c",
+  "sentence1": "This man is an athlete.",
+  "sentence1_binary_parse": "( ( This man ) ( ( is ( an athlete ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT This) (NN man)) (VP (VBZ is) (NP (DT an) (NN athlete))) (. .)))",
+  "sentence2": "A stoplight displaying two bicycle symbols, a left-turning green arrow and a red forward signal stands in the foreground while a man in a white hat and blue shirt bikes along a red path.",
+  "sentence2_binary_parse": "( ( ( A stoplight ) ( displaying ( ( ( ( ( two ( bicycle symbols ) ) , ) ( a ( left-turning ( green arrow ) ) ) ) and ) ( a ( red ( forward signal ) ) ) ) ) ) ( ( ( stands ( in ( the foreground ) ) ) ( while ( ( ( ( a man ) ( in ( a ( white hat ) ) ) ) and ) ( ( blue ( shirt bikes ) ) ( along ( a ( red path ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN stoplight)) (VP (VBG displaying) (NP (NP (CD two) (NN bicycle) (NNS symbols)) (, ,) (NP (DT a) (JJ left-turning) (JJ green) (NN arrow)) (CC and) (NP (DT a) (JJ red) (JJ forward) (NN signal))))) (VP (VBZ stands) (PP (IN in) (NP (DT the) (NN foreground))) (PP (IN while) (NP (NP (NP (DT a) (NN man)) (PP (IN in) (NP (DT a) (JJ white) (NN hat)))) (CC and) (NP (NP (JJ blue) (NN shirt) (NNS bikes)) (PP (IN along) (NP (DT a) (JJ red) (NN path))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "7002845832.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "7002845832.jpg#3r1n",
+  "sentence1": "The track runners are all black ethniticity",
+  "sentence1_binary_parse": "( ( The ( track runners ) ) ( are ( all ( black ethniticity ) ) ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN track) (NNS runners)) (VP (VBP are) (NP (DT all) (JJ black) (NN ethniticity)))))",
+  "sentence2": "There are a group of track runners bracing to take off.",
+  "sentence2_binary_parse": "( There ( ( are ( ( a group ) ( of ( ( track runners ) ( bracing ( to ( take off ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (EX There)) (VP (VBP are) (NP (NP (DT a) (NN group)) (PP (IN of) (NP (NP (NN track) (NNS runners)) (VP (VBG bracing) (S (VP (TO to) (VP (VB take) (PRT (RP off)))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "4647089599.jpg#0",
+  "gold_label": "entailment",
+  "pairID": "4647089599.jpg#0r1e",
+  "sentence1": "A man dressed really strangely is walking in front of some shops.",
+  "sentence1_binary_parse": "( ( ( A man ) ( dressed ( really strangely ) ) ) ( ( is ( walking ( in ( front ( of ( some shops ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (VP (VBN dressed) (ADVP (RB really) (RB strangely)))) (VP (VBZ is) (VP (VBG walking) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (DT some) (NNS shops))))))) (. .)))",
+  "sentence2": "A man wearing a graduation cap, a suit, and an orange shawl walks in front of city shops.",
+  "sentence2_binary_parse": "( ( ( A man ) ( wearing ( ( ( ( ( ( a ( graduation cap ) ) , ) ( a suit ) ) , ) and ) ( an ( orange shawl ) ) ) ) ) ( ( walks ( in ( front ( of ( city shops ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN man)) (VP (VBG wearing) (NP (NP (DT a) (NN graduation) (NN cap)) (, ,) (NP (DT a) (NN suit)) (, ,) (CC and) (NP (DT an) (JJ orange) (NN shawl))))) (VP (VBZ walks) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (NN city) (NNS shops)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "871290666.jpg#2",
+  "gold_label": "entailment",
+  "pairID": "871290666.jpg#2r1e",
+  "sentence1": "A man is outside.",
+  "sentence1_binary_parse": "( ( A man ) ( ( is outside ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ is) (ADVP (RB outside))) (. .)))",
+  "sentence2": "A man sits outdoors with some of his belongings.",
+  "sentence2_binary_parse": "( ( A man ) ( ( ( sits outdoors ) ( with ( some ( of ( his belongings ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ sits) (ADVP (RB outdoors)) (PP (IN with) (NP (NP (DT some)) (PP (IN of) (NP (PRP$ his) (NNS belongings)))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "neutral",
+    "contradiction",
+    "contradiction",
+    "neutral"
+  ],
+  "captionID": "3326454455.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "3326454455.jpg#0r1c",
+  "sentence1": "People are not looking at underwear.",
+  "sentence1_binary_parse": "( People ( ( ( are not ) ( looking ( at underwear ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NNS People)) (VP (VBP are) (RB not) (VP (VBG looking) (PP (IN at) (NP (NN underwear))))) (. .)))",
+  "sentence2": "We can see the white underwear of the man wearing the red soccer jersey because he is pulling up his shorts.",
+  "sentence2_binary_parse": "( We ( ( can ( see ( ( the ( white underwear ) ) ( of ( ( the man ) ( ( wearing ( the ( red ( soccer jersey ) ) ) ) ( because ( he ( is ( ( pulling up ) ( his shorts ) ) ) ) ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (PRP We)) (VP (MD can) (VP (VB see) (NP (NP (DT the) (JJ white) (NN underwear)) (PP (IN of) (NP (NP (DT the) (NN man)) (VP (VBG wearing) (NP (DT the) (JJ red) (NN soccer) (NN jersey)) (SBAR (IN because) (S (NP (PRP he)) (VP (VBZ is) (VP (VBG pulling) (PRT (RP up)) (NP (PRP$ his) (NNS shorts)))))))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "349738226.jpg#0",
+  "gold_label": "neutral",
+  "pairID": "349738226.jpg#0r1n",
+  "sentence1": "A group of people are part of a dog lover's group.",
+  "sentence1_binary_parse": "( ( ( A group ) ( of people ) ) ( ( are ( part ( of ( ( a ( dog ( lover 's ) ) ) group ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT A) (NN group)) (PP (IN of) (NP (NNS people)))) (VP (VBP are) (NP (NP (NN part)) (PP (IN of) (NP (NP (DT a) (NN dog) (NN lover) (POS 's)) (NN group))))) (. .)))",
+  "sentence2": "A group of people in jackets and hats are kneeling outside posing for a picture, each one with their dog by them on a leash.",
+  "sentence2_binary_parse": "( ( ( A group ) ( of ( people ( in ( ( jackets and ) hats ) ) ) ) ) ( ( are ( kneeling ( outside ( ( ( posing ( for ( ( ( a picture ) , ) ( ( each one ) ( with ( their dog ) ) ) ) ) ) ( by them ) ) ( on ( a leash ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN group)) (PP (IN of) (NP (NP (NNS people)) (PP (IN in) (NP (NNS jackets) (CC and) (NNS hats)))))) (VP (VBP are) (VP (VBG kneeling) (PP (IN outside) (S (VP (VBG posing) (PP (IN for) (NP (NP (DT a) (NN picture)) (, ,) (NP (NP (DT each) (NN one)) (PP (IN with) (NP (PRP$ their) (NN dog)))))) (PP (IN by) (NP (PRP them))) (PP (IN on) (NP (DT a) (NN leash)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "3772532605.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "3772532605.jpg#3r1n",
+  "sentence1": "The woman is in the ocean.",
+  "sentence1_binary_parse": "( ( The woman ) ( ( is ( in ( the ocean ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN woman)) (VP (VBZ is) (PP (IN in) (NP (DT the) (NN ocean)))) (. .)))",
+  "sentence2": "A woman floats in an innertube in a large body of water.",
+  "sentence2_binary_parse": "( ( A woman ) ( ( floats ( in ( ( an innertube ) ( in ( ( a ( large body ) ) ( of water ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN woman)) (VP (VBZ floats) (PP (IN in) (NP (NP (DT an) (NN innertube)) (PP (IN in) (NP (NP (DT a) (JJ large) (NN body)) (PP (IN of) (NP (NN water)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "entailment",
+    "neutral",
+    "contradiction"
+  ],
+  "captionID": "2536991887.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "2536991887.jpg#3r1n",
+  "sentence1": "Workers wearing orange are about to repair rail tracks.",
+  "sentence1_binary_parse": "( ( Workers ( wearing orange ) ) ( ( are ( about ( to ( repair ( rail tracks ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (NNS Workers)) (VP (VBG wearing) (ADJP (JJ orange)))) (VP (VBP are) (VP (IN about) (S (VP (TO to) (VP (VB repair) (NP (NN rail) (NNS tracks))))))) (. .)))",
+  "sentence2": "Workers wearing orange vests stand near rail tracks.",
+  "sentence2_binary_parse": "( ( Workers ( wearing ( orange vests ) ) ) ( ( stand ( near ( rail tracks ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (NNS Workers)) (VP (VBG wearing) (NP (JJ orange) (NNS vests)))) (VP (VBP stand) (PP (IN near) (NP (NN rail) (NNS tracks)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "571002259.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "571002259.jpg#2r1n",
+  "sentence1": "A tall human poking",
+  "sentence1_binary_parse": "( A ( tall ( human poking ) ) )",
+  "sentence1_parse": "(ROOT (NP (DT A) (JJ tall) (JJ human) (NN poking)))",
+  "sentence2": "A male with sunglasses is poking at a tree with a pole.",
+  "sentence2_binary_parse": "( ( ( A male ) ( with sunglasses ) ) ( ( is ( poking ( at ( ( a tree ) ( with ( a pole ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (DT A) (NN male)) (PP (IN with) (NP (NNS sunglasses)))) (VP (VBZ is) (VP (VBG poking) (PP (IN at) (NP (NP (DT a) (NN tree)) (PP (IN with) (NP (DT a) (NN pole))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "455994083.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "455994083.jpg#2r1n",
+  "sentence1": "The man was about to record his music album.",
+  "sentence1_binary_parse": "( ( The man ) ( ( was ( about ( to ( record ( his ( music album ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN man)) (VP (VBD was) (VP (IN about) (S (VP (TO to) (VP (VB record) (NP (PRP$ his) (NN music) (NN album))))))) (. .)))",
+  "sentence2": "A man is holding a microphone in front of his mouth.",
+  "sentence2_binary_parse": "( ( A man ) ( ( is ( ( holding ( a microphone ) ) ( in ( front ( of ( his mouth ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN man)) (VP (VBZ is) (VP (VBG holding) (NP (DT a) (NN microphone)) (PP (IN in) (NP (NP (NN front)) (PP (IN of) (NP (PRP$ his) (NN mouth))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "neutral",
+    "neutral",
+    "neutral",
+    "entailment"
+  ],
+  "captionID": "443756591.jpg#2",
+  "gold_label": "neutral",
+  "pairID": "443756591.jpg#2r1n",
+  "sentence1": "A brother and sister are playing on a swing set.",
+  "sentence1_binary_parse": "( ( A ( ( brother and ) sister ) ) ( ( are ( playing ( on ( a ( swing set ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN brother) (CC and) (NN sister)) (VP (VBP are) (VP (VBG playing) (PP (IN on) (NP (DT a) (NN swing) (NN set))))) (. .)))",
+  "sentence2": "A boy and girl child swing together on a swing set.",
+  "sentence2_binary_parse": "( ( A ( boy ( and ( girl child ) ) ) ) ( ( ( swing together ) ( on ( a ( swing set ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN boy) (CC and) (NN girl) (NN child)) (VP (VBP swing) (ADVP (RB together)) (PP (IN on) (NP (DT a) (NN swing) (NN set)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "neutral",
+    "neutral",
+    "entailment",
+    "neutral"
+  ],
+  "captionID": "311619377.jpg#3",
+  "gold_label": "neutral",
+  "pairID": "311619377.jpg#3r1e",
+  "sentence1": "The woman is in a kitchen.",
+  "sentence1_binary_parse": "( ( The woman ) ( ( is ( in ( a kitchen ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN woman)) (VP (VBZ is) (PP (IN in) (NP (DT a) (NN kitchen)))) (. .)))",
+  "sentence2": "A woman looks at a plate filled with steam.",
+  "sentence2_binary_parse": "( ( A woman ) ( ( looks ( at ( ( a plate ) ( filled ( with steam ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT A) (NN woman)) (VP (VBZ looks) (PP (IN at) (NP (NP (DT a) (NN plate)) (VP (VBN filled) (PP (IN with) (NP (NN steam))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "entailment",
+    "contradiction",
+    "entailment",
+    "contradiction"
+  ],
+  "captionID": "5716554915.jpg#0",
+  "gold_label": "contradiction",
+  "pairID": "5716554915.jpg#0r1c",
+  "sentence1": "A woman is asleep while moonlight filters in the window.",
+  "sentence1_binary_parse": "( ( A woman ) ( ( ( is asleep ) ( while ( moonlight ( filters ( in ( the window ) ) ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT A) (NN woman)) (VP (VBZ is) (ADJP (RB asleep)) (SBAR (IN while) (S (NP (NN moonlight)) (VP (VBZ filters) (PP (IN in) (NP (DT the) (NN window))))))) (. .)))",
+  "sentence2": "A woman in a black outfit lies face first on a yoga mat; several paintings are hanged on the wall, and the sun shines through a large window near her.",
+  "sentence2_binary_parse": "( ( ( ( ( ( A woman ) ( in ( a ( black outfit ) ) ) ) ( lies ( ( face first ) ( on ( a ( yoga mat ) ) ) ) ) ) ; ) ( ( ( ( ( several paintings ) ( are ( hanged ( on ( the wall ) ) ) ) ) , ) and ) ( ( the sun ) ( shines ( through ( ( a ( large window ) ) ( near her ) ) ) ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (S (S (NP (NP (DT A) (NN woman)) (PP (IN in) (NP (DT a) (JJ black) (NN outfit)))) (VP (VBZ lies) (VP (VB face) (ADVP (RB first)) (PP (IN on) (NP (DT a) (NN yoga) (NN mat)))))) (: ;) (S (S (NP (JJ several) (NNS paintings)) (VP (VBP are) (VP (VBN hanged) (PP (IN on) (NP (DT the) (NN wall)))))) (, ,) (CC and) (S (NP (DT the) (NN sun)) (VP (VBZ shines) (PP (IN through) (NP (NP (DT a) (JJ large) (NN window)) (PP (IN near) (NP (PRP her)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "neutral",
+    "entailment",
+    "neutral",
+    "neutral",
+    "neutral"
+  ],
+  "captionID": "6181621171.jpg#1",
+  "gold_label": "neutral",
+  "pairID": "6181621171.jpg#1r1n",
+  "sentence1": "Five girls are wearing different colored dresses.",
+  "sentence1_binary_parse": "( ( Five girls ) ( ( are ( wearing ( different ( colored dresses ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Five) (NNS girls)) (VP (VBP are) (VP (VBG wearing) (NP (JJ different) (JJ colored) (NNS dresses)))) (. .)))",
+  "sentence2": "Five young indian girls dress in colorful dresses are holding hands and smiling forming a circle",
+  "sentence2_binary_parse": "( ( ( Five ( young ( indian ( girls dress ) ) ) ) ( in ( colorful dresses ) ) ) ( are ( ( ( holding hands ) and ) ( smiling ( forming ( a circle ) ) ) ) ) )",
+  "sentence2_parse": "(ROOT (S (NP (NP (CD Five) (JJ young) (JJ indian) (NNS girls) (NN dress)) (PP (IN in) (NP (JJ colorful) (NNS dresses)))) (VP (VBP are) (VP (VP (VBG holding) (NP (NNS hands))) (CC and) (VP (VBG smiling) (S (VP (VBG forming) (NP (DT a) (NN circle)))))))))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "5921628407.jpg#1",
+  "gold_label": "entailment",
+  "pairID": "5921628407.jpg#1r1e",
+  "sentence1": "The couple are on a bus.",
+  "sentence1_binary_parse": "( ( The couple ) ( ( are ( on ( a bus ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (NN couple)) (VP (VBP are) (PP (IN on) (NP (DT a) (NN bus)))) (. .)))",
+  "sentence2": "A young couple riding on a bus with the boy's arm around the girl.",
+  "sentence2_binary_parse": "( ( ( A ( young couple ) ) ( ( riding ( on ( ( a bus ) ( with ( ( the ( boy 's ) ) arm ) ) ) ) ) ( around ( the girl ) ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (DT A) (JJ young) (NN couple)) (VP (VBG riding) (PP (IN on) (NP (NP (DT a) (NN bus)) (PP (IN with) (NP (NP (DT the) (NN boy) (POS 's)) (NN arm))))) (PP (IN around) (NP (DT the) (NN girl)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction",
+    "contradiction"
+  ],
+  "captionID": "3656030945.jpg#3",
+  "gold_label": "contradiction",
+  "pairID": "3656030945.jpg#3r1c",
+  "sentence1": "Three puppies are snuggling with their mother by the fire.",
+  "sentence1_binary_parse": "( ( Three puppies ) ( ( are ( ( snuggling ( with ( their mother ) ) ) ( by ( the fire ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (CD Three) (NNS puppies)) (VP (VBP are) (VP (VBG snuggling) (PP (IN with) (NP (PRP$ their) (NN mother))) (PP (IN by) (NP (DT the) (NN fire))))) (. .)))",
+  "sentence2": "Three puppies are in the tub being sprayed with water by a person.",
+  "sentence2_binary_parse": "( ( Three puppies ) ( ( are ( in ( ( the tub ) ( being ( ( sprayed ( with water ) ) ( by ( a person ) ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Three) (NNS puppies)) (VP (VBP are) (PP (IN in) (NP (NP (DT the) (NN tub)) (VP (VBG being) (VP (VBN sprayed) (PP (IN with) (NP (NN water))) (PP (IN by) (NP (DT a) (NN person)))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "3227111573.jpg#3",
+  "gold_label": "entailment",
+  "pairID": "3227111573.jpg#3r1e",
+  "sentence1": "The three people are posing at the mountain.",
+  "sentence1_binary_parse": "( ( The ( three people ) ) ( ( are ( posing ( at ( the mountain ) ) ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (CD three) (NNS people)) (VP (VBP are) (VP (VBG posing) (PP (IN at) (NP (DT the) (NN mountain))))) (. .)))",
+  "sentence2": "Three people are posing on the side of a mountain.",
+  "sentence2_binary_parse": "( ( Three people ) ( ( are ( posing ( on ( ( the side ) ( of ( a mountain ) ) ) ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (CD Three) (NNS people)) (VP (VBP are) (VP (VBG posing) (PP (IN on) (NP (NP (DT the) (NN side)) (PP (IN of) (NP (DT a) (NN mountain))))))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "237953705.jpg#1",
+  "gold_label": "entailment",
+  "pairID": "237953705.jpg#1r1e",
+  "sentence1": "The three young children are outside.",
+  "sentence1_binary_parse": "( ( The ( three ( young children ) ) ) ( ( are outside ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (DT The) (CD three) (JJ young) (NNS children)) (VP (VBP are) (ADJP (JJ outside))) (. .)))",
+  "sentence2": "The three young children played with some toilet paper in the grass.",
+  "sentence2_binary_parse": "( ( The ( three ( young children ) ) ) ( ( ( played ( with ( some ( toilet paper ) ) ) ) ( in ( the grass ) ) ) . ) )",
+  "sentence2_parse": "(ROOT (S (NP (DT The) (CD three) (JJ young) (NNS children)) (VP (VBD played) (PP (IN with) (NP (DT some) (NN toilet) (NN paper))) (PP (IN in) (NP (DT the) (NN grass)))) (. .)))"
+}
+{
+  "annotator_labels": [
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment",
+    "entailment"
+  ],
+  "captionID": "9556225.jpg#3",
+  "gold_label": "entailment",
+  "pairID": "9556225.jpg#3r1e",
+  "sentence1": "A woman working with her hands protected from harm.",
+  "sentence1_binary_parse": "( ( ( A woman ) ( working ( with ( her hands ) ) ) ) ( ( protected ( from harm ) ) . ) )",
+  "sentence1_parse": "(ROOT (S (NP (NP (DT A) (NN woman)) (VP (VBG working) (PP (IN with) (NP (PRP$ her) (NNS hands))))) (VP (VBN protected) (PP (IN from) (NP (NN harm)))) (. .)))",
+  "sentence2": "Blond women working wearing gloves.",
+  "sentence2_binary_parse": "( ( ( Blond women ) ( working ( wearing gloves ) ) ) . )",
+  "sentence2_parse": "(ROOT (NP (NP (JJ Blond) (NNS women)) (VP (VBG working) (S (VP (VBG wearing) (NP (NNS gloves))))) (. .)))"
+}

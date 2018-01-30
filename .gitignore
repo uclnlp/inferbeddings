@@ -115,3 +115,6 @@ data/multinli/*.gz
 save/
 models/lm/lm.ckpt-*.data-00000-*
 models/lm/lm.ckpt-*.*
+
+# Locks
+*.swp
