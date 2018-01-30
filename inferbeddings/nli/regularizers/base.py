@@ -190,7 +190,7 @@ def entailment_acl(model_class, model_kwargs,
 
     if is_bi:
         p_i, q_i = contradiction_prob, inv_entailment_prob
-        losses += tf.nn.relu(q_i - (1.0 - p_i))
+        losses += tf.nn.relu(p_i - (1.0 - q_i))
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss
@@ -228,7 +228,7 @@ def neutral_acl(model_class, model_kwargs,
 
     if is_bi:
         p_i, q_i = contradiction_prob, inv_neutral_prob
-        losses += tf.nn.relu(q_i - (1.0 - p_i))
+        losses += tf.nn.relu(p_i - (1.0 - q_i))
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss
@@ -266,6 +266,9 @@ def entailment_reflexive_acl(model_class, model_kwargs,
     return (loss, losses) if debug else loss
 
 
+# XXX: This is a soft constraint - it's not true in case of paraphrases,
+# but it tends to be true most of the times.
+#
 def entailment_neutral_acl(model_class, model_kwargs,
                            pooling_function=tf.reduce_sum,
                            entailment_idx=0, neutral_idx=1, contradiction_idx=2,
@@ -298,7 +301,7 @@ def entailment_neutral_acl(model_class, model_kwargs,
 
     if is_bi:
         p_i, q_i = inv_entailment_prob, neutral_prob
-        losses += tf.nn.relu(q_i - p_i)
+        losses += tf.nn.relu(p_i - q_i)
 
     loss = pooling_function(losses)
     return (loss, losses) if debug else loss

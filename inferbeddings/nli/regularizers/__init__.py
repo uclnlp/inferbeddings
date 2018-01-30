@@ -21,5 +21,6 @@ __all__ = [
     'entailment_acl',
     'neutral_acl',
 
-    'entailment_reflexive_acl'
+    'entailment_reflexive_acl',
+    'entailment_neutral_acl'
 ]
