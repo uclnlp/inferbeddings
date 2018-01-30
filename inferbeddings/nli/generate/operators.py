@@ -3,7 +3,7 @@
 import nltk
 
 
-def insert_subtree(tree1, st_idx, tree2):
+def _insert_subtree(tree1, st_idx, tree2):
     len_st = len(list(tree1.subtrees())[st_idx])
     res = []
     for i in range(len_st + 1):
@@ -15,12 +15,10 @@ def insert_subtree(tree1, st_idx, tree2):
 
 
 def combine_trees(tree1, tree2):
-    nb_sts1, nb_sts2 = len(list(tree1.subtrees())), len(list(tree2.subtrees()))
+    nb_sts = len(list(tree1.subtrees()))
     res = []
-    for i in range(nb_sts1):
-        res += insert_subtree(tree1, i, tree2)
-    for i in range(nb_sts2):
-        res += insert_subtree(tree2, i, tree1)
+    for i in range(nb_sts):
+        res += _insert_subtree(tree1, i, tree2)
     return res
 
 
