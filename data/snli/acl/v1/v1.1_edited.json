@@ -1375,7 +1375,7 @@
     "neutral"
   ],
   "captionID": "4976246643.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4976246643.jpg#1r1e",
   "sentence1": "A man is being carried by birds.",
   "sentence1_binary_parse": "( ( A man ) ( ( is ( being ( carried ( by birds ) ) ) ) . ) )",
@@ -1429,7 +1429,7 @@
     "entailment"
   ],
   "captionID": "3721881082.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3721881082.jpg#1r1e",
   "sentence1": "People are outside.",
   "sentence1_binary_parse": "( People ( ( are outside ) . ) )",
@@ -1447,7 +1447,7 @@
     "entailment"
   ],
   "captionID": "4526977553.jpg#2",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4526977553.jpg#2r1e",
   "sentence1": "A person is outside.",
   "sentence1_binary_parse": "( ( A person ) ( ( is outside ) . ) )",
@@ -1501,7 +1501,7 @@
     "entailment"
   ],
   "captionID": "4647089599.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4647089599.jpg#0r1e",
   "sentence1": "A man dressed really strangely is walking in front of some shops.",
   "sentence1_binary_parse": "( ( ( A man ) ( dressed ( really strangely ) ) ) ( ( is ( walking ( in ( front ( of ( some shops ) ) ) ) ) ) . ) )",
@@ -1519,7 +1519,7 @@
     "entailment"
   ],
   "captionID": "871290666.jpg#2",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "871290666.jpg#2r1e",
   "sentence1": "A man is outside.",
   "sentence1_binary_parse": "( ( A man ) ( ( is outside ) . ) )",
@@ -1717,7 +1717,7 @@
     "entailment"
   ],
   "captionID": "5921628407.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "5921628407.jpg#1r1e",
   "sentence1": "The couple are on a bus.",
   "sentence1_binary_parse": "( ( The couple ) ( ( are ( on ( a bus ) ) ) . ) )",
@@ -1753,7 +1753,7 @@
     "entailment"
   ],
   "captionID": "3227111573.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3227111573.jpg#3r1e",
   "sentence1": "The three people are posing at the mountain.",
   "sentence1_binary_parse": "( ( The ( three people ) ) ( ( are ( posing ( at ( the mountain ) ) ) ) . ) )",
@@ -1771,7 +1771,7 @@
     "entailment"
   ],
   "captionID": "237953705.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "237953705.jpg#1r1e",
   "sentence1": "The three young children are outside.",
   "sentence1_binary_parse": "( ( The ( three ( young children ) ) ) ( ( are outside ) . ) )",
@@ -1789,7 +1789,7 @@
     "entailment"
   ],
   "captionID": "9556225.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "9556225.jpg#3r1e",
   "sentence1": "A woman working with her hands protected from harm.",
   "sentence1_binary_parse": "( ( ( A woman ) ( working ( with ( her hands ) ) ) ) ( ( protected ( from harm ) ) . ) )",
