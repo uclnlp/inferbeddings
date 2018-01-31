@@ -31,7 +31,7 @@ def persist(path):
     def decorator(fun):
         cache = {}
         if os.path.isfile(path):
-            with open(path, 'r') as f:
+            with open(path, 'rb') as f:
                 cache = pickle.load(f)
 
         with open(path, 'wb') as f:
