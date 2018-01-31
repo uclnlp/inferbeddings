@@ -6,7 +6,6 @@ import argparse
 import os
 import sys
 
-import nltk
 import requests
 
 import logging

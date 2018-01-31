@@ -37,7 +37,7 @@ app = Flask('nli-service')
 
 
 # Run with:
-#  $ ./bin/service/nli-service-cli.py -R models/snli/dam_1/dam_1
+#  $ ./bin/service/nli-service-cli.py -R models/snli/dam_1/dam_1  --has-bos --has-unk
 
 class InvalidAPIUsage(Exception):
     """
@@ -151,7 +151,6 @@ def main(argv):
         logits = model()
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
-
     tokenizer = nltk.tokenize.TreebankWordTokenizer()
 
     with tf.Session() as session:
@@ -171,6 +170,9 @@ def main(argv):
 
                 sentence1_tokens = tokenizer.tokenize(sentence1)
                 sentence2_tokens = tokenizer.tokenize(sentence2)
+
+                logger.info('Sentence 1: {}'.format(str(sentence1_tokens)))
+                logger.info('Sentence 2: {}'.format(str(sentence2_tokens)))
 
                 sentence1_ids = []
                 sentence2_ids = []
