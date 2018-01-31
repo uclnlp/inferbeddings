@@ -10,6 +10,8 @@ import requests
 import pickle
 import atexit
 
+import numpy as np
+
 import gzip
 import json
 
@@ -26,17 +28,18 @@ def contradiction_loss(sentence1, sentence2):
 
 
 def persist(path):
-    def decorator(f):
-        try:
-            cache = pickle.load(open(path, 'r'))
-        except (IOError, ValueError):
-            cache = {}
+    def decorator(fun):
+        cache = {}
+        if os.path.isfile(path):
+            with open(path, 'r') as f:
+                cache = pickle.load(f)
 
-        atexit.register(lambda: pickle.dump(cache, open(path, "w")))
+        with open(path, 'wb') as f:
+            atexit.register(lambda: pickle.dump(cache, f))
 
         def new_f(*args):
             if tuple(args) not in cache:
-                cache[tuple(args)] = f(*args)
+                cache[tuple(args)] = fun(*args)
             return cache[args]
         return new_f
     return decorator
@@ -55,11 +58,16 @@ def main(argv):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
 
     argparser = argparse.ArgumentParser('SNLI Adversarial Candidate Generator', formatter_class=fmt)
+
     argparser.add_argument('--path', '-p', action='store', type=str, default='snli_1.0_train.jsonl.gz')
+    argparser.add_argument('--seed', '-s', action='store', type=int, default=0)
+    argparser.add_argument('--fraction', '-f', action='store', type=float, default=0.2)
 
     args = argparser.parse_args(argv)
 
     path = args.path
+    seed = args.seed
+    fraction = args.fraction
 
     obj_lst = []
     with gzip.open(path, 'rb') as f:
@@ -67,7 +75,15 @@ def main(argv):
             dl = line.decode('utf-8')
             obj_lst += [json.loads(dl)]
 
-    for obj in obj_lst:
+    rs = np.random.RandomState(seed)
+    nb_obj = len(obj_lst)
+    # Round to the closest integer
+    nb_samples = int(round(nb_obj * fraction))
+
+    sample_idxs = rs.choice(nb_obj, nb_samples, replace=False)
+    sample_obj_lst = [obj_lst[i] for i in sample_idxs]
+
+    for obj in sample_obj_lst:
         s1, s2 = obj['sentence1'], obj['sentence2']
         print(s1)
         print(s2)
