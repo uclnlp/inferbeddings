@@ -31,11 +31,9 @@ def persist(path):
     def decorator(fun):
         cache = {}
         if os.path.isfile(path):
-            with open(path, 'rb') as f:
-                cache = pickle.load(f)
+            cache = pickle.load(open(path, 'rb'))
 
-        with open(path, 'wb') as f:
-            atexit.register(lambda: pickle.dump(cache, f))
+        atexit.register(lambda: pickle.dump(cache, open(path, 'wb')))
 
         def new_f(*args):
             if tuple(args) not in cache:
