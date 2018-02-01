@@ -133,7 +133,9 @@ def main(argv):
 
     for obj in sorted_objs[:nb_instances]:
         print(json.dumps(obj), end='')
-        print(json.dumps(invert(obj)), end='')
+
+        i_obj = invert(obj)
+        print(json.dumps(i_obj), end='')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
