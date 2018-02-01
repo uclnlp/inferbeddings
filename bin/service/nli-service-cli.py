@@ -85,6 +85,8 @@ def main(argv):
 
     argparser.add_argument('--restore', '-R', action='store', type=str, default=None, required=True)
 
+    argparser.add_argument('--port', '-p', action='store', type=int, default=8889, required=False)
+
     args = argparser.parse_args(argv)
 
     model_name = args.model
@@ -98,6 +100,8 @@ def main(argv):
     is_lower = args.lower
 
     restore_path = args.restore
+
+    port = args.port
 
     with open('{}_index_to_token.p'.format(restore_path), 'rb') as f:
         index_to_token = pickle.load(f)
@@ -218,7 +222,7 @@ def main(argv):
 
         app.add_url_rule('/v1/nli', view_func=Service.as_view('request'))
 
-        app.run(host='0.0.0.0', port=8889, debug=False)
+        app.run(host='0.0.0.0', port=port, debug=False)
 
 
 if __name__ == '__main__':
