@@ -122,7 +122,7 @@ def main(argv):
         c_loss_value_dam = contradiction_loss_dam(s1, s2)
         c_loss_value_esim = contradiction_loss_esim(s1, s2)
 
-        obj_c_loss_pairs += [obj, c_loss_value_dam]
+        obj_c_loss_pairs += [(obj, c_loss_value_dam)]
 
     sorted_objs = [x for (x, _) in sorted(obj_c_loss_pairs,
                                           key=operator.itemgetter(1),
