@@ -47,7 +47,7 @@ def persist(path):
     return decorator
 
 
-@persist('cache.p')
+@persist('dam_cache.p')
 def call(sentence1, sentence2, url='http://127.0.0.1:8889/v1/nli'):
     data = {'sentence1': sentence1, 'sentence2': sentence2}
     ans = requests.post(url, data=data)
