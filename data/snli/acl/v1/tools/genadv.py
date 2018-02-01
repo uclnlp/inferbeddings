@@ -10,6 +10,7 @@ import requests
 import pickle
 import atexit
 import operator
+import copy
 
 import numpy as np
 
@@ -25,14 +26,14 @@ def contradiction_loss_dam(sentence1, sentence2):
     p1 = call_dam(sentence1, sentence2)['contradiction']
     p2 = call_dam(sentence2, sentence1)['contradiction']
     p1, p2 = float(p1), float(p2)
-    return max(p1 - p2, 0) + max(p2 - p1, 0)
+    return max(p1 - p2, 0), max(p2 - p1, 0)
 
 
 def contradiction_loss_esim(sentence1, sentence2):
     p1 = call_esim(sentence1, sentence2)['contradiction']
     p2 = call_esim(sentence2, sentence1)['contradiction']
     p1, p2 = float(p1), float(p2)
-    return max(p1 - p2, 0) + max(p2 - p1, 0)
+    return max(p1 - p2, 0), max(p2 - p1, 0)
 
 
 def persist(path):
@@ -72,7 +73,6 @@ def call_esim(sentence1, sentence2, url='http://127.0.0.1:9001/v1/nli'):
 
 
 def invert(_obj):
-    import copy
     i_obj = copy.deepcopy(_obj)
     for i, j in [(1, 2), (2, 1)]:
         for suf in ['', '_binary_parse', '_parse']:
@@ -115,26 +115,50 @@ def main(argv):
     else:
         sample_obj_lst = obj_lst
 
+    obj_c_loss_dam_pairs = []
+    obj_c_loss_esim_pairs = []
     obj_c_loss_pairs = []
 
     for obj in sample_obj_lst:
         s1, s2 = obj['sentence1'], obj['sentence2']
-        c_loss_value_dam = contradiction_loss_dam(s1, s2)
-        c_loss_value_esim = contradiction_loss_esim(s1, s2)
 
-        obj_c_loss_pairs += [(obj, c_loss_value_dam)]
+        dam_c1,  dam_c2 = contradiction_loss_dam(s1, s2)
+        esim_c1, esim_c2 = contradiction_loss_esim(s1, s2)
 
-    sorted_objs = [x for (x, _) in sorted(obj_c_loss_pairs,
-                                          key=operator.itemgetter(1),
-                                          reverse=True)]
+        c_loss_value_dam = dam_c1 + dam_c2
+        c_loss_value_esim = esim_c1 + esim_c2
+
+        obj_c_loss_dam_pairs += [(obj, c_loss_value_dam)]
+        obj_c_loss_esim_pairs += [(obj, c_loss_value_esim)]
+
+        obj_c_loss_pairs += [(obj, c_loss_value_dam + c_loss_value_esim)]
+
+    sorted_objs_c_loss_pairs = sorted(obj_c_loss_pairs,
+                                      key=operator.itemgetter(1),
+                                      reverse=True)
 
     if nb_instances is None:
-        nb_instances = len(sorted_objs)
+        nb_instances = len(sorted_objs_c_loss_pairs)
 
-    for obj in sorted_objs[:nb_instances]:
-        print(json.dumps(obj), end='')
+    for obj, c_loss in sorted_objs_c_loss_pairs[:nb_instances]:
+        s1, s2 = obj['sentence1'], obj['sentence2']
 
+        dam_c1,  dam_c2 = contradiction_loss_dam(s1, s2)
+        esim_c1, esim_c2 = contradiction_loss_esim(s1, s2)
+
+        c_obj = copy.deepcopy(obj)
         i_obj = invert(obj)
+
+        c_obj['type'] = 'normal'
+        i_obj['type'] = 'inverse'
+
+        c_obj['c_loss_dam'] = dam_c1
+        i_obj['c_loss_dam'] = dam_c2
+
+        c_obj['c_loss_esim'] = esim_c1
+        i_obj['c_loss_esim'] = esim_c2
+
+        print(json.dumps(c_obj), end='')
         print(json.dumps(i_obj), end='')
 
 if __name__ == '__main__':
