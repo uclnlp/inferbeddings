@@ -100,36 +100,36 @@ def main(argv):
     else:
         sample_obj_lst = obj_lst
 
-        obj_c_loss_pairs = []
+    obj_c_loss_pairs = []
 
-        for obj in sample_obj_lst:
-            s1, s2 = obj['sentence1'], obj['sentence2']
-            dam_c1, dam_c2 = contradiction_loss_dam(s1, s2)
-            c_loss_value_dam = dam_c1 + dam_c2
-            obj_c_loss_pairs += [(obj, c_loss_value_dam)]
+    for obj in sample_obj_lst:
+        s1, s2 = obj['sentence1'], obj['sentence2']
+        dam_c1, dam_c2 = contradiction_loss_dam(s1, s2)
+        c_loss_value_dam = dam_c1 + dam_c2
+        obj_c_loss_pairs += [(obj, c_loss_value_dam)]
 
-        sorted_objs_c_loss_pairs = sorted(obj_c_loss_pairs,
-                                          key=operator.itemgetter(1),
-                                          reverse=True)
+    sorted_objs_c_loss_pairs = sorted(obj_c_loss_pairs,
+                                      key=operator.itemgetter(1),
+                                      reverse=True)
 
-        if nb_instances is None:
-            nb_instances = len(sorted_objs_c_loss_pairs)
+    if nb_instances is None:
+        nb_instances = len(sorted_objs_c_loss_pairs)
 
-        for obj, c_loss in sorted_objs_c_loss_pairs[:nb_instances]:
-            s1, s2 = obj['sentence1'], obj['sentence2']
-            dam_c1, dam_c2 = contradiction_loss_dam(s1, s2)
+    for obj, c_loss in sorted_objs_c_loss_pairs[:nb_instances]:
+        s1, s2 = obj['sentence1'], obj['sentence2']
+        dam_c1, dam_c2 = contradiction_loss_dam(s1, s2)
 
-            c_obj = copy.deepcopy(obj)
-            i_obj = invert(obj)
+        c_obj = copy.deepcopy(obj)
+        i_obj = invert(obj)
 
-            c_obj['type'] = 'normal'
-            i_obj['type'] = 'inverse'
+        c_obj['type'] = 'normal'
+        i_obj['type'] = 'inverse'
 
-            c_obj['c_loss_dam'] = dam_c1
-            i_obj['c_loss_dam'] = dam_c2
+        c_obj['c_loss_dam'] = dam_c1
+        i_obj['c_loss_dam'] = dam_c2
 
-            print(json.dumps(c_obj), end='')
-            print(json.dumps(i_obj), end='')
+        print(json.dumps(c_obj), end='')
+        print(json.dumps(i_obj), end='')
 
     if __name__ == '__main__':
         logging.basicConfig(level=logging.INFO)
