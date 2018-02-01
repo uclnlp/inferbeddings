@@ -9,6 +9,7 @@ import requests
 
 import pickle
 import atexit
+import operator
 
 import numpy as np
 
@@ -55,6 +56,15 @@ def call(sentence1, sentence2, url='http://127.0.0.1:8889/v1/nli'):
     return ans_json
 
 
+def invert(_obj):
+    import copy
+    i_obj = copy.deepcopy(_obj)
+    for i, j in [(1, 2), (2, 1)]:
+        for suf in ['', '_binary_parse', '_parse']:
+            i_obj['sentence{}{}'.format(i, suf)] = _obj['sentence{}{}'.format(j, suf)]
+    return i_obj
+
+
 def main(argv):
     def fmt(prog):
         return argparse.HelpFormatter(prog, max_help_position=100, width=200)
@@ -64,12 +74,14 @@ def main(argv):
     argparser.add_argument('--path', '-p', action='store', type=str, default='snli_1.0_train.jsonl.gz')
     argparser.add_argument('--seed', '-s', action='store', type=int, default=0)
     argparser.add_argument('--fraction', '-f', action='store', type=float, default=None)
+    argparser.add_argument('--nb-instances', '-n', action='store', type=float, default=None)
 
     args = argparser.parse_args(argv)
 
     path = args.path
     seed = args.seed
     fraction = args.fraction
+    nb_instances = args.nb_instances
 
     obj_lst = []
     with gzip.open(path, 'rb') as f:
@@ -88,12 +100,24 @@ def main(argv):
     else:
         sample_obj_lst = obj_lst
 
+    obj_to_c_loss = dict()
+
     for obj in sample_obj_lst:
         s1, s2 = obj['sentence1'], obj['sentence2']
-        print(s1)
-        print(s2)
-        print(contradiction_loss(s1, s2))
+        c_loss_value = contradiction_loss(s1, s2)
 
+        obj_to_c_loss[obj] = c_loss_value
+
+    sorted_objs = [x for (x, _) in sorted(obj_to_c_loss.items(),
+                                          key=operator.itemgetter(1),
+                                          reverse=True)]
+
+    if nb_instances is None:
+        nb_instances = len(sorted_objs)
+
+    for obj in sorted_objs[:nb_instances]:
+        print(json.dumps(obj), end='')
+        print(json.dumps(invert(obj)), end='')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
