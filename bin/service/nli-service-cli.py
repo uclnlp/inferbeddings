@@ -38,7 +38,8 @@ app = Flask('nli-service')
 
 # Run with:
 #  $ ./bin/service/nli-service-cli.py -R models/snli/dam_1/dam_1  --has-bos --has-unk
-
+#
+# $ ./bin/service/nli-service-cli.py -R models/snli/esim_1/esim_1 -r 300 -m esim1 --has-bos --has-unk -p 9000
 class InvalidAPIUsage(Exception):
     """
     Class used for handling error messages.

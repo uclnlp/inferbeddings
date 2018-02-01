@@ -21,9 +21,16 @@ import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
-def contradiction_loss(sentence1, sentence2):
-    p1 = call(sentence1, sentence2)['contradiction']
-    p2 = call(sentence2, sentence1)['contradiction']
+def contradiction_loss_dam(sentence1, sentence2):
+    p1 = call_dam(sentence1, sentence2)['contradiction']
+    p2 = call_dam(sentence2, sentence1)['contradiction']
+    p1, p2 = float(p1), float(p2)
+    return max(p1 - p2, 0) + max(p2 - p1, 0)
+
+
+def contradiction_loss_esim(sentence1, sentence2):
+    p1 = call_esim(sentence1, sentence2)['contradiction']
+    p2 = call_esim(sentence2, sentence1)['contradiction']
     p1, p2 = float(p1), float(p2)
     return max(p1 - p2, 0) + max(p2 - p1, 0)
 
@@ -49,7 +56,15 @@ def persist(path):
 
 
 @persist('dam_cache.p')
-def call(sentence1, sentence2, url='http://127.0.0.1:8889/v1/nli'):
+def call_dam(sentence1, sentence2, url='http://127.0.0.1:8889/v1/nli'):
+    data = {'sentence1': sentence1, 'sentence2': sentence2}
+    ans = requests.post(url, data=data)
+    ans_json = ans.json()
+    return ans_json
+
+
+@persist('esim_cache.p')
+def call_esim(sentence1, sentence2, url='http://127.0.0.1:9001/v1/nli'):
     data = {'sentence1': sentence1, 'sentence2': sentence2}
     ans = requests.post(url, data=data)
     ans_json = ans.json()
@@ -104,9 +119,10 @@ def main(argv):
 
     for obj in sample_obj_lst:
         s1, s2 = obj['sentence1'], obj['sentence2']
-        c_loss_value = contradiction_loss(s1, s2)
+        c_loss_value_dam = contradiction_loss_dam(s1, s2)
+        c_loss_value_esim = contradiction_loss_esim(s1, s2)
 
-        obj_to_c_loss[obj] = c_loss_value
+        obj_to_c_loss[obj] = c_loss_value_dam
 
     sorted_objs = [x for (x, _) in sorted(obj_to_c_loss.items(),
                                           key=operator.itemgetter(1),
