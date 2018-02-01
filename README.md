@@ -3,6 +3,33 @@
 [![wercker status](https://app.wercker.com/status/47cfd21ce8315fb361ac5b4247ce280a/s/master "wercker status")](https://app.wercker.com/project/byKey/47cfd21ce8315fb361ac5b4247ce280a)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/uclmr/inferbeddings/blob/master/LICENSE)
 
+Source code used for the experiments in: 
+
+Pasquale Minervini, Thomas Demeester, Tim Rocktäschel, Sebastian Riedel: [Adversarial Sets for Regularising Neural Link Predictors](http://auai.org/uai2017/proceedings/papers/306.pdf) UAI 2017
+
+```
+@inproceedings{DBLP:conf/uai/MinerviniDRR17,
+  author    = {Pasquale Minervini and
+               Thomas Demeester and
+               Tim Rockt{\"{a}}schel and
+               Sebastian Riedel},
+  title     = {Adversarial Sets for Regularising Neural Link Predictors},
+  booktitle = {Proceedings of the Thirty-Third Conference on Uncertainty in Artificial
+               Intelligence, {UAI} 2017},
+  year      = {2017},
+  crossref  = {DBLP:conf/uai/2017}
+}
+@proceedings{DBLP:conf/uai/2017,
+  editor    = {Gal Elidan and
+               Kristian Kersting and
+               Alexander T. Ihler},
+  title     = {Proceedings of the Thirty-Third Conference on Uncertainty in Artificial
+               Intelligence, {UAI} 2017},
+  publisher = {{AUAI} Press},
+  year      = {2017}
+}
+```
+
 Injecting Background Knowledge in Neural Models via Adversarial Set Regularisation.
 
 
