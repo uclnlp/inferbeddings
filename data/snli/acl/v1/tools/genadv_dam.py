@@ -74,7 +74,7 @@ def main(argv):
     argparser.add_argument('--path', '-p', action='store', type=str, default='snli_1.0_train.jsonl.gz')
     argparser.add_argument('--seed', '-s', action='store', type=int, default=0)
     argparser.add_argument('--fraction', '-f', action='store', type=float, default=None)
-    argparser.add_argument('--nb-instances', '-n', action='store', type=float, default=None)
+    argparser.add_argument('--nb-instances', '-n', action='store', type=int, default=None)
 
     args = argparser.parse_args(argv)
 
