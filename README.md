@@ -5,7 +5,7 @@
 
 Source code used for the experiments in: 
 
-Pasquale Minervini, Thomas Demeester, Tim Rocktäschel, Sebastian Riedel: [Adversarial Sets for Regularising Neural Link Predictors](http://auai.org/uai2017/proceedings/papers/306.pdf) UAI 2017
+Pasquale Minervini, Thomas Demeester, Tim Rocktäschel, Sebastian Riedel: [Adversarial Sets for Regularising Neural Link Predictors](http://auai.org/uai2017/proceedings/papers/306.pdf), UAI 2017
 
 ```
 @inproceedings{DBLP:conf/uai/MinerviniDRR17,
