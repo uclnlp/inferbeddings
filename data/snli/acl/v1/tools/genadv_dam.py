@@ -104,8 +104,10 @@ def main(argv):
 
     for obj in sample_obj_lst:
         s1, s2 = obj['sentence1'], obj['sentence2']
+
         dam_c1, dam_c2 = contradiction_loss_dam(s1, s2)
         c_loss_value_dam = dam_c1 + dam_c2
+
         obj_c_loss_pairs += [(obj, c_loss_value_dam)]
 
     sorted_objs_c_loss_pairs = sorted(obj_c_loss_pairs,
@@ -125,12 +127,12 @@ def main(argv):
         c_obj['type'] = 'normal'
         i_obj['type'] = 'inverse'
 
-        c_obj['c_loss_dam'] = dam_c1
-        i_obj['c_loss_dam'] = dam_c2
+        c_obj['c_loss_dam'] = str(dam_c1)
+        i_obj['c_loss_dam'] = str(dam_c2)
 
         print(json.dumps(c_obj), end='')
         print(json.dumps(i_obj), end='')
 
-    if __name__ == '__main__':
-        logging.basicConfig(level=logging.INFO)
-        main(sys.argv[1:])
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])
