@@ -158,6 +158,12 @@ def main(argv):
         c_obj['c_loss_esim'] = esim_c1
         i_obj['c_loss_esim'] = esim_c2
 
+        c_obj['dam'] = call_dam(s1, s2)
+        i_obj['dam'] = call_dam(s2, s1)
+
+        c_obj['esim'] = call_esim(s1, s2)
+        i_obj['esim'] = call_esim(s2, s1)
+
         print(json.dumps(c_obj), end='')
         print(json.dumps(i_obj), end='')
 

@@ -82,7 +82,7 @@
     "entailment"
   ],
   "captionID": "2434710077.jpg#2",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "2434710077.jpg#2r1e",
   "sentence1": "There are four people outside.",
   "sentence1_binary_parse": "( There ( ( are ( ( four people ) outside ) ) . ) )",
@@ -132,7 +132,7 @@
     "entailment"
   ],
   "captionID": "3378389034.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3378389034.jpg#3r1e",
   "sentence1": "There is one child in this picture.",
   "sentence1_binary_parse": "( There ( ( is ( ( one child ) ( in ( this picture ) ) ) ) . ) )",
@@ -182,7 +182,7 @@
     "entailment"
   ],
   "captionID": "3569329986.jpg#4",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3569329986.jpg#4r1e",
   "sentence1": "The girl is not standing still.",
   "sentence1_binary_parse": "( ( The girl ) ( ( ( is not ) ( standing still ) ) . ) )",
@@ -282,7 +282,7 @@
     "entailment"
   ],
   "captionID": "3410899419.jpg#4",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3410899419.jpg#4r1c",
   "sentence1": "The kids are not reading.",
   "sentence1_binary_parse": "( ( The kids ) ( ( ( are not ) reading ) . ) )",
@@ -382,7 +382,7 @@
     "neutral"
   ],
   "captionID": "4823906931.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4823906931.jpg#1r1e",
   "sentence1": "There are multiple people present.",
   "sentence1_binary_parse": "( There ( ( are ( ( multiple people ) present ) ) . ) )",
@@ -732,7 +732,7 @@
     "entailment"
   ],
   "captionID": "2325436612.jpg#4",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "2325436612.jpg#4r1e",
   "sentence1": "There are men using scientific instruments.",
   "sentence1_binary_parse": "( There ( ( are ( men ( using ( scientific instruments ) ) ) ) . ) )",
@@ -882,7 +882,7 @@
     "entailment"
   ],
   "captionID": "44904567.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "44904567.jpg#1r1e",
   "sentence1": "There are multiple people present.",
   "sentence1_binary_parse": "( There ( ( are ( ( multiple people ) present ) ) . ) )",
@@ -932,7 +932,7 @@
     "entailment"
   ],
   "captionID": "3375991133.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3375991133.jpg#0r1e",
   "sentence1": "People are outside.",
   "sentence1_binary_parse": "( People ( ( are outside ) . ) )",
@@ -1132,7 +1132,7 @@
     "entailment"
   ],
   "captionID": "2308029439.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "2308029439.jpg#3r1e",
   "sentence1": "There is one woman in this picture.",
   "sentence1_binary_parse": "( There ( ( is ( ( one woman ) ( in ( this picture ) ) ) ) . ) )",
@@ -1357,7 +1357,7 @@
     "entailment"
   ],
   "captionID": "207225205.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "contradiction",
   "pairID": "207225205.jpg#0r1c",
   "sentence1": "An Asian woman dressed in a colorful outfit laughing.",
   "sentence1_binary_parse": "( ( An ( Asian woman ) ) ( ( dressed ( in ( a ( colorful ( outfit laughing ) ) ) ) ) . ) )",
@@ -1382,7 +1382,7 @@
     "entailment"
   ],
   "captionID": "207225205.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "contradiction",
   "pairID": "207225205.jpg#0r1c",
   "sentence1": "The woman is not laughing.",
   "sentence1_binary_parse": "( ( The woman ) ( ( ( is not ) laughing ) . ) )",
@@ -1732,7 +1732,7 @@
     "entailment"
   ],
   "captionID": "283178378.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "283178378.jpg#1r1e",
   "sentence1": "The people are at the race.",
   "sentence1_binary_parse": "( ( The people ) ( ( are ( at ( the race ) ) ) . ) )",
@@ -1782,7 +1782,7 @@
     "entailment"
   ],
   "captionID": "3465396606.jpg#4",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3465396606.jpg#4r1e",
   "sentence1": "There are people outside.",
   "sentence1_binary_parse": "( There ( ( ( are people ) outside ) . ) )",
@@ -1932,7 +1932,7 @@
     "neutral"
   ],
   "captionID": "3128856481.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3128856481.jpg#3r1e",
   "sentence1": "There is one animal in this picture.",
   "sentence1_binary_parse": "( There ( ( is ( ( one animal ) ( in ( this picture ) ) ) ) . ) )",
@@ -1982,7 +1982,7 @@
     "entailment"
   ],
   "captionID": "7582869910.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "7582869910.jpg#3r1e",
   "sentence1": "There is at least one person.",
   "sentence1_binary_parse": "( There ( ( is ( ( ( at least ) one ) person ) ) . ) )",
@@ -2032,7 +2032,7 @@
     "entailment"
   ],
   "captionID": "57691053.jpg#4",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "57691053.jpg#4r1e",
   "sentence1": "There are multiple people present.",
   "sentence1_binary_parse": "( There ( ( are ( ( multiple people ) present ) ) . ) )",
@@ -2282,7 +2282,7 @@
     "entailment"
   ],
   "captionID": "2255685792.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "2255685792.jpg#3r1e",
   "sentence1": "Three humans standing.",
   "sentence1_binary_parse": "( ( ( Three humans ) standing ) . )",
@@ -2332,7 +2332,7 @@
     "entailment"
   ],
   "captionID": "156021287.jpg#2",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "156021287.jpg#2r1e",
   "sentence1": "A boy is outside",
   "sentence1_binary_parse": "( ( A boy ) ( is outside ) )",

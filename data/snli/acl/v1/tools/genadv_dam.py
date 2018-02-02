@@ -130,6 +130,9 @@ def main(argv):
         c_obj['c_loss_dam'] = str(dam_c1)
         i_obj['c_loss_dam'] = str(dam_c2)
 
+        c_obj['dam'] = call_dam(s1, s2)
+        i_obj['dam'] = call_dam(s2, s1)
+
         print(json.dumps(c_obj), end='')
         print(json.dumps(i_obj), end='')
 
