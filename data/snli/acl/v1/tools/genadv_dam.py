@@ -59,9 +59,23 @@ def call_dam(sentence1, sentence2, url='http://127.0.0.1:8889/v1/nli'):
 
 def invert(_obj):
     i_obj = copy.deepcopy(_obj)
+
+    # Switch sentence1 with sentence2
     for i, j in [(1, 2), (2, 1)]:
         for suf in ['', '_binary_parse', '_parse']:
             i_obj['sentence{}{}'.format(i, suf)] = _obj['sentence{}{}'.format(j, suf)]
+
+    # Heuristically change the gold_label
+    gold_label = _obj['gold_label']
+    assert gold_label in {'entailment', 'contradiction', 'neutral', '-'}
+
+    if gold_label == 'entailment':
+        i_obj['gold_label'] = 'neutral'
+    if gold_label == 'neutral':
+        i_obj['gold_label'] = 'neutral'
+    if gold_label == 'contradiction':
+        i_obj['gold_label'] = 'contradiction'
+
     return i_obj
 
 
