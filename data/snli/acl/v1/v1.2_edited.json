@@ -2532,7 +2532,7 @@
     "entailment"
   ],
   "captionID": "3259160693.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3259160693.jpg#0r1e",
   "sentence1": "A male is engaging in something acrobatic.",
   "sentence1_binary_parse": "( ( A male ) ( ( is ( engaging ( in ( something acrobatic ) ) ) ) . ) )",
@@ -2682,7 +2682,7 @@
     "neutral"
   ],
   "captionID": "4799726314.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4799726314.jpg#0r1e",
   "sentence1": "There is a child and two animals.",
   "sentence1_binary_parse": "( There ( ( is ( ( ( a child ) and ) ( two animals ) ) ) . ) )",
@@ -3082,7 +3082,7 @@
     "entailment"
   ],
   "captionID": "3655155990.jpg#3",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3655155990.jpg#3r1e",
   "sentence1": "Two dogs are outside.",
   "sentence1_binary_parse": "( ( Two dogs ) ( ( are outside ) . ) )",
@@ -3132,7 +3132,7 @@
     "neutral"
   ],
   "captionID": "2129341575.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "2129341575.jpg#0r1e",
   "sentence1": "A person outside.",
   "sentence1_binary_parse": "( ( A person ) ( outside . ) )",
@@ -3532,7 +3532,7 @@
     "entailment"
   ],
   "captionID": "4953626913.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4953626913.jpg#0r1e",
   "sentence1": "Men sit.",
   "sentence1_binary_parse": "( Men ( sit . ) )",
@@ -3732,7 +3732,7 @@
     "entailment"
   ],
   "captionID": "405694615.jpg#2",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "405694615.jpg#2r1n",
   "sentence1": "Some people are doing something.",
   "sentence1_binary_parse": "( ( Some people ) ( ( are ( doing something ) ) . ) )",
@@ -3782,7 +3782,7 @@
     "contradiction"
   ],
   "captionID": "4756060683.jpg#1",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4756060683.jpg#1r1e",
   "sentence1": "There are multiple people present.",
   "sentence1_binary_parse": "( There ( ( are ( ( multiple people ) present ) ) . ) )",
@@ -3982,7 +3982,7 @@
     "entailment"
   ],
   "captionID": "4093896865.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4093896865.jpg#0r1e",
   "sentence1": "a man is taking pictures",
   "sentence1_binary_parse": "( ( a man ) ( is ( taking pictures ) ) )",
@@ -4032,7 +4032,7 @@
     "entailment"
   ],
   "captionID": "4797720700.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "4797720700.jpg#0r1e",
   "sentence1": "There are both people and animals in this picture.",
   "sentence1_binary_parse": "( There ( ( are ( ( both ( ( people and ) animals ) ) ( in ( this picture ) ) ) ) . ) )",
@@ -4182,7 +4182,7 @@
     "entailment"
   ],
   "captionID": "5716554915.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "5716554915.jpg#0r1e",
   "sentence1": "There is a person in a room.",
   "sentence1_binary_parse": "( There ( ( is ( ( a person ) ( in ( a room ) ) ) ) . ) )",
@@ -4232,7 +4232,7 @@
     "entailment"
   ],
   "captionID": "3494151850.jpg#2",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "3494151850.jpg#2r1e",
   "sentence1": "The men are outside.",
   "sentence1_binary_parse": "( ( The men ) ( ( are outside ) . ) )",
@@ -4982,7 +4982,7 @@
     "entailment"
   ],
   "captionID": "2533733805.jpg#0",
-  "gold_label": "entailment",
+  "gold_label": "neutral",
   "pairID": "2533733805.jpg#0r1e",
   "sentence1": "There is more than one woman in the group.",
   "sentence1_binary_parse": "( There ( ( is ( ( ( more ( than one ) ) woman ) ( in ( the group ) ) ) ) . ) )",
