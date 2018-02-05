@@ -44,3 +44,22 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 """.format(*(['{}', size, model, '{}', size + model] * 6))
 
         print(temp.format(*([restore_path, output_path] * (6 * 8 * 3))))
+
+
+        t = """
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/1.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/2.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/3.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/4.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/5.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/6.log
+
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/1.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/2.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/3.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/4.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/5.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/6.log
+        """.format(*(['{}', '{}'] * 12))
+
+        print(t.format(*([restore_path, output_path] * (6 * 2))))
