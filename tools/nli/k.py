@@ -28,7 +28,7 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/*{}* 2>&1 | tail -n 20 > {}/6{}.log
 """.format(*(['{}', prefix, '{}', suffix] * 6))
 
-        print(template.format(*([restore_path, output_path] * 18)))
+        print(template.format(*([restore_path, output_path] * (6 * 3))))
 
         temp = ''
 
@@ -42,3 +42,5 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 -d data/snli/acl/v1/genadv/snli_genadv{}_{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/5_{}.log
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/acl/v1/genadv/snli_genadv{}_{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/6_{}.log
 """.format(*(['{}', size, model, '{}', model + size] * 6))
+
+        print(template.format(*([restore_path, output_path] * (6 * 8 * 3))))
