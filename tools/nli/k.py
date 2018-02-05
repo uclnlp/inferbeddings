@@ -27,7 +27,7 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 -d data/snli/*{}* 2>&1 | tail -n 20 > {}/4{}.log
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 -d data/snli/*{}* 2>&1 | tail -n 20 > {}/5{}.log
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/*{}* 2>&1 | tail -n 20 > {}/6{}.log
-""".format('{}', prefix, '{}', suffix)
+""".format(['{}', prefix, '{}', suffix] * 6)
 
         print(template.format(*([restore_path, output_path] * 18)))
 
