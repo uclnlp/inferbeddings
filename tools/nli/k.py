@@ -30,17 +30,17 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 
         print(template.format(*([restore_path, output_path] * (6 * 3))))
 
+        print('mkdir {}/v1/'.format(output_path))
         temp = ''
-
         for size in ['100', '500', '1000', '2000', '3000', '4000', '5000', 'full']:
             for model in ['_dam', '_esim', '']:
                 temp += """
-python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/1_{}.log
-python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/2_{}.log
-python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/3_{}.log
-python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/4_{}.log
-python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/5_{}.log
-python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/6_{}.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/1_{}.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/2_{}.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/3_{}.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/4_{}.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/5_{}.log
+python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/6_{}.log
 """.format(*(['{}', size, model, '{}', size + model] * 6))
 
         print(temp.format(*([restore_path, output_path] * (6 * 8 * 3))))
