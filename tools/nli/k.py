@@ -45,6 +45,8 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 
         print(temp.format(*([restore_path, output_path] * (6 * 8 * 3))))
 
+        print('mkdir {}/v1.1/'.format(output_path))
+        print('mkdir {}/v1.2/'.format(output_path))
 
         t = """
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/1.log
