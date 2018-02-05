@@ -14,7 +14,7 @@ for s in sys.stdin:
     if len(tmp) > 0:
         restore_path = tmp[0].split('_0.ind')[0]
 
-        output_path = 'out_nli/{}/'.format(p)
+        output_path = 'out_nli/k{}/'.format(p)
         print('mkdir {}'.format(output_path))
 
         template = ""
