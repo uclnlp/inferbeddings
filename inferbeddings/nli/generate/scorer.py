@@ -11,6 +11,15 @@ from tensorflow.contrib import legacy_seq2seq as S
 from inferbeddings.nli import tfutil
 
 
+class IScorer:
+    def __init__(self, embedding_layer, token_to_index):
+        self.embedding_layer = embedding_layer
+        self.token_to_index = token_to_index
+        self.vocab_size = max(self.token_to_index.values()) + 1
+
+
+
+
 class LMScorer:
     def __init__(self, embedding_layer, token_to_index, lm_path='models/lm/', batch_size=32):
         self.embedding_layer = embedding_layer

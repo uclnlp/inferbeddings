@@ -72,6 +72,15 @@ def test_scorer():
         for e in v.tolist():
             assert abs(e - 15.976228) < 1e-4
 
+        sentence = 'The girl runs on the airplane .'
+        sentence_idx = [bos_idx] + [token_to_index[token] for token in sentence.split()]
+
+        np_sentence_idxs = np.array([sentence_idx] * batch_size)
+        np_sentence_lens = np.array([len(sentence_idx)] * batch_size)
+
+        v1 = generator.log_perplexity(session, np_sentence_idxs, np_sentence_lens)
+        assert np.all(v1 > v)
+
 if __name__ == '__main__':
     # pytest.main([__file__])
     test_scorer()
