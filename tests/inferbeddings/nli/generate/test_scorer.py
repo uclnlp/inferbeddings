@@ -111,7 +111,7 @@ def test_i_scorer():
             for e in v1.tolist():
                 assert abs(e - 0.0) < 1e-4
 
-            for e in v1.tolist():
+            for e in v2.tolist():
                 assert abs(e - 0.99952203) < 1e-4
 
 
@@ -187,5 +187,3 @@ def test_lm_scorer():
 
 if __name__ == '__main__':
     pytest.main([__file__])
-    # test_lm_scorer()
-    # test_i_scorer()
