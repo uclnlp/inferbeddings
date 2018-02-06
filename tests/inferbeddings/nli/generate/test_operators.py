@@ -6,7 +6,7 @@ from inferbeddings.nli.generate import operators
 from inferbeddings.nli.generate.parser import Parser
 
 
-def test_generate():
+def test_operators():
     parser = Parser()
 
     tree1 = parser.parse('Hi, my name is Squippy!')
