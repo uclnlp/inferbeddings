@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import copy
 
 import numpy as np
 import tensorflow as tf
@@ -9,19 +10,71 @@ from tensorflow.contrib import rnn
 from tensorflow.contrib import legacy_seq2seq as S
 
 from inferbeddings.nli import tfutil
+import inferbeddings.nli.regularizers.base as R
 
 
 class IScorer:
-    def __init__(self, embedding_layer, token_to_index):
+    def __init__(self, embedding_layer, token_to_index,
+                 model_class, model_kwargs,
+                 i_pooling_function,
+                 entailment_idx=0, neutral_idx=1, contradiction_idx=2):
+
         self.embedding_layer = embedding_layer
         self.token_to_index = token_to_index
+
+        self.i_model_class = model_class
+        self.i_model_kwargs = copy.copy(model_kwargs)
+
+        self.i_pooling_function = i_pooling_function
+
+        self.entailment_idx = entailment_idx
+        self.neutral_idx = neutral_idx
+        self.contradiction_idx = contradiction_idx
+
         self.vocab_size = max(self.token_to_index.values()) + 1
 
+        self.i_sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='i_sentence1')
+        self.i_sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='i_sentence2')
 
+        self.i_sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='i_sentence1_length')
+        self.i_sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='i_sentence2_length')
+
+        self.i_clipped_sentence1 = tfutil.clip_sentence(self.i_sentence1_ph, self.i_sentence1_len_ph)
+        self.i_clipped_sentence2 = tfutil.clip_sentence(self.i_sentence2_ph, self.i_sentence2_len_ph)
+
+        self.i_sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, self.i_clipped_sentence1)
+        self.i_sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, self.i_clipped_sentence2)
+
+        self.i_model_kwargs.update({
+            'sequence1': self.i_sentence1_embedding, 'sequence1_length': self.i_sentence1_len_ph,
+            'sequence2': self.i_sentence2_embedding, 'sequence2_length': self.i_sentence2_len_ph,
+            'dropout_keep_prob': 1
+        })
+
+        print(self.i_model_kwargs.keys())
+
+        self.function_kwargs = dict(model_class=self.i_model_class,
+                                    model_kwargs=self.i_model_kwargs,
+                                    entailment_idx=self.entailment_idx,
+                                    contradiction_idx=self.contradiction_idx,
+                                    neutral_idx=self.neutral_idx,
+                                    pooling_function=self.i_pooling_function,
+                                    debug=True)
+
+    def score(self, session, sentences1, sizes1, sentences2, sizes2):
+        # TODO: the function needs to be a parameter
+        score_f = R.contradiction_acl(**self.function_kwargs)
+        feed = {
+            self.i_sentence1_ph: sentences1, self.i_sentence1_len_ph: sizes1,
+            self.i_sentence2_ph: sentences2, self.i_sentence2_len_ph: sizes2
+        }
+        score_values = session.run([score_f], feed_dict=feed)
+        return score_values
 
 
 class LMScorer:
-    def __init__(self, embedding_layer, token_to_index, lm_path='models/lm/', batch_size=32):
+    def __init__(self, embedding_layer, token_to_index,
+                 lm_path='models/lm/', batch_size=32):
         self.embedding_layer = embedding_layer
         self.token_to_index = token_to_index
         self.vocab_size = max(self.token_to_index.values()) + 1
@@ -67,7 +120,7 @@ class LMScorer:
             self.lm_cost = tf.reduce_sum(self.lm_loss) / self.lm_batch_size / self.lm_seq_length
             self.lm_final_state = lm_last_state
 
-    def get_lm_vars(self):
+    def get_vars(self):
         lm_vars = tfutil.get_variables_in_scope(self.lm_scope_name)
         return lm_vars
 

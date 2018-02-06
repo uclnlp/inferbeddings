@@ -340,7 +340,7 @@ def main(argv):
 
         a_pooling_function = name_to_adversarial_pooling[adversarial_pooling_name]
 
-        a_model_kwargs = copy.deepcopy(model_kwargs)
+        a_model_kwargs = copy.copy(model_kwargs)
 
         a_sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='a_sentence1')
         a_sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='a_sentence2')
