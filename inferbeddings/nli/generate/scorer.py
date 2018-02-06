@@ -32,17 +32,14 @@ class Generator:
         self.lm_initial_state = self.lm_cell.zero_state(self.lm_batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
-            lm_W = tf.get_variable(name='W',
-                                   shape=[self.rnn_size, self.vocab_size],
+            lm_W = tf.get_variable(name='W', shape=[self.rnn_size, self.vocab_size],
                                    initializer=tf.contrib.layers.xavier_initializer())
 
-            lm_b = tf.get_variable(name='b',
-                                   shape=[self.vocab_size],
+            lm_b = tf.get_variable(name='b', shape=[self.vocab_size],
                                    initializer=tf.zeros_initializer())
 
             lm_emb_lookup = tf.nn.embedding_lookup(embedding_layer, self.lm_input_data_ph)
-            lm_emb_projection = tf.contrib.layers.fully_connected(inputs=lm_emb_lookup,
-                                                                  num_outputs=self.rnn_size,
+            lm_emb_projection = tf.contrib.layers.fully_connected(inputs=lm_emb_lookup, num_outputs=self.rnn_size,
                                                                   weights_initializer=tf.contrib.layers.xavier_initializer(),
                                                                   biases_initializer=tf.zeros_initializer())
 

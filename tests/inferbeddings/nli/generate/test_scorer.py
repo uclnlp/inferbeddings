@@ -10,10 +10,10 @@ import numpy as np
 import tensorflow as tf
 
 from inferbeddings.nli import tfutil
-from inferbeddings.nli.generate.generator import Generator
+from inferbeddings.nli.generate.scorer import Generator
 
 
-def test_generator():
+def test_scorer():
     vocabulary_path = 'models/snli/dam_1/dam_1_index_to_token.p'
     checkpoint_path = 'models/snli/dam_1/dam_1'
     lm_path = 'models/lm/'
@@ -76,4 +76,4 @@ def test_generator():
 
 if __name__ == '__main__':
     # pytest.main([__file__])
-    test_generator()
+    test_scorer()
