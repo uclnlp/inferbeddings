@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 from inferbeddings.nli import tfutil
-from inferbeddings.nli.generate.scorer import Generator
+from inferbeddings.nli.generate.scorer import LMScorer
 
 
 def test_scorer():
@@ -43,15 +43,13 @@ def test_scorer():
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           trainable=False)
 
-    lm_scope_name = 'language_model'
-    with tf.variable_scope(lm_scope_name):
-        generator = Generator(embedding_layer=embedding_layer, token_to_index=token_to_index, batch_size=batch_size)
+    generator = LMScorer(embedding_layer=embedding_layer, token_to_index=token_to_index, batch_size=batch_size)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
-    lm_vars = tfutil.get_variables_in_scope(lm_scope_name)
+    lm_vars = generator.get_lm_vars()
 
     saver = tf.train.Saver(discriminator_vars, max_to_keep=1)
     lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
