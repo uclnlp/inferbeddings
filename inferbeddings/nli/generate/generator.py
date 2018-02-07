@@ -164,11 +164,11 @@ class Generator:
         return Tree.fromstring(s)
 
     def _parse_str(self, sentence):
-        if sentence not in self.cache:
+        if ['Generator', 'parse', sentence] not in self.cache:
             tree = self.parser.parse(sentence)
             s_tree = str(tree)
-            self.cache[sentence] = s_tree
-        return self.cache[sentence]
+            self.cache['Generator', 'parse', sentence] = s_tree
+        return self.cache['Generator', 'parse', sentence]
 
     def _to_string(self, sentence_idxs):
         return ' '.join([self.index_to_token.get(idx, self.unk_token) for idx in sentence_idxs])
