@@ -2,6 +2,10 @@
 
 import nltk
 from nltk.tree import Tree
+
+import redis
+from collections import OrderedDict
+
 import numpy as np
 
 from inferbeddings.nli.generate.parser import Parser
@@ -34,7 +38,11 @@ class Generator:
         self.parser = Parser(url=corenlp_url)
         self.tokenizer = nltk.tokenize.TreebankWordTokenizer()
 
-        self.cache = {}
+        self.cache = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+        try:
+            self.cache.client_list()
+        except redis.ConnectionError:
+            self.cache = OrderedDict()
 
     def combine(self, sentence1, sentence2):
         sentence1_str, sentence2_str = sentence1, sentence2
