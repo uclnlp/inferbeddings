@@ -95,7 +95,7 @@ def main(argv):
 
     argparser.add_argument('--glove', action='store', type=str, default=None)
 
-    for i in range(0, 12):
+    for i in range(0, 13):
         argparser.add_argument('--rule{:02d}-weight'.format(i), '--{:02d}'.format(i),
                                action='store', type=float, default=None)
 
@@ -170,6 +170,7 @@ def main(argv):
     rule09_weight = args.rule09_weight
     rule10_weight = args.rule10_weight
     rule11_weight = args.rule11_weight
+    rule12_weight = args.rule12_weight
 
     adversarial_pooling_name = args.adversarial_pooling
 
@@ -403,6 +404,9 @@ def main(argv):
         if rule11_weight:
             a_loss, a_losses = R.entailment_neutral_acl(**a_kwargs)
             loss += rule11_weight * a_loss
+        if rule12_weight:
+            a_loss, a_losses = R.entailment_neutral_acl(is_bi=True, **a_kwargs)
+            loss += rule12_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
     discriminator_init_op = tf.variables_initializer(discriminator_vars)
@@ -460,6 +464,20 @@ def main(argv):
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
+
+    from inferbeddings.nli.generate.generator import Generator
+    from inferbeddings.nli.generate.scorer import IScorer
+
+    nb_corruptions = 32
+
+    G = Generator(token_to_index=token_to_index,
+                  nb_corruptions=nb_corruptions)
+
+    S = IScorer(embedding_layer=embedding_layer,
+                token_to_index=token_to_index,
+                model_class=model_class,
+                model_kwargs=model_kwargs,
+                i_pooling_function=tf.reduce_sum)
 
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
@@ -525,6 +543,19 @@ def main(argv):
 
                     batch_sentences1 = batch_sentences1[:, :batch_max_size1]
                     batch_sentences2 = batch_sentences2[:, :batch_max_size2]
+
+                    # TODO: This is where we generate, score, and select the adversarial examples
+
+
+
+
+
+
+
+
+
+
+
 
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1,

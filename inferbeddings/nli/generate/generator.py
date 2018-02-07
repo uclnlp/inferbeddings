@@ -150,7 +150,7 @@ class Generator:
 
         return res1, res2
 
-    # @persist('cache/parse.p')
+    @persist('cache/parse.p')
     def _parse(self, sentence):
         return self.parser.parse(sentence)
 
