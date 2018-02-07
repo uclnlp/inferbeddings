@@ -4,7 +4,6 @@ import nltk
 from nltk.tree import Tree
 import numpy as np
 
-from inferbeddings.decorators import persist
 from inferbeddings.nli.generate.parser import Parser
 from inferbeddings.nli.generate import operators as O
 
@@ -34,6 +33,8 @@ class Generator:
 
         self.parser = Parser(url=corenlp_url)
         self.tokenizer = nltk.tokenize.TreebankWordTokenizer()
+
+        self.cache = {}
 
     def combine(self, sentence1, sentence2):
         sentence1_str, sentence2_str = sentence1, sentence2
@@ -131,7 +132,7 @@ class Generator:
         sentence1_len, sentence2_len = len(sentence1_idxs), len(sentence2_idxs)
 
         for idx in range(self.nb_corruptions):
-            new_word = self.rs.randint(low=1, high=self.nb_words)
+            new_word = self.rs.randint(low=3, high=self.nb_words)
 
             if self.rs.randint(0, 2):
                 where_to_corrupt1 = self.rs.randint(low=1, high=sentence1_len - 1)
@@ -150,9 +151,16 @@ class Generator:
 
         return res1, res2
 
-    @persist('cache/parse.p')
     def _parse(self, sentence):
-        return self.parser.parse(sentence)
+        s = self._parse_str(sentence)
+        return Tree.fromstring(s)
+
+    def _parse_str(self, sentence):
+        if sentence not in self.cache:
+            tree = self.parser.parse(sentence)
+            s_tree = str(tree)
+            self.cache[sentence] = s_tree
+        return self.cache[sentence]
 
     def _to_string(self, sentence_idxs):
         return ' '.join([self.index_to_token.get(idx, self.unk_token) for idx in sentence_idxs])
