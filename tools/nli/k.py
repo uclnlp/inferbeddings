@@ -21,7 +21,7 @@ for s in sys.stdin:
 
         output_path = 'out_nli/k{}/'.format(p)
         out_str += """
-mkdir {}
+mkdir -p {}
 """.format(output_path)
 
         template = ''
@@ -40,7 +40,7 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
         out_str += template.format(*([restore_path, output_path] * (6 * 3)))
 
         out_str += """
-mkdir {}/v1/
+mkdir -p {}/v1/
 """.format(output_path)
 
         temp = ''
@@ -58,11 +58,11 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
         out_str += temp.format(*([restore_path, output_path] * (6 * 8 * 3)))
 
         out_str += """
-mkdir {}/v1.1/
+mkdir -p {}/v1.1/
 """.format(output_path)
 
         out_str += """
-mkdir {}/v1.2/
+mkdir -p {}/v1.2/
 """.format(output_path)
 
         t = """
@@ -95,4 +95,8 @@ for e in out_lst:
                 data = f.read()
 
             if '(True) AND NOT(S1' not in data:
+                print(e)
+
+        if 'mkdir' in e:
+            if not os.path.isdir(path):
                 print(e)
