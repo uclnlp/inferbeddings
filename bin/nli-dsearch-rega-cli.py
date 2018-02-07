@@ -4,7 +4,7 @@
 """
 Sample usage:
 
-$ python3 ./bin/nli-dsearch-areg-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8
+$ python3 ./bin/nli-dsearch-rega-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8
 --representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform --nb-epochs 10 --has-bos --has-unk
 -p -S --restore models/snli/dam_1/dam_1 --04 0.0 -P sum -E data/snli/generated/snli_1.0_contradictions_*.gz
 --hard-save models/snli/dam_1/acl/batch_dsearch_reg_v1/dam_1_0
@@ -18,6 +18,7 @@ import sys
 
 import pickle
 import socket
+import copy
 
 import numpy as np
 import tensorflow as tf
@@ -339,7 +340,26 @@ def main(argv):
 
         a_pooling_function = name_to_adversarial_pooling[adversarial_pooling_name]
 
-        a_kwargs = dict(model_class=model_class, model_kwargs=model_kwargs,
+        a_model_kwargs = copy.copy(model_kwargs)
+
+        a_sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='a_sentence1')
+        a_sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='a_sentence2')
+
+        a_sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='a_sentence1_length')
+        a_sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='a_sentence2_length')
+
+        a_clipped_sentence1 = tfutil.clip_sentence(a_sentence1_ph, a_sentence1_len_ph)
+        a_clipped_sentence2 = tfutil.clip_sentence(a_sentence2_ph, a_sentence2_len_ph)
+
+        a_sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, a_clipped_sentence1)
+        a_sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, a_clipped_sentence2)
+
+        a_model_kwargs.update({
+            'sequence1': a_sentence1_embedding, 'sequence1_length': a_sentence1_len_ph,
+            'sequence2': a_sentence2_embedding, 'sequence2_length': a_sentence2_len_ph
+        })
+
+        a_kwargs = dict(model_class=model_class, model_kwargs=a_model_kwargs,
                         entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx,
                         pooling_function=a_pooling_function, debug=True)
 
