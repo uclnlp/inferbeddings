@@ -25,11 +25,13 @@ def test_generator():
     nb_corruptions = 32
     g = Generator(token_to_index=token_to_index, nb_corruptions=nb_corruptions)
 
-    sentence1 = 'The girl runs happily on the grass .'
+    sentence1 = 'The girl runs happily on the grass close to a white box .'
     sentence2 = 'The girl is happy .'
 
-    corr1, corr2 = g.remove(sentence1=sentence1, sentence2=sentence2)
-    assert len(corr1) == len(corr2) == nb_corruptions
+    corr1, corr2 = g.flip(sentence1=sentence1, sentence2=sentence2)
+
+    assert len(corr1) == nb_corruptions
+    assert len(corr2) == nb_corruptions
 
     tokenizer = nltk.tokenize.TreebankWordTokenizer()
 
@@ -43,7 +45,22 @@ def test_generator():
         s_tkns = tokenizer.tokenize(sentence2)
         assert len(e_tkns) == len(s_tkns)
 
+    corr1, corr2 = g.remove(sentence1=sentence1, sentence2=sentence2)
+
+    assert len(corr1) == nb_corruptions
+    assert len(corr2) == nb_corruptions
+
+    for e in corr1:
+        e_tkns = tokenizer.tokenize(e)
+        s_tkns = tokenizer.tokenize(sentence1)
+        assert len(e_tkns) <= len(s_tkns)
+
+    for e in corr2:
+        e_tkns = tokenizer.tokenize(e)
+        s_tkns = tokenizer.tokenize(sentence2)
+        assert len(e_tkns) <= len(s_tkns)
+
 
 if __name__ == '__main__':
-    pytest.main([__file__])
-    # test_generator()
+    # pytest.main([__file__])
+    test_generator()

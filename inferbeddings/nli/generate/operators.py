@@ -23,11 +23,24 @@ def combine_trees(tree1, tree2):
 
 
 def remove_subtree(tree):
+    return _remove_subtree(tree, tree)
+
+
+def _remove_subtree(main_tree, subtree):
     res = []
+    for st in subtree:
+        if isinstance(st, nltk.Tree):
+            main_tree_cp = main_tree.copy(deep=True)
+            _remove_subtree_from_tree(main_tree_cp, st)
+            res += [main_tree_cp]
+            res += _remove_subtree(main_tree, st)
+    return res
+
+
+def _remove_subtree_from_tree(tree, subtree_to_remove):
     for st in tree:
         if isinstance(st, nltk.Tree):
-            tree_cp = tree.copy(deep=True)
-            tree_cp.remove(st)
-            res += [tree_cp]
-            res += remove_subtree(st)
-    return res
+            if st == subtree_to_remove:
+                tree.remove(st)
+            _remove_subtree_from_tree(st, subtree_to_remove)
+    return
