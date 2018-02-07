@@ -60,7 +60,21 @@ def test_generator():
         s_tkns = tokenizer.tokenize(sentence2)
         assert len(e_tkns) <= len(s_tkns)
 
+    corr1, corr2 = g.combine(sentence1=sentence1, sentence2=sentence2)
+
+    assert len(corr1) == nb_corruptions
+    assert len(corr2) == nb_corruptions
+
+    for e in corr1:
+        e_tkns = tokenizer.tokenize(e)
+        s_tkns = tokenizer.tokenize(sentence1)
+        assert len(e_tkns) >= len(s_tkns)
+
+    for e in corr2:
+        e_tkns = tokenizer.tokenize(e)
+        s_tkns = tokenizer.tokenize(sentence2)
+        assert len(e_tkns) >= len(s_tkns)
 
 if __name__ == '__main__':
-    # pytest.main([__file__])
-    test_generator()
+    pytest.main([__file__])
+
