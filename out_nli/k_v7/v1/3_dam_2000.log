@@ -1,0 +1,20 @@
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/fully_connected/weights:0 ((200, 3)): 600 params
+INFO:root:discriminator/aggregate/fully_connected/biases:0 ((3,)): 3 params
+INFO:nli-debug-cli.py:Total Trainable Discriminator Parameters: 12075203
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/acl/batch_dsearch_reg_v7/dam_1_6
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/acl/batch_dsearch_reg_v7/dam_1_6
+  0%|          | 0/31 [00:00<?, ?it/s]  3%|▎         | 1/31 [00:07<03:51,  7.72s/it]  6%|▋         | 2/31 [00:08<02:01,  4.19s/it] 10%|▉         | 3/31 [00:09<01:31,  3.27s/it] 13%|█▎        | 4/31 [00:10<01:11,  2.66s/it] 16%|█▌        | 5/31 [00:11<01:01,  2.35s/it] 19%|█▉        | 6/31 [00:13<00:56,  2.27s/it] 23%|██▎       | 7/31 [00:14<00:50,  2.09s/it] 26%|██▌       | 8/31 [00:15<00:44,  1.96s/it] 29%|██▉       | 9/31 [00:16<00:40,  1.84s/it] 32%|███▏      | 10/31 [00:17<00:37,  1.76s/it] 35%|███▌      | 11/31 [00:18<00:33,  1.69s/it] 39%|███▊      | 12/31 [00:19<00:30,  1.61s/it] 42%|████▏     | 13/31 [00:20<00:28,  1.57s/it] 45%|████▌     | 14/31 [00:21<00:26,  1.53s/it] 48%|████▊     | 15/31 [00:22<00:23,  1.49s/it] 52%|█████▏    | 16/31 [00:23<00:21,  1.45s/it] 55%|█████▍    | 17/31 [00:24<00:19,  1.42s/it] 58%|█████▊    | 18/31 [00:25<00:18,  1.43s/it] 61%|██████▏   | 19/31 [00:26<00:16,  1.39s/it] 65%|██████▍   | 20/31 [00:27<00:14,  1.35s/it] 68%|██████▊   | 21/31 [00:28<00:13,  1.34s/it] 71%|███████   | 22/31 [00:29<00:12,  1.34s/it] 74%|███████▍  | 23/31 [00:30<00:10,  1.31s/it] 77%|███████▋  | 24/31 [00:31<00:09,  1.30s/it] 81%|████████  | 25/31 [00:32<00:07,  1.30s/it] 84%|████████▍ | 26/31 [00:33<00:06,  1.29s/it] 87%|████████▋ | 27/31 [00:34<00:05,  1.29s/it] 90%|█████████ | 28/31 [00:36<00:03,  1.30s/it] 94%|█████████▎| 29/31 [00:37<00:02,  1.30s/it] 97%|█████████▋| 30/31 [00:38<00:01,  1.29s/it]100%|██████████| 31/31 [00:39<00:00,  1.27s/it]
+INFO:nli-debug-cli.py:Number of examples: 3876
+INFO:nli-debug-cli.py:Accuracy: 0.5903
+INFO:nli-debug-cli.py:(S1 contradicts S2) XOR (S2 contradicts S1): 1558
+INFO:nli-debug-cli.py:(S1 contradicts S2): 1269
+INFO:nli-debug-cli.py:(S1 contradicts S2) AND NOT(S2 contradicts S1): 779 (0.6139)
+INFO:nli-debug-cli.py:(S1 entailment S2): 1116
+INFO:nli-debug-cli.py:(S1 entailment S2) AND (S2 contradicts S1): 276 (0.2473)
+INFO:nli-debug-cli.py:(S1 neutral S2): 1269
+INFO:nli-debug-cli.py:(S1 neutral S2) AND (S2 contradicts S1): 503 (0.3964)
+INFO:nli-debug-cli.py:(True): 7752 [3876 + 3876]
+INFO:nli-debug-cli.py:(True) AND NOT(S1 entails S1): 10 [5 + 5] (0.0013)
