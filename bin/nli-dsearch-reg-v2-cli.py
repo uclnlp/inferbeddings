@@ -4,7 +4,7 @@
 """
 Sample usage:
 
-$ python3 ./bin/nli-dsearch-rega-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8
+$ python3 ./bin/nli-dsearch-reg-v2-cli.py -f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8
 --representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform --nb-epochs 10 --has-bos --has-unk
 -p -S --restore models/snli/dam_1/dam_1 --04 0.0 -P sum -E data/snli/generated/snli_1.0_contradictions_*.gz
 --hard-save models/snli/dam_1/acl/batch_dsearch_reg_v1/dam_1_0
@@ -109,7 +109,23 @@ def main(argv):
 
     argparser.add_argument('--eval', '-E', nargs='+', type=str, help='Evaluate on these additional sets')
 
+    # Parameters for adversarial training
+    argparser.add_argument('--adversarial-epsilon', '--aeps',
+                           action='store', type=float, default=0.01)
+    argparser.add_argument('--adversarial-nb-corruptions', '--anc',
+                           action='store', type=int, default=32)
+
+    argparser.add_argument('--adversarial-flip', '--af', action='store_true', default=False)
+    argparser.add_argument('--adversarial-combine', '--ac', action='store_true', default=False)
+    argparser.add_argument('--adversarial-remove', '--ar', action='store_true', default=False)
+
     args = argparser.parse_args(argv)
+
+    a_epsilon = args.adversarial_epsilon
+    a_nb_corruptions = args.adversarial_nb_corruptions
+    a_is_flip = args.adversarial_flip
+    a_is_combine = args.adversarial_combine
+    a_is_remove = args.adversarial_remove
 
     # Command line arguments
     train_path, valid_path, test_path = args.train, args.valid, args.test
@@ -546,6 +562,13 @@ def main(argv):
 
                     # TODO: This is where we generate, score, and select the adversarial examples
 
+                    # Remove the BOS
+                    o_batch_size = batch_sentences1.shape[0]
+                    o_sentences1_idxs, o_sentences2_idxs = [], []
+
+                    for i in o_batch_size:
+                        o_sentences1_idxs += [[idx for idx in batch_sentences1[i, 1:].tolist() if idx is not 0]]
+                        o_sentences2_idxs += [[idx for idx in batch_sentences1[i, 1:].tolist() if idx is not 0]]
 
 
 
@@ -554,8 +577,7 @@ def main(argv):
 
 
 
-
-
+                    sys.exit(0)
 
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1,
