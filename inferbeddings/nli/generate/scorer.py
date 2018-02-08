@@ -9,7 +9,7 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import legacy_seq2seq as S
 
-from inferbeddings.nli import tfutil
+from inferbeddings.nli import util, tfutil
 import inferbeddings.nli.regularizers.base as R
 
 
@@ -17,7 +17,8 @@ class IScorer:
     def __init__(self, embedding_layer, token_to_index,
                  model_class, model_kwargs,
                  i_pooling_function,
-                 entailment_idx=0, neutral_idx=1, contradiction_idx=2):
+                 entailment_idx=0, neutral_idx=1, contradiction_idx=2,
+                 a_function_weight_bi_tuple_lst=None):
 
         self.embedding_layer = embedding_layer
         self.token_to_index = token_to_index
@@ -51,8 +52,6 @@ class IScorer:
             'dropout_keep_prob': 1
         })
 
-        print(self.i_model_kwargs.keys())
-
         self.function_kwargs = dict(model_class=self.i_model_class,
                                     model_kwargs=self.i_model_kwargs,
                                     entailment_idx=self.entailment_idx,
@@ -61,14 +60,42 @@ class IScorer:
                                     pooling_function=self.i_pooling_function,
                                     debug=True)
 
+        if a_function_weight_bi_tuple_lst is None:
+            a_function_weight_bi_tuple_lst = [(R.contradiction_acl, 1.0, True)]
+
+        self.score_f = 0.0
+        for f, w, is_bi in a_function_weight_bi_tuple_lst:
+            a_loss, a_losses = f(is_bi=is_bi, **self.function_kwargs)
+            self.score_f += a_losses * w
+
+    def iscore(self, session, sentence1_lst, sentence2_lst, bos_idx=1):
+        _sentences1, _sentences2 = [], []
+
+        for s1, s2 in zip(sentence1_lst, sentence2_lst):
+            if bos_idx is not None:
+                _s1 = [bos_idx] + s1
+                _s2 = [bos_idx] + s2
+                s1, s2 = _s1, _s2
+            _sentences1 += [s1]
+            _sentences2 += [s2]
+
+        sizes1 = [len(s) for s in _sentences1]
+        sizes2 = [len(s) for s in _sentences2]
+
+        np_sentences1 = util.pad_sequences(_sentences1)
+        np_sentences2 = util.pad_sequences(_sentences2)
+        np_sizes1, np_sizes2 = np.array(sizes1), np.array(sizes2)
+
+        return self.score(session,
+                          np_sentences1, np_sizes1,
+                          np_sentences2, np_sizes2)
+
     def score(self, session, sentences1, sizes1, sentences2, sizes2):
-        # TODO: the function needs to be a parameter
-        score_f = R.contradiction_acl(**self.function_kwargs)
         feed = {
             self.i_sentence1_ph: sentences1, self.i_sentence1_len_ph: sizes1,
             self.i_sentence2_ph: sentences2, self.i_sentence2_len_ph: sizes2
         }
-        score_values = session.run([score_f], feed_dict=feed)
+        score_values = session.run(self.score_f, feed_dict=feed)
         return score_values
 
 
@@ -123,6 +150,12 @@ class LMScorer:
     def get_vars(self):
         lm_vars = tfutil.get_variables_in_scope(self.lm_scope_name)
         return lm_vars
+
+    def score(self, session, sentence_lst):
+        sentence_len_lst = [len(lst) for lst in sentence_lst]
+        np_sentence_lst = util.pad_sequences(sentence_lst)
+        np_sentence_len_lst = np.array(sentence_len_lst)
+        return self.log_perplexity(session, np_sentence_lst, np_sentence_len_lst)
 
     def log_perplexity(self, session, sentences, sizes):
         assert sentences.shape[0] == sizes.shape[0]

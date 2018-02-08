@@ -34,6 +34,10 @@ import inferbeddings.nli.regularizers.base as R
 
 from inferbeddings.models.training import constraints
 
+from inferbeddings.nli.generate.generator import Generator
+from inferbeddings.nli.generate.scorer import LMScorer
+from inferbeddings.nli.generate.scorer import IScorer
+
 from inferbeddings.nli.evaluation import accuracy, stats
 
 import logging
@@ -110,10 +114,19 @@ def main(argv):
     argparser.add_argument('--eval', '-E', nargs='+', type=str, help='Evaluate on these additional sets')
 
     # Parameters for adversarial training
+    argparser.add_argument('--lm', action='store', type=str, default='models/lm/',
+                           help='Language Model')
+
+    # XXX: default to None (disable)
     argparser.add_argument('--adversarial-epsilon', '--aeps',
                            action='store', type=float, default=0.01)
     argparser.add_argument('--adversarial-nb-corruptions', '--anc',
                            action='store', type=int, default=32)
+    argparser.add_argument('--adversarial-nb-examples-per-batch', '--anepb',
+                           action='store', type=int, default=4)
+    # XXX: default to -1 (disable)
+    argparser.add_argument('--adversarial-top-k', '--atopk',
+                           action='store', type=int, default=2)
 
     argparser.add_argument('--adversarial-flip', '--af', action='store_true', default=False)
     argparser.add_argument('--adversarial-combine', '--ac', action='store_true', default=False)
@@ -121,8 +134,11 @@ def main(argv):
 
     args = argparser.parse_args(argv)
 
+    lm_path = args.lm
     a_epsilon = args.adversarial_epsilon
-    a_nb_corruptions = args.adversarial_nb_corruptions
+    a_nb_corr = args.adversarial_nb_corruptions
+    a_nb_examples_per_batch = args.adversarial_nb_examples_per_batch
+    a_top_k = args.adversarial_top_k
     a_is_flip = args.adversarial_flip
     a_is_combine = args.adversarial_combine
     a_is_remove = args.adversarial_remove
@@ -381,47 +397,62 @@ def main(argv):
                         pooling_function=a_pooling_function, debug=True)
 
         a_losses = None
+        a_function_weight_bi_tuple_lst = []
+
         if rule00_weight:
             a_loss, a_losses = R.contradiction_symmetry_l2(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.contradiction_symmetry_l2, rule00_weight, False)]
             loss += rule00_weight * a_loss
         if rule01_weight:
             a_loss, a_losses = R.contradiction_symmetry_l1(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.contradiction_symmetry_l1, rule01_weight, False)]
             loss += rule01_weight * a_loss
         if rule02_weight:
             a_loss, a_losses = R.contradiction_kullback_leibler(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.contradiction_kullback_leibler, rule02_weight, False)]
             loss += rule02_weight * a_loss
         if rule03_weight:
             a_loss, a_losses = R.contradiction_jensen_shannon(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.contradiction_jensen_shannon, rule03_weight, False)]
             loss += rule03_weight * a_loss
 
         if rule04_weight:
             a_loss, a_losses = R.contradiction_acl(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.contradiction_acl, rule04_weight, False)]
             loss += rule04_weight * a_loss
         if rule05_weight:
             a_loss, a_losses = R.entailment_acl(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.entailment_acl, rule05_weight, False)]
             loss += rule05_weight * a_loss
         if rule06_weight:
             a_loss, a_losses = R.neutral_acl(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.neutral_acl, rule06_weight, False)]
             loss += rule06_weight * a_loss
 
         if rule07_weight:
             a_loss, a_losses = R.contradiction_acl(is_bi=True, **a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.contradiction_acl, rule07_weight, True)]
             loss += rule07_weight * a_loss
         if rule08_weight:
             a_loss, a_losses = R.entailment_acl(is_bi=True, **a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.entailment_acl, rule08_weight, True)]
             loss += rule08_weight * a_loss
         if rule09_weight:
             a_loss, a_losses = R.neutral_acl(is_bi=True, **a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.neutral_acl, rule09_weight, True)]
             loss += rule09_weight * a_loss
 
         if rule10_weight:
             a_loss, a_losses = R.entailment_reflexive_acl(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.entailment_reflexive_acl, rule10_weight, False)]
             loss += rule10_weight * a_loss
         if rule11_weight:
             a_loss, a_losses = R.entailment_neutral_acl(**a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.entailment_neutral_acl, rule11_weight, False)]
             loss += rule11_weight * a_loss
         if rule12_weight:
             a_loss, a_losses = R.entailment_neutral_acl(is_bi=True, **a_kwargs)
+            a_function_weight_bi_tuple_lst += [(R.entailment_neutral_acl, rule12_weight, True)]
             loss += rule12_weight * a_loss
 
     discriminator_vars = tfutil.get_variables_in_scope(discriminator_scope_name)
@@ -481,19 +512,27 @@ def main(argv):
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
-    from inferbeddings.nli.generate.generator import Generator
-    from inferbeddings.nli.generate.scorer import IScorer
-
-    nb_corruptions = 32
+    a_batch_size = 1 + (a_nb_corr * a_is_flip) + (a_nb_corr * a_is_remove) + (a_nb_corr * a_is_combine)
 
     G = Generator(token_to_index=token_to_index,
-                  nb_corruptions=nb_corruptions)
+                  nb_corruptions=a_nb_corr)
 
-    S = IScorer(embedding_layer=embedding_layer,
-                token_to_index=token_to_index,
-                model_class=model_class,
-                model_kwargs=model_kwargs,
-                i_pooling_function=tf.reduce_sum)
+    with tf.variable_scope(discriminator_scope_name):
+        IS = IScorer(embedding_layer=embedding_layer,
+                     token_to_index=token_to_index,
+                     model_class=model_class,
+                     model_kwargs=model_kwargs,
+                     i_pooling_function=tf.reduce_sum,
+                     a_function_weight_bi_tuple_lst=a_function_weight_bi_tuple_lst)
+
+    LMS = LMScorer(embedding_layer=embedding_layer,
+                   token_to_index=token_to_index,
+                   batch_size=a_batch_size)
+
+    lm_vars = LMS.get_vars()
+    lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
+
+    A_rs = np.random.RandomState(0)
 
     with tf.Session(config=session_config) as session:
         logger.info('Total Parameters: {}'.format(tfutil.count_trainable_parameters()))
@@ -501,6 +540,9 @@ def main(argv):
             tfutil.count_trainable_parameters(var_list=discriminator_vars)))
         logger.info('Total Trainable Discriminator Parameters: {}'.format(
             tfutil.count_trainable_parameters(var_list=trainable_discriminator_vars)))
+
+        lm_ckpt = tf.train.get_checkpoint_state(lm_path)
+        lm_saver.restore(session, lm_ckpt.model_checkpoint_path)
 
         if restore_path:
             saver.restore(session, restore_path)
@@ -564,30 +606,72 @@ def main(argv):
 
                     # Remove the BOS
                     o_batch_size = batch_sentences1.shape[0]
-                    o_sentences1_idxs, o_sentences2_idxs = [], []
+                    o_sentences1, o_sentences2 = [], []
 
-                    for i in o_batch_size:
-                        o_sentences1_idxs += [[idx for idx in batch_sentences1[i, 1:].tolist() if idx is not 0]]
-                        o_sentences2_idxs += [[idx for idx in batch_sentences1[i, 1:].tolist() if idx is not 0]]
+                    for i in range(o_batch_size):
+                        _start_idx = 1 if has_bos else 0
+                        o_sentences1 += [[idx for idx in batch_sentences1[i, _start_idx:].tolist() if idx != 0]]
+                        o_sentences2 += [[idx for idx in batch_sentences2[i, _start_idx:].tolist() if idx != 0]]
 
+                    # Parameters for adversarial training:
+                    # a_epsilon, a_nb_corruptions, a_nb_examples_per_batch, a_is_flip, a_is_combine, a_is_remove
+                    selected_sentence1, selected_sentence2 = [], []
 
+                    c_idxs = A_rs.choice(o_batch_size, a_nb_examples_per_batch, replace=False)
+                    for c_idx in c_idxs:
+                        o_sentence1 = o_sentences1[c_idx]
+                        o_sentence2 = o_sentences2[c_idx]
 
+                        # Generating Corruptions
+                        c_sentence1_lst, c_sentence2_lst = [o_sentence1], [o_sentence2]
+                        if a_is_flip:
+                            corr1, corr2 = G.flip(sentence1=o_sentence1, sentence2=o_sentence2)
+                            c_sentence1_lst += corr1
+                            c_sentence2_lst += corr2
+                        if a_is_remove:
+                            corr1, corr2 = G.remove(sentence1=o_sentence1, sentence2=o_sentence2)
+                            c_sentence1_lst += corr1
+                            c_sentence2_lst += corr2
+                        if a_is_combine:
+                            corr1, corr2 = G.combine(sentence1=o_sentence1, sentence2=o_sentence2)
+                            c_sentence1_lst += corr1
+                            c_sentence2_lst += corr2
 
+                        if a_epsilon is not None:
+                            # Scoring them against a Language Model
+                            log_perp1 = LMS.score(session, c_sentence1_lst)
+                            log_perp2 = LMS.score(session, c_sentence2_lst)
 
+                            low_lperp_idxs = np.where(
+                                (log_perp1 + log_perp2) < (log_perp1[0] + log_perp2[0] + a_epsilon)
+                            )[0].tolist()
+                        else:
+                            low_lperp_idxs = range(len(c_sentence1_lst))
 
+                        selected_sentence1 += [c_sentence1_lst[i] for i in low_lperp_idxs]
+                        selected_sentence2 += [c_sentence2_lst[i] for i in low_lperp_idxs]
 
+                    # Now in selected_sentence1 and selected_sentence2 we have the most offending examples
+                    if a_top_k >= 0:
+                        _, iscore_values = IS.iscore(session, selected_sentence1, selected_sentence2)
+                        top_k_idxs = np.argsort(iscore_values)[::-1][:a_top_k]
+                        selected_sentence1 = [selected_sentence1[i] for i in top_k_idxs]
+                        selected_sentence2 = [selected_sentence2[i] for i in top_k_idxs]
 
-                    sys.exit(0)
+                    # Convert selected_sentence1 and selected_sentence2 into a batch
+                    batch_a_sentences1 = util.pad_sequences(selected_sentence1)
+                    batch_a_sentences2 = util.pad_sequences(selected_sentence2)
+
+                    batch_a_sizes1 = np.array([len(s) for s in selected_sentence1])
+                    batch_a_sizes2 = np.array([len(s) for s in selected_sentence2])
 
                     batch_feed_dict = {
-                        sentence1_ph: batch_sentences1,
-                        sentence1_len_ph: batch_sizes1,
+                        sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
+                        sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
+                        label_ph: batch_labels, dropout_keep_prob_ph: dropout_keep_prob,
 
-                        sentence2_ph: batch_sentences2,
-                        sentence2_len_ph: batch_sizes2,
-
-                        label_ph: batch_labels,
-                        dropout_keep_prob_ph: dropout_keep_prob
+                        a_sentence1_ph: batch_a_sentences1, a_sentence1_len_ph: batch_a_sizes1,
+                        a_sentence2_ph: batch_a_sentences2, a_sentence2_len_ph: batch_a_sizes2
                     }
 
                     # Adding the adversaries

@@ -147,7 +147,9 @@ def test_lm_scorer():
                                           initializer=tf.contrib.layers.xavier_initializer(),
                                           trainable=False)
 
-    generator = LMScorer(embedding_layer=embedding_layer, token_to_index=token_to_index, batch_size=batch_size)
+    generator = LMScorer(embedding_layer=embedding_layer,
+                         token_to_index=token_to_index,
+                         batch_size=batch_size)
 
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
