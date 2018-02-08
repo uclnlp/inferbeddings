@@ -60,13 +60,17 @@ class IScorer:
                                     pooling_function=self.i_pooling_function,
                                     debug=True)
 
-        if a_function_weight_bi_tuple_lst is None or len(a_function_weight_bi_tuple_lst) == 0:
-            a_function_weight_bi_tuple_lst = [(R.contradiction_acl, 0.0, False)]
-
-        self.score_f = 0.0
-        for f, w, is_bi in a_function_weight_bi_tuple_lst:
-            a_loss, a_losses = f(is_bi=is_bi, **self.function_kwargs)
-            self.score_f += a_losses * w
+        self.score_f = None
+        if a_function_weight_bi_tuple_lst is None:
+            def_loss, def_losses = R.contradiction_acl(is_bi=False, **self.function_kwargs)
+            self.score_f = tf.zeros_like(def_losses) * 0.0
+        else:
+            for f, w, is_bi in a_function_weight_bi_tuple_lst:
+                a_loss, a_losses = f(is_bi=is_bi, **self.function_kwargs)
+                if self.score_f is None:
+                    self.score_f = a_losses * w
+                else:
+                    self.score_f += a_losses * w
 
     def iscore(self, session, sentence1_lst, sentence2_lst, bos_idx=1):
         _sentences1, _sentences2 = [], []

@@ -139,15 +139,18 @@ class Generator:
 
         sentence1_len, sentence2_len = len(sentence1_idxs), len(sentence2_idxs)
 
-        for idx in range(self.nb_corruptions):
-            new_word = self.rs.randint(low=3, high=self.nb_words)
+        print(sentence1_len, sentence2_len)
 
-            if self.rs.randint(0, 2):
-                where_to_corrupt1 = self.rs.randint(low=1, high=sentence1_len - 1)
-                corruptions1[idx, where_to_corrupt1] = new_word
-            else:
-                where_to_corrupt2 = self.rs.randint(low=1, high=sentence2_len - 1)
-                corruptions2[idx, where_to_corrupt2] = new_word
+        for idx in range(self.nb_corruptions):
+            if 1 < sentence1_len - 1 and 1 < sentence2_len - 1:
+                new_word = self.rs.randint(low=3, high=self.nb_words)
+
+                if self.rs.randint(0, 2):
+                    where_to_corrupt1 = self.rs.randint(low=1, high=sentence1_len - 1)
+                    corruptions1[idx, where_to_corrupt1] = new_word
+                else:
+                    where_to_corrupt2 = self.rs.randint(low=1, high=sentence2_len - 1)
+                    corruptions2[idx, where_to_corrupt2] = new_word
 
         res1, res2 = corruptions1.tolist(), corruptions2.tolist()
 
