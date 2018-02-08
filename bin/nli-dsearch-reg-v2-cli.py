@@ -117,16 +117,16 @@ def main(argv):
     argparser.add_argument('--lm', action='store', type=str, default='models/lm/',
                            help='Language Model')
 
-    # XXX: default to None (disable)
+    # XXX: default to None (disable) - 0.01
     argparser.add_argument('--adversarial-epsilon', '--aeps',
-                           action='store', type=float, default=0.01)
+                           action='store', type=float, default=None)
     argparser.add_argument('--adversarial-nb-corruptions', '--anc',
                            action='store', type=int, default=32)
     argparser.add_argument('--adversarial-nb-examples-per-batch', '--anepb',
                            action='store', type=int, default=4)
-    # XXX: default to -1 (disable)
+    # XXX: default to -1 (disable) - 4
     argparser.add_argument('--adversarial-top-k', '--atopk',
-                           action='store', type=int, default=2)
+                           action='store', type=int, default=-1)
 
     argparser.add_argument('--adversarial-flip', '--af', action='store_true', default=False)
     argparser.add_argument('--adversarial-combine', '--ac', action='store_true', default=False)
@@ -653,7 +653,7 @@ def main(argv):
 
                     # Now in selected_sentence1 and selected_sentence2 we have the most offending examples
                     if a_top_k >= 0:
-                        _, iscore_values = IS.iscore(session, selected_sentence1, selected_sentence2)
+                        iscore_values = IS.iscore(session, selected_sentence1, selected_sentence2)
                         top_k_idxs = np.argsort(iscore_values)[::-1][:a_top_k]
                         selected_sentence1 = [selected_sentence1[i] for i in top_k_idxs]
                         selected_sentence2 = [selected_sentence2[i] for i in top_k_idxs]

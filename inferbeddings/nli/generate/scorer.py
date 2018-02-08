@@ -60,8 +60,8 @@ class IScorer:
                                     pooling_function=self.i_pooling_function,
                                     debug=True)
 
-        if a_function_weight_bi_tuple_lst is None:
-            a_function_weight_bi_tuple_lst = [(R.contradiction_acl, 1.0, True)]
+        if a_function_weight_bi_tuple_lst is None or len(a_function_weight_bi_tuple_lst) == 0:
+            a_function_weight_bi_tuple_lst = [(R.contradiction_acl, 0.0, False)]
 
         self.score_f = 0.0
         for f, w, is_bi in a_function_weight_bi_tuple_lst:
