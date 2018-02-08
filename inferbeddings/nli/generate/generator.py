@@ -139,8 +139,6 @@ class Generator:
 
         sentence1_len, sentence2_len = len(sentence1_idxs), len(sentence2_idxs)
 
-        print(sentence1_len, sentence2_len)
-
         for idx in range(self.nb_corruptions):
             if 1 < sentence1_len - 1 and 1 < sentence2_len - 1:
                 new_word = self.rs.randint(low=3, high=self.nb_words)
