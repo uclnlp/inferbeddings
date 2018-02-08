@@ -90,11 +90,14 @@ for e in out_lst:
     if len(e_split) > 0:
         path = e_split[-1]
 
-        if os.path.isfile(path) and 'log' in path:
-            with open(path, 'r') as f:
-                data = f.read()
+        if 'log' in path:
+            if os.path.isfile(path):
+                with open(path, 'r') as f:
+                    data = f.read()
 
-            if '(True) AND NOT(S1' not in data:
+                if '(True) AND NOT(S1' not in data:
+                    print(e)
+            else:
                 print(e)
 
         if 'mkdir' in e:
