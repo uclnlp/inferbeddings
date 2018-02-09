@@ -1,0 +1,1 @@
+python3 ./bin/nli-cli.py -f -n -m esim1 --batch-size 32 --dropout-keep-prob 0.5 --representation-size 300 --optimizer adam --learning-rate 0.001 -c 100 -i uniform --nb-epochs 1000 --has-bos --has-unk -p --glove $HOME/data/glove/glove.840B.300d.txt -S --save models/snli/cbilstm_1/cbilstm_1 > models/snli/cbilstm_1/go.out 2>&1
