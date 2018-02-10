@@ -19,13 +19,13 @@ class ConditionalBiLSTM(BaseRTEModel):
         with tf.variable_scope('lstm', reuse=self.reuse) as _:
             self.cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
                                                    initializer=tf.contrib.layers.xavier_initializer())
-            if self.dropout_keep_prob:
+            if self.dropout_keep_prob is not None:
                 self.cell_fw = tf.contrib.rnn.DropoutWrapper(self.cell_fw, input_keep_prob=self.dropout_keep_prob,
                                                              output_keep_prob=self.dropout_keep_prob)
 
             self.cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
                                                    initializer=tf.contrib.layers.xavier_initializer())
-            if self.dropout_keep_prob:
+            if self.dropout_keep_prob is not None:
                 self.cell_bw = tf.contrib.rnn.DropoutWrapper(self.cell_bw, input_keep_prob=self.dropout_keep_prob,
                                                              output_keep_prob=self.dropout_keep_prob)
 
