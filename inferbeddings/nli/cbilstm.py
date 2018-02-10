@@ -10,20 +10,20 @@ logger = logging.getLogger(__name__)
 
 
 class ConditionalBiLSTM(BaseRTEModel):
-    def __init__(self, hidden_size=100, dropout_keep_prob=None, *args, **kwargs):
+    def __init__(self, representation_size=300, dropout_keep_prob=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.hidden_size = hidden_size
+        self.representation_size = representation_size
         self.dropout_keep_prob = dropout_keep_prob
 
         with tf.variable_scope('lstm', reuse=self.reuse) as _:
-            self.cell_fw = tf.contrib.rnn.LSTMCell(self.hidden_size, state_is_tuple=True,
+            self.cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
                                                    initializer=tf.contrib.layers.xavier_initializer())
             if self.dropout_keep_prob:
                 self.cell_fw = tf.contrib.rnn.DropoutWrapper(self.cell_fw, input_keep_prob=self.dropout_keep_prob,
                                                              output_keep_prob=self.dropout_keep_prob)
 
-            self.cell_bw = tf.contrib.rnn.LSTMCell(self.hidden_size, state_is_tuple=True,
+            self.cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
                                                    initializer=tf.contrib.layers.xavier_initializer())
             if self.dropout_keep_prob:
                 self.cell_bw = tf.contrib.rnn.DropoutWrapper(self.cell_bw, input_keep_prob=self.dropout_keep_prob,
