@@ -9,6 +9,42 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def fused_rnn_backward(fused_rnn, inputs, sequence_length, initial_state=None, dtype=None, scope=None, time_major=True):
+    if not time_major:
+        inputs = tf.transpose(inputs, [1, 0, 2])
+    # assumes that time dim is 0 and batch is 1
+    rev_inputs = tf.reverse_sequence(inputs, sequence_length, 0, 1)
+    rev_outputs, last_state = fused_rnn(rev_inputs, sequence_length=sequence_length, initial_state=initial_state,
+                                        dtype=dtype, scope=scope)
+    outputs = tf.reverse_sequence(rev_outputs, sequence_length, 0, 1)
+    if not time_major:
+        outputs = tf.transpose(outputs, [1, 0, 2])
+    return outputs, last_state
+
+
+def fused_birnn(fused_rnn, inputs, sequence_length, initial_state=(None, None), dtype=None, scope=None,
+                time_major=False, backward_device=None):
+    with tf.variable_scope(scope or "BiRNN"):
+        sequence_length = tf.cast(sequence_length, tf.int32)
+        if not time_major:
+            inputs = tf.transpose(inputs, [1, 0, 2])
+        outputs_fw, state_fw = fused_rnn(inputs, sequence_length=sequence_length, initial_state=initial_state[0],
+                                         dtype=dtype, scope="FW")
+
+        if backward_device is not None:
+            with tf.device(backward_device):
+                outputs_bw, state_bw = fused_rnn_backward(fused_rnn, inputs, sequence_length, initial_state[1], dtype,
+                                                          scope="BW")
+        else:
+            outputs_bw, state_bw = fused_rnn_backward(fused_rnn, inputs, sequence_length, initial_state[1], dtype,
+                                                      scope="BW")
+
+        if not time_major:
+            outputs_fw = tf.transpose(outputs_fw, [1, 0, 2])
+            outputs_bw = tf.transpose(outputs_bw, [1, 0, 2])
+    return (outputs_fw, outputs_bw), (state_fw, state_bw)
+
+
 class ConditionalBiLSTM(BaseRTEModel):
     def __init__(self, representation_size=300, dropout_keep_prob=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,45 +53,20 @@ class ConditionalBiLSTM(BaseRTEModel):
         self.dropout_keep_prob = dropout_keep_prob
 
         with tf.variable_scope('lstm', reuse=self.reuse) as _:
-            self.cell_fw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
-                                                   initializer=tf.contrib.layers.xavier_initializer())
-            if self.dropout_keep_prob is not None:
-                self.cell_fw = tf.contrib.rnn.DropoutWrapper(self.cell_fw, input_keep_prob=self.dropout_keep_prob,
-                                                             output_keep_prob=self.dropout_keep_prob)
+            fused_rnn = tf.contrib.rnn.LSTMBlockFusedCell(self.representation_size)
+            # [batch, 2*output_dim] -> [batch, num_classes]
+            _, q_states = fused_birnn(fused_rnn, self.sequence1, sequence_length=self.sequence1_length,
+                                      dtype=tf.float32, time_major=False, scope="sequence1_rnn")
+            outputs, _ = fused_birnn(fused_rnn, self.sequence2, sequence_length=self.sequence2_length,
+                                     dtype=tf.float32, initial_state=q_states, time_major=False, scope="sequence2_rnn")
 
-            self.cell_bw = tf.contrib.rnn.LSTMCell(self.representation_size, state_is_tuple=True,
-                                                   initializer=tf.contrib.layers.xavier_initializer())
-            if self.dropout_keep_prob is not None:
-                self.cell_bw = tf.contrib.rnn.DropoutWrapper(self.cell_bw, input_keep_prob=self.dropout_keep_prob,
-                                                             output_keep_prob=self.dropout_keep_prob)
-
-            self.encoded_sequence1, output_states = \
-                self._encoder(sequence=self.sequence1, sequence_length=self.sequence1_length, reuse=self.reuse)
-
-            self.encoded_sequence2, _ = \
-                self._encoder(sequence=self.sequence2, sequence_length=self.sequence2_length,
-                              initial_state=output_states, reuse=True)
-
-        self.encoded_sequences = tf.concat(values=[self.encoded_sequence1, self.encoded_sequence2], axis=1)
-
-        with tf.variable_scope('output', reuse=self.reuse) as _:
-            self.logits = tf.contrib.layers.fully_connected(inputs=self.encoded_sequences, num_outputs=self.nb_classes,
-                                                            weights_initializer=tf.random_normal_initializer(0.0, 0.1),
-                                                            biases_initializer=tf.zeros_initializer(),
-                                                            activation_fn=None)
+            outputs = tf.concat([outputs[0], outputs[1]], axis=2)
+            hidden = tf.layers.dense(outputs, self.representation_size, tf.nn.relu, name="hidden") * tf.expand_dims(
+                tf.sequence_mask(self.sequence2_length, maxlen=tf.shape(outputs)[1], dtype=tf.float32), 2)
+            hidden = tf.reduce_max(hidden, axis=1)
+            # [batch, dim] -> [batch, num_classes]
+            outputs = tf.layers.dense(hidden, self.nb_classes, name="classification")
+            self.logits = outputs
 
     def __call__(self):
             return self.logits
-
-    def _encoder(self, sequence, sequence_length=None, initial_state=None, reuse=False):
-        initial_state_fw = initial_state_bw = initial_state
-
-        with tf.variable_scope('encoder', reuse=reuse or self.reuse) as _:
-            outputs, output_states = tf.nn.bidirectional_dynamic_rnn(
-                cell_fw=self.cell_fw, cell_bw=self.cell_bw,
-                initial_state_fw=initial_state_fw,
-                initial_state_bw=initial_state_bw,
-                inputs=sequence,
-                sequence_length=sequence_length,
-                dtype=tf.float32)
-        return tf.concat(outputs, axis=2), output_states
