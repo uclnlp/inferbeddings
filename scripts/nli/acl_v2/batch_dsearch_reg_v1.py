@@ -19,7 +19,7 @@ def summary(configuration):
 
 
 def to_cmd(c, idx):
-    suffix = ''
+    suffix = ' '
     suffix += ' --af ' if c['af'] is True else ''
     suffix += ' --ac ' if c['ac'] is True else ''
     suffix += ' --ar ' if c['ar'] is True else ''
@@ -33,7 +33,7 @@ def to_cmd(c, idx):
               '-P {} {}' \
               '--hard-save models/snli/dam_1/acl_v2/batch_dsearch_reg_v1/dam_1_{}'\
         .format(c['weight'], c['weight'], c['weight'], c['weight'], c['weight'],
-                c['adversarial_pooling'], idx, suffix)
+                c['adversarial_pooling'], suffix, idx)
     return command
 
 
