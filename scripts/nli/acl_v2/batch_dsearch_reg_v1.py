@@ -30,10 +30,12 @@ def to_cmd(c, idx):
               '--nb-epochs 10 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 ' \
               '--07 {} --08 {} --09 {} --10 {} --12 {} ' \
-              '-P {} {}' \
+              '-P {} --atopk {} --anc {} --anepb {} ' \
+              '{}' \
               '--hard-save models/snli/dam_1/acl_v2/batch_dsearch_reg_v1/dam_1_{}'\
         .format(c['weight'], c['weight'], c['weight'], c['weight'], c['weight'],
-                c['adversarial_pooling'], suffix, idx)
+                c['adversarial_pooling'], c['atopk'], c['anc'], c['anepb'],
+                suffix, idx)
     return command
 
 
