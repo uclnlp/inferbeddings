@@ -19,16 +19,21 @@ def summary(configuration):
 
 
 def to_cmd(c, idx):
+    suffix = ''
+    suffix += ' --af ' if c['af'] is True else ''
+    suffix += ' --ac ' if c['ac'] is True else ''
+    suffix += ' --ar ' if c['ar'] is True else ''
+
     command = 'PYTHONPATH=. python3 ./bin/nli-dsearch-reg-v2-cli.py ' \
               '-f -n -m ff-dam --batch-size 32 --dropout-keep-prob 0.8 ' \
               '--representation-size 200 --optimizer adagrad --learning-rate 0.05 -c 100 -i uniform ' \
               '--nb-epochs 10 --has-bos --has-unk -p ' \
               '-S --restore models/snli/dam_1/dam_1 ' \
               '--07 {} --08 {} --09 {} --10 {} --12 {} ' \
-              '-P {} ' \
+              '-P {} {}' \
               '--hard-save models/snli/dam_1/acl_v2/batch_dsearch_reg_v1/dam_1_{}'\
         .format(c['weight'], c['weight'], c['weight'], c['weight'], c['weight'],
-                c['adversarial_pooling'], idx)
+                c['adversarial_pooling'], idx, suffix)
     return command
 
 
@@ -39,8 +44,16 @@ def to_logfile(c, path):
 
 def main(argv):
     hyperparameters_space_1 = dict(
-        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0],
-        adversarial_pooling=['sum'] # XXX: we got rid of this hyperparam, but maybe it matters?
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0],
+        adversarial_pooling=['sum'],
+
+        atopk=[-1],
+        anc=[1, 10],
+        anepb=[8, 16, 32],
+
+        af=[True, False],
+        ac=[True, False],
+        ar=[True, False]
     )
 
     configurations = list(cartesian_product(hyperparameters_space_1))
