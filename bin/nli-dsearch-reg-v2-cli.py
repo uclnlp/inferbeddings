@@ -672,7 +672,7 @@ def main(argv):
 
                     if not (batch_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size):
                         logger.error("{} {} {}".format(
-                            str(batch_sentences1.shape),
+                            str(batch_a_sentences1.shape),
                             str(batch_a_sentences2.shape),
                             str(a_batch_size)))
                     assert batch_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size
