@@ -670,6 +670,8 @@ def main(argv):
                     batch_a_sizes1 = np.array([len(s) for s in selected_sentence1])
                     batch_a_sizes2 = np.array([len(s) for s in selected_sentence2])
 
+                    assert batch_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size
+
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
                         sentence2_ph: batch_sentences2, sentence2_len_ph: batch_sizes2,
