@@ -517,20 +517,24 @@ def main(argv):
     G = Generator(token_to_index=token_to_index,
                   nb_corruptions=a_nb_corr)
 
-    with tf.variable_scope(discriminator_scope_name):
-        IS = IScorer(embedding_layer=embedding_layer,
-                     token_to_index=token_to_index,
-                     model_class=model_class,
-                     model_kwargs=model_kwargs,
-                     i_pooling_function=tf.reduce_sum,
-                     a_function_weight_bi_tuple_lst=a_function_weight_bi_tuple_lst)
+    IS = None
+    if a_top_k is not None:
+        with tf.variable_scope(discriminator_scope_name):
+            IS = IScorer(embedding_layer=embedding_layer,
+                         token_to_index=token_to_index,
+                         model_class=model_class,
+                         model_kwargs=model_kwargs,
+                         i_pooling_function=tf.reduce_sum,
+                         a_function_weight_bi_tuple_lst=a_function_weight_bi_tuple_lst)
 
-    LMS = LMScorer(embedding_layer=embedding_layer,
-                   token_to_index=token_to_index,
-                   batch_size=a_batch_size)
+    LMS = None
+    if a_epsilon is not None:
+        LMS = LMScorer(embedding_layer=embedding_layer,
+                       token_to_index=token_to_index,
+                       batch_size=a_batch_size)
 
-    lm_vars = LMS.get_vars()
-    lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
+        lm_vars = LMS.get_vars()
+        lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
 
     A_rs = np.random.RandomState(0)
 
@@ -541,8 +545,9 @@ def main(argv):
         logger.info('Total Trainable Discriminator Parameters: {}'.format(
             tfutil.count_trainable_parameters(var_list=trainable_discriminator_vars)))
 
-        lm_ckpt = tf.train.get_checkpoint_state(lm_path)
-        lm_saver.restore(session, lm_ckpt.model_checkpoint_path)
+        if LMS is not None:
+            lm_ckpt = tf.train.get_checkpoint_state(lm_path)
+            lm_saver.restore(session, lm_ckpt.model_checkpoint_path)
 
         if restore_path:
             saver.restore(session, restore_path)
@@ -637,7 +642,7 @@ def main(argv):
                             c_sentence1_lst += corr1
                             c_sentence2_lst += corr2
 
-                        if a_epsilon is not None:
+                        if a_epsilon is not None and LMS is not None:
                             # Scoring them against a Language Model
                             log_perp1 = LMS.score(session, c_sentence1_lst)
                             log_perp2 = LMS.score(session, c_sentence2_lst)
@@ -652,7 +657,7 @@ def main(argv):
                         selected_sentence2 += [c_sentence2_lst[i] for i in low_lperp_idxs]
 
                     # Now in selected_sentence1 and selected_sentence2 we have the most offending examples
-                    if a_top_k >= 0:
+                    if a_top_k >= 0 and IS is not None:
                         iscore_values = IS.iscore(session, selected_sentence1, selected_sentence2)
                         top_k_idxs = np.argsort(iscore_values)[::-1][:a_top_k]
                         selected_sentence1 = [selected_sentence1[i] for i in top_k_idxs]
