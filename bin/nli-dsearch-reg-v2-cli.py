@@ -670,6 +670,11 @@ def main(argv):
                     batch_a_sizes1 = np.array([len(s) for s in selected_sentence1])
                     batch_a_sizes2 = np.array([len(s) for s in selected_sentence2])
 
+                    if not (batch_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size):
+                        logger.error("{} {} {}".format(
+                            str(batch_sentences1.shape),
+                            str(batch_a_sentences2.shape),
+                            str(a_batch_size)))
                     assert batch_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size
 
                     batch_feed_dict = {
