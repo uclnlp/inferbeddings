@@ -50,7 +50,7 @@ def main(argv):
         adversarial_pooling=['sum'],
 
         atopk=[-1],
-        anc=[1, 10],
+        anc=[1],
         anepb=[8, 16, 32],
 
         af=[True, False],
