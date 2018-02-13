@@ -44,6 +44,17 @@ class Generator:
         except redis.ConnectionError:
             self.cache = OrderedDict()
 
+        self.str_to_tree_cache = dict()
+
+    def _str_to_tree(self, tree_str):
+        if self.str_to_tree_cache is not None:
+            if tree_str not in self.str_to_tree_cache:
+                self.str_to_tree_cache[tree_str] = Tree.fromstring(tree_str)
+            res = self.str_to_tree_cache[tree_str]
+        else:
+            res = Tree.fromstring(tree_str)
+        return res
+
     def combine(self, sentence1, sentence2):
         sentence1_str, sentence2_str = sentence1, sentence2
 
@@ -60,8 +71,8 @@ class Generator:
         tree2_variations = O.combine_trees(tree1, tree2)
 
         # Remove duplicate trees, working around the issue that Tree is not hashable
-        tree1_variations = [Tree.fromstring(s) for s in list(set([str(t) for t in tree1_variations]))]
-        tree2_variations = [Tree.fromstring(s) for s in list(set([str(t) for t in tree2_variations]))]
+        tree1_variations = [self._str_to_tree(s) for s in list(set([str(t) for t in tree1_variations]))]
+        tree2_variations = [self._str_to_tree(s) for s in list(set([str(t) for t in tree2_variations]))]
 
         res1, res2 = [], []
         for idx in range(self.nb_corruptions):
@@ -98,8 +109,8 @@ class Generator:
         tree2_variations = O.remove_subtree(tree2)
 
         # Remove duplicate trees, working around the issue that Tree is not hashable
-        tree1_variations = [Tree.fromstring(s) for s in list(set([str(t) for t in tree1_variations]))]
-        tree2_variations = [Tree.fromstring(s) for s in list(set([str(t) for t in tree2_variations]))]
+        tree1_variations = [self._str_to_tree(s) for s in list(set([str(t) for t in tree1_variations]))]
+        tree2_variations = [self._str_to_tree(s) for s in list(set([str(t) for t in tree2_variations]))]
 
         res1, res2 = [], []
         for idx in range(self.nb_corruptions):
@@ -162,7 +173,7 @@ class Generator:
 
     def _parse(self, sentence):
         s = self._parse_str(sentence)
-        return Tree.fromstring(s)
+        return self._str_to_tree(s)
 
     def _parse_str(self, sentence):
         if ('Generator', 'parse', sentence) not in self.cache:
