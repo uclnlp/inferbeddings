@@ -53,7 +53,7 @@ class Generator:
             res = self.str_to_tree_cache[tree_str]
         else:
             res = Tree.fromstring(tree_str)
-        return res
+        return res.copy(deep=True)
 
     def combine(self, sentence1, sentence2):
         sentence1_str, sentence2_str = sentence1, sentence2
