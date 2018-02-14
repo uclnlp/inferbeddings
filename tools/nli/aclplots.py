@@ -34,6 +34,10 @@ def get_accuracy(text):
 
 
 def main(argv):
+    title_fontsize = 15
+    fontsize = 15
+    labelsize = 10
+
     base_path = '/home/pasquale/ucl/workspace/inferbeddings'
     os.chdir(base_path)
 
@@ -70,29 +74,34 @@ def main(argv):
         if isinstance(ii, int) and ii <= 2000:
             accuracies = [get_accuracy(s) for s in results['/k_v12/v1/X_dam_{}'.format(ii)]]
             for lmbda_idx, accuracy in enumerate(accuracies):
-                dataset_name = '$\mathcal{A}_{\mathrm{DAM}}^{' + str(ii) + '}$'
-                data['class'] += [dataset_name]
+                if lmbda_idx <= 4:
+                    dataset_name = '$\mathcal{A}_{\mathrm{DAM}}^{' + str(ii) + '}$'
+                    data['class'] += [dataset_name]
 
-                lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
-                data['x'] += [lmbdas[lmbda_idx]]
-                data['y'] += [accuracy]
+                    lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+                    data['x'] += [lmbdas[lmbda_idx]]
+                    data['y'] += [accuracy]
 
     df = pd.DataFrame(data)
 
     # Optimal: size=4, aspect=3
-    for size in [1, 2, 3, 4]:
-        for aspect in [1, 2, 3, 4]:
+    for size in [2, 3]:
+        for aspect in [2, 3]:
+            logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+
             graycolors = sns.mpl_palette('Greys_r', 6)
             g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
                                linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
-            g.axes[0][0].legend(loc=1, title='Dataset')
+            # g.axes[0][0].legend(loc=1, title='Dataset')
+            g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
 
             plt.grid()
-            plt.title('Accuracy on adversarial examples for varying values of the regularisation weight $\lambda_{r}$')
-            plt.xlabel('Regularisation Parameter $\lambda_{r}$')
-            plt.ylabel('Accuracy')
+            plt.title('Accuracy on adversarial datasets for varying values of $\lambda_{r}$',
+                      fontsize=title_fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+            plt.ylabel('Accuracy', fontsize=fontsize)
 
             g.savefig('plots/acl/accuracy_adversarial_{}_{}.pdf'.format(size, aspect))
 
@@ -114,31 +123,34 @@ def main(argv):
 
     for rule_idx, rule_str in enumerate(rules):
         percs = [get_violations_perc(s, rule_str) for s in results['/k_v12/Xt']]
-
         for perc_idx, perc in enumerate(percs):
-            rule_name = str_to_rule[rule_str]
-            data['class'] += [rule_name]
-            lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
             lmbda_idx = perc_idx
-            data['x'] += [lmbdas[lmbda_idx]]
-            data['y'] += [perc]
+            if lmbda_idx <= 5:
+                rule_name = str_to_rule[rule_str]
+                data['class'] += [rule_name]
+                lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+                data['x'] += [lmbdas[lmbda_idx]]
+                data['y'] += [perc]
 
     df = pd.DataFrame(data)
 
     # Optimal: size=4, aspect=3
-    for size in [1, 2, 3, 4]:
-        for aspect in [1, 2, 3, 4]:
+    for size in [1, 2, 3]:
+        for aspect in [1, 2, 3]:
+            logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+
             graycolors = sns.mpl_palette('Greys_r', 6)
             g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
                                linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
-            g.axes[0][0].legend(loc=1, title='Dataset')
+            g.axes[0][0].legend(loc='upper right', title='Rules', fontsize=labelsize)
 
             plt.grid()
-            plt.title('Number of violations (%) on the SNLI Test Set for varying values of the regularisation weight $\lambda_{r}$')
-            plt.xlabel('Regularisation Parameter $\lambda_{r}$')
-            plt.ylabel('Violations (%)')
+            plt.title('Number of violations (%) for varying values of $\lambda_{r}$',
+                      fontsize=title_fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+            plt.ylabel('Violations (%)', fontsize=fontsize)
 
             g.savefig('plots/acl/test_violations_{}_{}.pdf'.format(size, aspect))
 
