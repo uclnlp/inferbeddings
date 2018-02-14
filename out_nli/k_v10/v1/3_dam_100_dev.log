@@ -1,0 +1,20 @@
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/fully_connected/weights:0 ((200, 3)): 600 params
+INFO:root:discriminator/aggregate/fully_connected/biases:0 ((3,)): 3 params
+INFO:nli-debug-cli.py:Total Trainable Discriminator Parameters: 12075203
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/acl/batch_dsearch_reg_v10/dam_1_6
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/acl/batch_dsearch_reg_v10/dam_1_6
+  0%|          | 0/2 [00:00<?, ?it/s] 50%|█████     | 1/2 [00:01<00:01,  1.59s/it]100%|██████████| 2/2 [00:02<00:00,  1.05s/it]
+INFO:nli-debug-cli.py:Number of examples: 196
+INFO:nli-debug-cli.py:Accuracy: 0.4796
+INFO:nli-debug-cli.py:(S1 contradicts S2) XOR (S2 contradicts S1): 196
+INFO:nli-debug-cli.py:(S1 contradicts S2): 98
+INFO:nli-debug-cli.py:(S1 contradicts S2) AND NOT(S2 contradicts S1): 98 (1.0000)
+INFO:nli-debug-cli.py:(S1 entailment S2): 30
+INFO:nli-debug-cli.py:(S1 entailment S2) AND (S2 contradicts S1): 30 (1.0000)
+INFO:nli-debug-cli.py:(S1 neutral S2): 98
+INFO:nli-debug-cli.py:(S1 neutral S2) AND (S2 contradicts S1): 68 (0.6939)
+INFO:nli-debug-cli.py:(True): 392 [196 + 196]
+INFO:nli-debug-cli.py:(True) AND NOT(S1 entails S1): 0 [0 + 0] (0.0000)
