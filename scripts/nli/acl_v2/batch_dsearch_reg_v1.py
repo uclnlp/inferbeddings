@@ -51,7 +51,7 @@ def main(argv):
 
         atopk=[-1],
         anc=[1],
-        anepb=[1, 4],
+        anepb=[1],
 
         af=[True, False],
         ac=[True, False],
