@@ -512,7 +512,7 @@ def main(argv):
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
-    a_batch_size = 1 + (a_nb_corr * a_is_flip) + (a_nb_corr * a_is_remove) + (a_nb_corr * a_is_combine)
+    a_batch_size = (a_nb_corr * a_is_flip) + (a_nb_corr * a_is_remove) + (a_nb_corr * a_is_combine)
 
     G = Generator(token_to_index=token_to_index,
                   nb_corruptions=a_nb_corr)
@@ -607,9 +607,10 @@ def main(argv):
                     batch_sentences1 = batch_sentences1[:, :batch_max_size1]
                     batch_sentences2 = batch_sentences2[:, :batch_max_size2]
 
-                    # TODO: This is where we generate, score, and select the adversarial examples
+                    # This is where we generate, score, and select the adversarial examples
+                    cur_batch_size = batch_sentences1.shape[0]
 
-                    # Remove the BOS
+                    # Remove the BOS token from sentences
                     o_batch_size = batch_sentences1.shape[0]
                     o_sentences1, o_sentences2 = [], []
 
@@ -622,13 +623,17 @@ def main(argv):
                     # a_epsilon, a_nb_corruptions, a_nb_examples_per_batch, a_is_flip, a_is_combine, a_is_remove
                     selected_sentence1, selected_sentence2 = [], []
 
+                    # First, add all training sentences
+                    selected_sentence1 += o_sentences1
+                    selected_sentence2 += o_sentences2
+
                     c_idxs = A_rs.choice(o_batch_size, a_nb_examples_per_batch, replace=False)
                     for c_idx in c_idxs:
                         o_sentence1 = o_sentences1[c_idx]
                         o_sentence2 = o_sentences2[c_idx]
 
                         # Generating Corruptions
-                        c_sentence1_lst, c_sentence2_lst = [o_sentence1], [o_sentence2]
+                        c_sentence1_lst, c_sentence2_lst = [], []
                         if a_is_flip:
                             corr1, corr2 = G.flip(sentence1=o_sentence1, sentence2=o_sentence2)
                             c_sentence1_lst += corr1
@@ -663,6 +668,11 @@ def main(argv):
                         selected_sentence1 = [selected_sentence1[i] for i in top_k_idxs]
                         selected_sentence2 = [selected_sentence2[i] for i in top_k_idxs]
 
+                    # Add the bos_idx token, if needed, to sentences in selected_sentences1 and selected_sentences2
+                    _selected_sentence1 = [([bos_idx] if has_bos else []) + s1 for s1 in selected_sentence1]
+                    _selected_sentence2 = [([bos_idx] if has_bos else []) + s2 for s2 in selected_sentence2]
+                    selected_sentence1, selected_sentence2 = _selected_sentence1, _selected_sentence2
+
                     # Convert selected_sentence1 and selected_sentence2 into a batch
                     batch_a_sentences1 = util.pad_sequences(selected_sentence1)
                     batch_a_sentences2 = util.pad_sequences(selected_sentence2)
@@ -670,12 +680,11 @@ def main(argv):
                     batch_a_sizes1 = np.array([len(s) for s in selected_sentence1])
                     batch_a_sizes2 = np.array([len(s) for s in selected_sentence2])
 
-                    if not (batch_a_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size * a_nb_examples_per_batch):
-                        logger.error("{} {} {}".format(
-                            str(batch_a_sentences1.shape),
-                            str(batch_a_sentences2.shape),
-                            str(a_batch_size)))
-                    assert batch_a_sentences1.shape[0] == batch_a_sentences2.shape[0] == a_batch_size * a_nb_examples_per_batch
+                    if not (batch_a_sentences1.shape[0] == batch_a_sentences2.shape[0] == (cur_batch_size + a_nb_examples_per_batch * a_batch_size)):
+                        logger.error("{} {} {} {} {}".format(
+                            str(batch_a_sentences1.shape), str(batch_a_sentences2.shape),
+                            str(a_batch_size), str(cur_batch_size), str(a_nb_examples_per_batch)))
+                    assert batch_a_sentences1.shape[0] == batch_a_sentences2.shape[0] == (cur_batch_size + a_nb_examples_per_batch * a_batch_size)
 
                     batch_feed_dict = {
                         sentence1_ph: batch_sentences1, sentence1_len_ph: batch_sizes1,
@@ -693,7 +702,6 @@ def main(argv):
 
                     logger.debug('Epoch {0}/{1}/{2}\tLoss: {3}'.format(epoch, d_epoch, batch_idx, loss_value))
 
-                    cur_batch_size = batch_sentences1.shape[0]
                     loss_values += [loss_value / cur_batch_size]
                     epoch_loss_values += [loss_value / cur_batch_size]
 
