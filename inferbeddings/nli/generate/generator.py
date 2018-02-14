@@ -44,7 +44,8 @@ class Generator:
         except redis.ConnectionError:
             self.cache = OrderedDict()
 
-        self.str_to_tree_cache = dict()
+        # self.str_to_tree_cache = dict()
+        self.str_to_tree_cache = None
 
     def _str_to_tree(self, tree_str):
         if self.str_to_tree_cache is not None:
@@ -53,7 +54,7 @@ class Generator:
             res = self.str_to_tree_cache[tree_str]
         else:
             res = Tree.fromstring(tree_str)
-        return res
+        return res.copy(deep=True)
 
     def combine(self, sentence1, sentence2):
         sentence1_str, sentence2_str = sentence1, sentence2
