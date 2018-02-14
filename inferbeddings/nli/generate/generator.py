@@ -44,7 +44,8 @@ class Generator:
         except redis.ConnectionError:
             self.cache = OrderedDict()
 
-        self.str_to_tree_cache = dict()
+        # self.str_to_tree_cache = dict()
+        self.str_to_tree_cache = None
 
     def _str_to_tree(self, tree_str):
         if self.str_to_tree_cache is not None:
