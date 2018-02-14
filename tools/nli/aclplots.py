@@ -68,42 +68,43 @@ def main(argv):
     sns.set_style("white")
     sns.set_style("ticks")
 
-    data = {'x': [], 'y': [], 'class': []}
+    for model_name in ['dam', 'cbilstm', 'esim']:
+        data = {'x': [], 'y': [], 'class': []}
 
-    for i, ii in enumerate([100, 500, 1000, 2000, 3000, 4000, 5000, 'full']):
-        if isinstance(ii, int) and ii <= 2000:
-            accuracies = [get_accuracy(s) for s in results['/k_v12/v1/X_dam_{}'.format(ii)]]
-            for lmbda_idx, accuracy in enumerate(accuracies):
-                if lmbda_idx <= 4:
-                    dataset_name = '$\mathcal{A}_{\mathrm{DAM}}^{' + str(ii) + '}$'
-                    data['class'] += [dataset_name]
+        for i, ii in enumerate([100, 500, 1000, 2000, 3000, 4000, 5000, 'full']):
+            if isinstance(ii, int) and ii <= 2000:
+                accuracies = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_test'.format(model_name, ii)]]
+                for lmbda_idx, accuracy in enumerate(accuracies):
+                    if lmbda_idx <= 4:
+                        dataset_name = '$\mathcal{A}_{\mathrm{DAM}}^{' + str(ii) + '}$'
+                        data['class'] += [dataset_name]
 
-                    lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
-                    data['x'] += [lmbdas[lmbda_idx]]
-                    data['y'] += [accuracy]
+                        lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+                        data['x'] += [lmbdas[lmbda_idx]]
+                        data['y'] += [accuracy]
 
-    df = pd.DataFrame(data)
+        df = pd.DataFrame(data)
 
-    # Optimal: size=4, aspect=3
-    for size in [2, 3]:
-        for aspect in [2, 3]:
-            logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+        # Optimal: size=4, aspect=3
+        for size in [3]:
+            for aspect in [2]:
+                logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-            graycolors = sns.mpl_palette('Greys_r', 6)
-            g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
-                               linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
-                               legend=False, size=size, aspect=aspect)
+                graycolors = sns.mpl_palette('Greys_r', 6)
+                g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
+                                   linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                                   legend=False, size=size, aspect=aspect)
 
-            # g.axes[0][0].legend(loc=1, title='Dataset')
-            g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
+                # g.axes[0][0].legend(loc=1, title='Dataset')
+                g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
 
-            plt.grid()
-            plt.title('Accuracy on adversarial datasets for varying values of $\lambda_{r}$',
-                      fontsize=title_fontsize)
-            plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
-            plt.ylabel('Accuracy', fontsize=fontsize)
+                plt.grid()
+                plt.title('Accuracy on adversarial datasets for varying values of $\lambda_{r}$',
+                          fontsize=title_fontsize)
+                plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+                plt.ylabel('Accuracy', fontsize=fontsize)
 
-            g.savefig('plots/acl/accuracy_adversarial_{}_{}.pdf'.format(size, aspect))
+                g.savefig('plots/acl/accuracy_adversarial_{}_{}.pdf'.format(size, aspect))
 
     rule_1 = '(S1 contradicts S2) AND NOT(S2 contradicts S1)'
     rule_2 = '(S1 entailment S2) AND (S2 contradicts S1)'
@@ -135,8 +136,8 @@ def main(argv):
     df = pd.DataFrame(data)
 
     # Optimal: size=4, aspect=3
-    for size in [1, 2, 3]:
-        for aspect in [1, 2, 3]:
+    for size in [3]:
+        for aspect in [2]:
             logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
             graycolors = sns.mpl_palette('Greys_r', 6)

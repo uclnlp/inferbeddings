@@ -45,7 +45,7 @@ mkdir -p {}/v1/
 
         temp = ''
         for size in ['100', '500', '1000', '2000', '3000', '4000', '5000', 'full']:
-            for model in ['dam_', 'esim_', '']:
+            for model in ['dam_', 'esim_', 'cbilstm_', '']:
                 temp += """
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v1/1_{}_dev.log
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v1/2_{}_dev.log
@@ -59,7 +59,7 @@ python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}
 
         temp = ''
         for size in ['100', '500', '1000', '2000', '3000', '4000', '5000', 'full']:
-            for model in ['dam_', 'esim_', '']:
+            for model in ['dam_', 'esim_', 'cbilstm_', '']:
                 temp += """
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/1_{}_test.log
 python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 -d data/snli/acl/v1/genadv/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v1/2_{}_test.log
