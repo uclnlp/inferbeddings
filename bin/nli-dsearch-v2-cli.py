@@ -235,6 +235,8 @@ def main(argv):
 
         assert model_class is not None
         model = model_class(**model_kwargs)
+        logits = model()
+        probabilities = tf.nn.softmax(logits)
 
         a_pooling_function = name_to_adversarial_pooling[adversarial_pooling_name]
 
@@ -358,6 +360,8 @@ def main(argv):
 
     A_rs = np.random.RandomState(0)
 
+    sp2op = {}
+
     with tf.Session(config=session_config) as session:
 
         if LMS is not None:
@@ -414,20 +418,33 @@ def main(argv):
                 o_sentence1 = o_sentences1[c_idx]
                 o_sentence2 = o_sentences2[c_idx]
 
+                sp2op[(tuple(o_sentence1), tuple(o_sentence2))] = (o_sentence1, o_sentence2)
+
                 # Generating Corruptions
                 c_sentence1_lst, c_sentence2_lst = [], []
                 if a_is_flip:
                     corr1, corr2 = G.flip(sentence1=o_sentence1, sentence2=o_sentence2)
                     c_sentence1_lst += corr1
                     c_sentence2_lst += corr2
+
+                    for _c1, _c2 in zip(corr1, corr2):
+                        sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
+
                 if a_is_remove:
                     corr1, corr2 = G.remove(sentence1=o_sentence1, sentence2=o_sentence2)
                     c_sentence1_lst += corr1
                     c_sentence2_lst += corr2
+
+                    for _c1, _c2 in zip(corr1, corr2):
+                        sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
+
                 if a_is_combine:
                     corr1, corr2 = G.combine(sentence1=o_sentence1, sentence2=o_sentence2)
                     c_sentence1_lst += corr1
                     c_sentence2_lst += corr2
+
+                    for _c1, _c2 in zip(corr1, corr2):
+                        sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
 
                 if a_epsilon is not None and LMS is not None:
                     # Scoring them against a Language Model
@@ -457,12 +474,40 @@ def main(argv):
             def decode(sentence_ids):
                 return ' '.join([index_to_token[idx] for idx in sentence_ids])
 
+            def infer(s1_ids, s2_ids):
+                a = np.array([[bos_idx] + s1_ids])
+                b = np.array([[bos_idx] + s2_ids])
+
+                c = np.array([1 + len(s1_ids)])
+                d = np.array([1 + len(s2_ids)])
+
+                inf_feed = {
+                    sentence1_ph: a,
+                    sentence2_ph: b,
+                    sentence1_len_ph: c,
+                    sentence2_len_ph: d
+                }
+                pv = session.run(probabilities, feed_dict=inf_feed)
+                return {'ent': pv[0, entailment_idx], 'neu': pv[0, neutral_idx], 'con': pv[0, contradiction_idx]}
+
             logger.info("No. of generated pairs: {}".format(len(selected_sentence1)))
 
-            for s1, s2, score in zip(selected_sentence1, selected_sentence2, selected_scores):
-                print('Sentence 1: {}'.format(decode(s1)))
-                print('Sentence 2: {}'.format(decode(s2)))
-                print('Score: {}'.format(score))
+            for i, (s1, s2, score) in enumerate(zip(selected_sentence1, selected_sentence2, selected_scores)):
+                o1, o2 = sp2op[(tuple(s1), tuple(s2))]
+
+                print('[{}] Original 1: {}'.format(i, decode(o1)))
+                print('[{}] Original 2: {}'.format(i, decode(o2)))
+
+                print('[{}] Sentence 1: {}'.format(i, decode(s1)))
+                print('[{}] Sentence 2: {}'.format(i, decode(s2)))
+
+                print('[{}] Inconsistency Loss: {}'.format(i, score))
+
+                print('[{}] (before) s1 -> s2: {}'.format(i, str(infer(o1, o2))))
+                print('[{}] (before) s2 -> s1: {}'.format(i, str(infer(o2, o1))))
+
+                print('[{}] (after) s1 -> s2: {}'.format(i, str(infer(s1, s2))))
+                print('[{}] (after) s2 -> s1: {}'.format(i, str(infer(s2, s1))))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
