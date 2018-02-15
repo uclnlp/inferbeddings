@@ -216,8 +216,6 @@ def main(argv):
     report_interval = args.report
     report_loss_interval = args.report_loss
 
-    eval_paths = args.eval
-
     np.random.seed(seed)
     rs = np.random.RandomState(seed)
     tf.set_random_seed(seed)
@@ -396,7 +394,6 @@ def main(argv):
                         entailment_idx=entailment_idx, contradiction_idx=contradiction_idx, neutral_idx=neutral_idx,
                         pooling_function=a_pooling_function, debug=True)
 
-        a_losses = None
         a_function_weight_bi_tuple_lst = []
 
         if rule00_weight:
