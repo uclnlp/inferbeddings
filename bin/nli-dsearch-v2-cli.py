@@ -195,6 +195,15 @@ def main(argv):
 
     label = dataset['label']
 
+    sentence1_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence1')
+    sentence2_ph = tf.placeholder(dtype=tf.int32, shape=[None, None], name='sentence2')
+
+    sentence1_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence1_length')
+    sentence2_len_ph = tf.placeholder(dtype=tf.int32, shape=[None], name='sentence2_length')
+
+    clipped_sentence1 = tfutil.clip_sentence(sentence1_ph, sentence1_len_ph)
+    clipped_sentence2 = tfutil.clip_sentence(sentence2_ph, sentence2_len_ph)
+
     nb_instances = sentence1.shape[0]
     token_set = set(token_to_index.keys())
     vocab_size = max(token_to_index.values()) + 1
@@ -206,11 +215,13 @@ def main(argv):
                                           shape=[vocab_size, embedding_size],
                                           initializer=None)
 
+        sentence1_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence1)
+        sentence2_embedding = tf.nn.embedding_lookup(embedding_layer, clipped_sentence2)
+
         model_kwargs = dict(
-            sequence1=None, sequence1_length=None,
-            sequence2=None, sequence2_length=None,
-            representation_size=representation_size,
-            dropout_keep_prob=1.0)
+            sequence1=sentence1_embedding, sequence1_length=sentence1_len_ph,
+            sequence2=sentence2_embedding, sequence2_length=sentence2_len_ph,
+            representation_size=representation_size, dropout_keep_prob=1.0)
 
         mode_name_to_class = {
             'cbilstm': ConditionalBiLSTM,
@@ -432,14 +443,27 @@ def main(argv):
                 selected_sentence1 += [c_sentence1_lst[i] for i in low_lperp_idxs]
                 selected_sentence2 += [c_sentence2_lst[i] for i in low_lperp_idxs]
 
+            selected_scores = None
             # Now in selected_sentence1 and selected_sentence2 we have the most offending examples
             if a_top_k >= 0 and IS is not None:
                 iscore_values = IS.iscore(session, selected_sentence1, selected_sentence2)
                 top_k_idxs = np.argsort(iscore_values)[::-1][:a_top_k]
+
                 selected_sentence1 = [selected_sentence1[i] for i in top_k_idxs]
                 selected_sentence2 = [selected_sentence2[i] for i in top_k_idxs]
 
-            # Add the bos_idx token, if needed, to sentences in selected_sentences1 and selected_sentences2
-            _selected_sentence1 = [([bos_idx] if has_bos else []) + s1 for s1 in selected_sentence1]
-            _selected_sentence2 = [([bos_idx] if has_bos else []) + s2 for s2 in selected_sentence2]
-            selected_sentence1, selected_sentence2 = _selected_sentence1, _selected_sentence2
+                selected_scores = [iscore_values[i] for i in top_k_idxs]
+
+            def decode(sentence_ids):
+                return ' '.join([index_to_token[idx] for idx in sentence_ids])
+
+            logger.info("No. of generated pairs: {}".format(len(selected_sentence1)))
+
+            for s1, s2, score in zip(selected_sentence1, selected_sentence2, selected_scores):
+                print('Sentence 1: {}'.format(decode(s1)))
+                print('Sentence 2: {}'.format(decode(s2)))
+                print('Score: {}'.format(score))
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    main(sys.argv[1:])
