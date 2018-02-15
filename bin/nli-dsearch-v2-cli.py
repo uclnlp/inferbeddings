@@ -418,6 +418,9 @@ def main(argv):
             selected_sentence1 += o_sentences1
             selected_sentence2 += o_sentences2
 
+            for a, b in zip(selected_sentence1, selected_sentence2):
+                sp2op[(tuple(a), tuple(b))] = (a, b)
+
             c_idxs = A_rs.choice(o_batch_size, a_nb_examples_per_batch, replace=False)
             for c_idx in c_idxs:
                 o_sentence1 = o_sentences1[c_idx]
