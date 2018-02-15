@@ -366,8 +366,7 @@ def main(argv):
 
     A_rs = np.random.RandomState(0)
 
-    sp2op = {}
-    op2lbl = {}
+    sp2op, op2lbl, sp2corr = {}, {}, {}
 
     with tf.Session(config=session_config) as session:
 
@@ -423,6 +422,7 @@ def main(argv):
             for a, b, c in zip(selected_sentence1, selected_sentence2, batch_labels):
                 sp2op[(tuple(a), tuple(b))] = (a, b)
                 op2lbl[(tuple(a), tuple(b))] = c
+                sp2corr[(tuple(a), tuple(b))] = 'none'
 
             c_idxs = A_rs.choice(o_batch_size, a_nb_examples_per_batch, replace=False)
             for c_idx in c_idxs:
@@ -430,6 +430,7 @@ def main(argv):
                 o_sentence2 = o_sentences2[c_idx]
 
                 sp2op[(tuple(o_sentence1), tuple(o_sentence2))] = (o_sentence1, o_sentence2)
+                sp2corr[(tuple(o_sentence1), tuple(o_sentence2))] = 'none'
 
                 # Generating Corruptions
                 c_sentence1_lst, c_sentence2_lst = [], []
@@ -440,6 +441,7 @@ def main(argv):
 
                     for _c1, _c2 in zip(corr1, corr2):
                         sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
+                        sp2corr[(tuple(_c1), tuple(_c2))] = 'flip'
 
                 if a_is_remove:
                     corr1, corr2 = G.remove(sentence1=o_sentence1, sentence2=o_sentence2)
@@ -448,6 +450,7 @@ def main(argv):
 
                     for _c1, _c2 in zip(corr1, corr2):
                         sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
+                        sp2corr[(tuple(_c1), tuple(_c2))] = 'remove'
 
                 if a_is_combine:
                     corr1, corr2 = G.combine(sentence1=o_sentence1, sentence2=o_sentence2)
@@ -456,6 +459,7 @@ def main(argv):
 
                     for _c1, _c2 in zip(corr1, corr2):
                         sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
+                        sp2corr[(tuple(_c1), tuple(_c2))] = 'combine'
 
                 if a_epsilon is not None and LMS is not None:
                     # Scoring them against a Language Model
@@ -508,6 +512,7 @@ def main(argv):
             for i, (s1, s2, score) in enumerate(zip(selected_sentence1, selected_sentence2, selected_scores)):
                 o1, o2 = sp2op[(tuple(s1), tuple(s2))]
                 lbl = op2lbl[(tuple(o1), tuple(o2))]
+                corr = sp2corr[(tuple(s1), tuple(s2))]
 
                 print('[{}] Original 1: {}'.format(i, decode(o1)))
                 print('[{}] Original 2: {}'.format(i, decode(o2)))
@@ -517,6 +522,7 @@ def main(argv):
                 print('[{}] Sentence 2: {}'.format(i, decode(s2)))
 
                 print('[{}] Inconsistency Loss: {}'.format(i, score))
+                print('[{}] Corruption type: {}'.format(i, corr))
 
                 print('[{}] (before) s1 -> s2: {}'.format(i, str(infer(o1, o2))))
                 print('[{}] (before) s2 -> s1: {}'.format(i, str(infer(o2, o1))))
@@ -531,6 +537,7 @@ def main(argv):
                     'sentence1': decode(s1),
                     'sentence2': decode(s2),
                     'inconsistency_loss': str(score),
+                    'corruption': str(corr),
                     'probabilities_before_s1_s2': infer(o1, o2),
                     'probabilities_before_s2_s1': infer(o2, o1),
                     'probabilities_after_s1_s2': infer(s1, s2),
