@@ -441,7 +441,8 @@ def main(argv):
 
                     for _c1, _c2 in zip(corr1, corr2):
                         sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
-                        sp2corr[(tuple(_c1), tuple(_c2))] = 'flip'
+                        if (tuple(_c1), tuple(_c2)) not in sp2corr:
+                            sp2corr[(tuple(_c1), tuple(_c2))] = 'flip'
 
                 if a_is_remove:
                     corr1, corr2 = G.remove(sentence1=o_sentence1, sentence2=o_sentence2)
@@ -450,7 +451,8 @@ def main(argv):
 
                     for _c1, _c2 in zip(corr1, corr2):
                         sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
-                        sp2corr[(tuple(_c1), tuple(_c2))] = 'remove'
+                        if (tuple(_c1), tuple(_c2)) not in sp2corr:
+                            sp2corr[(tuple(_c1), tuple(_c2))] = 'remove'
 
                 if a_is_combine:
                     corr1, corr2 = G.combine(sentence1=o_sentence1, sentence2=o_sentence2)
@@ -459,7 +461,8 @@ def main(argv):
 
                     for _c1, _c2 in zip(corr1, corr2):
                         sp2op[(tuple(_c1), tuple(_c2))] = (o_sentence1, o_sentence2)
-                        sp2corr[(tuple(_c1), tuple(_c2))] = 'combine'
+                        if (tuple(_c1), tuple(_c2)) not in sp2corr:
+                            sp2corr[(tuple(_c1), tuple(_c2))] = 'combine'
 
                 if a_epsilon is not None and LMS is not None:
                     # Scoring them against a Language Model
