@@ -68,14 +68,14 @@ def main(argv):
     sns.set_style("white")
     sns.set_style("ticks")
 
+    to_str = {
+        'dam': 'DAM',
+        'cbilstm': 'cBiLSTM',
+        'esim': 'ESIM'
+    }
+
     for model_name in ['dam', 'cbilstm', 'esim']:
         data = {'x': [], 'y': [], 'class': []}
-
-        to_str = {
-            'dam': 'DAM',
-            'cbilstm': 'cBiLSTM',
-            'esim': 'ESIM'
-        }
 
         for i, ii in enumerate([100, 500, 1000, 2000, 3000, 4000, 5000, 'full']):
             if isinstance(ii, int) and ii <= 2000:
@@ -96,7 +96,9 @@ def main(argv):
             for aspect in [2]:
                 logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-                graycolors = None # sns.mpl_palette('Greys_r', 6)
+                # graycolors = sns.mpl_palette('Greys_r', 6)
+                graycolors = None
+
                 g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
                                    linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                    legend=False, size=size, aspect=aspect)
@@ -110,7 +112,6 @@ def main(argv):
                     start = 0.7
                 # g.set(ylim=(None, 1.0))
 
-                # g.axes[0][0].legend(loc=1, title='Dataset')
                 g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
 
                 plt.grid()
@@ -146,7 +147,7 @@ def main(argv):
                 data['class'] += [rule_name]
                 lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
                 data['x'] += [lmbdas[lmbda_idx]]
-                data['y'] += [perc]
+                data['y'] += [perc * 100]
 
     df = pd.DataFrame(data)
 
@@ -155,12 +156,14 @@ def main(argv):
         for aspect in [2]:
             logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-            graycolors = None # sns.mpl_palette('Greys_r', 6)
+            # graycolors = sns.mpl_palette('Greys_r', 6)
+            graycolors = None
+
             g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
                                linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
-            g.axes[0][0].legend(loc='upper right', title='Rules', fontsize=labelsize)
+            g.fig.get_axes()[0].legend(loc='upper right', title='Rules', fontsize=labelsize)
 
             plt.grid()
             plt.title('Number of violations (%) for varying values of $\lambda_{r}$',
