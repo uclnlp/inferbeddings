@@ -184,6 +184,7 @@ def main(argv):
         'neutral': neutral_idx,
         'contradiction': contradiction_idx,
     }
+    index_to_label = {k: v for v, k in label_to_index.items()}
 
     max_len = None
     args = dict(has_bos=has_bos, has_eos=has_eos, has_unk=has_unk,
@@ -366,6 +367,7 @@ def main(argv):
     A_rs = np.random.RandomState(0)
 
     sp2op = {}
+    op2lbl = {}
 
     with tf.Session(config=session_config) as session:
 
@@ -418,8 +420,9 @@ def main(argv):
             selected_sentence1 += o_sentences1
             selected_sentence2 += o_sentences2
 
-            for a, b in zip(selected_sentence1, selected_sentence2):
+            for a, b, c in zip(selected_sentence1, selected_sentence2, batch_labels):
                 sp2op[(tuple(a), tuple(b))] = (a, b)
+                op2lbl[(tuple(a), tuple(b))] = c
 
             c_idxs = A_rs.choice(o_batch_size, a_nb_examples_per_batch, replace=False)
             for c_idx in c_idxs:
@@ -490,21 +493,25 @@ def main(argv):
                 d = np.array([1 + len(s2_ids)])
 
                 inf_feed = {
-                    sentence1_ph: a,
-                    sentence2_ph: b,
-                    sentence1_len_ph: c,
-                    sentence2_len_ph: d
+                    sentence1_ph: a, sentence2_ph: b,
+                    sentence1_len_ph: c, sentence2_len_ph: d
                 }
                 pv = session.run(probabilities, feed_dict=inf_feed)
-                return {'ent': pv[0, entailment_idx], 'neu': pv[0, neutral_idx], 'con': pv[0, contradiction_idx]}
+                return {
+                    'ent': str(pv[0, entailment_idx]),
+                    'neu': str(pv[0, neutral_idx]),
+                    'con': str(pv[0, contradiction_idx])
+                }
 
             logger.info("No. of generated pairs: {}".format(len(selected_sentence1)))
 
             for i, (s1, s2, score) in enumerate(zip(selected_sentence1, selected_sentence2, selected_scores)):
                 o1, o2 = sp2op[(tuple(s1), tuple(s2))]
+                lbl = op2lbl[(tuple(o1), tuple(o2))]
 
                 print('[{}] Original 1: {}'.format(i, decode(o1)))
                 print('[{}] Original 2: {}'.format(i, decode(o2)))
+                print('[{}] Original Label: {}'.format(i, index_to_label[lbl]))
 
                 print('[{}] Sentence 1: {}'.format(i, decode(s1)))
                 print('[{}] Sentence 2: {}'.format(i, decode(s2)))
@@ -516,6 +523,24 @@ def main(argv):
 
                 print('[{}] (after) s1 -> s2: {}'.format(i, str(infer(s1, s2))))
                 print('[{}] (after) s2 -> s1: {}'.format(i, str(infer(s2, s1))))
+
+                jdata = {
+                    'original_sentence1': decode(o1),
+                    'original_sentence2': decode(o2),
+                    'original_label': index_to_label[lbl],
+                    'sentence1': decode(s1),
+                    'sentence1': decode(s2),
+                    'inconsistency_loss': str(score),
+                    'probabilities_before_s1_s2': infer(o1, o2),
+                    'probabilities_before_s2_s1': infer(o2, o1),
+                    'probabilities_after_s1_s2': infer(s1, s2),
+                    'probabilities_after_s2_s1': infer(s2, s1)
+                }
+
+                if json_path is not None:
+                    with open(json_path, 'a') as f:
+                        json.dump(jdata, f)
+                        f.write('\n')
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
