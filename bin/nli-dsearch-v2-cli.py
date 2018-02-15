@@ -5,6 +5,7 @@ import argparse
 
 import os
 import sys
+import json
 
 import pickle
 import socket
@@ -97,6 +98,8 @@ def main(argv):
     argparser.add_argument('--adversarial-combine', '--ac', action='store_true', default=False)
     argparser.add_argument('--adversarial-remove', '--ar', action='store_true', default=False)
 
+    argparser.add_argument('--json', action='store', type=str, default=None)
+
     args = argparser.parse_args(argv)
 
     lm_path = args.lm
@@ -107,6 +110,8 @@ def main(argv):
     a_is_flip = args.adversarial_flip
     a_is_combine = args.adversarial_combine
     a_is_remove = args.adversarial_remove
+
+    json_path = args.json
 
     # Command line arguments
     data_path = args.data
