@@ -529,7 +529,7 @@ def main(argv):
                     'original_sentence2': decode(o2),
                     'original_label': index_to_label[lbl],
                     'sentence1': decode(s1),
-                    'sentence1': decode(s2),
+                    'sentence2': decode(s2),
                     'inconsistency_loss': str(score),
                     'probabilities_before_s1_s2': infer(o1, o2),
                     'probabilities_before_s2_s1': infer(o2, o1),
