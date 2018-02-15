@@ -46,19 +46,32 @@ def to_logfile(c, path):
 
 def main(argv):
     hyperparameters_space_1 = dict(
-        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0],
-        adversarial_pooling=['sum'],
-
-        atopk=[-1],
-        anc=[1],
-        anepb=[1],
-
-        af=[True, False],
-        ac=[True, False],
-        ar=[True, False]
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0], adversarial_pooling=['sum'],
+        atopk=[-1], anc=[1], anepb=[1],
+        af=[False], ac=[False], ar=[False]
+    )
+    hyperparameters_space_2 = dict(
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0], adversarial_pooling=['sum'],
+        atopk=[-1], anc=[1], anepb=[1],
+        af=[True], ac=[False], ar=[False]
+    )
+    hyperparameters_space_3 = dict(
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0], adversarial_pooling=['sum'],
+        atopk=[-1], anc=[1], anepb=[1],
+        af=[False], ac=[True], ar=[False]
+    )
+    hyperparameters_space_4 = dict(
+        weight=[0.0, 0.0001, 0.001, 0.01, 0.1, 1.0], adversarial_pooling=['sum'],
+        atopk=[-1], anc=[1], anepb=[1],
+        af=[False], ac=[False], ar=[True]
     )
 
-    configurations = list(cartesian_product(hyperparameters_space_1))
+    conf_1 = list(cartesian_product(hyperparameters_space_1))
+    conf_2 = list(cartesian_product(hyperparameters_space_2))
+    conf_3 = list(cartesian_product(hyperparameters_space_3))
+    conf_4 = list(cartesian_product(hyperparameters_space_4))
+
+    configurations = conf_1 + conf_2 + conf_3 + conf_4
 
     path = './logs/nli/acl_v2/batch_dsearch_reg_v1/'
     _path = './models/snli/dam_1/acl_v2/batch_dsearch_reg_v1/'
