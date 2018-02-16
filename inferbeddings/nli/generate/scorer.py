@@ -105,7 +105,7 @@ class IScorer:
 
 class LMScorer:
     def __init__(self, embedding_layer, token_to_index,
-                 lm_path='models/lm/', batch_size=32):
+                 lm_path='models/lm/', batch_size=32, reuse=False):
         self.embedding_layer = embedding_layer
         self.token_to_index = token_to_index
         self.vocab_size = max(self.token_to_index.values()) + 1
@@ -123,12 +123,12 @@ class LMScorer:
         self.lm_cell = rnn.MultiRNNCell(lm_cells)
 
         self.lm_scope_name = 'language_model'
-        with tf.variable_scope(self.lm_scope_name):
+        with tf.variable_scope(self.lm_scope_name, reuse=reuse):
             self.lm_input_data_ph = tf.placeholder(tf.int32, [None, self.lm_seq_length], name='input_data')
             self.lm_targets_ph = tf.placeholder(tf.int32, [None, self.lm_seq_length], name='targets')
             self.lm_initial_state = self.lm_cell.zero_state(self.lm_batch_size, tf.float32)
 
-            with tf.variable_scope('rnnlm'):
+            with tf.variable_scope('rnnlm', reuse=reuse):
                 lm_W = tf.get_variable(name='W', shape=[self.lm_rnn_size, self.vocab_size],
                                        initializer=tf.contrib.layers.xavier_initializer())
                 lm_b = tf.get_variable(name='b', shape=[self.vocab_size], initializer=tf.zeros_initializer())

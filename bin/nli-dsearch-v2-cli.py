@@ -484,12 +484,17 @@ def main(argv):
                     log_perp_o1 = LMS2.score(session, o_sentences1)
                     log_perp_o2 = LMS2.score(session, o_sentences2)
 
-                    for c1, c2 in zip(c_sentence1_lst, c_sentence2_lst):
-                        print(c1, c2)
+                    low_lperp_idxs = []
+                    for c1, c2, _lp1, _lp2 in zip(c_sentence1_lst, c_sentence2_lst, log_perp1, log_perp2):
+                        o1, o2 = sp2op[(tuple(c1), tuple(c2))]
+                        idx = op2idx[(tuple(o1), tuple(o2))]
+                        _log_perp_o1 = log_perp_o1[idx]
+                        _log_perp_o2 = log_perp_o2[idx]
 
-                    low_lperp_idxs = np.where(
-                        (log_perp1 + log_perp2) < (log_perp1[0] + log_perp2[0] + a_epsilon)
-                    )[0].tolist()
+                        if (_lp1 + _lp2) <= (_log_perp_o1 + _log_perp_o2 + a_epsilon):
+                            low_lperp_idxs += [True]
+                        else:
+                            low_lperp_idxs += [False]
                 else:
                     low_lperp_idxs = range(len(c_sentence1_lst))
 
