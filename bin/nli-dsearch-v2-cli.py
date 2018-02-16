@@ -355,11 +355,19 @@ def main(argv):
 
     a_batch_size = (a_nb_corr * a_is_flip) + (a_nb_corr * a_is_remove) + (a_nb_corr * a_is_combine)
 
-    LMS = None
+    LMS = LMS1 = None
     if a_epsilon is not None:
         LMS = LMScorer(embedding_layer=embedding_layer,
                        token_to_index=token_to_index,
                        batch_size=a_batch_size)
+
+        LMS1 = LMScorer(embedding_layer=embedding_layer,
+                        token_to_index=token_to_index,
+                        batch_size=1, reuse=True)
+
+        LMS2 = LMScorer(embedding_layer=embedding_layer,
+                        token_to_index=token_to_index,
+                        batch_size=batch_size, reuse=True)
 
         lm_vars = LMS.get_vars()
         lm_saver = tf.train.Saver(lm_vars, max_to_keep=1)
@@ -419,6 +427,10 @@ def main(argv):
             selected_sentence1 += o_sentences1
             selected_sentence2 += o_sentences2
 
+            op2idx = {}
+            for idx, (o1, o2) in enumerate(zip(o_sentences1, o_sentences2)):
+                op2idx[(tuple(o1), tuple(o2))] = idx
+
             for a, b, c in zip(selected_sentence1, selected_sentence2, batch_labels):
                 sp2op[(tuple(a), tuple(b))] = (a, b)
                 op2lbl[(tuple(a), tuple(b))] = c
@@ -468,6 +480,12 @@ def main(argv):
                     # Scoring them against a Language Model
                     log_perp1 = LMS.score(session, c_sentence1_lst)
                     log_perp2 = LMS.score(session, c_sentence2_lst)
+
+                    log_perp_o1 = LMS2.score(session, o_sentences1)
+                    log_perp_o2 = LMS2.score(session, o_sentences2)
+
+                    for c1, c2 in zip(c_sentence1_lst, c_sentence2_lst):
+                        print(c1, c2)
 
                     low_lperp_idxs = np.where(
                         (log_perp1 + log_perp2) < (log_perp1[0] + log_perp2[0] + a_epsilon)

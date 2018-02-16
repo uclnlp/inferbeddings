@@ -562,13 +562,14 @@ def main(argv):
                         logger.info('Epoch {0}/{1}/{2}\tBest Dev Accuracy: {3:.2f}\tBest Test Accuracy: {4:.2f}'
                                     .format(epoch, d_epoch, batch_idx, best_dev_acc * 100, best_test_acc * 100))
 
-                        for eval_path in eval_paths:
-                            eval_path_acc = eutil.evaluate(session, eval_path, label_to_index, token_to_index, predictions, batch_size,
-                                                           sentence1_ph, sentence2_ph, sentence1_len_ph, sentence2_len_ph, dropout_keep_prob_ph,
-                                                           has_bos=has_bos, has_eos=has_eos, has_unk=has_unk, is_lower=is_lower,
-                                                           bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx)
-                            logger.info('Epoch {0}/{1}/{2}\tAccuracy on {3} is {4}'.format(epoch, d_epoch, batch_idx,
-                                                                                           eval_path, eval_path_acc))
+                        if eval_paths is not None:
+                            for eval_path in eval_paths:
+                                eval_path_acc = eutil.evaluate(session, eval_path, label_to_index, token_to_index, predictions, batch_size,
+                                                               sentence1_ph, sentence2_ph, sentence1_len_ph, sentence2_len_ph, dropout_keep_prob_ph,
+                                                               has_bos=has_bos, has_eos=has_eos, has_unk=has_unk, is_lower=is_lower,
+                                                               bos_idx=bos_idx, eos_idx=eos_idx, unk_idx=unk_idx)
+                                logger.info('Epoch {0}/{1}/{2}\tAccuracy on {3} is {4}'.format(epoch, d_epoch, batch_idx,
+                                                                                               eval_path, eval_path_acc))
 
                         if a_losses is not None:
                             t_feed_dict = a_feed_dict
