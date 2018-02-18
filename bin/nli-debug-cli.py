@@ -335,7 +335,7 @@ def main(argv):
             tmp = [data_is[i] for i in np.where(e)[0].tolist()]
             pickle.dump(tmp, f)
 
-        f = s1s2_con
+        f = s1s2_neu
         logger.info('(S1 neutral S2): {0}'.format(f.sum()))
         g = np.logical_and(s1s2_neu, s2s1_con)
         logger.info('(S1 neutral S2) AND (S2 contradicts S1): {0} ({1:.4f})'.format(g.sum(), g.sum() / f.sum()))

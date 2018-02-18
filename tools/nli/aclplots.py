@@ -91,7 +91,7 @@ def main(argv):
 
         df = pd.DataFrame(data)
 
-        # Optimal: size=4, aspect=3
+        # Optimal: size=3, aspect=2
         for size in [3]:
             for aspect in [2]:
                 logging.info('Size: {}, Aspect: {}'.format(size, aspect))
@@ -151,7 +151,7 @@ def main(argv):
 
     df = pd.DataFrame(data)
 
-    # Optimal: size=4, aspect=3
+    # Optimal: size=3, aspect=2
     for size in [3]:
         for aspect in [2]:
             logging.info('Size: {}, Aspect: {}'.format(size, aspect))
@@ -172,6 +172,53 @@ def main(argv):
             plt.ylabel('Violations (%)', fontsize=fontsize)
 
             g.savefig('plots/acl/test_violations_{}_{}.pdf'.format(size, aspect))
+
+    data = {'x': [], 'y': [], 'class': []}
+
+    for data_name in ['', 'd', 't']:
+        percs = [get_accuracy(s) for s in results['/k_v12/X{}'.format(data_name)]]
+        lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+
+        name = None
+        if data_name == '':
+            name = 'Train'
+        if data_name == 'd':
+            name = 'Dev'
+        if data_name == 't':
+            name = 'Test'
+
+        for perc_idx, perc in enumerate(percs):
+            lmbda_idx = perc_idx
+
+            if lmbda_idx <= 4:
+                data['class'] += [name]
+                data['x'] += [lmbdas[lmbda_idx]]
+                data['y'] += [perc * 100]
+
+    df = pd.DataFrame(data)
+
+    # Optimal: size=3, aspect=2
+    for size in [3]:
+        for aspect in [2]:
+            logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+
+            # graycolors = sns.mpl_palette('Greys_r', 6)
+            graycolors = None
+            palette = sns.color_palette("cubehelix", 3)
+
+            g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
+                               linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                               legend=False, size=size, aspect=aspect)
+
+            g.fig.get_axes()[0].legend(loc='upper right', title='Rules', fontsize=labelsize)
+
+            plt.grid()
+            plt.title('SNLI Accuracy (%) for varying values of $\lambda_{r}$',
+                      fontsize=title_fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+            plt.ylabel('Accuracy (%)', fontsize=fontsize)
+
+            g.savefig('plots/acl/train_accuracy_{}_{}.pdf'.format(size, aspect))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
