@@ -7,7 +7,7 @@ import glob
 
 import argparse
 
-# $ ls models/snli/dam_1/acl/ | grep batch_dsearch_reg_v | python3 k.py | grep -v mkdir  | parallel -j 8 --delay 6
+# $ ls models/snli/dam_1/acl/ | grep batch_dsearch_reg_v | python3 tools/nli/k.py | grep -v mkdir  | parallel -j 8 --delay 6
 
 
 def main(argv):
@@ -23,10 +23,12 @@ def main(argv):
 
     flags = ''
     msuff = ''
+    path = 'models/snli/dam_1/acl/'
 
     if model == 'cbilstm':
         flags = ' -m cbilstm --representation-size 300 '
         msuff = '.{}'.format(model)
+        path = 'models/snli/cbilstm_1/acl/'
     elif model == 'esim':
         flags = ' -m esim1 --representation-size 300 '
         msuff = '.{}'.format(model)
@@ -38,7 +40,7 @@ def main(argv):
         a = s.split("_v")
         p = "_v{}".format(a[1])
 
-        tmp = glob.glob('models/snli/dam_1/acl/{}/*_0.index'.format(s))
+        tmp = glob.glob('{}/{}/*_0.index'.format(path, s))
 
         if len(tmp) > 0:
             restore_path = tmp[0].split('_0.ind')[0]
