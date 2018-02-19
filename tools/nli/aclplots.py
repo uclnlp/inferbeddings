@@ -115,9 +115,9 @@ def main(argv):
                 g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
 
                 plt.grid()
-                plt.title('Accuracy on $\mathcal{A}_{\mathrm{' + to_str[model_name] + '}}^{k}$ for varying $\lambda_{r}$',
+                plt.title('Accuracy on $\mathcal{A}_{\mathrm{' + to_str[model_name] + '}}^{k}$ for varying $\lambda$',
                           fontsize=title_fontsize)
-                plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+                plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
                 plt.ylabel('Accuracy', fontsize=fontsize)
 
                 g.savefig('plots/acl/accuracy_adversarial_{}_{}_{}.pdf'.format(model_name, size, aspect))
@@ -166,9 +166,9 @@ def main(argv):
             g.fig.get_axes()[0].legend(loc='upper right', title='Rules', fontsize=labelsize)
 
             plt.grid()
-            plt.title('Number of violations (%) for varying values of $\lambda_{r}$',
+            plt.title('Number of violations (%) for varying values of $\lambda$',
                       fontsize=title_fontsize)
-            plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Violations (%)', fontsize=fontsize)
 
             g.savefig('plots/acl/test_violations_{}_{}.pdf'.format(size, aspect))
@@ -213,9 +213,9 @@ def main(argv):
             g.fig.get_axes()[0].legend(loc='upper right', title='Rules', fontsize=labelsize)
 
             plt.grid()
-            plt.title('SNLI Accuracy (%) for varying values of $\lambda_{r}$',
+            plt.title('SNLI Accuracy (%) for varying values of $\lambda$',
                       fontsize=title_fontsize)
-            plt.xlabel('Regularisation Parameter $\lambda_{r}$', fontsize=fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Accuracy (%)', fontsize=fontsize)
 
             g.savefig('plots/acl/train_accuracy_{}_{}.pdf'.format(size, aspect))
