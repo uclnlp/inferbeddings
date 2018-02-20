@@ -34,8 +34,6 @@
 ./tools/genadv.py -p ../../snli_1.0_dev.jsonl.gz -n 5000 > genadv/snli_genadv_5000_dev.jsonl
 ./tools/genadv.py -p ../../snli_1.0_dev.jsonl.gz > genadv/snli_genadv_full_dev.jsonl
 
-
-
 ./tools/genadv_dam.py -p ../../snli_1.0_test.jsonl.gz -n 100 > genadv/snli_genadv_dam_100_test.jsonl
 ./tools/genadv_dam.py -p ../../snli_1.0_test.jsonl.gz -n 500 > genadv/snli_genadv_dam_500_test.jsonl
 ./tools/genadv_dam.py -p ../../snli_1.0_test.jsonl.gz -n 1000 > genadv/snli_genadv_dam_1000_test.jsonl
@@ -71,7 +69,5 @@
 ./tools/genadv.py -p ../../snli_1.0_test.jsonl.gz -n 4000 > genadv/snli_genadv_4000_test.jsonl
 ./tools/genadv.py -p ../../snli_1.0_test.jsonl.gz -n 5000 > genadv/snli_genadv_5000_test.jsonl
 ./tools/genadv.py -p ../../snli_1.0_test.jsonl.gz > genadv/snli_genadv_full_test.jsonl
-
-
 
 gzip -9 genadv/*.jsonl

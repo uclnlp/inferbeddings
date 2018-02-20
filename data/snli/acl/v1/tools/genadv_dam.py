@@ -90,12 +90,16 @@ def main(argv):
     argparser.add_argument('--fraction', '-f', action='store', type=float, default=None)
     argparser.add_argument('--nb-instances', '-n', action='store', type=int, default=None)
 
+    argparser.add_argument('--no-inverse', '-N', action='store_true', default=False)
+
     args = argparser.parse_args(argv)
 
     path = args.path
     seed = args.seed
     fraction = args.fraction
     nb_instances = args.nb_instances
+
+    no_inverse = args.no_inverse
 
     obj_lst = []
     with gzip.open(path, 'rb') as f:
@@ -148,7 +152,9 @@ def main(argv):
         i_obj['dam'] = call_dam(s2, s1)
 
         print(json.dumps(c_obj))
-        print(json.dumps(i_obj))
+
+        if no_inverse is False:
+            print(json.dumps(i_obj))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
