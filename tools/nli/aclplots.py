@@ -222,8 +222,7 @@ def main(argv):
 
     data = {'x': [], 'y': [], 'class': []}
 
-    # for data_name in ['', 'd', 't']:
-    for data_name in ['d', 't']:
+    for data_name in ['', 'd', 't']:
         percs = [get_accuracy(s) for s in results['/k_v12c/X{}.cbilstm'.format(data_name)]]
         lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
 
