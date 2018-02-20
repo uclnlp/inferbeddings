@@ -6,7 +6,6 @@ import sys
 import glob
 
 import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -263,18 +262,72 @@ def main(argv):
 
     logging.info('Producing tables..')
 
-    for model in ['dam', 'cbilstm']:
-        for dataset in [100, 500, 1000, 2000, 3000, 4000, 5000, 'full']:
+    # This row will contain column titles
+    row_0 = [' ']
 
-            model_name = None
-            if model == 'dam':
-                model_name = '{\bf DAM}'
-            elif model == 'cbilstm':
-                model_name = '{\bf cBiLSTM}'
+    # Results for regularised and unregularised DAM
+    row_1 = ['{\bf DAM}$^{\mathcal{AR}}$']
+    row_2 = ['{\bf DAM}']
 
+    # Results for regularised and unregularised cBiLSTM
+    row_3 = ['{\bf cBiLSTM}$^{\mathcal{AR}}$']
+    row_4 = ['{\bf cBiLSTM}']
 
+    for data_model in ['dam', 'esim', 'cbilstm']:
+        for data_size in [100, 500, 1000, 2000]:
 
+            data_model_name = None
+            if data_model == 'dam':
+                data_model_name = 'DAM'
+            if data_model == 'esim':
+                data_model_name = 'ESIM'
+            elif data_model == 'cbilstm':
+                data_model_name = 'cBiLSTM'
 
+            dataset_name = '\\aset{' + data_model_name + '}{' + str(data_size) + '}'
+
+            dam_dev_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_dev'.format(data_model, data_size)]]
+            dam_test_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_test'.format(data_model, data_size)]]
+
+            dam_best_dev_acc_idx = dam_dev_accs.index(max(dam_dev_accs))
+            dam_test_acc = dam_test_accs[dam_best_dev_acc_idx]
+
+            cbilstm_dev_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_dev'.format(data_model, data_size)]]
+            cbilstm_test_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_test'.format(data_model, data_size)]]
+
+            cbilstm_best_dev_acc_idx = cbilstm_dev_accs.index(max(cbilstm_dev_accs))
+            cbilstm_test_acc = cbilstm_test_accs[cbilstm_best_dev_acc_idx]
+
+            row_0 += [dataset_name]
+
+            row_1 += [dam_test_acc]
+            row_2 += [dam_test_accs[0]]
+
+            row_3 += [cbilstm_test_acc]
+            row_4 += [cbilstm_test_accs[0]]
+
+    table_str = """
+\\begin{tabular}{""" + ''.join(['c'] * len(row_0)) + """}
+\\toprule
+"""
+
+    table_str += ' & '.join(row_0) + "\n\\midrule\n"
+
+    for row in [row_1, row_2]:
+        table_str += ' & '.join([str(e) for e in row]) + "\n"
+
+    table_str += "\n\\midrule\n"
+
+    for row in [row_3, row_4]:
+        table_str += ' & '.join([str(e) for e in row]) + "\n"
+
+    table_str += """
+\\bottomrule
+\\end{tabular}
+"""
+
+    with open('acl/tables/accuracy.tex', 'w') as f:
+        f.write(table_str)
 
 
 if __name__ == '__main__':
