@@ -48,8 +48,8 @@ def main(argv):
     for path in tqdm(paths):
         dirname = os.path.dirname(path)
         basename = os.path.basename(path)
-        noext = os.path.splitext(basename)[0]
 
+        noext = os.path.splitext(basename)[0]
         noext_lst = list(noext)
 
         number = int(noext_lst[0])
@@ -210,15 +210,63 @@ def main(argv):
                                linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
-            g.fig.get_axes()[0].legend(loc='upper right', title='Rules', fontsize=labelsize)
+            g.fig.get_axes()[0].legend(loc='upper right', title='SNLI', fontsize=labelsize)
 
             plt.grid()
-            plt.title('SNLI Accuracy (%) for varying values of $\lambda$',
+            plt.title('DAM Accuracy on SNLI',
                       fontsize=title_fontsize)
             plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Accuracy (%)', fontsize=fontsize)
 
-            g.savefig('plots/acl/train_accuracy_{}_{}.pdf'.format(size, aspect))
+            g.savefig('plots/acl/accuracy_dam_{}_{}.pdf'.format(size, aspect))
+
+    data = {'x': [], 'y': [], 'class': []}
+
+    # for data_name in ['', 'd', 't']:
+    for data_name in ['d', 't']:
+        percs = [get_accuracy(s) for s in results['/k_v12c/X{}.cbilstm'.format(data_name)]]
+        lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+
+        name = None
+        if data_name == '':
+            name = 'Train'
+        if data_name == 'd':
+            name = 'Valid.'
+        if data_name == 't':
+            name = 'Test'
+
+        for perc_idx, perc in enumerate(percs):
+            lmbda_idx = perc_idx
+
+            if lmbda_idx <= 4:
+                data['class'] += [name]
+                data['x'] += [lmbdas[lmbda_idx]]
+                data['y'] += [perc * 100]
+
+    df = pd.DataFrame(data)
+
+    # Optimal: size=3, aspect=2
+    for size in [3]:
+        for aspect in [2]:
+            logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+
+            # graycolors = sns.mpl_palette('Greys_r', 6)
+            graycolors = None
+            palette = sns.color_palette("cubehelix", 3)
+
+            g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
+                               linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                               legend=False, size=size, aspect=aspect)
+
+            g.fig.get_axes()[0].legend(loc='upper right', title='SNLI', fontsize=labelsize)
+
+            plt.grid()
+            plt.title('cBiLSTM Accuracy on SNLI',
+                      fontsize=title_fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
+            plt.ylabel('Accuracy (%)', fontsize=fontsize)
+
+            g.savefig('plots/acl/accuracy_cbilstm_{}_{}.pdf'.format(size, aspect))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
