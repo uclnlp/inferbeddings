@@ -65,6 +65,8 @@ def main(argv):
         with open(path, 'r') as f:
             results[key][number - 1] = f.read()
 
+    logging.info('Producing plots..')
+
     sns.set_style("white")
     sns.set_style("ticks")
 
@@ -96,10 +98,8 @@ def main(argv):
             for aspect in [2]:
                 logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-                # graycolors = sns.mpl_palette('Greys_r', 6)
-                graycolors = None
-
-                g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
+                palette = None
+                g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
                                    linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                    legend=False, size=size, aspect=aspect)
 
@@ -156,10 +156,8 @@ def main(argv):
         for aspect in [2]:
             logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-            # graycolors = sns.mpl_palette('Greys_r', 6)
-            graycolors = None
-
-            g = sns.factorplot(x="x", y="y", hue="class", palette=graycolors, data=df,
+            palette = None
+            g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
                                linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
@@ -202,12 +200,10 @@ def main(argv):
         for aspect in [2]:
             logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-            # graycolors = sns.mpl_palette('Greys_r', 6)
-            graycolors = None
             palette = sns.color_palette("cubehelix", 3)
 
             g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
-                               linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                               linestyles=[":", "--", "-"], markers=['o', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
             g.fig.get_axes()[0].legend(loc='upper right', title='SNLI', fontsize=labelsize)
@@ -249,12 +245,10 @@ def main(argv):
         for aspect in [2]:
             logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-            # graycolors = sns.mpl_palette('Greys_r', 6)
-            graycolors = None
             palette = sns.color_palette("cubehelix", 3)
 
             g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
-                               linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                               linestyles=[":", "--", "-"], markers=['o', "<", ">"],
                                legend=False, size=size, aspect=aspect)
 
             g.fig.get_axes()[0].legend(loc='upper right', title='SNLI', fontsize=labelsize)
@@ -266,6 +260,22 @@ def main(argv):
             plt.ylabel('Accuracy (%)', fontsize=fontsize)
 
             g.savefig('acl/plots/accuracy_cbilstm_{}_{}.pdf'.format(size, aspect))
+
+    logging.info('Producing tables..')
+
+    for model in ['dam', 'cbilstm']:
+        for dataset in [100, 500, 1000, 2000, 3000, 4000, 5000, 'full']:
+
+            model_name = None
+            if model == 'dam':
+                model_name = '{\bf DAM}'
+            elif model == 'cbilstm':
+                model_name = '{\bf cBiLSTM}'
+
+
+
+
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
