@@ -120,7 +120,7 @@ def main(argv):
                 plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
                 plt.ylabel('Accuracy', fontsize=fontsize)
 
-                g.savefig('plots/acl/accuracy_adversarial_{}_{}_{}.pdf'.format(model_name, size, aspect))
+                g.savefig('acl/plots/accuracy_adversarial_{}_{}_{}.pdf'.format(model_name, size, aspect))
 
     rule_1 = '(S1 contradicts S2) AND NOT(S2 contradicts S1)'
     rule_2 = '(S1 entailment S2) AND (S2 contradicts S1)'
@@ -171,7 +171,7 @@ def main(argv):
             plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Violations (%)', fontsize=fontsize)
 
-            g.savefig('plots/acl/test_violations_{}_{}.pdf'.format(size, aspect))
+            g.savefig('acl/plots/test_violations_{}_{}.pdf'.format(size, aspect))
 
     data = {'x': [], 'y': [], 'class': []}
 
@@ -218,7 +218,7 @@ def main(argv):
             plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Accuracy (%)', fontsize=fontsize)
 
-            g.savefig('plots/acl/accuracy_dam_{}_{}.pdf'.format(size, aspect))
+            g.savefig('acl/plots/accuracy_dam_{}_{}.pdf'.format(size, aspect))
 
     data = {'x': [], 'y': [], 'class': []}
 
@@ -266,7 +266,7 @@ def main(argv):
             plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Accuracy (%)', fontsize=fontsize)
 
-            g.savefig('plots/acl/accuracy_cbilstm_{}_{}.pdf'.format(size, aspect))
+            g.savefig('acl/plots/accuracy_cbilstm_{}_{}.pdf'.format(size, aspect))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
