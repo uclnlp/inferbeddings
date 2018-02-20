@@ -263,18 +263,21 @@ def main(argv):
     logging.info('Producing tables..')
 
     # This row will contain column titles
-    row_0 = [' ']
+    row_0 = ['\\diagbox{\\bf Model}{\\bf Dataset}']
 
     # Results for regularised and unregularised DAM
-    row_1 = ['{\bf DAM}$^{\mathcal{AR}}$']
-    row_2 = ['{\bf DAM}']
+    row_1 = ['{\\bf DAM}$^{\mathcal{AR}}$']
+    row_2 = ['{\\bf DAM}']
 
     # Results for regularised and unregularised cBiLSTM
-    row_3 = ['{\bf cBiLSTM}$^{\mathcal{AR}}$']
-    row_4 = ['{\bf cBiLSTM}']
+    row_3 = ['{\\bf cBiLSTM}$^{\mathcal{AR}}$']
+    row_4 = ['{\\bf cBiLSTM}']
 
-    for data_model in ['dam', 'esim', 'cbilstm']:
-        for data_size in [100, 500, 1000, 2000]:
+    data_sizes = [100, 500, 1000, 2000]
+    data_models = ['dam', 'esim', 'cbilstm']
+
+    for data_model in data_models:
+        for data_size in data_sizes:
 
             data_model_name = None
             if data_model == 'dam':
@@ -284,7 +287,7 @@ def main(argv):
             elif data_model == 'cbilstm':
                 data_model_name = 'cBiLSTM'
 
-            dataset_name = '\\aset{' + data_model_name + '}{' + str(data_size) + '}'
+            dataset_name = '$\\aset{' + data_model_name + '}{' + str(data_size) + '}$'
 
             dam_dev_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_dev'.format(data_model, data_size)]]
             dam_test_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_test'.format(data_model, data_size)]]
@@ -292,8 +295,8 @@ def main(argv):
             dam_best_dev_acc_idx = dam_dev_accs.index(max(dam_dev_accs))
             dam_test_acc = dam_test_accs[dam_best_dev_acc_idx]
 
-            cbilstm_dev_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_dev'.format(data_model, data_size)]]
-            cbilstm_test_accs = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_test'.format(data_model, data_size)]]
+            cbilstm_dev_accs = [get_accuracy(s) for s in results['/k_v12c/v1/X_{}_{}_dev.cbilstm'.format(data_model, data_size)]]
+            cbilstm_test_accs = [get_accuracy(s) for s in results['/k_v12c/v1/X_{}_{}_test.cbilstm'.format(data_model, data_size)]]
 
             cbilstm_best_dev_acc_idx = cbilstm_dev_accs.index(max(cbilstm_dev_accs))
             cbilstm_test_acc = cbilstm_test_accs[cbilstm_best_dev_acc_idx]
@@ -307,19 +310,23 @@ def main(argv):
             row_4 += [cbilstm_test_accs[0]]
 
     table_str = """
-\\begin{tabular}{""" + ''.join(['c'] * len(row_0)) + """}
+\\begin{tabular}{""" + ''.join(['R{3cm}'] + (['|C{1.5cm}C{1.5cm}C{1.5cm}C{1.5cm}'] * (len(data_models)))) + """}
 \\toprule
 """
 
-    table_str += ' & '.join(row_0) + "\n\\midrule\n"
+    table_str += ' & '.join(row_0) + " \\\\ \n\\midrule\n"
 
-    for row in [row_1, row_2]:
-        table_str += ' & '.join([str(e) for e in row]) + "\n"
+    for i, row in enumerate([row_1, row_2]):
+        def p(s):
+            return s if i > 0 else '{\\bf ' + s + '}'
+        table_str += ' & '.join([p(str(e)) for e in row]) + " \\\\ \n"
 
     table_str += "\n\\midrule\n"
 
-    for row in [row_3, row_4]:
-        table_str += ' & '.join([str(e) for e in row]) + "\n"
+    for i, row in enumerate([row_3, row_4]):
+        def p(s):
+            return s if i > 0 else '{\\bf ' + s + '}'
+        table_str += ' & '.join([p(str(e)) for e in row]) + " \\\\ \n"
 
     table_str += """
 \\bottomrule
