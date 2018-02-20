@@ -98,6 +98,38 @@ def main(argv):
             out_str += temp.format(*([restore_path, output_path] * (6 * 8 * 4)))
 
             out_str += """
+            mkdir -p {}/v2/
+            """.format(output_path)
+
+            temp = ''
+            for size in ['100', '500', '1000', '2000', '3000', '4000', '5000', 'full']:
+                for model in ['dam_', 'esim_', 'cbilstm_', '']:
+                    temp += """
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v2/1_{}_dev{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v2/2_{}_dev{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v2/3_{}_dev{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v2/4_{}_dev{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v2/5_{}_dev{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_dev.jsonl.gz 2>&1 | tail -n 20 > {}/v2/6_{}_dev{}.log
+                    """.format(*(['{}', flags, model, size, '{}', model + size, msuff] * 6))
+
+            out_str += temp.format(*([restore_path, output_path] * (6 * 8 * 4)))
+
+            temp = ''
+            for size in ['100', '500', '1000', '2000', '3000', '4000', '5000', 'full']:
+                for model in ['dam_', 'esim_', 'cbilstm_', '']:
+                    temp += """
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v2/1_{}_test{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v2/2_{}_test{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v2/3_{}_test{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v2/4_{}_test{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v2/5_{}_test{}.log
+            python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/acl/v1/genadv2/snli_genadv_{}{}_test.jsonl.gz 2>&1 | tail -n 20 > {}/v2/6_{}_test{}.log
+            """.format(*(['{}', flags, model, size, '{}', model + size, msuff] * 6))
+
+            out_str += temp.format(*([restore_path, output_path] * (6 * 8 * 4)))
+
+            out_str += """
     mkdir -p {}/v1.1/
     """.format(output_path)
 
