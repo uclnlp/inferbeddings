@@ -32,6 +32,7 @@ def main(argv):
     elif model == 'esim':
         flags = ' -m esim1 --representation-size 300 '
         msuff = '.{}'.format(model)
+        path = 'models/snli/esim_1/acl/'
 
     out_str = ''
 
