@@ -39,6 +39,9 @@ def main(argv):
     fontsize = 20
     labelsize = 12
 
+    # Plot using seaborn
+    sns.set(font_scale=1.2)
+
     base_path = '/home/pasquale/ucl/workspace/inferbeddings'
     os.chdir(base_path)
 
@@ -351,6 +354,60 @@ def main(argv):
 
             g.savefig('acl/plots/accuracy_{}_{}.pdf'.format(size, aspect))
 
+    for m in ['dam', 'esim', 'cbilstm']:
+        data = {'x': [], 'y': [], 'class': []}
+
+        percs_dam_500_test = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_500_test'.format(m)]]
+        percs_cbilstm_500_test = [get_accuracy(s) for s in results['/k_v12c/v1/X_{}_500_test.cbilstm'.format(m)]]
+
+        lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+
+        class_to_lst = {
+            '$\\mathrm{DAM}$': percs_dam_500_test,
+            '$\\mathrm{cBiLSTM}$': percs_cbilstm_500_test,
+        }
+
+        for perc_idx in range(6):
+            lmbda_idx = perc_idx
+            if lmbda_idx <= 4:
+                for name, lst in class_to_lst.items():
+                    _name, _x, _y = name, lmbdas[lmbda_idx], lst[perc_idx] * 100
+                    data['class'] += [_name]
+                    data['x'] += [_x]
+                    data['y'] += [_y]
+
+        df = pd.DataFrame(data)
+
+        # Optimal: size=3, aspect=2
+        for size in [3]:
+            for aspect in [2]:
+                logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+
+                palette = None
+                g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
+                                   linestyles=["--", "-"], markers=['<', ">"],
+                                   legend=False, size=size, aspect=aspect)
+
+                g.fig.get_axes()[0].legend(loc='lower right', title=None, fontsize=labelsize)
+
+                # g.set(ylim=(75.00, 100.00))
+
+                data_model_name = None
+                if m == 'dam':
+                    data_model_name = 'DAM'
+                if m == 'esim':
+                    data_model_name = 'ESIM'
+                elif m == 'cbilstm':
+                    data_model_name = 'cBiLSTM'
+
+                plt.grid()
+                plt.title('Accuracy (%) on $\\mathcal{A}_{\mathrm{' + data_model_name + '}}^{500}$',
+                          fontsize=title_fontsize)
+                plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
+                plt.ylabel('Accuracy (%)', fontsize=fontsize)
+
+                g.savefig('acl/plots/accuracy_aset_{}_500_{}_{}.pdf'.format(m, size, aspect))
+
     logging.info('Producing tables..')
 
     # This row will contain column titles
@@ -364,7 +421,7 @@ def main(argv):
     row_3 = ['\\cBiLSTM$^{\mathcal{AR}}$']
     row_4 = ['\\cBiLSTM']
 
-    data_sizes = [100, 500, 1000, 2000]
+    data_sizes = [100, 500, 1000]
     data_models = ['dam', 'esim', 'cbilstm']
 
     for data_model in data_models:
@@ -401,7 +458,7 @@ def main(argv):
             row_4 += [cbilstm_test_accs[0]]
 
     table_str = """
-\\begin{tabular}{""" + ''.join(['R{3cm}'] + (['C{1.5cm}C{1.5cm}C{1.5cm}C{1.5cm}'] * (len(data_models)))) + """}
+\\begin{tabular}{""" + ''.join(['R{3cm}'] + (['C{1.5cm}'] * (len(data_sizes) * len(data_models)))) + """}
 \\toprule
 """
 
@@ -410,29 +467,29 @@ def main(argv):
     table_str += """
 
 \\cmidrule(lr){1-1}
-\\cmidrule(lr){2-5}
-\\cmidrule(lr){6-9}
-\\cmidrule(lr){10-13}
+\\cmidrule(lr){2-4}
+\\cmidrule(lr){5-7}
+\\cmidrule(lr){8-10}
 
 """
 
     for i, row in enumerate([row_1, row_2]):
         def p(s):
-            return s if i > 0 else '{\\bf ' + s + '}'
+            return '{0:.2f}'.format(float(s) * 100) if i > 0 else '{\\bf ' + '{0:.2f}'.format(float(s) * 100) + '}'
         table_str += ' & '.join([row[0]] + [p(str(e)) for e in row[1:]]) + " \\\\ \n"
 
     table_str += """
 
 \\cmidrule(lr){1-1}
-\\cmidrule(lr){2-5}
-\\cmidrule(lr){6-9}
-\\cmidrule(lr){10-13}
+\\cmidrule(lr){2-4}
+\\cmidrule(lr){5-7}
+\\cmidrule(lr){8-10}
 
 """
 
     for i, row in enumerate([row_3, row_4]):
         def p(s):
-            return s if i > 0 else '{\\bf ' + s + '}'
+            return '{0:.2f}'.format(float(s) * 100) if i > 0 else '{\\bf ' + '{0:.2f}'.format(float(s) * 100) + '}'
         table_str += ' & '.join([row[0]] + [p(str(e)) for e in row[1:]]) + " \\\\ \n"
 
     table_str += """

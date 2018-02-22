@@ -118,3 +118,5 @@ models/lm/lm.ckpt-*.*
 
 # Locks
 *.swp
+
+octave-workspace

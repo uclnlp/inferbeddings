@@ -9,6 +9,7 @@ import argparse
 
 # $ ls models/snli/dam_1/acl/ | grep batch_dsearch_reg_v | python3 tools/nli/k.py | grep -v mkdir  | parallel -j 8 --delay 6
 # $ ls models/snli/cbilstm_1/acl/ | python3 tools/nli/k.py -m cbilstm | grep -v mkdir
+# $ ls models/snli/esim_1/acl/ | python3 tools/nli/k.py -m esim | grep v12e | grep -v train | parallel -j 2
 
 def main(argv):
     def fmt(prog):
