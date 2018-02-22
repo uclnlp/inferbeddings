@@ -1,0 +1,20 @@
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/weights:0 ((200, 200)): 40000 params
+INFO:root:discriminator/aggregate/transform_aggregate/fully_connected_1/biases:0 ((200,)): 200 params
+INFO:root:discriminator/aggregate/fully_connected/weights:0 ((200, 3)): 600 params
+INFO:root:discriminator/aggregate/fully_connected/biases:0 ((3,)): 3 params
+INFO:nli-debug-cli.py:Total Trainable Discriminator Parameters: 12075203
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/acl//batch_dsearch_reg_v2/dam_1_12
+INFO:tensorflow:Restoring parameters from models/snli/dam_1/acl//batch_dsearch_reg_v2/dam_1_12
+  0%|          | 0/16 [00:00<?, ?it/s]  6%|▋         | 1/16 [00:00<00:06,  2.35it/s] 12%|█▎        | 2/16 [00:00<00:03,  3.60it/s] 19%|█▉        | 3/16 [00:00<00:02,  4.39it/s] 25%|██▌       | 4/16 [00:00<00:02,  4.69it/s] 31%|███▏      | 5/16 [00:01<00:02,  4.86it/s] 38%|███▊      | 6/16 [00:01<00:01,  5.19it/s] 44%|████▍     | 7/16 [00:01<00:01,  5.26it/s] 50%|█████     | 8/16 [00:01<00:01,  5.30it/s] 56%|█████▋    | 9/16 [00:01<00:01,  5.08it/s] 62%|██████▎   | 10/16 [00:02<00:01,  4.86it/s] 69%|██████▉   | 11/16 [00:02<00:01,  4.82it/s] 75%|███████▌  | 12/16 [00:02<00:00,  4.76it/s] 81%|████████▏ | 13/16 [00:02<00:00,  4.80it/s] 88%|████████▊ | 14/16 [00:02<00:00,  4.88it/s] 94%|█████████▍| 15/16 [00:03<00:00,  4.93it/s]100%|██████████| 16/16 [00:03<00:00,  5.16it/s]
+INFO:nli-debug-cli.py:Number of examples: 1939
+INFO:nli-debug-cli.py:Accuracy: 0.7427
+INFO:nli-debug-cli.py:(S1 contradicts S2) XOR (S2 contradicts S1): 962
+INFO:nli-debug-cli.py:(S1 contradicts S2): 642
+INFO:nli-debug-cli.py:(S1 contradicts S2) AND NOT(S2 contradicts S1): 24 (0.0374)
+INFO:nli-debug-cli.py:(S1 entailment S2): 437
+INFO:nli-debug-cli.py:(S1 entailment S2) AND (S2 contradicts S1): 276 (0.6316)
+INFO:nli-debug-cli.py:(S1 neutral S2): 860
+INFO:nli-debug-cli.py:(S1 neutral S2) AND (S2 contradicts S1): 662 (0.7698)
+INFO:nli-debug-cli.py:(True): 3878 [1939 + 1939]
+INFO:nli-debug-cli.py:(True) AND NOT(S1 entails S1): 6 [1 + 5] (0.0015)

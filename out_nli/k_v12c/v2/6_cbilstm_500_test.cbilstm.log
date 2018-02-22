@@ -1,0 +1,20 @@
+INFO:root:discriminator/lstm/hidden/bias:0 ((300,)): 300 params
+INFO:root:discriminator/lstm/classification/kernel:0 ((300, 3)): 900 params
+INFO:root:discriminator/lstm/classification/bias:0 ((3,)): 3 params
+INFO:nli-debug-cli.py:Total Trainable Discriminator Parameters: 14759403
+INFO:tensorflow:Restoring parameters from models/snli/cbilstm_1/acl//batch_dsearch_reg_v12c/cbilstm_1_15
+INFO:tensorflow:Restoring parameters from models/snli/cbilstm_1/acl//batch_dsearch_reg_v12c/cbilstm_1_15
+  0%|          | 0/4 [00:00<?, ?it/s] 25%|██▌       | 1/4 [00:03<00:09,  3.10s/it] 50%|█████     | 2/4 [00:05<00:05,  2.60s/it] 75%|███████▌  | 3/4 [00:07<00:02,  2.39s/it]100%|██████████| 4/4 [00:09<00:00,  2.27s/it]
+INFO:nli-debug-cli.py:Number of examples: 495
+INFO:nli-debug-cli.py:Accuracy: 0.2646
+INFO:nli-debug-cli.py:(S1 contradicts S2) XOR (S2 contradicts S1): 0
+INFO:nli-debug-cli.py:(S1 contradicts S2): 0
+./bin/nli-debug-cli.py:323: RuntimeWarning: invalid value encountered in long_scalars
+  logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1): {0} ({1:.4f})'.format(c.sum(), c.sum() / b.sum()))
+INFO:nli-debug-cli.py:(S1 contradicts S2) AND NOT(S2 contradicts S1): 0 (nan)
+INFO:nli-debug-cli.py:(S1 entailment S2): 183
+INFO:nli-debug-cli.py:(S1 entailment S2) AND (S2 contradicts S1): 0 (0.0000)
+INFO:nli-debug-cli.py:(S1 neutral S2): 312
+INFO:nli-debug-cli.py:(S1 neutral S2) AND (S2 contradicts S1): 0 (0.0000)
+INFO:nli-debug-cli.py:(True): 990 [495 + 495]
+INFO:nli-debug-cli.py:(True) AND NOT(S1 entails S1): 0 [0 + 0] (0.0000)

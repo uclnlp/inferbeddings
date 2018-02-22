@@ -1,0 +1,20 @@
+INFO:root:discriminator/lstm/sequence2_rnn/BW/bias:0 ((1200,)): 1200 params
+INFO:root:discriminator/lstm/hidden/kernel:0 ((600, 300)): 180000 params
+INFO:root:discriminator/lstm/hidden/bias:0 ((300,)): 300 params
+INFO:root:discriminator/lstm/classification/kernel:0 ((300, 3)): 900 params
+INFO:root:discriminator/lstm/classification/bias:0 ((3,)): 3 params
+INFO:nli-debug-cli.py:Total Trainable Discriminator Parameters: 14759403
+INFO:tensorflow:Restoring parameters from models/snli/cbilstm_1/acl//batch_dsearch_reg_v12c/cbilstm_1_3
+INFO:tensorflow:Restoring parameters from models/snli/cbilstm_1/acl//batch_dsearch_reg_v12c/cbilstm_1_3
+  0%|          | 0/16 [00:00<?, ?it/s]  6%|▋         | 1/16 [00:02<00:37,  2.52s/it] 12%|█▎        | 2/16 [00:04<00:34,  2.44s/it] 19%|█▉        | 3/16 [00:06<00:29,  2.26s/it] 25%|██▌       | 4/16 [00:09<00:28,  2.34s/it] 31%|███▏      | 5/16 [00:11<00:25,  2.28s/it] 38%|███▊      | 6/16 [00:13<00:22,  2.20s/it] 44%|████▍     | 7/16 [00:14<00:19,  2.13s/it] 50%|█████     | 8/16 [00:16<00:16,  2.08s/it] 56%|█████▋    | 9/16 [00:18<00:14,  2.03s/it] 62%|██████▎   | 10/16 [00:20<00:12,  2.06s/it] 69%|██████▉   | 11/16 [00:22<00:10,  2.04s/it] 75%|███████▌  | 12/16 [00:24<00:08,  2.04s/it] 81%|████████▏ | 13/16 [00:26<00:06,  2.05s/it] 88%|████████▊ | 14/16 [00:28<00:04,  2.04s/it] 94%|█████████▍| 15/16 [00:30<00:02,  2.04s/it]100%|██████████| 16/16 [00:30<00:00,  1.92s/it]
+INFO:nli-debug-cli.py:Number of examples: 1952
+INFO:nli-debug-cli.py:Accuracy: 0.7515
+INFO:nli-debug-cli.py:(S1 contradicts S2) XOR (S2 contradicts S1): 1136
+INFO:nli-debug-cli.py:(S1 contradicts S2): 958
+INFO:nli-debug-cli.py:(S1 contradicts S2) AND NOT(S2 contradicts S1): 684 (0.7140)
+INFO:nli-debug-cli.py:(S1 entailment S2): 355
+INFO:nli-debug-cli.py:(S1 entailment S2) AND (S2 contradicts S1): 158 (0.4451)
+INFO:nli-debug-cli.py:(S1 neutral S2): 639
+INFO:nli-debug-cli.py:(S1 neutral S2) AND (S2 contradicts S1): 294 (0.4601)
+INFO:nli-debug-cli.py:(True): 3904 [1952 + 1952]
+INFO:nli-debug-cli.py:(True) AND NOT(S1 entails S1): 1079 [603 + 476] (0.2764)

@@ -1,0 +1,20 @@
+INFO:root:discriminator/lstm/hidden/bias:0 ((300,)): 300 params
+INFO:root:discriminator/lstm/classification/kernel:0 ((300, 3)): 900 params
+INFO:root:discriminator/lstm/classification/bias:0 ((3,)): 3 params
+INFO:nli-debug-cli.py:Total Trainable Discriminator Parameters: 14759403
+INFO:tensorflow:Restoring parameters from models/snli/cbilstm_1/acl//batch_dsearch_reg_v12c/cbilstm_1_15
+INFO:tensorflow:Restoring parameters from models/snli/cbilstm_1/acl//batch_dsearch_reg_v12c/cbilstm_1_15
+  0%|          | 0/23 [00:00<?, ?it/s]  4%|▍         | 1/23 [00:03<01:15,  3.44s/it]  9%|▊         | 2/23 [00:05<01:00,  2.87s/it] 13%|█▎        | 3/23 [00:08<00:56,  2.85s/it] 17%|█▋        | 4/23 [00:11<00:52,  2.76s/it] 22%|██▏       | 5/23 [00:13<00:47,  2.66s/it] 26%|██▌       | 6/23 [00:15<00:43,  2.57s/it] 30%|███       | 7/23 [00:17<00:39,  2.49s/it] 35%|███▍      | 8/23 [00:19<00:36,  2.42s/it] 39%|███▉      | 9/23 [00:21<00:33,  2.39s/it] 43%|████▎     | 10/23 [00:23<00:30,  2.37s/it] 48%|████▊     | 11/23 [00:25<00:27,  2.33s/it] 52%|█████▏    | 12/23 [00:27<00:25,  2.33s/it] 57%|█████▋    | 13/23 [00:30<00:23,  2.31s/it] 61%|██████    | 14/23 [00:31<00:20,  2.28s/it] 65%|██████▌   | 15/23 [00:34<00:18,  2.28s/it] 70%|██████▉   | 16/23 [00:36<00:16,  2.29s/it] 74%|███████▍  | 17/23 [00:38<00:13,  2.26s/it] 78%|███████▊  | 18/23 [00:40<00:11,  2.25s/it] 83%|████████▎ | 19/23 [00:42<00:09,  2.25s/it] 87%|████████▋ | 20/23 [00:44<00:06,  2.23s/it] 91%|█████████▏| 21/23 [00:48<00:04,  2.30s/it] 96%|█████████▌| 22/23 [00:50<00:02,  2.31s/it]100%|██████████| 23/23 [00:53<00:00,  2.32s/it]
+INFO:nli-debug-cli.py:Number of examples: 2933
+INFO:nli-debug-cli.py:Accuracy: 0.5414
+INFO:nli-debug-cli.py:(S1 contradicts S2) XOR (S2 contradicts S1): 0
+INFO:nli-debug-cli.py:(S1 contradicts S2): 0
+./bin/nli-debug-cli.py:323: RuntimeWarning: invalid value encountered in long_scalars
+  logger.info('(S1 contradicts S2) AND NOT(S2 contradicts S1): {0} ({1:.4f})'.format(c.sum(), c.sum() / b.sum()))
+INFO:nli-debug-cli.py:(S1 contradicts S2) AND NOT(S2 contradicts S1): 0 (nan)
+INFO:nli-debug-cli.py:(S1 entailment S2): 1014
+INFO:nli-debug-cli.py:(S1 entailment S2) AND (S2 contradicts S1): 0 (0.0000)
+INFO:nli-debug-cli.py:(S1 neutral S2): 1919
+INFO:nli-debug-cli.py:(S1 neutral S2) AND (S2 contradicts S1): 0 (0.0000)
+INFO:nli-debug-cli.py:(True): 5866 [2933 + 2933]
+INFO:nli-debug-cli.py:(True) AND NOT(S1 entails S1): 2 [0 + 2] (0.0003)
