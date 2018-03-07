@@ -55,14 +55,14 @@ def main(argv):
             template = ''
             for (prefix, suffix) in [('train', ''), ('dev', 'd'), ('test', 't')]:
                 template += """
-    
+
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 {} -d data/snli/*{}* 2>&1 | tail -n 20 > {}/1{}{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 {} -d data/snli/*{}* 2>&1 | tail -n 20 > {}/2{}{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 {} -d data/snli/*{}* 2>&1 | tail -n 20 > {}/3{}{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/*{}* 2>&1 | tail -n 20 > {}/4{}{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/*{}* 2>&1 | tail -n 20 > {}/5{}{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/*{}* 2>&1 | tail -n 20 > {}/6{}{}.log
-    
+
     """.format(*(['{}', flags, prefix, '{}', suffix, msuff] * 6))
 
             out_str += template.format(*([restore_path, output_path] * (6 * 3)))
@@ -146,7 +146,7 @@ def main(argv):
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/4{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/5{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/acl/v1/v1.1_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.1/6{}.log
-    
+
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 {} -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/1{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 {} -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/2{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 {} -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/3{}.log
@@ -156,6 +156,20 @@ def main(argv):
             """.format(*(['{}', flags, '{}', msuff] * 12))
 
             out_str += t.format(*([restore_path, output_path] * (6 * 2)))
+
+            out_str += """
+    mkdir -p {}/hard/
+    """.format(output_path)
+
+            t = """
+    python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_0 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/1{}.log
+    python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_3 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/2{}.log
+    python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_6 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/3{}.log
+    python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/4{}.log
+    python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/5{}.log
+    python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/6{}.log
+            """.format(*(['{}', flags, '{}', msuff] * 12))
+
 
     out_lst = out_str.split("\n")
 
