@@ -153,7 +153,7 @@ def main(argv):
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/4{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/5{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/acl/v1/v1.2_edited.jsonl.gz 2>&1 | tail -n 20 > {}/v1.2/6{}.log
-            """.format(*(['{}', flags, '{}', msuff] * 12))
+            """.format(*(['{}', flags, '{}', msuff] * (6 * 2)))
 
             out_str += t.format(*([restore_path, output_path] * (6 * 2)))
 
@@ -168,7 +168,9 @@ def main(argv):
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_9 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/4{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_12 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/5{}.log
     python3 ./bin/nli-debug-cli.py --has-bos --has-unk --batch-size 128 --restore {}_15 {} -d data/snli/hard/snli_1.0_test_hard.jsonl.gz 2>&1 | tail -n 20 > {}/hard/6{}.log
-            """.format(*(['{}', flags, '{}', msuff] * 12))
+            """.format(*(['{}', flags, '{}', msuff] * 6))
+
+    out_str += t.format(*([restore_path, output_path] * 6))
 
 
     out_lst = out_str.split("\n")
