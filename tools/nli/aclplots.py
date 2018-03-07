@@ -80,51 +80,61 @@ def main(argv):
         'esim': 'ESIM'
     }
 
-    for model_name in ['dam', 'cbilstm', 'esim']:
-        data = {'x': [], 'y': [], 'class': []}
+    for m in ['dam', 'cbilstm', 'esim']:
+        for model_name in ['dam', 'cbilstm', 'esim']:
+            data = {'x': [], 'y': [], 'class': []}
 
-        for i, ii in enumerate([100, 500, 1000, 2000, 3000, 4000, 5000, 'full']):
-            if isinstance(ii, int) and ii <= 2000:
-                accuracies = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_{}_test'.format(model_name, ii)]]
-                for lmbda_idx, accuracy in enumerate(accuracies):
-                    if lmbda_idx <= 4:
-                        dataset_name = '$\mathcal{A}_{\mathrm{' + to_str[model_name] + '}}^{' + str(ii) + '}$'
-                        data['class'] += [dataset_name]
+            suffix = ''
+            s = ''
+            if m == 'cbilstm':
+                suffix = 'c'
+                s = '.cbilstm'
+            elif m == 'esim':
+                suffix = 'e'
+                s = '.esim'
 
-                        lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
-                        data['x'] += [lmbdas[lmbda_idx]]
-                        data['y'] += [accuracy]
+            for i, ii in enumerate([100, 500, 1000, 2000, 3000, 4000, 5000, 'full']):
+                if isinstance(ii, int) and ii < 2000:
+                    accuracies = [get_accuracy(s) for s in results['/k_v12{}/v1/X_{}_{}_test{}'.format(suffix, model_name, ii, s)]]
+                    for lmbda_idx, accuracy in enumerate(accuracies):
+                        if lmbda_idx <= 4:
+                            dataset_name = '$\mathcal{A}_{\mathrm{' + to_str[model_name] + '}}^{' + str(ii) + '}$'
+                            data['class'] += [dataset_name]
 
-        df = pd.DataFrame(data)
+                            lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+                            data['x'] += [lmbdas[lmbda_idx]]
+                            data['y'] += [accuracy]
 
-        # Optimal: size=3, aspect=2
-        for size in [3]:
-            for aspect in [2]:
-                logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+            df = pd.DataFrame(data)
 
-                palette = None
-                g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
-                                   linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
-                                   legend=False, size=size, aspect=aspect)
+            # Optimal: size=3, aspect=2
+            for size in [3]:
+                for aspect in [2]:
+                    logging.info('Size: {}, Aspect: {}'.format(size, aspect))
 
-                start = 0.0
-                if model_name == 'dam':
-                    start = 0.4
-                elif model_name == 'esim':
-                    start = 0.5
-                elif model_name == 'cbilstm':
-                    start = 0.7
-                # g.set(ylim=(None, 1.0))
+                    palette = None
+                    g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
+                                       linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                                       legend=False, size=size, aspect=aspect)
 
-                g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
+                    start = 0.0
+                    if model_name == 'dam':
+                        start = 0.4
+                    elif model_name == 'esim':
+                        start = 0.5
+                    elif model_name == 'cbilstm':
+                        start = 0.7
+                    # g.set(ylim=(None, 1.0))
 
-                plt.grid()
-                plt.title('Accuracy on $\mathcal{A}_{\mathrm{' + to_str[model_name] + '}}^{k}$ for varying $\lambda$',
-                          fontsize=title_fontsize)
-                plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
-                plt.ylabel('Accuracy', fontsize=fontsize)
+                    g.fig.get_axes()[0].legend(loc='lower right', title='Dataset', fontsize=labelsize)
 
-                g.savefig('acl/plots/accuracy_adversarial_{}_{}_{}.pdf'.format(model_name, size, aspect))
+                    plt.grid()
+                    plt.title('Accuracy of $\mathrm{' + to_str[m] + '}$ on $\mathcal{A}_{\mathrm{' + to_str[model_name] + '}}^{k}$',
+                              fontsize=title_fontsize)
+                    plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
+                    plt.ylabel('Accuracy', fontsize=fontsize)
+
+                    g.savefig('acl/plots/accuracy_{}_adversarial_{}_{}_{}.pdf'.format(m, model_name, size, aspect))
 
     rule_1 = '(S1 contradicts S2) AND NOT(S2 contradicts S1)'
     rule_2 = '(S1 entailment S2) AND (S2 contradicts S1)'
@@ -213,6 +223,43 @@ def main(argv):
             plt.ylabel('Violations (%)', fontsize=fontsize)
 
             g.savefig('acl/plots/test_violations_cbilstm_{}_{}.pdf'.format(size, aspect))
+
+    data = {'x': [], 'y': [], 'class': []}
+
+    for rule_idx, rule_str in enumerate(rules):
+        percs = [get_violations_perc(s, rule_str) for s in results['/k_v12e/Xt.esim']]
+        for perc_idx, perc in enumerate(percs):
+            lmbda_idx = perc_idx
+            if lmbda_idx <= 5:
+                rule_name = str_to_rule[rule_str]
+                data['class'] += [rule_name]
+                lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
+                data['x'] += [lmbdas[lmbda_idx]]
+                data['y'] += [perc * 100]
+
+    df = pd.DataFrame(data)
+
+    # Optimal: size=3, aspect=2
+    for size in [3]:
+        for aspect in [2]:
+            logging.info('Size: {}, Aspect: {}'.format(size, aspect))
+
+            palette = None
+            g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
+                               linestyles=[":", "-.", "--", "-"], markers=['o', 'v', "<", ">"],
+                               legend=False, size=size, aspect=aspect)
+
+            g.fig.get_axes()[0].legend(loc='upper right', title=None, fontsize=labelsize)
+
+            # g.set(ylim=(None, 20))
+
+            plt.grid()
+            plt.title('Number of violations (%) made by $\\mathrm{ESIM}$',
+                      fontsize=title_fontsize)
+            plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
+            plt.ylabel('Violations (%)', fontsize=fontsize)
+
+            g.savefig('acl/plots/test_violations_esim_{}_{}.pdf'.format(size, aspect))
 
     data = {'x': [], 'y': [], 'class': []}
 
@@ -309,16 +356,23 @@ def main(argv):
     percs_dam_dev = [get_accuracy(s) for s in results['/k_v12/Xd']]
     percs_dam_test = [get_accuracy(s) for s in results['/k_v12/Xt']]
 
+    percs_esim_dev = [get_accuracy(s) for s in results['/k_v12e/Xd.esim']]
+    percs_esim_test = [get_accuracy(s) for s in results['/k_v12e/Xt.esim']]
+
     percs_cbilstm_dev = [get_accuracy(s) for s in results['/k_v12c/Xd.cbilstm']]
     percs_cbilstm_test = [get_accuracy(s) for s in results['/k_v12c/Xt.cbilstm']]
 
     lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
 
     class_to_lst = {
-        '$\\mathrm{DAM}$, SNLI valid.': percs_dam_dev,
-        '$\\mathrm{DAM}$, SNLI test': percs_dam_test,
-        '$\\mathrm{cBiLSTM}$, SNLI valid.': percs_cbilstm_dev,
-        '$\\mathrm{cBiLSTM}$, SNLI test': percs_cbilstm_test
+        # '$\\mathrm{DAM}$, SNLI valid.': percs_dam_dev,
+        '$\\mathrm{DAM}$': percs_dam_test,
+
+        # '$\\mathrm{ESIM}$, SNLI valid.': percs_esim_dev,
+        '$\\mathrm{ESIM}$': percs_esim_test,
+
+        # '$\\mathrm{cBiLSTM}$, SNLI valid.': percs_cbilstm_dev,
+        '$\\mathrm{cBiLSTM}$': percs_cbilstm_test
     }
 
     for perc_idx in range(6):
@@ -339,7 +393,7 @@ def main(argv):
 
             palette = None
             g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
-                               linestyles=["--", "-", "--", "-"], markers=['<', '<', ">", ">"],
+                               linestyles=["--", "-", ':'], markers=['<', '>', 'o'],
                                legend=False, size=size, aspect=aspect)
 
             g.fig.get_axes()[0].legend(loc='upper right', title=None, fontsize=labelsize)
@@ -347,7 +401,7 @@ def main(argv):
             g.set(ylim=(75.00, 100.00))
 
             plt.grid()
-            plt.title('SNLI Validation and Test Accuracy (%)',
+            plt.title('SNLI Test Accuracy (%)',
                       fontsize=title_fontsize)
             plt.xlabel('Regularisation Parameter $\lambda$', fontsize=fontsize)
             plt.ylabel('Accuracy (%)', fontsize=fontsize)
@@ -359,12 +413,14 @@ def main(argv):
 
         percs_dam_500_test = [get_accuracy(s) for s in results['/k_v12/v1/X_{}_500_test'.format(m)]]
         percs_cbilstm_500_test = [get_accuracy(s) for s in results['/k_v12c/v1/X_{}_500_test.cbilstm'.format(m)]]
+        percs_esim_500_test = [get_accuracy(s) for s in results['/k_v12e/v1/X_{}_500_test.esim'.format(m)]]
 
         lmbdas = ["$0.0$", "$10^{-4}$", "$10^{-3}$", "$10^{-2}$", "$10^{-1}$", "$1.0$"]
 
         class_to_lst = {
             '$\\mathrm{DAM}$': percs_dam_500_test,
             '$\\mathrm{cBiLSTM}$': percs_cbilstm_500_test,
+            '$\\mathrm{ESIM}$': percs_esim_500_test
         }
 
         for perc_idx in range(6):
@@ -385,7 +441,7 @@ def main(argv):
 
                 palette = None
                 g = sns.factorplot(x="x", y="y", hue="class", palette=palette, data=df,
-                                   linestyles=["--", "-"], markers=['<', ">"],
+                                   linestyles=["--", "-", ':'], markers=['<', '>', 'o'],
                                    legend=False, size=size, aspect=aspect)
 
                 g.fig.get_axes()[0].legend(loc='lower right', title=None, fontsize=labelsize)
@@ -417,6 +473,10 @@ def main(argv):
     row_1 = ['\\DAM$^{\mathcal{AR}}$']
     row_2 = ['\\DAM']
 
+    # Results for regularised and unregularised ESIM
+    row_5 = ['\\ESIM$^{\mathcal{AR}}$']
+    row_6 = ['\\ESIM']
+
     # Results for regularised and unregularised cBiLSTM
     row_3 = ['\\cBiLSTM$^{\mathcal{AR}}$']
     row_4 = ['\\cBiLSTM']
@@ -443,6 +503,12 @@ def main(argv):
             dam_best_dev_acc_idx = dam_dev_accs.index(max(dam_dev_accs))
             dam_test_acc = dam_test_accs[dam_best_dev_acc_idx]
 
+            esim_dev_accs = [get_accuracy(s) for s in results['/k_v12e/v1/X_{}_{}_dev.esim'.format(data_model, data_size)]]
+            esim_test_accs = [get_accuracy(s) for s in results['/k_v12e/v1/X_{}_{}_test.esim'.format(data_model, data_size)]]
+
+            esim_best_dev_acc_idx = esim_dev_accs.index(max(esim_dev_accs))
+            esim_test_acc = esim_test_accs[esim_best_dev_acc_idx]
+
             cbilstm_dev_accs = [get_accuracy(s) for s in results['/k_v12c/v1/X_{}_{}_dev.cbilstm'.format(data_model, data_size)]]
             cbilstm_test_accs = [get_accuracy(s) for s in results['/k_v12c/v1/X_{}_{}_test.cbilstm'.format(data_model, data_size)]]
 
@@ -453,6 +519,9 @@ def main(argv):
 
             row_1 += [dam_test_acc]
             row_2 += [dam_test_accs[0]]
+
+            row_5 += [esim_test_acc]
+            row_6 += [esim_test_accs[0]]
 
             row_3 += [cbilstm_test_acc]
             row_4 += [cbilstm_test_accs[0]]
@@ -474,6 +543,20 @@ def main(argv):
 """
 
     for i, row in enumerate([row_1, row_2]):
+        def p(s):
+            return '{0:.2f}'.format(float(s) * 100) if i > 0 else '{\\bf ' + '{0:.2f}'.format(float(s) * 100) + '}'
+        table_str += ' & '.join([row[0]] + [p(str(e)) for e in row[1:]]) + " \\\\ \n"
+
+    table_str += """
+
+    \\cmidrule(lr){1-1}
+    \\cmidrule(lr){2-4}
+    \\cmidrule(lr){5-7}
+    \\cmidrule(lr){8-10}
+
+    """
+
+    for i, row in enumerate([row_5, row_6]):
         def p(s):
             return '{0:.2f}'.format(float(s) * 100) if i > 0 else '{\\bf ' + '{0:.2f}'.format(float(s) * 100) + '}'
         table_str += ' & '.join([row[0]] + [p(str(e)) for e in row[1:]]) + " \\\\ \n"
