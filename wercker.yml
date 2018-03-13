@@ -21,8 +21,10 @@ test-light:
     - script:
       name: install
       code: |
+        sudo apt-get update
+        sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python -m pip install -e .[tf]
+        python setup.py install --user
 
     - script:
         name: Run unit tests
@@ -36,8 +38,10 @@ test-slow:
     - script:
       name: install
       code: |
+        sudo apt-get update
+        sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python -m pip install -e .[tf]
+        python setup.py install --user
 
     - script:
         name: Run slow unit tests
@@ -51,8 +55,10 @@ test-veryslow:
     - script:
       name: install
       code: |
+        sudo apt-get update
+        sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python -m pip install -e .[tf]
+        python setup.py install --user
 
     - script:
         name: Run very slow unit tests
@@ -66,8 +72,10 @@ test-closedform:
     - script:
       name: install
       code: |
+        sudo apt-get update
+        sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python -m pip install -e .[tf]
+        python setup.py install --user
 
     - script:
         name: Run closed form solutions unit tests
