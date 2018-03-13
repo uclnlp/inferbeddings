@@ -35,17 +35,17 @@ def test_wn18_cli():
             assert line.split()[2] == "0.2984"
             assert line.split()[4] == "0.0069"
         if "Epoch: 5/1\\tLoss:" in line:
-            assert line.split()[2] == "0.1842"
+            assert line.split()[2] == "0.1840"
         if "Epoch: 6/1\\tLoss:" in line:
-            assert line.split()[2] == "0.1287"
+            assert line.split()[2] == "0.1286"
         if "Epoch: 7/1\\tLoss:" in line:
-            assert line.split()[2] == "0.0980"
+            assert line.split()[2] == "0.0983"
         if "Epoch: 8/1\\tLoss:" in line:
-            assert line.split()[2] == "0.0795"
+            assert line.split()[2] == "0.0796"
         if "Epoch: 9/1\\tLoss:" in line:
             assert line.split()[2] == "0.0653"
         if "Epoch: 10/1\\tLoss:" in line:
-            assert line.split()[2] == "0.0562"
+            assert line.split()[2] == "0.0560"
 
     # Checking if results are still the same
     cmd = ['./bin/kbp-cli.py',
