@@ -1,0 +1,3 @@
+{
+  "tests/inferbeddings/test_kbp_cli_safety.py::test_wn18_cli": true
+}
