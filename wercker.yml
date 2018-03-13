@@ -24,7 +24,8 @@ test-light:
         sudo apt-get update
         sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install --user
+        python -m pip install --upgrade tensorflow
+        python setup.py install
 
     - script:
         name: Run unit tests
@@ -41,7 +42,8 @@ test-slow:
         sudo apt-get update
         sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install --user
+        python -m pip install --upgrade tensorflow
+        python setup.py install
 
     - script:
         name: Run slow unit tests
@@ -58,7 +60,8 @@ test-veryslow:
         sudo apt-get update
         sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install --user
+        python -m pip install --upgrade tensorflow
+        python setup.py install
 
     - script:
         name: Run very slow unit tests
@@ -75,7 +78,8 @@ test-closedform:
         sudo apt-get update
         sudo apt-get -y install libtk8.6
         python -m pip install --upgrade -r requirements.txt
-        python setup.py install --user
+        python -m pip install --upgrade tensorflow
+        python setup.py install
 
     - script:
         name: Run closed form solutions unit tests
