@@ -573,6 +573,7 @@ def main(argv):
                         json.dump(jdata, f)
                         f.write('\n')
 
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main(sys.argv[1:])
